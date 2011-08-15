@@ -1,5 +1,6 @@
 config BR2_PACKAGE_UDEV
 	bool "udev"
+	depends on BR2_ROOTFS_DEVICE_CREATION_DYNAMIC_UDEV
 	help
 	  Userspace device daemon.
 
@@ -26,3 +27,6 @@ comment "udev extras requires a toolchain with LARGEFILE/WCHAR/PROGRAM_INVOCATIO
 	depends on !(BR2_LARGEFILE && BR2_USE_WCHAR && BR2_PROGRAM_INVOCATION)
 
 endif
+
+comment "udev requires /dev mgmnt set to udev under System configuration"
+	depends on !BR2_ROOTFS_DEVICE_CREATION_DYNAMIC_UDEV
