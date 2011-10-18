@@ -104,15 +104,16 @@ endif
 ################################################################################
 
 define DOWNLOAD_GIT
-	test -e $(DL_DIR)/$($(PKG)_SOURCE) || \
-	(pushd $(DL_DIR) > /dev/null && \
-	$(GIT) clone $($(PKG)_SITE) $($(PKG)_BASE_NAME) && \
-	pushd $($(PKG)_BASE_NAME) > /dev/null && \
-	$(GIT) archive --format=tar --prefix=$($(PKG)_BASE_NAME)/ $($(PKG)_DL_VERSION) | \
-		gzip -c > $(DL_DIR)/$($(PKG)_SOURCE) && \
-	popd > /dev/null && \
-	rm -rf $($(PKG)_DL_DIR) && \
-	popd > /dev/null)
+	( export GIT_DIR=$(DL_DIR)/git/$($(PKG)_NAME)/.git; \
+	(test -d $(DL_DIR)/git/$($(PKG)_NAME)/.git && $(GIT) cat-file -e $($(PKG)_DL_VERSION) && \
+		touch $(DL_DIR)/$($(PKG)_SOURCE)) || \
+	(test -d $(DL_DIR)/git/$($(PKG)_NAME)/.git && $(GIT) fetch --all && \
+		$(GIT) cat-file -e $($(PKG)_DL_VERSION) && \
+		touch $(DL_DIR)/$($(PKG)_SOURCE)) || \
+	(test ! -e $(DL_DIR)/git/$($(PKG)_NAME)/.git && $(GIT) clone --no-checkout $($(PKG)_SITE) $(DL_DIR)/git/$($(PKG)_NAME) && \
+		$(GIT) cat-file -e $($(PKG)_DL_VERSION) && \
+		touch $(DL_DIR)/$($(PKG)_SOURCE))) || \
+	echo "Error extracting revision: $($(PKG)_DL_VERSION)" ; false
 endef
 
 # TODO: improve to check that the given PKG_DL_VERSION exists on the remote
