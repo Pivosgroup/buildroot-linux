@@ -250,10 +250,17 @@ endif
 
 # Unpack the archive
 $(BUILD_DIR)/%/.stamp_extracted:
-	@$(call MESSAGE,"Extracting")
 	$(Q)mkdir -p $(@D)
-	$(Q)$(INFLATE$(suffix $($(PKG)_SOURCE))) $(DL_DIR)/$($(PKG)_SOURCE) | \
-	$(TAR) $(TAR_STRIP_COMPONENTS)=1 -C $(@D) $(TAR_OPTIONS) -
+	$(Q)( \
+	if  test -d $(DL_DIR)/git/$($(PKG)_NAME)/.git -a ! -s $(DL_DIR)/$($(PKG)_SOURCE) ; then \
+		$(call MESSAGE,"Checking out cached revision"); \
+		$(GIT) --work-tree=$(@D) --git-dir=$(DL_DIR)/git/$($(PKG)_NAME)/.git checkout -f -q $($(PKG)_DL_VERSION); \
+	else \
+		$(call MESSAGE,"Extracting"); \
+		$(INFLATE$(suffix $($(PKG)_SOURCE))) $(DL_DIR)/$($(PKG)_SOURCE) | \
+		$(TAR) $(TAR_STRIP_COMPONENTS)=1 -C $(@D) $(TAR_OPTIONS) - ;\
+	fi; \
+	)
 # some packages have messed up permissions inside
 	$(Q)chmod -R ug+rw $(@D)
 	$(foreach hook,$($(PKG)_POST_EXTRACT_HOOKS),$(call $(hook))$(sep))
