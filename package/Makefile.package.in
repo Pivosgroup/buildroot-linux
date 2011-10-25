@@ -72,6 +72,7 @@ TERM_RESET := $(shell tput rmso)
 WGET:=$(call qstrip,$(BR2_WGET)) $(QUIET)
 SVN:=$(call qstrip,$(BR2_SVN)) $(QUIET)
 BZR:=$(call qstrip,$(BR2_BZR)) $(QUIET)
+CP:=$(call qstrip,$(BR2_CP)) $(QUIET)
 GIT:=$(call qstrip,$(BR2_GIT)) $(QUIET)
 
 # Default spider mode is 'DOWNLOAD'. Other possible values are 'SOURCE_CHECK'
@@ -139,6 +140,12 @@ define SHOW_EXTERNAL_DEPS_BZR
 endef
 
 
+define DOWNLOAD_CP
+        test -e $(DL_DIR)/$($(PKG)_SOURCE) || \
+        tar -C $($(PKG)_SITE) . -czf $(DL_DIR)/$($(PKG)_SOURCE)
+endef
+
+
 define DOWNLOAD_SVN
 	test -e $(DL_DIR)/$($(PKG)_SOURCE) || \
 	(pushd $(DL_DIR) > /dev/null && \
@@ -192,6 +199,7 @@ define DOWNLOAD
 			git) $($(DL_MODE)_GIT) && exit ;; \
 			svn) $($(DL_MODE)_SVN) && exit ;; \
 			bzr) $($(DL_MODE)_BZR) && exit ;; \
+			cp) $($(DL_MODE)_CP) && exit ;; \
 			*) $(call $(DL_MODE)_WGET,$(1),$(2)) && exit ;; \
 		esac ; \
 	fi ; \
