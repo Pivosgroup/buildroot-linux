@@ -28,7 +28,7 @@ $(HOST_MAKEDEVS_DIR)/makedevs.c:
 	cp package/makedevs/makedevs.c $(HOST_MAKEDEVS_DIR)
 
 $(HOST_MAKEDEVS_DIR)/makedevs: $(HOST_MAKEDEVS_DIR)/makedevs.c
-	$(CC) -Wall -Werror -O2 $(HOST_MAKEDEVS_DIR)/makedevs.c -o $@
+	$(CC) -Wall -Werror -Wno-unused-but-set-variable -O2 $(HOST_MAKEDEVS_DIR)/makedevs.c -o $@
 
 $(HOST_DIR)/usr/bin/makedevs: $(HOST_MAKEDEVS_DIR)/makedevs
 	$(INSTALL) -m 755 $^ $@
