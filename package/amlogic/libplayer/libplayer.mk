@@ -5,7 +5,7 @@
 #############################################################
 LIBPLAYER_VERSION:=0.9.9
 LIBPLAYER_DIR=$(BUILD_DIR)/libplayer
-AMFFMPEG_DIR=$(LIBPLAYER_DIR)/amffmpeg
+#AMFFMPEG_DIR=$(LIBPLAYER_DIR)/amffmpeg
 LIBPLAYER_SOURCE=src
 LIBPLAYER_SITE=.
 
