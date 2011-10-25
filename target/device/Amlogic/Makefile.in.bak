@@ -1,0 +1,11 @@
+ifeq ($(BR2_TARGET_AMLOGIC),y)
+
+AMLOGIC_PATH:=target/device/amlogic
+AMLOGIC_TARGET:=$(AMLOGIC_PATH)/root
+TARGET_SKELETON:=$(AMLOGIC_PATH)/target_skeleton
+
+include target/device/Amlogic/root/Makefile.in
+
+endif
+
+

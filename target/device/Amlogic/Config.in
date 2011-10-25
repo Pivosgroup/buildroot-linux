@@ -1,0 +1,7 @@
+menuconfig BR2_TARGET_AMLOGIC
+	bool "Amlogic Device Support"	
+
+
+source "target/device/Amlogic/root/Config.in"
+
+

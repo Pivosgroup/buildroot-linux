@@ -1,0 +1,18 @@
+#! /bin/sh
+#
+# System-V init script for the openntp daemon
+#
+case "$1" in
+  start)
+	/bin/amadecd
+	;;
+  stop)
+	;;
+  restart|reload)
+
+	;;
+  *)
+  	;;
+esac
+
+exit $?

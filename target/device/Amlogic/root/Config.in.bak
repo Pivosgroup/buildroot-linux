@@ -1,0 +1,77 @@
+if (BR2_TARGET_AMLOGIC)
+
+config BR2_TARGET_GENERIC_HOSTNAME
+       string "System hostname"
+       default "buildroot"
+       help
+         Select system hostname to be stored in /etc/hostname.
+
+config BR2_TARGET_GENERIC_ISSUE
+       string "System banner"
+       default "Welcome to Amlogic"
+       help
+         Select system banner (/etc/issue) to be displayed at login.
+
+menuconfig BR2_TARGET_GENERIC_GETTY
+	bool "Generic serial port config"
+
+if BR2_TARGET_GENERIC_GETTY
+
+choice
+	prompt "Serial port to run a getty on"
+	default BR2_TARGET_GENERIC_GETTY_TTYS0
+	help
+	  Select a port to run a getty (login prompt) on.
+
+config BR2_TARGET_GENERIC_GETTY_NONE
+	bool "none"
+config BR2_TARGET_GENERIC_GETTY_TTYS0
+	bool "ttyS0"
+config BR2_TARGET_GENERIC_GETTY_TTYS1
+	bool "ttyS1"
+config BR2_TARGET_GENERIC_GETTY_TTYS2
+	bool "ttyS2"
+config BR2_TARGET_GENERIC_GETTY_TTYS3
+	bool "ttyS3"
+endchoice
+
+config BR2_TARGET_GENERIC_GETTY_PORT
+	string
+	default "#ttyS0"	if BR2_TARGET_GENERIC_GETTY_NONE
+	default "ttyS0"		if BR2_TARGET_GENERIC_GETTY_TTYS0
+	default "ttyS1"		if BR2_TARGET_GENERIC_GETTY_TTYS1
+	default "ttyS2"		if BR2_TARGET_GENERIC_GETTY_TTYS2
+	default "ttyS3"		if BR2_TARGET_GENERIC_GETTY_TTYS3
+
+choice
+	prompt "Baudrate to use"
+	default BR2_TARGET_GENERIC_GETTY_BAUDRATE_115200
+	help
+	  Select a baudrate to use.
+
+config BR2_TARGET_GENERIC_GETTY_BAUDRATE_KEEP
+       bool "keep kernel default"
+config BR2_TARGET_GENERIC_GETTY_BAUDRATE_9600
+	bool "9600"
+config BR2_TARGET_GENERIC_GETTY_BAUDRATE_19200
+	bool "19200"
+config BR2_TARGET_GENERIC_GETTY_BAUDRATE_38400
+	bool "38400"
+config BR2_TARGET_GENERIC_GETTY_BAUDRATE_57600
+	bool "57600"
+config BR2_TARGET_GENERIC_GETTY_BAUDRATE_115200
+	bool "115200"
+endchoice
+
+config BR2_TARGET_GENERIC_GETTY_BAUDRATE
+	string
+	default "0"		if BR2_TARGET_GENERIC_GETTY_BAUDRATE_KEEP
+	default "9600"		if BR2_TARGET_GENERIC_GETTY_BAUDRATE_9600
+	default "19200"		if BR2_TARGET_GENERIC_GETTY_BAUDRATE_19200
+	default "38400"		if BR2_TARGET_GENERIC_GETTY_BAUDRATE_38400
+	default "57600"		if BR2_TARGET_GENERIC_GETTY_BAUDRATE_57600
+	default "115200"	if BR2_TARGET_GENERIC_GETTY_BAUDRATE_115200
+
+endif # BR2_TARGET_GENERIC_GETTY
+
+endif

@@ -1,0 +1,30 @@
+# Default target skeleton stuff, may be overridden
+
+TARGET_AMLOGIC_HOSTNAME:=$(call qstrip,$(BR2_TARGET_AMLOGIC_HOSTNAME))
+TARGET_AMLOGIC_ISSUE:=$(call qstrip,$(BR2_TARGET_AMLOGIC_ISSUE))
+TARGET_AMLOGIC_GETTY:=$(call qstrip,$(BR2_TARGET_AMLOGIC_GETTY_PORT))
+TARGET_AMLOGIC_GETTY_BAUDRATE:=$(call qstrip,$(BR2_TARGET_AMLOGIC_GETTY_BAUDRATE))
+
+target-AMLOGIC-hostname:
+	mkdir -p $(TARGET_DIR)/etc
+	echo "$(TARGET_AMLOGIC_HOSTNAME)" > $(TARGET_DIR)/etc/hostname
+
+target-AMLOGIC-issue:
+	mkdir -p $(TARGET_DIR)/etc
+	echo "$(TARGET_AMLOGIC_ISSUE)" > $(TARGET_DIR)/etc/issue
+
+target-AMLOGIC-getty:
+	$(SED) '/# AMLOGIC_GENERAL_SERIAL$$/s~^.*#~$(TARGET_AMLOGIC_GETTY)::respawn:/bin/sh  #~' \
+	$(TARGET_DIR)/etc/inittab
+
+ifneq ($(TARGET_AMLOGIC_HOSTNAME),)
+TARGETS += target-AMLOGIC-hostname
+endif
+
+ifneq ($(TARGET_AMLOGIC_ISSUE),)
+TARGETS += target-AMLOGIC-issue
+endif
+
+ifeq ($(BR2_TARGET_AMLOGIC_GETTY),y)
+TARGETS += target-AMLOGIC-getty
+endif
