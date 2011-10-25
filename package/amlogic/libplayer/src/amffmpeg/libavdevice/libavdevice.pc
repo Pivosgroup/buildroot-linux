@@ -1,0 +1,14 @@
+prefix=/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/target/usr
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/build/libplayer/amadec/../../../staging/usr/include
+
+Name: libavdevice
+Description: FFmpeg device handling library
+Version: 52.2.0
+Requires: 
+Requires.private: libavformat = 52.39.2
+Conflicts:
+Libs: -L${libdir} -lavdevice 
+Libs.private: -lm
+Cflags: -I${includedir}

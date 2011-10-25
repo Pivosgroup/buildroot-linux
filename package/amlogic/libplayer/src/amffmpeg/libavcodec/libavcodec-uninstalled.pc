@@ -1,0 +1,12 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}
+includedir=/home/gongping/Project_ARMLinux/arm_ref/buildroot-2010.05/package/multimedia/libplayer/src/amffmpeg
+
+Name: libavcodec
+Description: FFmpeg codec library
+Version: 52.42.0
+Requires: libavutil = 50.5.0
+Conflicts:
+Libs: ${libdir}/libavcodec.a   -lm
+Cflags: -I${includedir}

@@ -1,0 +1,1 @@
+DIST_EXTR=pic_app.h pic_uop.h vo.h

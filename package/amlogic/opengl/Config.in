@@ -1,0 +1,8 @@
+config BR2_PACKAGE_OPENGL
+	bool "opengl"
+	help
+	  amlogic mali400 opengl driver.
+
+	  http://openlinux.amlogic.com
+
+

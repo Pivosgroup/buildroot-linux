@@ -1,0 +1,7 @@
+config BR2_PACKAGE_LIBXFER
+	bool "libxfer"
+	select BR2_PACKAGE_ZLIB
+	select BR2_PACKAGE_CURL
+	help
+	 xfer lib
+

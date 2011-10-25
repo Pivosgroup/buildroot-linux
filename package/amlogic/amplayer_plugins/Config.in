@@ -1,0 +1,9 @@
+config BR2_PACKAGE_AMPLAYER_PLUGINS
+	bool "amplayer_plugins"
+	select BR2_PACKAGE_AMPLAYER2
+	help
+	  amlogic media player control interface.
+
+	  http://openlinux.amlogic.com
+
+

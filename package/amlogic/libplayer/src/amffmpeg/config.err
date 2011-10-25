@@ -1,0 +1,2035 @@
+# ./configure --cc=/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-gcc --arch=arm --enable-cross-compile --cross-prefix=/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi- --prefix=/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/target/usr --incdir=/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/build/libplayer/amadec/../../../staging/usr/include --extra-ldflags=L/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/target/usr/lib --disable-static --enable-shared --disable-ffmpeg --disable-ffplay --disable-ffserver --disable-doc --disable-mpegaudio-hp --disable-encoders --disable-decoder=h264 --disable-muxers --disable-filters --disable-altivec --disable-amd3dnow --disable-amd3dnowext --disable-mmx --disable-mmx2 --disable-sse --disable-ssse3 --disable-armv5te --disable-armv6 --disable-armv6t2 --disable-armvfp --disable-iwmmxt --disable-mmi --disable-vis --disable-yasm --enable-pic
+ANDROID_BUILD_PATHS=:/home/gongping/mydroid/out/host/linux-x86/bin:/home/gongping/mydroid/prebuilt/linux-x86/toolchain/arm-eabi-4.4.0/bin:/home/gongping/mydroid/development/emulator/qtools:/home/gongping/mydroid/prebuilt/linux-x86/toolchain/arm-eabi-4.4.0/bin:/home/gongping/mydroid/prebuilt/linux-x86/toolchain/arm-eabi-4.4.0/bin
+ANDROID_BUILD_TOP=/home/gongping/mydroid
+ANDROID_EABI_TOOLCHAIN=/home/gongping/mydroid/prebuilt/linux-x86/toolchain/arm-eabi-4.4.0/bin
+ANDROID_PRODUCT_OUT=/home/gongping/mydroid/out/target/product/m1ref
+ANDROID_QTOOLS=/home/gongping/mydroid/development/emulator/qtools
+ANDROID_TOOLCHAIN=/home/gongping/mydroid/prebuilt/linux-x86/toolchain/arm-eabi-4.4.0/bin
+ARCH_EXT_LIST='
+    altivec
+    amd3dnow
+    amd3dnowext
+    armv5te
+    armv6
+    armv6t2
+    armvfp
+    iwmmxt
+    mmi
+    mmx
+    mmx2
+    neon
+    ppc4xx
+    sse
+    ssse3
+    vis
+'
+ARCH_LIST='
+    alpha
+    arm
+    avr32
+    avr32_ap
+    avr32_uc
+    bfin
+    ia64
+    m68k
+    mips
+    mips64
+    parisc
+    ppc
+    ppc64
+    s390
+    sh4
+    sparc
+    sparc64
+    x86
+    x86_32
+    x86_64
+'
+BASH=/bin/sh
+BASH_ARGC=([0]="34")
+BASH_ARGV=([0]="--enable-pic" [1]="--disable-yasm" [2]="--disable-vis" [3]="--disable-mmi" [4]="--disable-iwmmxt" [5]="--disable-armvfp" [6]="--disable-armv6t2" [7]="--disable-armv6" [8]="--disable-armv5te" [9]="--disable-ssse3" [10]="--disable-sse" [11]="--disable-mmx2" [12]="--disable-mmx" [13]="--disable-amd3dnowext" [14]="--disable-amd3dnow" [15]="--disable-altivec" [16]="--disable-filters" [17]="--disable-muxers" [18]="--disable-decoder=h264" [19]="--disable-encoders" [20]="--disable-mpegaudio-hp" [21]="--disable-doc" [22]="--disable-ffserver" [23]="--disable-ffplay" [24]="--disable-ffmpeg" [25]="--enable-shared" [26]="--disable-static" [27]="--extra-ldflags=L/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/target/usr/lib" [28]="--incdir=/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/build/libplayer/amadec/../../../staging/usr/include" [29]="--prefix=/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/target/usr" [30]="--cross-prefix=/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-" [31]="--enable-cross-compile" [32]="--arch=arm" [33]="--cc=/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-gcc")
+BASH_LINENO=([0]="0")
+BASH_SOURCE=([0]="./configure")
+BASH_VERSINFO=([0]="3" [1]="2" [2]="48" [3]="1" [4]="release" [5]="i486-pc-linux-gnu")
+BASH_VERSION='3.2.48(1)-release'
+BSF_LIST='aac_adtstoasc_bsf
+dump_extradata_bsf
+h264_mp4toannexb_bsf
+imx_dump_header_bsf
+mjpega_dump_header_bsf
+mp3_header_compress_bsf
+mp3_header_decompress_bsf
+mov2textsub_bsf
+noise_bsf
+remove_extradata_bsf
+text2movsub_bsf'
+BUILD_ENV_SEQUENCE_NUMBER=9
+CC_O='-o $@'
+CMDLINE_APPEND='
+    extra_cflags
+'
+CMDLINE_SELECT='
+    
+    altivec
+    amd3dnow
+    amd3dnowext
+    armv5te
+    armv6
+    armv6t2
+    armvfp
+    iwmmxt
+    mmi
+    mmx
+    mmx2
+    neon
+    ppc4xx
+    sse
+    ssse3
+    vis
+
+    
+    
+    bsfs
+    decoders
+    demuxers
+    encoders
+    filters
+    hwaccels
+    indevs
+    muxers
+    outdevs
+    parsers
+    protocols
+
+    aandct
+    avfilter
+    avfilter_lavf
+    avisynth
+    beos_netserver
+    bzlib
+    doc
+    fastdiv
+    ffmpeg
+    ffplay
+    ffserver
+    fft
+    golomb
+    gpl
+    gprof
+    gray
+    hardcoded_tables
+    ipv6
+    libdc1394
+    libdirac
+    libfaac
+    libfaad
+    libfaadbin
+    libgsm
+    libmp3lame
+    libnut
+    libopencore_amrnb
+    libopencore_amrwb
+    libopenjpeg
+    libschroedinger
+    libspeex
+    libtheora
+    libvorbis
+    libx264
+    libxvid
+    lpc
+    mdct
+    memalign_hack
+    mlib
+    mpegaudio_hp
+    network
+    nonfree
+    pic
+    postproc
+    powerpc_perf
+    rdft
+    runtime_cpudetect
+    shared
+    small
+    static
+    swscale_alpha
+    vaapi
+    vdpau
+    version3
+    x11grab
+    zlib
+
+    
+    beosthreads
+    os2threads
+    pthreads
+    w32threads
+
+    cross_compile
+    debug
+    extra_warnings
+    logging
+    optimizations
+    stripping
+    yasm
+'
+CMDLINE_SET='
+    
+    bindir
+    datadir
+    incdir
+    libdir
+    mandir
+    prefix
+    shlibdir
+
+    arch
+    as
+    build_suffix
+    cc
+    cpu
+    cross_prefix
+    dep_cc
+    extra_version
+    host_cc
+    host_cflags
+    host_ldflags
+    host_libs
+    host_os
+    ld
+    logfile
+    nm
+    source_path
+    sysinclude
+    sysroot
+    target_exec
+    target_os
+    target_path
+'
+COMPONENT_LIST='
+    bsfs
+    decoders
+    demuxers
+    encoders
+    filters
+    hwaccels
+    indevs
+    muxers
+    outdevs
+    parsers
+    protocols
+'
+CONFIG_EXTRA='
+    gplv3
+    lgplv3
+'
+CONFIG_LIST='
+    
+    bsfs
+    decoders
+    demuxers
+    encoders
+    filters
+    hwaccels
+    indevs
+    muxers
+    outdevs
+    parsers
+    protocols
+
+    aandct
+    avfilter
+    avfilter_lavf
+    avisynth
+    beos_netserver
+    bzlib
+    doc
+    fastdiv
+    ffmpeg
+    ffplay
+    ffserver
+    fft
+    golomb
+    gpl
+    gprof
+    gray
+    hardcoded_tables
+    ipv6
+    libdc1394
+    libdirac
+    libfaac
+    libfaad
+    libfaadbin
+    libgsm
+    libmp3lame
+    libnut
+    libopencore_amrnb
+    libopencore_amrwb
+    libopenjpeg
+    libschroedinger
+    libspeex
+    libtheora
+    libvorbis
+    libx264
+    libxvid
+    lpc
+    mdct
+    memalign_hack
+    mlib
+    mpegaudio_hp
+    network
+    nonfree
+    pic
+    postproc
+    powerpc_perf
+    rdft
+    runtime_cpudetect
+    shared
+    small
+    static
+    swscale_alpha
+    vaapi
+    vdpau
+    version3
+    x11grab
+    zlib
+'
+DECODER_LIST='aasc_decoder
+amv_decoder
+asv1_decoder
+asv2_decoder
+avs_decoder
+bethsoftvid_decoder
+bfi_decoder
+bmp_decoder
+c93_decoder
+cavs_decoder
+cinepak_decoder
+cljr_decoder
+cscd_decoder
+cyuv_decoder
+dnxhd_decoder
+dpx_decoder
+dsicinvideo_decoder
+dvvideo_decoder
+dxa_decoder
+eacmv_decoder
+eamad_decoder
+eatgq_decoder
+eatgv_decoder
+eatqi_decoder
+eightbps_decoder
+eightsvx_exp_decoder
+eightsvx_fib_decoder
+escape124_decoder
+ffv1_decoder
+ffvhuff_decoder
+flashsv_decoder
+flic_decoder
+flv_decoder
+fourxm_decoder
+fraps_decoder
+frwu_decoder
+gif_decoder
+h261_decoder
+h263_decoder
+h263i_decoder
+h264_decoder
+h264_vdpau_decoder
+huffyuv_decoder
+idcin_decoder
+indeo2_decoder
+indeo3_decoder
+interplay_video_decoder
+jpegls_decoder
+kmvc_decoder
+loco_decoder
+mdec_decoder
+mimic_decoder
+mjpeg_decoder
+mjpegb_decoder
+mmvideo_decoder
+motionpixels_decoder
+mpeg_xvmc_decoder
+mpeg1video_decoder
+mpeg2video_decoder
+mpeg4_decoder
+mpeg4_vdpau_decoder
+mpegvideo_decoder
+mpeg_vdpau_decoder
+mpeg1_vdpau_decoder
+msmpeg4v1_decoder
+msmpeg4v2_decoder
+msmpeg4v3_decoder
+msrle_decoder
+msvideo1_decoder
+mszh_decoder
+nuv_decoder
+pam_decoder
+pbm_decoder
+pcx_decoder
+pgm_decoder
+pgmyuv_decoder
+png_decoder
+ppm_decoder
+ptx_decoder
+qdraw_decoder
+qpeg_decoder
+qtrle_decoder
+rawvideo_decoder
+rl2_decoder
+roq_decoder
+rpza_decoder
+rv10_decoder
+rv20_decoder
+rv30_decoder
+rv40_decoder
+sgi_decoder
+smacker_decoder
+smc_decoder
+snow_decoder
+sp5x_decoder
+sunrast_decoder
+svq1_decoder
+svq3_decoder
+targa_decoder
+theora_decoder
+thp_decoder
+tiertexseqvideo_decoder
+tiff_decoder
+tmv_decoder
+truemotion1_decoder
+truemotion2_decoder
+tscc_decoder
+txd_decoder
+ulti_decoder
+v210_decoder
+v210x_decoder
+vb_decoder
+vc1_decoder
+vc1_vdpau_decoder
+vcr1_decoder
+vmdvideo_decoder
+vmnc_decoder
+vp3_decoder
+vp5_decoder
+vp6_decoder
+vp6a_decoder
+vp6f_decoder
+vqa_decoder
+wmv1_decoder
+wmv2_decoder
+wmv3_decoder
+wmv3_vdpau_decoder
+wnv1_decoder
+xan_wc3_decoder
+xl_decoder
+zlib_decoder
+zmbv_decoder
+aac_decoder
+ac3_decoder
+alac_decoder
+als_decoder
+ape_decoder
+atrac1_decoder
+atrac3_decoder
+cook_decoder
+dca_decoder
+dsicinaudio_decoder
+eac3_decoder
+flac_decoder
+imc_decoder
+mace3_decoder
+mace6_decoder
+mlp_decoder
+mp1_decoder
+mp2_decoder
+mp3_decoder
+mp3adu_decoder
+mp3on4_decoder
+mpc7_decoder
+mpc8_decoder
+nellymoser_decoder
+qcelp_decoder
+qdm2_decoder
+ra_144_decoder
+ra_288_decoder
+shorten_decoder
+smackaud_decoder
+sonic_decoder
+truehd_decoder
+truespeech_decoder
+tta_decoder
+twinvq_decoder
+vmdaudio_decoder
+vorbis_decoder
+wavpack_decoder
+wmapro_decoder
+wmav1_decoder
+wmav2_decoder
+ws_snd1_decoder
+pcm_alaw_decoder
+pcm_bluray_decoder
+pcm_dvd_decoder
+pcm_f32be_decoder
+pcm_f32le_decoder
+pcm_f64be_decoder
+pcm_f64le_decoder
+pcm_mulaw_decoder
+pcm_s8_decoder
+pcm_s16be_decoder
+pcm_s16le_decoder
+pcm_s16le_planar_decoder
+pcm_s24be_decoder
+pcm_s24daud_decoder
+pcm_s24le_decoder
+pcm_s32be_decoder
+pcm_s32le_decoder
+pcm_u8_decoder
+pcm_u16be_decoder
+pcm_u16le_decoder
+pcm_u24be_decoder
+pcm_u24le_decoder
+pcm_u32be_decoder
+pcm_u32le_decoder
+pcm_zork_decoder
+interplay_dpcm_decoder
+roq_dpcm_decoder
+sol_dpcm_decoder
+xan_dpcm_decoder
+adpcm_4xm_decoder
+adpcm_adx_decoder
+adpcm_ct_decoder
+adpcm_ea_decoder
+adpcm_ea_maxis_xa_decoder
+adpcm_ea_r1_decoder
+adpcm_ea_r2_decoder
+adpcm_ea_r3_decoder
+adpcm_ea_xas_decoder
+adpcm_g726_decoder
+adpcm_ima_amv_decoder
+adpcm_ima_dk3_decoder
+adpcm_ima_dk4_decoder
+adpcm_ima_ea_eacs_decoder
+adpcm_ima_ea_sead_decoder
+adpcm_ima_iss_decoder
+adpcm_ima_qt_decoder
+adpcm_ima_smjpeg_decoder
+adpcm_ima_wav_decoder
+adpcm_ima_ws_decoder
+adpcm_ms_decoder
+adpcm_sbpro_2_decoder
+adpcm_sbpro_3_decoder
+adpcm_sbpro_4_decoder
+adpcm_swf_decoder
+adpcm_thp_decoder
+adpcm_xa_decoder
+adpcm_yamaha_decoder
+dvbsub_decoder
+dvdsub_decoder
+pgssub_decoder
+xsub_decoder
+libdirac_decoder
+libfaad_decoder
+libgsm_decoder
+libgsm_ms_decoder
+libopencore_amrnb_decoder
+libopencore_amrwb_decoder
+libopenjpeg_decoder
+libschroedinger_decoder
+libspeex_decoder'
+DEMUXER_LIST='aac_demuxer
+ac3_demuxer
+aea_demuxer
+aiff_demuxer
+amr_demuxer
+apc_demuxer
+ape_demuxer
+asf_demuxer
+ass_demuxer
+au_demuxer
+avi_demuxer
+avisynth_demuxer
+avs_demuxer
+bethsoftvid_demuxer
+bfi_demuxer
+c93_demuxer
+caf_demuxer
+cavsvideo_demuxer
+daud_demuxer
+dirac_demuxer
+dnxhd_demuxer
+dsicin_demuxer
+dts_demuxer
+dv_demuxer
+dxa_demuxer
+ea_demuxer
+ea_cdata_demuxer
+eac3_demuxer
+ffm_demuxer
+flac_demuxer
+flic_demuxer
+flv_demuxer
+fourxm_demuxer
+gsm_demuxer
+gxf_demuxer
+h261_demuxer
+h263_demuxer
+h264_demuxer
+idcin_demuxer
+iff_demuxer
+image2_demuxer
+image2pipe_demuxer
+ingenient_demuxer
+ipmovie_demuxer
+iss_demuxer
+lmlm4_demuxer
+m4v_demuxer
+matroska_demuxer
+mjpeg_demuxer
+mlp_demuxer
+mm_demuxer
+mmf_demuxer
+mov_demuxer
+mp3_demuxer
+mpc_demuxer
+mpc8_demuxer
+mpegps_demuxer
+mpegts_demuxer
+mpegtsraw_demuxer
+mpegvideo_demuxer
+msnwc_tcp_demuxer
+mtv_demuxer
+mvi_demuxer
+mxf_demuxer
+nc_demuxer
+nsv_demuxer
+nut_demuxer
+nuv_demuxer
+ogg_demuxer
+oma_demuxer
+pcm_alaw_demuxer
+pcm_mulaw_demuxer
+pcm_f64be_demuxer
+pcm_f64le_demuxer
+pcm_f32be_demuxer
+pcm_f32le_demuxer
+pcm_s32be_demuxer
+pcm_s32le_demuxer
+pcm_s24be_demuxer
+pcm_s24le_demuxer
+pcm_s16be_demuxer
+pcm_s16le_demuxer
+pcm_s8_demuxer
+pcm_u32be_demuxer
+pcm_u32le_demuxer
+pcm_u24be_demuxer
+pcm_u24le_demuxer
+pcm_u16be_demuxer
+pcm_u16le_demuxer
+pcm_u8_demuxer
+pva_demuxer
+qcp_demuxer
+r3d_demuxer
+rawvideo_demuxer
+rl2_demuxer
+rm_demuxer
+roq_demuxer
+rpl_demuxer
+rtsp_demuxer
+sdp_demuxer
+segafilm_demuxer
+shorten_demuxer
+siff_demuxer
+smacker_demuxer
+sol_demuxer
+sox_demuxer
+str_demuxer
+swf_demuxer
+thp_demuxer
+tiertexseq_demuxer
+tmv_demuxer
+truehd_demuxer
+tta_demuxer
+txd_demuxer
+vc1_demuxer
+vc1t_demuxer
+vmd_demuxer
+voc_demuxer
+vqf_demuxer
+w64_demuxer
+wav_demuxer
+wc3_demuxer
+wsaud_demuxer
+wsvqa_demuxer
+wv_demuxer
+xa_demuxer
+yuv4mpegpipe_demuxer
+libnut_demuxer'
+DEPEND_CMD='$(DEPCC) $(DEPFLAGS) $< | sed -e "/^\#.*/d" -e "s,^[[:space:]]*$(*F)\\.o,$(@D)/$(*F).o," > $(@:.o=.d)'
+DEPFLAGS='$(CPPFLAGS) $(CFLAGS) -MM'
+DIRSTACK=()
+DISABLE_DEXPREOPT=true
+E1=0
+E2=1
+ENCODER_LIST='asv1_encoder
+asv2_encoder
+bmp_encoder
+dnxhd_encoder
+dvvideo_encoder
+ffv1_encoder
+ffvhuff_encoder
+flashsv_encoder
+flv_encoder
+gif_encoder
+h261_encoder
+h263_encoder
+h263p_encoder
+huffyuv_encoder
+jpegls_encoder
+ljpeg_encoder
+mjpeg_encoder
+mpeg1video_encoder
+mpeg2video_encoder
+mpeg4_encoder
+msmpeg4v1_encoder
+msmpeg4v2_encoder
+msmpeg4v3_encoder
+pam_encoder
+pbm_encoder
+pcx_encoder
+pgm_encoder
+pgmyuv_encoder
+png_encoder
+ppm_encoder
+qtrle_encoder
+rawvideo_encoder
+roq_encoder
+rv10_encoder
+rv20_encoder
+sgi_encoder
+snow_encoder
+svq1_encoder
+targa_encoder
+tiff_encoder
+v210_encoder
+wmv1_encoder
+wmv2_encoder
+zlib_encoder
+zmbv_encoder
+aac_encoder
+ac3_encoder
+alac_encoder
+flac_encoder
+mp2_encoder
+nellymoser_encoder
+sonic_encoder
+sonic_ls_encoder
+vorbis_encoder
+wmav1_encoder
+wmav2_encoder
+pcm_alaw_encoder
+pcm_f32be_encoder
+pcm_f32le_encoder
+pcm_f64be_encoder
+pcm_f64le_encoder
+pcm_mulaw_encoder
+pcm_s8_encoder
+pcm_s16be_encoder
+pcm_s16le_encoder
+pcm_s24be_encoder
+pcm_s24daud_encoder
+pcm_s24le_encoder
+pcm_s32be_encoder
+pcm_s32le_encoder
+pcm_u8_encoder
+pcm_u16be_encoder
+pcm_u16le_encoder
+pcm_u24be_encoder
+pcm_u24le_encoder
+pcm_u32be_encoder
+pcm_u32le_encoder
+pcm_zork_encoder
+roq_dpcm_encoder
+adpcm_adx_encoder
+adpcm_g726_encoder
+adpcm_ima_qt_encoder
+adpcm_ima_wav_encoder
+adpcm_ms_encoder
+adpcm_swf_encoder
+adpcm_yamaha_encoder
+dvbsub_encoder
+dvdsub_encoder
+xsub_encoder
+libdirac_encoder
+libfaac_encoder
+libgsm_encoder
+libgsm_ms_encoder
+libmp3lame_encoder
+libopencore_amrnb_encoder
+libschroedinger_encoder
+libtheora_encoder
+libvorbis_encoder
+libx264_encoder
+libxvid_encoder'
+EUID=1005
+FFMPEG_CONFIGURATION='--cc=/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-gcc --arch=arm --enable-cross-compile --cross-prefix=/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi- --prefix=/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/target/usr --incdir=/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/build/libplayer/amadec/../../../staging/usr/include --extra-ldflags=L/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/target/usr/lib --disable-static --enable-shared --disable-ffmpeg --disable-ffplay --disable-ffserver --disable-doc --disable-mpegaudio-hp --disable-encoders --disable-decoder=h264 --disable-muxers --disable-filters --disable-altivec --disable-amd3dnow --disable-amd3dnowext --disable-mmx --disable-mmx2 --disable-sse --disable-ssse3 --disable-armv5te --disable-armv6 --disable-armv6t2 --disable-armvfp --disable-iwmmxt --disable-mmi --disable-vis --disable-yasm --enable-pic'
+FFSERVERLDFLAGS=-Wl,-E
+FILTER_LIST='crop_filter
+format_filter
+noformat_filter
+null_filter
+scale_filter
+slicify_filter
+vflip_filter'
+FULLNAME='$(NAME)$(BUILDSUF)'
+GROUPS=()
+HAVE_LIST='
+    
+    altivec
+    amd3dnow
+    amd3dnowext
+    armv5te
+    armv6
+    armv6t2
+    armvfp
+    iwmmxt
+    mmi
+    mmx
+    mmx2
+    neon
+    ppc4xx
+    sse
+    ssse3
+    vis
+
+    
+    beosthreads
+    os2threads
+    pthreads
+    w32threads
+
+    alsa_asoundlib_h
+    altivec_h
+    arpa_inet_h
+    attribute_packed
+    bigendian
+    bswap
+    closesocket
+    cmov
+    conio_h
+    dcbzl
+    dev_bktr_ioctl_bt848_h
+    dev_bktr_ioctl_meteor_h
+    dev_ic_bt8xx_h
+    dev_video_meteor_ioctl_meteor_h
+    dev_video_bktr_ioctl_bt848_h
+    dlfcn_h
+    dlopen
+    dos_paths
+    ebp_available
+    ebx_available
+    fast_64bit
+    fast_cmov
+    fast_unaligned
+    fork
+    gethrtime
+    GetProcessTimes
+    getrusage
+    inet_aton
+    inline_asm
+    isatty
+    ldbrx
+    libdc1394_1
+    libdc1394_2
+    llrint
+    log2
+    loongson
+    lrint
+    lrintf
+    lzo1x_999_compress
+    machine_ioctl_bt848_h
+    machine_ioctl_meteor_h
+    malloc_h
+    memalign
+    mkstemp
+    pld
+    posix_memalign
+    round
+    roundf
+    sdl
+    sdl_video_size
+    setmode
+    socklen_t
+    soundcard_h
+    poll_h
+    sys_mman_h
+    sys_resource_h
+    sys_select_h
+    sys_soundcard_h
+    sys_videoio_h
+    ten_operands
+    termios_h
+    threads
+    truncf
+    vfp_args
+    VirtualAlloc
+    winsock2_h
+    xform_asm
+    yasm
+'
+HISTCONTROL=ignoreboth
+HOME=/home/gongping
+HOSTNAME=amlogicbj-desktop
+HOSTTYPE=i486
+HWACCEL_LIST='h263_vaapi_hwaccel
+mpeg2_vaapi_hwaccel
+mpeg4_vaapi_hwaccel
+vc1_vaapi_hwaccel
+wmv3_vaapi_hwaccel'
+IFS=' 	
+'
+INDEV_LIST='alsa_indev
+audio_beos_indev
+bktr_indev
+dv1394_indev
+jack_indev
+oss_indev
+v4l2_indev
+v4l_indev
+vfwcap_indev
+x11_grab_device_indev
+libdc1394_indev'
+JAVA_HOME=/usr/lib/jvm/java-1.5.0-sun
+LANG=en_US.UTF-8
+LC_ALL=C
+LDFLAGS=' L/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/target/usr/lib'
+LESSCLOSE='/usr/bin/lesspipe %s %s'
+LESSOPEN='| /usr/bin/lesspipe %s'
+LIBNAME='$(LIBPREF)$(FULLNAME)$(LIBSUF)'
+LIBPREF=lib
+LIBSUF=.a
+LIB_INSTALL_EXTRA_CMD='$(RANLIB) "$(LIBDIR)/$(LIBNAME)"'
+LOGNAME=gongping
+LS_COLORS='no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.svgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.lzma=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.rar=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:'
+MACHTYPE=i486-pc-linux-gnu
+MAIL=/var/mail/gongping
+MUXER_LIST='ac3_muxer
+adts_muxer
+aiff_muxer
+amr_muxer
+asf_muxer
+ass_muxer
+asf_stream_muxer
+au_muxer
+avi_muxer
+avm2_muxer
+crc_muxer
+daud_muxer
+dirac_muxer
+dnxhd_muxer
+dts_muxer
+dv_muxer
+eac3_muxer
+ffm_muxer
+flac_muxer
+flv_muxer
+framecrc_muxer
+gif_muxer
+gxf_muxer
+h261_muxer
+h263_muxer
+h264_muxer
+image2_muxer
+image2pipe_muxer
+ipod_muxer
+m4v_muxer
+matroska_muxer
+matroska_audio_muxer
+mjpeg_muxer
+mlp_muxer
+mmf_muxer
+mov_muxer
+mp2_muxer
+mp3_muxer
+mp4_muxer
+mpeg1system_muxer
+mpeg1vcd_muxer
+mpeg1video_muxer
+mpeg2dvd_muxer
+mpeg2svcd_muxer
+mpeg2video_muxer
+mpeg2vob_muxer
+mpegts_muxer
+mpjpeg_muxer
+mxf_muxer
+mxf_d10_muxer
+null_muxer
+nut_muxer
+ogg_muxer
+pcm_alaw_muxer
+pcm_mulaw_muxer
+pcm_f64be_muxer
+pcm_f64le_muxer
+pcm_f32be_muxer
+pcm_f32le_muxer
+pcm_s32be_muxer
+pcm_s32le_muxer
+pcm_s24be_muxer
+pcm_s24le_muxer
+pcm_s16be_muxer
+pcm_s16le_muxer
+pcm_s8_muxer
+pcm_u32be_muxer
+pcm_u32le_muxer
+pcm_u24be_muxer
+pcm_u24le_muxer
+pcm_u16be_muxer
+pcm_u16le_muxer
+pcm_u8_muxer
+psp_muxer
+rawvideo_muxer
+rm_muxer
+roq_muxer
+rtp_muxer
+sox_muxer
+spdif_muxer
+swf_muxer
+tg2_muxer
+tgp_muxer
+truehd_muxer
+vc1t_muxer
+voc_muxer
+wav_muxer
+yuv4mpegpipe_muxer
+libnut_muxer'
+OPROFILE_EVENTS_DIR=/home/gongping/mydroid/prebuilt/linux-x86/oprofile
+OPTERR=1
+OPTIND=1
+OSTYPE=linux-gnu
+OUT=/home/gongping/mydroid/out/target/product/m1ref
+OUTDEV_LIST='alsa_outdev
+audio_beos_outdev
+oss_outdev'
+PARSER_LIST='aac_parser
+ac3_parser
+cavsvideo_parser
+dca_parser
+dirac_parser
+dnxhd_parser
+dvbsub_parser
+dvdsub_parser
+h261_parser
+h263_parser
+h264_parser
+mjpeg_parser
+mlp_parser
+mpeg4video_parser
+mpegaudio_parser
+mpegvideo_parser
+pnm_parser
+vc1_parser
+vp3_parser'
+PATH=/home/gongping/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games::/opt/gnutools/arc2.2-p4/elf32-4.2.1/bin:/opt/gnutools/arc2.2-p4/uclibc-4.2.1/bin::/opt/CodeSourcery/Sourcery_G++_Lite/bin::/home/gongping/mydroid/out/host/linux-x86/bin:/home/gongping/mydroid/prebuilt/linux-x86/toolchain/arm-eabi-4.4.0/bin:/home/gongping/mydroid/development/emulator/qtools:/home/gongping/mydroid/prebuilt/linux-x86/toolchain/arm-eabi-4.4.0/bin:/home/gongping/mydroid/prebuilt/linux-x86/toolchain/arm-eabi-4.4.0/bin
+PATHS_LIST='
+    bindir
+    datadir
+    incdir
+    libdir
+    mandir
+    prefix
+    shlibdir
+'
+PIPESTATUS=([0]="0")
+POSIXLY_CORRECT=y
+PPID=27382
+PROMPT_COMMAND='echo -ne "\033]0;[m1ref-eng] gongping@amlogicbj-desktop: /home/gongping/mydroid\007"'
+PROTOCOL_LIST='file_protocol
+gopher_protocol
+http_protocol
+pipe_protocol
+rtmp_protocol
+rtp_protocol
+tcp_protocol
+udp_protocol
+shttp_protocol'
+PS4='+ '
+PWD=/home/gongping/Project_ARMLinux/arm_ref/buildroot-2010.05/package/multimedia/libplayer/src/amffmpeg
+SHELL=/bin/bash
+SHELLOPTS=braceexpand:hashall:interactive-comments:posix
+SHFLAGS='-shared -Wl,-soname,$$(@F)'
+SHLVL=3
+SLIBNAME='$(SLIBPREF)$(FULLNAME)$(SLIBSUF)'
+SLIBNAME_WITH_MAJOR='$(SLIBNAME).$(LIBMAJOR)'
+SLIBNAME_WITH_VERSION='$(SLIBNAME).$(LIBVERSION)'
+SLIBPREF=lib
+SLIBSUF=.so
+SSH_CLIENT='10.68.8.220 1792 22'
+SSH_CONNECTION='10.68.8.220 1792 10.68.11.58 22'
+SSH_TTY=/dev/pts/3
+TARGET_BUILD_APPS=
+TARGET_BUILD_TYPE=release
+TARGET_BUILD_VARIANT=eng
+TARGET_PRODUCT=m1ref
+TARGET_SIMULATOR=false
+TERM=xterm
+THREADS_LIST='
+    beosthreads
+    os2threads
+    pthreads
+    w32threads
+'
+UID=1005
+USER=gongping
+XDG_SESSION_COOKIE=1e987b27177dcac0c53cd7314a0843d5-1303698302.279387-731814461
+_='# ./configure --cc=/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-gcc --arch=arm --enable-cross-compile --cross-prefix=/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi- --prefix=/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/target/usr --incdir=/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/build/libplayer/amadec/../../../staging/usr/include --extra-ldflags=L/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/target/usr/lib --disable-static --enable-shared --disable-ffmpeg --disable-ffplay --disable-ffserver --disable-doc --disable-mpegaudio-hp --disable-encoders --disable-decoder=h264 --disable-muxers --disable-filters --disable-altivec --disable-amd3dnow --disable-amd3dnowext --disable-mmx --disable-mmx2 --disable-sse --disable-ssse3 --disable-armv5te --disable-armv6 --disable-armv6t2 --disable-armvfp --disable-iwmmxt --disable-mmi --disable-vis --disable-yasm --enable-pic'
+aac_adtstoasc_bsf=yes
+aac_decoder=yes
+aac_decoder_select='fft mdct'
+aac_demuxer=yes
+aac_encoder_select='fft mdct'
+aac_parser=yes
+aasc_decoder=yes
+ac3_decoder=yes
+ac3_decoder_select='fft mdct'
+ac3_demuxer=yes
+ac3_demuxer_deps=ac3_parser
+ac3_parser=yes
+action=enable
+adpcm_4xm_decoder=yes
+adpcm_adx_decoder=yes
+adpcm_ct_decoder=yes
+adpcm_ea_decoder=yes
+adpcm_ea_maxis_xa_decoder=yes
+adpcm_ea_r1_decoder=yes
+adpcm_ea_r2_decoder=yes
+adpcm_ea_r3_decoder=yes
+adpcm_ea_xas_decoder=yes
+adpcm_g726_decoder=yes
+adpcm_ima_amv_decoder=yes
+adpcm_ima_dk3_decoder=yes
+adpcm_ima_dk4_decoder=yes
+adpcm_ima_ea_eacs_decoder=yes
+adpcm_ima_ea_sead_decoder=yes
+adpcm_ima_iss_decoder=yes
+adpcm_ima_qt_decoder=yes
+adpcm_ima_smjpeg_decoder=yes
+adpcm_ima_wav_decoder=yes
+adpcm_ima_ws_decoder=yes
+adpcm_ms_decoder=yes
+adpcm_sbpro_2_decoder=yes
+adpcm_sbpro_3_decoder=yes
+adpcm_sbpro_4_decoder=yes
+adpcm_swf_decoder=yes
+adpcm_thp_decoder=yes
+adpcm_xa_decoder=yes
+adpcm_yamaha_decoder=yes
+aea_demuxer=yes
+aiff_demuxer=yes
+alac_decoder=yes
+alac_encoder_select=lpc
+als_decoder=yes
+alsa_indev=yes
+alsa_indev_deps='alsa_asoundlib_h snd_pcm_htimestamp'
+alsa_indev_extralibs=-lasound
+alsa_outdev=yes
+alsa_outdev_deps=alsa_asoundlib_h
+alsa_outdev_extralibs=-lasound
+altivec=no
+altivec_deps=ppc
+amd3dnow=no
+amd3dnow_deps=mmx
+amd3dnowext=no
+amd3dnowext_deps=amd3dnow
+amr_demuxer=yes
+amv_decoder=yes
+apc_demuxer=yes
+ape_decoder=yes
+ape_demuxer=yes
+ar=ar
+arch=arm
+armv5te=no
+armv5te_deps=arm
+armv6=no
+armv6_deps=arm
+armv6t2=no
+armv6t2_deps=arm
+armvfp=no
+armvfp_deps=arm
+asf_demuxer=yes
+asf_stream_muxer_select=asf_muxer
+ass_demuxer=yes
+asv1_decoder=yes
+asv2_decoder=yes
+atrac1_decoder=yes
+atrac3_decoder=yes
+atrac3_decoder_select='fft mdct'
+au_demuxer=yes
+audio_beos_indev=yes
+audio_beos_indev_deps=audio_beos
+audio_beos_indev_extralibs='-lmedia -lbe'
+audio_beos_outdev=yes
+audio_beos_outdev_deps=audio_beos
+audio_beos_outdev_extralibs='-lmedia -lbe'
+avi_demuxer=yes
+avisynth_demuxer=yes
+avisynth_demuxer_deps=avisynth
+avs_decoder=yes
+avs_demuxer=yes
+bethsoftvid_decoder=yes
+bethsoftvid_demuxer=yes
+bfi_decoder=yes
+bfi_demuxer=yes
+bindir_default='${prefix}/bin'
+bktr_indev=yes
+bktr_indev_deps_any='dev_bktr_ioctl_bt848_h machine_ioctl_bt848_h dev_video_bktr_ioctl_bt848_h dev_ic_bt8xx_h'
+bmp_decoder=yes
+c93_decoder=yes
+c93_demuxer=yes
+caf_demuxer=yes
+cavs_decoder=yes
+cavs_decoder_select=golomb
+cavsvideo_demuxer=yes
+cavsvideo_parser=yes
+cc=/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-gcc
+cc_default=gcc
+cc_version='"unknown"'
+cinepak_decoder=yes
+cljr_decoder=yes
+cook_decoder=yes
+cook_decoder_select='fft mdct'
+cpu=generic
+cross_compile=yes
+cross_prefix=/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-
+cscd_decoder=yes
+cscd_decoder_suggest=zlib
+cyuv_decoder=yes
+datadir_default='${prefix}/share/ffmpeg'
+daud_demuxer=yes
+dca_decoder=yes
+dca_decoder_select='fft mdct'
+dca_parser=yes
+debug=yes
+dirac_demuxer=yes
+dirac_demuxer_deps=dirac_parser
+dirac_parser=yes
+dnxhd_decoder=yes
+dnxhd_demuxer=yes
+dnxhd_encoder_select=aandct
+dnxhd_parser=yes
+doc=no
+doc_deps=texi2html
+dpx_decoder=yes
+dsicin_demuxer=yes
+dsicinaudio_decoder=yes
+dsicinvideo_decoder=yes
+dts_demuxer=yes
+dump_extradata_bsf=yes
+dv1394_indev=yes
+dv1394_indev_deps='dv1394 dv_demuxer'
+dv_demuxer=yes
+dvbsub_decoder=yes
+dvbsub_parser=yes
+dvdsub_decoder=yes
+dvdsub_parser=yes
+dvvideo_decoder=yes
+dxa_decoder=yes
+dxa_decoder_select=zlib
+dxa_demuxer=yes
+ea_cdata_demuxer=yes
+ea_demuxer=yes
+eac3_decoder=yes
+eac3_decoder_select=ac3_decoder
+eac3_demuxer=yes
+eacmv_decoder=yes
+eamad_decoder=yes
+eamad_decoder_select=aandct
+eatgq_decoder=yes
+eatgq_decoder_select=aandct
+eatgv_decoder=yes
+eatqi_decoder=yes
+eatqi_decoder_select=aandct
+eightbps_decoder=yes
+eightsvx_exp_decoder=yes
+eightsvx_fib_decoder=yes
+escape124_decoder=yes
+fastdiv=yes
+ffm_demuxer=yes
+ffmpeg=no
+ffplay=no
+ffplay_deps=sdl
+ffserver=no
+ffserver_deps='ffm_muxer rtp_protocol rtsp_demuxer'
+ffserver_extralibs='$ldl'
+ffv1_decoder=yes
+ffv1_decoder_select=golomb
+ffvhuff_decoder=yes
+file_protocol=yes
+flac_decoder=yes
+flac_decoder_select=golomb
+flac_demuxer=yes
+flac_encoder_select='golomb lpc'
+flashsv_decoder=yes
+flashsv_decoder_select=zlib
+flashsv_encoder_select=zlib
+flic_decoder=yes
+flic_demuxer=yes
+flv_decoder=yes
+flv_demuxer=yes
+flv_encoder_select=h263_encoder
+fourxm_decoder=yes
+fourxm_demuxer=yes
+fraps_decoder=yes
+frwu_decoder=yes
+gif_decoder=yes
+gopher_protocol=yes
+gopher_protocol_deps=network
+gsm_demuxer=yes
+gxf_demuxer=yes
+h261_decoder=yes
+h261_demuxer=yes
+h261_encoder_select=aandct
+h261_parser=yes
+h263_decoder=yes
+h263_demuxer=yes
+h263_encoder_select=aandct
+h263_parser=yes
+h263_vaapi_hwaccel=yes
+h263_vaapi_hwaccel_deps=va_va_h
+h263_vaapi_hwaccel_select='vaapi h263_decoder'
+h263i_decoder=yes
+h263p_encoder_select=h263_encoder
+h264_decoder=no
+h264_decoder_select=golomb
+h264_demuxer=yes
+h264_mp4toannexb_bsf=yes
+h264_parser=yes
+h264_parser_select=golomb
+h264_vaapi_hwaccel_deps=va_va_h
+h264_vaapi_hwaccel_select=vaapi
+h264_vdpau_decoder=yes
+h264_vdpau_decoder_deps='vdpau_vdpau_h vdpau_vdpau_x11_h'
+h264_vdpau_decoder_select='vdpau h264_decoder'
+host_cc_default=gcc
+host_cflags='-D_ISOC99_SOURCE -D_POSIX_C_SOURCE=200112 -O3 -g -Wall'
+host_libs=-lm
+host_os=linux
+http_protocol=yes
+http_protocol_deps=network
+huffyuv_decoder=yes
+idcin_decoder=yes
+idcin_demuxer=yes
+iff_demuxer=yes
+image2_demuxer=yes
+image2pipe_demuxer=yes
+imc_decoder=yes
+imc_decoder_select='fft mdct'
+imx_dump_header_bsf=yes
+incdir=/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/build/libplayer/amadec/../../../staging/usr/include
+incdir_default='${prefix}/include'
+indeo2_decoder=yes
+indeo3_decoder=yes
+ingenient_demuxer=yes
+inline_asm_deps='!tms470'
+interplay_dpcm_decoder=yes
+interplay_video_decoder=yes
+ipmovie_demuxer=yes
+ipod_muxer_select=mov_muxer
+ipv6=yes
+iss_demuxer=yes
+iwmmxt=no
+iwmmxt_deps=arm
+jack_indev=yes
+jack_indev_deps=jack_jack_h
+jack_indev_extralibs=-ljack
+jpegls_decoder=yes
+jpegls_decoder_select=golomb
+jpegls_encoder_select=golomb
+kmvc_decoder=yes
+l=
+libdc1394_indev=yes
+libdc1394_indev_deps=libdc1394
+libdir_default='${prefix}/lib'
+libdirac_decoder=yes
+libdirac_decoder_deps='libdirac !libschroedinger'
+libdirac_encoder_deps=libdirac
+libfaac_encoder_deps=libfaac
+libfaad_decoder=yes
+libfaad_decoder_deps=libfaad
+libfaadbin_decoder_extralibs='$ldl'
+libgsm_decoder=yes
+libgsm_decoder_deps=libgsm
+libgsm_encoder_deps=libgsm
+libgsm_ms_decoder=yes
+libgsm_ms_decoder_deps=libgsm
+libgsm_ms_encoder_deps=libgsm
+libmp3lame_encoder_deps=libmp3lame
+libnut_demuxer=yes
+libnut_demuxer_deps=libnut
+libnut_muxer_deps=libnut
+libopencore_amrnb_decoder=yes
+libopencore_amrnb_decoder_deps=libopencore_amrnb
+libopencore_amrnb_encoder_deps=libopencore_amrnb
+libopencore_amrwb_decoder=yes
+libopencore_amrwb_decoder_deps=libopencore_amrwb
+libopenjpeg_decoder=yes
+libopenjpeg_decoder_deps=libopenjpeg
+libschroedinger_decoder=yes
+libschroedinger_decoder_deps=libschroedinger
+libschroedinger_encoder_deps=libschroedinger
+libspeex_decoder=yes
+libspeex_decoder_deps=libspeex
+libtheora_encoder_deps=libtheora
+libvorbis_encoder_deps=libvorbis
+libx264_encoder_deps=libx264
+libxvid_encoder_deps=libxvid
+list='aasc_decoder
+amv_decoder
+asv1_decoder
+asv2_decoder
+avs_decoder
+bethsoftvid_decoder
+bfi_decoder
+bmp_decoder
+c93_decoder
+cavs_decoder
+cinepak_decoder
+cljr_decoder
+cscd_decoder
+cyuv_decoder
+dnxhd_decoder
+dpx_decoder
+dsicinvideo_decoder
+dvvideo_decoder
+dxa_decoder
+eacmv_decoder
+eamad_decoder
+eatgq_decoder
+eatgv_decoder
+eatqi_decoder
+eightbps_decoder
+eightsvx_exp_decoder
+eightsvx_fib_decoder
+escape124_decoder
+ffv1_decoder
+ffvhuff_decoder
+flashsv_decoder
+flic_decoder
+flv_decoder
+fourxm_decoder
+fraps_decoder
+frwu_decoder
+gif_decoder
+h261_decoder
+h263_decoder
+h263i_decoder
+h264_decoder
+h264_vdpau_decoder
+huffyuv_decoder
+idcin_decoder
+indeo2_decoder
+indeo3_decoder
+interplay_video_decoder
+jpegls_decoder
+kmvc_decoder
+loco_decoder
+mdec_decoder
+mimic_decoder
+mjpeg_decoder
+mjpegb_decoder
+mmvideo_decoder
+motionpixels_decoder
+mpeg_xvmc_decoder
+mpeg1video_decoder
+mpeg2video_decoder
+mpeg4_decoder
+mpeg4_vdpau_decoder
+mpegvideo_decoder
+mpeg_vdpau_decoder
+mpeg1_vdpau_decoder
+msmpeg4v1_decoder
+msmpeg4v2_decoder
+msmpeg4v3_decoder
+msrle_decoder
+msvideo1_decoder
+mszh_decoder
+nuv_decoder
+pam_decoder
+pbm_decoder
+pcx_decoder
+pgm_decoder
+pgmyuv_decoder
+png_decoder
+ppm_decoder
+ptx_decoder
+qdraw_decoder
+qpeg_decoder
+qtrle_decoder
+rawvideo_decoder
+rl2_decoder
+roq_decoder
+rpza_decoder
+rv10_decoder
+rv20_decoder
+rv30_decoder
+rv40_decoder
+sgi_decoder
+smacker_decoder
+smc_decoder
+snow_decoder
+sp5x_decoder
+sunrast_decoder
+svq1_decoder
+svq3_decoder
+targa_decoder
+theora_decoder
+thp_decoder
+tiertexseqvideo_decoder
+tiff_decoder
+tmv_decoder
+truemotion1_decoder
+truemotion2_decoder
+tscc_decoder
+txd_decoder
+ulti_decoder
+v210_decoder
+v210x_decoder
+vb_decoder
+vc1_decoder
+vc1_vdpau_decoder
+vcr1_decoder
+vmdvideo_decoder
+vmnc_decoder
+vp3_decoder
+vp5_decoder
+vp6_decoder
+vp6a_decoder
+vp6f_decoder
+vqa_decoder
+wmv1_decoder
+wmv2_decoder
+wmv3_decoder
+wmv3_vdpau_decoder
+wnv1_decoder
+xan_wc3_decoder
+xl_decoder
+zlib_decoder
+zmbv_decoder
+aac_decoder
+ac3_decoder
+alac_decoder
+als_decoder
+ape_decoder
+atrac1_decoder
+atrac3_decoder
+cook_decoder
+dca_decoder
+dsicinaudio_decoder
+eac3_decoder
+flac_decoder
+imc_decoder
+mace3_decoder
+mace6_decoder
+mlp_decoder
+mp1_decoder
+mp2_decoder
+mp3_decoder
+mp3adu_decoder
+mp3on4_decoder
+mpc7_decoder
+mpc8_decoder
+nellymoser_decoder
+qcelp_decoder
+qdm2_decoder
+ra_144_decoder
+ra_288_decoder
+shorten_decoder
+smackaud_decoder
+sonic_decoder
+truehd_decoder
+truespeech_decoder
+tta_decoder
+twinvq_decoder
+vmdaudio_decoder
+vorbis_decoder
+wavpack_decoder
+wmapro_decoder
+wmav1_decoder
+wmav2_decoder
+ws_snd1_decoder
+pcm_alaw_decoder
+pcm_bluray_decoder
+pcm_dvd_decoder
+pcm_f32be_decoder
+pcm_f32le_decoder
+pcm_f64be_decoder
+pcm_f64le_decoder
+pcm_mulaw_decoder
+pcm_s8_decoder
+pcm_s16be_decoder
+pcm_s16le_decoder
+pcm_s16le_planar_decoder
+pcm_s24be_decoder
+pcm_s24daud_decoder
+pcm_s24le_decoder
+pcm_s32be_decoder
+pcm_s32le_decoder
+pcm_u8_decoder
+pcm_u16be_decoder
+pcm_u16le_decoder
+pcm_u24be_decoder
+pcm_u24le_decoder
+pcm_u32be_decoder
+pcm_u32le_decoder
+pcm_zork_decoder
+interplay_dpcm_decoder
+roq_dpcm_decoder
+sol_dpcm_decoder
+xan_dpcm_decoder
+adpcm_4xm_decoder
+adpcm_adx_decoder
+adpcm_ct_decoder
+adpcm_ea_decoder
+adpcm_ea_maxis_xa_decoder
+adpcm_ea_r1_decoder
+adpcm_ea_r2_decoder
+adpcm_ea_r3_decoder
+adpcm_ea_xas_decoder
+adpcm_g726_decoder
+adpcm_ima_amv_decoder
+adpcm_ima_dk3_decoder
+adpcm_ima_dk4_decoder
+adpcm_ima_ea_eacs_decoder
+adpcm_ima_ea_sead_decoder
+adpcm_ima_iss_decoder
+adpcm_ima_qt_decoder
+adpcm_ima_smjpeg_decoder
+adpcm_ima_wav_decoder
+adpcm_ima_ws_decoder
+adpcm_ms_decoder
+adpcm_sbpro_2_decoder
+adpcm_sbpro_3_decoder
+adpcm_sbpro_4_decoder
+adpcm_swf_decoder
+adpcm_thp_decoder
+adpcm_xa_decoder
+adpcm_yamaha_decoder
+dvbsub_decoder
+dvdsub_decoder
+pgssub_decoder
+xsub_decoder
+libdirac_decoder
+libfaad_decoder
+libgsm_decoder
+libgsm_ms_decoder
+libopencore_amrnb_decoder
+libopencore_amrwb_decoder
+libopenjpeg_decoder
+libschroedinger_decoder
+libspeex_decoder'
+ljpeg_encoder_select=aandct
+lmlm4_demuxer=yes
+ln_s='ln -sf'
+loco_decoder=yes
+loco_decoder_select=golomb
+logfile=config.err
+m4v_demuxer=yes
+mace3_decoder=yes
+mace6_decoder=yes
+mandir_default='${prefix}/share/man'
+matroska_audio_muxer_select=matroska_muxer
+matroska_demuxer=yes
+matroska_demuxer_suggest='zlib bzlib'
+mdec_decoder=yes
+mimic_decoder=yes
+mjpeg_decoder=yes
+mjpeg_demuxer=yes
+mjpeg_encoder_select=aandct
+mjpeg_parser=yes
+mjpega_dump_header_bsf=yes
+mjpegb_decoder=yes
+mlp_decoder=yes
+mlp_demuxer=yes
+mlp_parser=yes
+mm_demuxer=yes
+mmf_demuxer=yes
+mmi=no
+mmi_deps=mips
+mmvideo_decoder=yes
+mmx=no
+mmx2=no
+mmx2_deps=mmx
+mmx_deps=x86
+motionpixels_decoder=yes
+mov2textsub_bsf=yes
+mov_demuxer=yes
+mov_demuxer_suggest=zlib
+movie_filter_deps=avfilter_lavf
+mp1_decoder=yes
+mp2_decoder=yes
+mp3_decoder=yes
+mp3_demuxer=yes
+mp3_demuxer_deps=mpegaudio_parser
+mp3_header_compress_bsf=yes
+mp3_header_decompress_bsf=yes
+mp3adu_decoder=yes
+mp3on4_decoder=yes
+mp4_muxer_select=mov_muxer
+mpc7_decoder=yes
+mpc8_decoder=yes
+mpc8_demuxer=yes
+mpc_demuxer=yes
+mpeg1_vdpau_decoder=yes
+mpeg1_vdpau_decoder_deps='vdpau_vdpau_h vdpau_vdpau_x11_h'
+mpeg1_vdpau_decoder_select='vdpau mpeg1video_decoder'
+mpeg1video_decoder=yes
+mpeg1video_encoder_select=aandct
+mpeg2_vaapi_hwaccel=yes
+mpeg2_vaapi_hwaccel_deps=va_va_h
+mpeg2_vaapi_hwaccel_select='vaapi mpeg2video_decoder'
+mpeg2video_decoder=yes
+mpeg2video_encoder_select=aandct
+mpeg4_decoder=yes
+mpeg4_encoder_select=h263_encoder
+mpeg4_vaapi_hwaccel=yes
+mpeg4_vaapi_hwaccel_deps=va_va_h
+mpeg4_vaapi_hwaccel_select='vaapi mpeg4_decoder'
+mpeg4_vdpau_decoder=yes
+mpeg4_vdpau_decoder_deps='vdpau_vdpau_h vdpau_vdpau_x11_h'
+mpeg4_vdpau_decoder_select='vdpau mpeg4_decoder'
+mpeg4video_parser=yes
+mpeg_vdpau_decoder=yes
+mpeg_vdpau_decoder_deps='vdpau_vdpau_h vdpau_vdpau_x11_h'
+mpeg_vdpau_decoder_select='vdpau mpegvideo_decoder'
+mpeg_xvmc_decoder=yes
+mpeg_xvmc_decoder_deps=X11_extensions_XvMClib_h
+mpeg_xvmc_decoder_select=mpegvideo_decoder
+mpegaudio_hp=no
+mpegaudio_parser=yes
+mpegps_demuxer=yes
+mpegts_demuxer=yes
+mpegtsraw_demuxer=yes
+mpegtsraw_demuxer_select=mpegts_demuxer
+mpegvideo_decoder=yes
+mpegvideo_demuxer=yes
+mpegvideo_parser=yes
+msmpeg4v1_decoder=yes
+msmpeg4v1_encoder_select=h263_encoder
+msmpeg4v2_decoder=yes
+msmpeg4v2_encoder_select=h263_encoder
+msmpeg4v3_decoder=yes
+msmpeg4v3_encoder_select=h263_encoder
+msnwc_tcp_demuxer=yes
+msrle_decoder=yes
+msvideo1_decoder=yes
+mszh_decoder=yes
+mtv_demuxer=yes
+mvi_demuxer=yes
+mxf_d10_muxer_select=mxf_muxer
+mxf_demuxer=yes
+name=h264_decoder
+nc_demuxer=yes
+need_memalign='altivec neon sse'
+nellymoser_decoder=yes
+nellymoser_decoder_select='fft mdct'
+nellymoser_encoder_select='fft mdct'
+neon=yes
+neon_deps=arm
+network=yes
+nm_default=nm
+noise_bsf=yes
+nsv_demuxer=yes
+nut_demuxer=yes
+nuv_decoder=yes
+nuv_demuxer=yes
+objformat=elf
+ogg_demuxer=yes
+oma_demuxer=yes
+op==
+opt=--enable-pic
+optimizations=yes
+option=pic
+optname=incdir
+optval=--enable-pic
+oss_indev=yes
+oss_indev_deps_any='soundcard_h sys_soundcard_h'
+oss_outdev=yes
+oss_outdev_deps_any='soundcard_h sys_soundcard_h'
+pam_decoder=yes
+pbm_decoder=yes
+pcm_alaw_decoder=yes
+pcm_alaw_demuxer=yes
+pcm_bluray_decoder=yes
+pcm_dvd_decoder=yes
+pcm_f32be_decoder=yes
+pcm_f32be_demuxer=yes
+pcm_f32le_decoder=yes
+pcm_f32le_demuxer=yes
+pcm_f64be_decoder=yes
+pcm_f64be_demuxer=yes
+pcm_f64le_decoder=yes
+pcm_f64le_demuxer=yes
+pcm_mulaw_decoder=yes
+pcm_mulaw_demuxer=yes
+pcm_s16be_decoder=yes
+pcm_s16be_demuxer=yes
+pcm_s16le_decoder=yes
+pcm_s16le_demuxer=yes
+pcm_s16le_planar_decoder=yes
+pcm_s24be_decoder=yes
+pcm_s24be_demuxer=yes
+pcm_s24daud_decoder=yes
+pcm_s24le_decoder=yes
+pcm_s24le_demuxer=yes
+pcm_s32be_decoder=yes
+pcm_s32be_demuxer=yes
+pcm_s32le_decoder=yes
+pcm_s32le_demuxer=yes
+pcm_s8_decoder=yes
+pcm_s8_demuxer=yes
+pcm_u16be_decoder=yes
+pcm_u16be_demuxer=yes
+pcm_u16le_decoder=yes
+pcm_u16le_demuxer=yes
+pcm_u24be_decoder=yes
+pcm_u24be_demuxer=yes
+pcm_u24le_decoder=yes
+pcm_u24le_demuxer=yes
+pcm_u32be_decoder=yes
+pcm_u32be_demuxer=yes
+pcm_u32le_decoder=yes
+pcm_u32le_demuxer=yes
+pcm_u8_decoder=yes
+pcm_u8_demuxer=yes
+pcm_zork_decoder=yes
+pcx_decoder=yes
+pgm_decoder=yes
+pgmyuv_decoder=yes
+pgssub_decoder=yes
+pic=yes
+pipe_protocol=yes
+png_decoder=yes
+png_decoder_select=zlib
+png_encoder_select=zlib
+pnm_parser=yes
+ppc4xx=yes
+ppc4xx_deps=ppc
+ppm_decoder=yes
+prefix=/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/target/usr
+prefix_default=/usr/local
+protocols=yes
+psp_muxer_select=mov_muxer
+ptx_decoder=yes
+pva_demuxer=yes
+qcelp_decoder=yes
+qcp_demuxer=yes
+qdm2_decoder=yes
+qdm2_decoder_select='fft mdct rdft'
+qdraw_decoder=yes
+qpeg_decoder=yes
+qtrle_decoder=yes
+r=--enable-pic
+r3d_demuxer=yes
+ra_144_decoder=yes
+ra_288_decoder=yes
+ranlib=ranlib
+rawvideo_decoder=yes
+rawvideo_demuxer=yes
+remove_extradata_bsf=yes
+rl2_decoder=yes
+rl2_demuxer=yes
+rm_demuxer=yes
+roq_decoder=yes
+roq_demuxer=yes
+roq_dpcm_decoder=yes
+rpl_demuxer=yes
+rpza_decoder=yes
+rtmp_protocol=yes
+rtmp_protocol_deps=tcp_protocol
+rtp_muxer_deps='network rtp_protocol'
+rtp_protocol=yes
+rtp_protocol_deps=udp_protocol
+rtsp_demuxer=yes
+rtsp_demuxer_deps=sdp_demuxer
+rv10_decoder=yes
+rv10_encoder_select=h263_encoder
+rv20_decoder=yes
+rv20_encoder_select=h263_encoder
+rv30_decoder=yes
+rv30_decoder_select=golomb
+rv40_decoder=yes
+rv40_decoder_select=golomb
+sdp_demuxer=yes
+sdp_demuxer_deps='rtp_protocol mpegts_demuxer'
+segafilm_demuxer=yes
+sgi_decoder=yes
+shared=yes
+shlibdir_default='${prefix}/lib'
+shorten_decoder=yes
+shorten_decoder_select=golomb
+shorten_demuxer=yes
+shttp_protocol=yes
+siff_demuxer=yes
+smackaud_decoder=yes
+smacker_decoder=yes
+smacker_demuxer=yes
+smc_decoder=yes
+snow_decoder=yes
+sol_demuxer=yes
+sol_dpcm_decoder=yes
+sonic_decoder=yes
+sonic_decoder_select=golomb
+sonic_encoder_select=golomb
+sonic_ls_encoder_select=golomb
+source_path=/home/gongping/Project_ARMLinux/arm_ref/buildroot-2010.05/package/multimedia/libplayer/src/amffmpeg
+source_path_used=no
+sox_demuxer=yes
+sp5x_decoder=yes
+sse=no
+sse_deps=mmx
+ssse3=no
+ssse3_deps=sse
+static=no
+str_demuxer=yes
+strip=strip
+stripping=yes
+sunrast_decoder=yes
+svq1_decoder=yes
+svq3_decoder=yes
+svq3_decoder_select=golomb
+svq3_decoder_suggest=zlib
+swf_demuxer=yes
+swscale_alpha=yes
+targa_decoder=yes
+target_os=linux
+target_path=.
+tcp_protocol=yes
+tcp_protocol_deps=network
+text2movsub_bsf=yes
+tg2_muxer_select=mov_muxer
+tgp_muxer_select=mov_muxer
+theora_decoder=yes
+theora_decoder_select=vp3_decoder
+thing=decoder
+thp_decoder=yes
+thp_demuxer=yes
+tiertexseq_demuxer=yes
+tiertexseqvideo_decoder=yes
+tiff_decoder=yes
+tiff_decoder_suggest=zlib
+tiff_encoder_suggest=zlib
+tmv_decoder=yes
+tmv_demuxer=yes
+truehd_decoder=yes
+truehd_demuxer=yes
+truemotion1_decoder=yes
+truemotion2_decoder=yes
+truespeech_decoder=yes
+tscc_decoder=yes
+tscc_decoder_select=zlib
+tta_decoder=yes
+tta_demuxer=yes
+twinvq_decoder=yes
+txd_decoder=yes
+txd_demuxer=yes
+udp_protocol=yes
+udp_protocol_deps=network
+ulti_decoder=yes
+v=--enable-pic
+v210_decoder=yes
+v210x_decoder=yes
+v4l2_indev=yes
+v4l2_indev_deps_any='linux_videodev2_h sys_videoio_h'
+v4l_indev=yes
+v4l_indev_deps=linux_videodev_h
+value=yes
+var=pic
+vb_decoder=yes
+vc1_decoder=yes
+vc1_demuxer=yes
+vc1_parser=yes
+vc1_vaapi_hwaccel=yes
+vc1_vaapi_hwaccel_deps=va_va_h
+vc1_vaapi_hwaccel_select='vaapi vc1_decoder'
+vc1_vdpau_decoder=yes
+vc1_vdpau_decoder_deps='vdpau_vdpau_h vdpau_vdpau_x11_h'
+vc1_vdpau_decoder_select='vdpau vc1_decoder'
+vc1t_demuxer=yes
+vcr1_decoder=yes
+vfwcap_indev=yes
+vfwcap_indev_deps=capCreateCaptureWindow
+vfwcap_indev_extralibs=-lvfw32
+vis=no
+vis_deps=sparc
+vmd_demuxer=yes
+vmdaudio_decoder=yes
+vmdvideo_decoder=yes
+vmnc_decoder=yes
+voc_demuxer=yes
+vorbis_decoder=yes
+vorbis_decoder_select='fft mdct'
+vorbis_encoder_select='fft mdct'
+vp3_decoder=yes
+vp3_parser=yes
+vp5_decoder=yes
+vp6_decoder=yes
+vp6a_decoder=yes
+vp6a_decoder_select=vp6_decoder
+vp6f_decoder=yes
+vp6f_decoder_select=vp6_decoder
+vqa_decoder=yes
+vqf_demuxer=yes
+w64_demuxer=yes
+w64_demuxer_deps=wav_demuxer
+wav_demuxer=yes
+wavpack_decoder=yes
+wc3_demuxer=yes
+wmapro_decoder=yes
+wmav1_decoder=yes
+wmav1_decoder_select='fft mdct'
+wmav1_encoder_select='fft mdct'
+wmav2_decoder=yes
+wmav2_decoder_select='fft mdct'
+wmav2_encoder_select='fft mdct'
+wmv1_decoder=yes
+wmv1_encoder_select=h263_encoder
+wmv2_decoder=yes
+wmv2_encoder_select=h263_encoder
+wmv3_decoder=yes
+wmv3_decoder_select=vc1_decoder
+wmv3_vaapi_hwaccel=yes
+wmv3_vaapi_hwaccel_select=vc1_vaapi_hwaccel
+wmv3_vdpau_decoder=yes
+wmv3_vdpau_decoder_select=vc1_vdpau_decoder
+wnv1_decoder=yes
+ws_snd1_decoder=yes
+wsaud_demuxer=yes
+wsvqa_demuxer=yes
+wv_demuxer=yes
+x11_grab_device_indev=yes
+x11_grab_device_indev_deps='x11grab XShmCreateImage'
+x11_grab_device_indev_extralibs='-lX11 -lXext'
+xa_demuxer=yes
+xan_dpcm_decoder=yes
+xan_wc3_decoder=yes
+xl_decoder=yes
+xsub_decoder=yes
+yasm=no
+yasmexe=yasm
+yuv4mpegpipe_demuxer=yes
+zlib_decoder=yes
+zlib_decoder_select=zlib
+zlib_encoder_select=zlib
+zmbv_decoder=yes
+zmbv_decoder_select=zlib
+zmbv_encoder_select=zlib
+type mktemp
+mktemp is /bin/mktemp
+check_ld
+check_cc
+BEGIN /tmp/ffconf.wedVwNdV.c
+    1	int main(void){ return 0; }
+END /tmp/ffconf.wedVwNdV.c
+/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-gcc -c -o /tmp/ffconf.qgjGnXCk.o /tmp/ffconf.wedVwNdV.c
+/opt/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-linux-gnueabi-gcc L/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/target/usr/lib -o /tmp/ffconf.xLgtsGTo /tmp/ffconf.qgjGnXCk.o
+arm-none-linux-gnueabi-gcc: L/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/target/usr/lib: No such file or directory
+C compiler test failed.

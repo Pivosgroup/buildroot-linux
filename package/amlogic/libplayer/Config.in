@@ -1,0 +1,7 @@
+config BR2_PACKAGE_LIBPLAYER
+        bool "libplayer"
+        help
+          amlogic media player library.
+
+          http://openlinux.amlogic.com
+

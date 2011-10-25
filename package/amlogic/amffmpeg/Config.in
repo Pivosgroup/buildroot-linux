@@ -1,0 +1,8 @@
+config BR2_PACKAGE_AMFFMPEG
+	bool "amffmpeg"
+	help
+	  amlogic porting for ffmpeg.
+
+	  http://openlinux.amlogic.com
+
+

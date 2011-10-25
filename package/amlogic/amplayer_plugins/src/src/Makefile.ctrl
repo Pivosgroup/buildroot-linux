@@ -1,0 +1,128 @@
+#############################################################################
+# Makefile for building: libmpapi.so.1
+#############################################################################
+
+####### Compiler, tools and options
+
+
+CFLAGS        = -fPIC -shared
+CXXFLAGS      = 
+INCPATH       =  -I./ -I../include  -I$(STAGING)/include
+LFLAGS        = -fPIC -shared
+LIBS          = $(SUBLIBS) -lm -lrt -ldl -lpthread -L$(PREFIX)/lib -lavutil -lavformat -lavcodec -lamcodec -lamplayer -lamcontroler 
+
+TAR           = tar -cf
+COMPRESS      = gzip -9f
+COPY          = cp -f
+SED           = sed
+COPY_FILE     = $(COPY)
+COPY_DIR      = $(COPY) -r
+INSTALL_FILE  = install -m 644 -p
+INSTALL_DIR   = $(COPY_DIR)
+INSTALL_PROGRAM = install -m 755 -p
+DEL_FILE      = rm -f
+DEL_ALL				= rm -rf
+SYMLINK       = ln -sf
+
+DEL_DIR       = rmdir
+MOVE          = mv -f
+CHK_DIR_EXISTS= test -d
+MKDIR         = mkdir -p
+TOPDIR				= ${PKG_BUILD_DIR}/${FILE_DIR}
+
+
+####### Output directory
+
+OBJECTS_DIR   = .obj/
+
+####### Files
+
+SOURCES       = comm_socket_tcp.c \
+		mp_utils.c \
+		msgmngr_svr.c \
+		socket2_controler.c
+
+OBJECTS       = .obj/comm_socket_tcp.o \
+								.obj/mp_utils.o \
+								.obj/msgmngr_svr.o \
+								.obj/socket2_controler.o
+
+
+
+DESTDIR       = 
+TARGET        = ../lib/libsocket2_pl.so
+
+first: all
+####### Implicit rules
+
+.SUFFIXES: .o .c .cpp .cc .cxx .C
+
+.cpp.o:
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o "$@" "$<"
+
+.cc.o:
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o "$@" "$<"
+
+.cxx.o:
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o "$@" "$<"
+
+.C.o:
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o "$@" "$<"
+
+.c.o:
+	$(CC) -c $(CFLAGS) $(INCPATH) -o "$@" "$<"
+
+####### Build rules
+
+all: Makefile.ctrl  $(TARGET)
+
+$(TARGET):  $(OBJECTS) $(SUBLIBS) $(OBJCOMP)  
+	-$(MKDIR) $(OBJECTS_DIR)
+	-$(DEL_FILE) $(TARGET)
+	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS) $(OBJCOMP)
+
+
+dist:	 
+	@$(CHK_DIR_EXISTS) .obj/mpapi1.0.0 || $(MKDIR) .obj/mpapi1.0.0 
+	$(COPY_FILE) --parents $(SOURCES) $(DIST) .obj/mpapi1.0.0/ && $(COPY_FILE) --parents comm_socket_tcp.c msgqueue.c msgmngr.c mp_api.c mp_utils.c comm_socket_udp.c taskmngr.c msgmngr_svr.c socket2_controler.c .obj/mpapi1.0.0/  && $(COPY_DIR) ../include .obj/mpapi1.0.0/. && (cd `dirname .obj/mpapi1.0.0` && $(TAR) mpapi1.0.0.tar mpapi1.0.0 && $(COMPRESS) mpapi1.0.0.tar) && $(MOVE) `dirname .obj/mpapi1.0.0`/mpapi1.0.0.tar.gz . && $(DEL_FILE) -r .obj/mpapi1.0.0
+
+
+clean: 
+	-$(DEL_FILE) $(OBJECTS)
+	-$(DEL_FILE) $(TARGET) 	
+	-$(DEL_ALL)  $(OBJECTS_DIR)
+
+####### Sub-libraries
+
+distclean: clean
+	-$(DEL_FILE) $(TARGET)
+
+
+####### Compile
+
+.obj/comm_socket_tcp.o: comm_socket_tcp.c ../include/comm_socket_tcp.h \
+		../include/mp_log.h
+	$(CC) -c $(CFLAGS) $(INCPATH) -o .obj/comm_socket_tcp.o comm_socket_tcp.c
+	
+.obj/mp_utils.o: mp_utils.c ../include/mp_utils.h \
+		../include/mp_types.h
+	$(CC) -c $(CFLAGS) $(INCPATH) -o .obj/mp_utils.o mp_utils.c
+
+.obj/msgmngr_svr.o: msgmngr_svr.c ../include/msgmngr_svr.h \
+		../include/comm_socket_tcp.h
+	$(CC) -c $(CFLAGS) $(INCPATH) -o .obj/msgmngr_svr.o msgmngr_svr.c
+
+.obj/socket2_controler.o: socket2_controler.c ../include/socket2_controler.h \
+		../include/comm_socket_tcp.h 				
+	$(CC) -c $(CFLAGS) $(INCPATH) -o .obj/socket2_controler.o socket2_controler.c	
+
+
+####### Install
+
+install:   FORCE
+
+uninstall:   FORCE
+
+FORCE:
+
+#include $(MAKEFILES_DIR)/package.rules

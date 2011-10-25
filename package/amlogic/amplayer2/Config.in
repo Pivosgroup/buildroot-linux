@@ -1,0 +1,10 @@
+config BR2_PACKAGE_AMPLAYER2
+	bool "amplayer2"
+	select BR2_PACKAGE_AMFFMPEG
+	select BR2_PACKAGE_ZLIB
+	help
+	  amlogic media player.
+
+	  http://openlinux.amlogic.com
+
+

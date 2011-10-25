@@ -1,0 +1,37 @@
+  
+【20100920 update notes】
+ 1.增加subtitle字段，供上层调用。
+ 2.如果需要底层打开subtitle解析，必须在运行amplayer时加 -u 参数。
+
+【20100914 update notes】
+ 1.在媒体信息里增加subtitle和audiotrack信息。
+ 2.tag info里面字段全用变长字段。取消定长字段。同时增补一些信息，应用根据需要自取。注意指针的处理。
+ 3.增加自动更新时间代码，暂未开放接口。测试后开放。应用不需要主动取当前时间。
+
+【20100910 update notes】
+ 1.增加player原始出错提示，org_code，在mp_tools中有测试用例，建议UI显示到屏幕上，方便底层调试。
+ 2.mp_tools playlist增加更多的格式支持，可以自动扫描播放更多的文件。
+
+【20100830 update notes】
+ 1.增加提示，当一个文件部分可以播放时，会提示出normal_err状态。处理时要和fatal error区别开来。MP_events增加两个枚举值。在mp_tools代码里同步更新了测试case,使用时可以查看。
+
+	
+【20100817 update notes】
+ 1.把play超时由永久等待改为1分。
+ 2.把老的play及close接口移去。
+ 3.把声音相关的mediaid由-1改成-100.从而和播放失败返回的-1相区分开。
+ 
+【20100817 update notes】
+ Feature:
+ 1.MP_PlayMediaSource,MP_AddMediaSource接口改为阻塞式操作。
+ 2.socket断开不再释放 id map table,后续设计异常消息后，由应用决定是否释放。
+ 3.在mp_tools中增加目录播放工具，另外，提高了mp_tools的稳定性，更方便测试者使用。目前文件过滤仅支持mp3,avi,rmvb,rm四种后缀结尾的文件。
+【20100729 update notes】
+ Feature:
+ 在mp_tools中增加了playlist测试用例，目前只有四个操作。start,add,stop,view;
+【20100727 update notes】
+ Feature:
+ 1.改进了MP_AddMediaSource和MP_play_file两个接口的返回值，如果返回值>0，即获得mediaid,这个ID代表一次播放过程的句柄.如果播放停止或者结束，需要手动调用MP_ClosePlayerInstance接口。注意，如果是loop模式，注意在停止前不要释放句柄。
+ 2.增加MP_GetValidMediaIDSync接口，这个接口的作用就是如果在播放状态下，上层应用挂掉,可以不用重新启动player service,而把目前可以使用的句柄拿回来，然后实现连续控制。
+ 3.增加MP_free_command_msg接口和MP_free_response_msg接口，可以帮助上层释放资源，注意入参是指针，内部我把入参整体也进行了释放。
+ 

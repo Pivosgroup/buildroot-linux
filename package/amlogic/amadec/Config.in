@@ -1,0 +1,9 @@
+config BR2_PACKAGE_AMADEC
+	bool "amadec"
+    select BR2_PACKAGE_ALSA_LIB
+	help
+	  amlogic audio player.
+
+	  http://openlinux.amlogic.com
+
+

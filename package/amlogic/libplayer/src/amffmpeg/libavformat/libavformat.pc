@@ -1,0 +1,14 @@
+prefix=/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/target/usr
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=/home/gongping/Project_ARMLinux/arm_ref/build_rootfs/7266m_8626m_demo/build/build/libplayer/amadec/../../../staging/usr/include
+
+Name: libavformat
+Description: FFmpeg container format library
+Version: 52.39.2
+Requires: 
+Requires.private: libavcodec = 52.42.0
+Conflicts:
+Libs: -L${libdir} -lavformat 
+Libs.private: -lm
+Cflags: -I${includedir}

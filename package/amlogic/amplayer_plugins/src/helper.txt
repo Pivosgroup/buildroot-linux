@@ -1,0 +1,21 @@
+
+1. how to run amplayer2?
+amplayer2 -b -e socket2_pl -m socket2
+
+2. how to run amplayer2 testtool(mp_tools)?
+a> 新打开一个secureCRT session,用telnet登录板子。(使用secureCRT可以方便的复制文件路径，用其他telnet工具亦可)
+b> mp_tools 回车即可。
+c> 根据mp_tools提示进行操作，如果用默认参数，输入"y"即可，其他参数请自行输入。
+d> 如果退出mp_tools,请按对应选项退出即可。
+e> 目前测试工具中16~19项尚不对测试组开放,如果使用，对相关问题不予支持。
+
+3. Knows
+a> 保存amplayer2播放日志(串口日志+amplayer2.log(在"/tmp/"目录下))，最好一个测试文件保存一份日志，在日志后加测试文件标注。
+b> 如果播放器发生问题，请用"killall amplayer2"结束程序或者重启板子,请在这些操作前保存日志。
+
+4. Miscs
+a> 复制文件
+  copy /tmp/amplayer2.log /destdir/.(注：实际需要使用文件目录，可能是nfs，也可能是挂载的u盘)
+b) 因为amplayer2和mp_tools都是独立进程，所以，如果有一个退出，请重新运行另外一个。
+
+c) 测试工具mp_tools仅仅是一种控制amplayer的播放的方式，amplayer2自身有其他控制方式，比如shell,在运行mp_tools时，必须保证按上述运行amplayer2的方式运行才能进行测试。 

@@ -1,0 +1,12 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}
+includedir=/home/gongping/Project_ARMLinux/arm_ref/buildroot-2010.05/package/multimedia/libplayer/src/amffmpeg
+
+Name: libavformat
+Description: FFmpeg container format library
+Version: 52.39.2
+Requires: libavcodec = 52.42.0
+Conflicts:
+Libs: ${libdir}/libavformat.a   -lm
+Cflags: -I${includedir}

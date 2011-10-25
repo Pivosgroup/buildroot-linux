@@ -1,0 +1,9 @@
+config BR2_PACKAGE_KPLAYER
+	bool "kplayer"
+	select BR2_PACKAGE_LIBPLAYER
+	help
+	  amlogic kplayer.
+
+	  http://openlinux.amlogic.com
+
+
