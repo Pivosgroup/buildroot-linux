@@ -47,7 +47,7 @@ else
 	CFLAGS+=-I$(SRC)/player/include
 endif
 
-CFLAGS+=-I${SRCTREE}/../amffmpeg -I${SRCTREE}/../amcodec -I${SRCTREE}/../amadec/include
+CFLAGS+=-I${SRCTREE}/../amffmpeg -I${SRCTREE}/../amcodec/include -I${SRCTREE}/../amadec/include
 CFLAGS+= -fPIC
 target_all=  $(TARGET)
 
