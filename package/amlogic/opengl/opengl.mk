@@ -10,12 +10,12 @@ OPENGL_SITE_METHOD=cp
 OPENGL_INSTALL_STAGING=YES
 
 define OPENGL_INSTALL_STAGING_CMDS
-        install -m 755 $(@D)/lib/*.so* $(STAGING_DIR)/usr/lib
-        cp -rf $(@D)/include/* $(STAGING_DIR)/usr/include
+        cp -rfP $(@D)/lib/*.so* $(STAGING_DIR)/usr/lib
+        cp -rf  $(@D)/include/* $(STAGING_DIR)/usr/include
 endef
 
 define OPENGL_INSTALL_TARGET_CMDS
-        install -m 755 $(@D)/lib/*.so.* $(TARGET_DIR)/usr/lib
+        cp -rfP $(@D)/lib/*.so* $(TARGET_DIR)/usr/lib
 endef
 
 $(eval $(call GENTARGETS,package/amlogic,opengl))
