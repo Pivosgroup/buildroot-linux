@@ -5,7 +5,7 @@
 #############################################################
 AMADEC_VERSION:=0.9.9
 AMADEC_SOURCE=amadec-$(AMADEC_VERSION).tar.gz
-AMADEC_SITE=./package/amlogic/amadec/src
+AMADEC_SITE=./package/amlogic/libplayer/src/amadec/
 AMADEC_SITE_METHOD=cp
 
 ifeq ($(BR2_PACKAGE_AMADEC),y)
