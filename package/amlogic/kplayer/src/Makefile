@@ -16,7 +16,7 @@ LDFLAGS += -lpthread -lm -lasound -lrt -lamplayer -lamcodec -lavformat -lavutil 
 TARGET_DIR=$(shell pwd)/../../target
 STAGING_DIR=$(shell pwd)/../../staging
 CFLAGS+=-O2
-CFLAGS+=-I$(shell pwd)/../libplayer/amffmpeg/ -I$(shell pwd)/../libplayer/amplayer/player/include -I${STAGING_DIR}/include -I${STAGING_DIR}/usr/include -L${TARGET_DIR}/lib -L${TARGET_DIR}/usr/lib
+CFLAGS+=-I$(shell pwd)/../libplayer/amffmpeg/ -I$(shell pwd)/../libplayer/amplayer/player/include -I${STAGING_DIR}/include -I${STAGING_DIR}/usr/include -L${STAGING_DIR}/lib -L${STAGING_DIR}/usr/lib
 
 
 
