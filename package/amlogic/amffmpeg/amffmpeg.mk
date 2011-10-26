@@ -5,7 +5,7 @@
 #############################################################
 AMFFMPEG_VERSION:=0.9.9
 AMFFMPEG_SOURCE=amffmpeg-$(AMFFMPEG_VERSION).tar.gz
-AMFFMPEG_SITE=./package/amlogic/amffmpeg/src
+AMFFMPEG_SITE=./package/amlogic/libplayer/src/amffmpeg
 AMFFMPEG_SITE_METHOD=cp
 AMFFMPEG_INSTALL_STAGING=YES
 
