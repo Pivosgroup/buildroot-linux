@@ -10,7 +10,7 @@ OPENGL_SITE_METHOD=cp
 OPENGL_INSTALL_STAGING=YES
 
 define OPENGL_INSTALL_STAGING_CMDS
-        install -m 755 $(@D)/lib/*.so.* $(STAGING_DIR)/usr/lib
+        install -m 755 $(@D)/lib/*.so* $(STAGING_DIR)/usr/lib
         cp -rf $(@D)/include/* $(STAGING_DIR)/usr/include
 endef
 
