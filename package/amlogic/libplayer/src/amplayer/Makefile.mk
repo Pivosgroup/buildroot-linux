@@ -33,7 +33,7 @@ TARGET_IS_LIB=$(TARGET:%so=yes)
 
 
 
-LDFLAGS+= -L$(PREFIX)/lib -lavutil -lavformat -lavcodec -lm  -lpthread 
+LDFLAGS+= -L$(PREFIX)/lib -lavutil -lavformat -lavcodec -lm  -lpthread -lamcodec 
 
 INSTALL_DIR?=$(PREFIX)/lib
 LDFLAGS+=-shared 
