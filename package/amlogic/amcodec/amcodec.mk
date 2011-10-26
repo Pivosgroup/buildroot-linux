@@ -5,7 +5,7 @@
 #############################################################
 AMCODEC_VERSION:=0.9.9
 AMCODEC_SOURCE=amcodec-$(AMCODEC_VERSION).tar.gz
-AMCODEC_SITE=./package/amlogic/amcodec/src
+AMCODEC_SITE=./package/amlogic/libplayer/src/amcodec/
 AMCODEC_SITE_METHOD=cp
 
 define AMCODEC_BUILD_CMDS
