@@ -36,4 +36,10 @@ ifdef DEBUG
 AMFFMPEG_CONF_OPT+=    --enable-debug --disable-stripping
 endif  
 
+define AMFFMPEG_STAGING_AMFFMPEG_EXTRA_HEADERS
+       install $(@D)/libavformat/aviolpbuf.h $(STAGING_DIR)/usr/include/libavformat
+endef
+
+AMFFMPEG_POST_INSTALL_STAGING_HOOKS += AMFFMPEG_STAGING_AMFFMPEG_EXTRA_HEADERS
+
 $(eval $(call AUTOTARGETS,package/amlogic,amffmpeg))
