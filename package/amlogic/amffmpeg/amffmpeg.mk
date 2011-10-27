@@ -9,11 +9,12 @@ AMFFMPEG_SITE=./package/amlogic/libplayer/src/amffmpeg
 AMFFMPEG_SITE_METHOD=cp
 AMFFMPEG_INSTALL_STAGING=YES
 
-AMFFMPEG_CONF_OPT=--disable-static --enable-shared --disable-ffplay --disable-ffserver --disable-doc \
-    --disable-mpegaudio-hp --disable-encoders --disable-decoder=h264 --disable-muxers --disable-filters \
-    --disable-altivec --disable-amd3dnow \
-    --disable-amd3dnowext --disable-mmx --disable-mmx2 --disable-sse --disable-ssse3 --disable-armv5te --disable-armv6 \
-    --disable-armv6t2 --disable-armvfp --disable-iwmmxt --disable-mmi --disable-vis --disable-yasm --enable-pic --enable-zlib
+AMFFMPEG_CONF_OPT= --disable-static --enable-shared \
+                --disable-ffmpeg --disable-ffplay --disable-ffserver --disable-doc --disable-mpegaudio-hp \
+                --disable-encoders --disable-decoder=h264 --disable-muxers --disable-filters --disable-altivec \
+                --disable-amd3dnow --disable-amd3dnowext --disable-mmx --disable-mmx2 --disable-sse --disable-ssse3 \
+                --disable-armv5te --disable-armv6 --disable-armv6t2 --disable-armvfp --disable-iwmmxt --disable-mmi --disable-vis --disable-yasm \
+                --enable-pic
 
 define AMFFMPEG_CONFIGURE_CMDS
 	(cd $(AMFFMPEG_SRCDIR) && rm -rf config.cache && \
