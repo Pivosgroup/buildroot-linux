@@ -25,7 +25,6 @@ CFLAGS+=-I$(shell pwd)/../libplayer/amffmpeg/ -I$(shell pwd)/../libplayer/amplay
 export CC CFLAGS
 
 all: $(KPLAYER_DIST) 
-	make install
 	
 
 kplayer: $(KPLAYER_OBJS)$(DEPENDS)
