@@ -1,0 +1,11 @@
+config BR2_PACKAGE_XBMC
+	bool "xbmc (deps only)"
+	select BR2_PACKAGE_KPLAYER
+	select BR2_PACKAGE_OPENGL
+	select BR2_PACKAGE_LZO
+	select BR2_PACKAGE_NCURSES
+	select BR2_PACKAGE_ALSA_UTILS
+	select BR2_PACKAGE_ALSA_UTILS_ALSAMIXER
+	help
+		XBMC
+
