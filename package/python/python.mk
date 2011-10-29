@@ -107,6 +107,7 @@ PYTHON_CONF_OPT += \
 	--without-cxx-main 	\
 	--without-doc-strings	\
 	--with-system-ffi	\
+	--enable-shared		\
 	--disable-pydoc		\
 	--disable-test-modules	\
 	--disable-lib2to3	\
