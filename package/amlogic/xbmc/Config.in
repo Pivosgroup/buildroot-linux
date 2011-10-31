@@ -1,5 +1,6 @@
 config BR2_PACKAGE_XBMC
 	bool "xbmc (deps only)"
+        select BR2_PACKAGE_AMREMOTE_CONFIG
 	select BR2_PACKAGE_KPLAYER
 	select BR2_PACKAGE_OPENGL
 	select BR2_PACKAGE_LZO
