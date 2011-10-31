@@ -190,6 +190,15 @@ $(STAMP_DIR)/ext-toolchain-installed: $(TOOLCHAIN_EXTERNAL_DEPENDENCIES)
 	for libs in $(USR_LIB_EXTERNAL_LIBS); do \
 		$(call copy_toolchain_lib_root,$${ARCH_SYSROOT_DIR},$$libs,/usr/lib); \
 	done ; \
+	for d in $(call qstrip,$(BR2_EXT_TOOL_DIRS_EXTRA)); do \
+	  if [ -d "$${ARCH_SYSROOT_DIR}$${d}" ]; then \
+	    mkdir -p "$(TARGET_DIR)$${d}"; \
+	    echo "Copying extra directory '$${d}' to target from toolchain"; \
+	    cp -a "$${ARCH_SYSROOT_DIR}$${d}/" "$(TARGET_DIR)$${d}/../"; \
+	  else \
+	    echo "No such directory '$${d}' while trying to copy from toolchain"; \
+	  fi; \
+	done; \
 	echo "Copy external toolchain sysroot to staging..." ; \
 	$(call copy_toolchain_sysroot,$${SYSROOT_DIR},$${ARCH_SYSROOT_DIR},$${ARCH_SUBDIR}) ; \
 	if [ -L $${ARCH_SYSROOT_DIR}/lib64 ] ; then \
