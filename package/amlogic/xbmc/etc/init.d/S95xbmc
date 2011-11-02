@@ -1,0 +1,28 @@
+#!/bin/sh
+#
+# Start XBMC....
+#
+
+case "$1" in
+  start)
+        echo "Starting XBMC..."
+        export LD_LIBRARY_PATH=/opt/xbmc-aml/lib:/usr/lib/mysql:$LD_LIBRARY_PATH
+        export PATH=/opt/xbmc-aml/bin:$PATH
+        export XBMC_HOME=/opt/xbmc-aml/share/xbmc
+        /usr/bin/amremote_config /etc/xbmc/irmap-amlogic
+        /opt/xbmc-aml/lib/xbmc/xbmc.bin --settings=/etc/xbmc/xbmc-settings.xml
+        ;;
+  stop)
+        echo -n "Stopping XBMC..."
+        killall xbmc.bin
+        ;;
+  restart|reload)
+        "$0" stop
+        "$0" start
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|restart}"
+        exit 1
+esac
+
+exit $?
