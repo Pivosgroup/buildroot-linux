@@ -41,6 +41,7 @@
 #define EXT_INFO					(1<<5)
 #define READ_END_FLAG				(1<<6)
 #define ALLOW_CACHE_FLAG			(1<<7)
+#define REAL_STREAMING_FLAG		(1<<8)
 
 
 struct list_mgt;
@@ -59,6 +60,7 @@ typedef struct list_item
 typedef struct list_mgt
 {
 	char *filename;
+	char *location;
 	int flags;
 	lock_t mutex;
 	struct list_item *item_list;
@@ -67,6 +69,7 @@ typedef struct list_mgt
 	int64_t file_size;
 	int 	full_time;
 	int 	have_list_end;
+	int  seq;  
 	ByteIOContext	*cur_uio;
 	struct list_demux *demux;
 }list_mgt_t;
@@ -78,6 +81,14 @@ typedef struct list_demux
 	int (*parser)(struct list_mgt *mgt,ByteIOContext *s);
 	struct list_demux *next;
 }list_demux_t;
+URLProtocol *get_file_list_protocol(void);
+int register_list_demux_all(void);
+int register_list_demux(struct list_demux *demux);
+struct list_demux * probe_demux(ByteIOContext  *s,const char *filename);
+int list_add_item(struct list_mgt *mgt,struct list_item*item);
+int list_test_and_add_item(struct list_mgt *mgt,struct list_item*item);
+int url_is_file_list(ByteIOContext *s,const char *filename);
+
 
 #endif /* AVFORMAT_FILE_LIST_H */
 

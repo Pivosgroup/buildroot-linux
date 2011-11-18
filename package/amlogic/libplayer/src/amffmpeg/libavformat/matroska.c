@@ -45,19 +45,21 @@ const CodecTags ff_mkv_codec_tags[]={
     {"A_REAL/28_8"      , CODEC_ID_RA_288},
     {"A_REAL/ATRC"      , CODEC_ID_ATRAC3},
     {"A_REAL/COOK"      , CODEC_ID_COOK},
-//    {"A_REAL/SIPR"      , CODEC_ID_SIPRO},
+    {"A_REAL/SIPR"      , CODEC_ID_SIPR},
     {"A_TRUEHD"         , CODEC_ID_TRUEHD},
     {"A_TTA1"           , CODEC_ID_TTA},
     {"A_VORBIS"         , CODEC_ID_VORBIS},
     {"A_WAVPACK4"       , CODEC_ID_WAVPACK},
 
     {"S_TEXT/UTF8"      , CODEC_ID_TEXT},
+    {"S_TEXT/UTF8"      , CODEC_ID_SRT},
     {"S_TEXT/ASCII"     , CODEC_ID_TEXT},
     {"S_TEXT/ASS"       , CODEC_ID_SSA},
     {"S_TEXT/SSA"       , CODEC_ID_SSA},
     {"S_ASS"            , CODEC_ID_SSA},
     {"S_SSA"            , CODEC_ID_SSA},
     {"S_VOBSUB"         , CODEC_ID_DVD_SUBTITLE},
+    {"S_HDMV/PGS"       , CODEC_ID_HDMV_PGS_SUBTITLE},
 
     {"V_DIRAC"          , CODEC_ID_DIRAC},
     {"V_MJPEG"          , CODEC_ID_MJPEG},
@@ -75,6 +77,7 @@ const CodecTags ff_mkv_codec_tags[]={
     {"V_SNOW"           , CODEC_ID_SNOW},
     {"V_THEORA"         , CODEC_ID_THEORA},
     {"V_UNCOMPRESSED"   , CODEC_ID_RAWVIDEO},
+    {"V_VP8"            , CODEC_ID_VP8},
 
     {""                 , CODEC_ID_NONE}
 };
@@ -92,8 +95,31 @@ const CodecMime ff_mkv_mime_tags[] = {
 };
 
 const AVMetadataConv ff_mkv_metadata_conv[] = {
-    { "ARTIST"        , "artist" },
-    { "LEAD_PERFORMER", "artist" },
+    { "LEAD_PERFORMER", "performer" },
     { "PART_NUMBER"   , "track"  },
     { 0 }
+};
+
+const char * const matroska_video_stereo_mode[MATROSKA_VIDEO_STEREO_MODE_COUNT] = {
+    "mono",
+    "left_right",
+    "bottom_top",
+    "top_bottom",
+    "checkerboard_rl",
+    "checkerboard_lr"
+    "row_interleaved_rl",
+    "row_interleaved_lr",
+    "col_interleaved_rl",
+    "col_interleaved_lr",
+    "anaglyph_cyan_red",
+    "right_left",
+    "anaglyph_green_magenta",
+    "block_lr",
+    "block_rl",
+};
+
+const char * const matroska_video_stereo_plane[MATROSKA_VIDEO_STEREO_PLANE_COUNT] = {
+    "left",
+    "right",
+    "background",
 };

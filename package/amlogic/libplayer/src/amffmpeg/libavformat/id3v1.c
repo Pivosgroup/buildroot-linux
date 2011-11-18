@@ -21,6 +21,7 @@
 
 #include "id3v1.h"
 #include "libavcodec/avcodec.h"
+#include "libavutil/dict.h"
 
 const char * const ff_id3v1_genre_str[ID3v1_GENRE_MAX + 1] = {
       [0] = "Blues",
@@ -149,6 +150,28 @@ const char * const ff_id3v1_genre_str[ID3v1_GENRE_MAX + 1] = {
     [123] = "A capella",
     [124] = "Euro-House",
     [125] = "Dance Hall",
+    [126] = "Goa",
+    [127] = "Drum & Bass",
+    [128] = "Club-House",
+    [129] = "Hardcore",
+    [130] = "Terror",
+    [131] = "Indie",
+    [132] = "BritPop",
+    [133] = "Negerpunk",
+    [134] = "Polsk Punk",
+    [135] = "Beat",
+    [136] = "Christian Gangsta",
+    [137] = "Heavy Metal",
+    [138] = "Black Metal",
+    [139] = "Crossover",
+    [140] = "Contemporary Christian",
+    [141] = "Christian Rock",
+    [142] = "Merengue",
+    [143] = "Salsa",
+    [144] = "Thrash Metal",
+    [145] = "Anime",
+    [146] = "JPop",
+    [147] = "SynthPop",
 };
 
 static void get_string(AVFormatContext *s, const char *key,
@@ -169,7 +192,7 @@ static void get_string(AVFormatContext *s, const char *key,
     *q = '\0';
 
     if (*str)
-        av_metadata_set(&s->metadata, key, str);
+        av_dict_set(&s->metadata, key, str, 0);
 }
 
 /**
@@ -187,40 +210,36 @@ static int parse_tag(AVFormatContext *s, const uint8_t *buf)
           buf[2] == 'G'))
         return -1;
     get_string(s, "title",   buf +  3, 30);
-    get_string(s, "author",  buf + 33, 30);
+    get_string(s, "artist",  buf + 33, 30);
     get_string(s, "album",   buf + 63, 30);
-    get_string(s, "year",    buf + 93,  4);
+    get_string(s, "date",    buf + 93,  4);
     get_string(s, "comment", buf + 97, 30);
     if (buf[125] == 0 && buf[126] != 0) {
         snprintf(str, sizeof(str), "%d", buf[126]);
-        av_metadata_set(&s->metadata, "track", str);
+        av_dict_set(&s->metadata, "track", str, 0);
     }
     genre = buf[127];
     if (genre <= ID3v1_GENRE_MAX)
-        av_metadata_set(&s->metadata, "genre", ff_id3v1_genre_str[genre]);
+        av_dict_set(&s->metadata, "genre", ff_id3v1_genre_str[genre], 0);
     return 0;
 }
 
-int ff_id3v1_read(AVFormatContext *s)
+void ff_id3v1_read(AVFormatContext *s)
 {
-    int ret, filesize;
+    int ret;
     uint8_t buf[ID3v1_TAG_SIZE];
+    int64_t filesize, position = avio_tell(s->pb);
 
-    if (!url_is_streamed(s->pb)) {
+    if (s->pb->seekable && !s->pb->is_slowmedia) {
         /* XXX: change that */
-        filesize = url_fsize(s->pb);
+        filesize = avio_size(s->pb);
         if (filesize > 128) {
-            url_fseek(s->pb, filesize - 128, SEEK_SET);
-            ret = get_buffer(s->pb, buf, ID3v1_TAG_SIZE);
+            avio_seek(s->pb, filesize - 128, SEEK_SET);
+            ret = avio_read(s->pb, buf, ID3v1_TAG_SIZE);
             if (ret == ID3v1_TAG_SIZE) {
-                ret = parse_tag(s, buf);
+                parse_tag(s, buf);
             }
-			else {
-				return -1;
-			}
-            url_fseek(s->pb, 0, SEEK_SET);
-			return ret;
+            avio_seek(s->pb, position, SEEK_SET);
         }
     }
-	return -1;
 }

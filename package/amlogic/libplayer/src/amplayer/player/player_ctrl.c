@@ -200,11 +200,11 @@ int player_stop(int pid)
     if ((get_player_state(player_para) & 0x30000) == 1) {
         return PLAYER_SUCCESS;
     }
-
+/*
     if (player_para->pFormatCtx) {
         av_ioctrl(player_para->pFormatCtx, AVIOCTL_STOP, 0, 0);
     }
-
+*/
     cmd = message_alloc();
     if (cmd) {
         cmd->ctrl_cmd = CMD_STOP;
@@ -247,11 +247,11 @@ int player_stop_async(int pid)
     if (player_para == NULL) {
         return PLAYER_NOT_VALID_PID;
     }
-
+/*
     if (player_para->pFormatCtx) {
         av_ioctrl(player_para->pFormatCtx, AVIOCTL_STOP, 0, 0);
     }
-
+*/
     cmd = message_alloc();
     if (cmd) {
         cmd->ctrl_cmd = CMD_STOP;

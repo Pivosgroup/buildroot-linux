@@ -62,14 +62,14 @@ static int lmlm4_read_header(AVFormatContext *s, AVFormatParameters *ap) {
 
     if (!(st = av_new_stream(s, 0)))
         return AVERROR(ENOMEM);
-    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     st->codec->codec_id   = CODEC_ID_MPEG4;
     st->need_parsing      = AVSTREAM_PARSE_HEADERS;
     av_set_pts_info(st, 64, 1001, 30000);
 
     if (!(st = av_new_stream(s, 1)))
         return AVERROR(ENOMEM);
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id   = CODEC_ID_MP2;
     st->need_parsing      = AVSTREAM_PARSE_HEADERS;
 
@@ -78,13 +78,13 @@ static int lmlm4_read_header(AVFormatContext *s, AVFormatParameters *ap) {
 }
 
 static int lmlm4_read_packet(AVFormatContext *s, AVPacket *pkt) {
-    ByteIOContext *pb = s->pb;
+    AVIOContext *pb = s->pb;
     int ret;
     unsigned int frame_type, packet_size, padding, frame_size;
 
-    get_be16(pb);                       /* channel number */
-    frame_type  = get_be16(pb);
-    packet_size = get_be32(pb);
+    avio_rb16(pb);                       /* channel number */
+    frame_type  = avio_rb16(pb);
+    packet_size = avio_rb32(pb);
     padding     = -packet_size & 511;
     frame_size  = packet_size - 8;
 
@@ -100,11 +100,11 @@ static int lmlm4_read_packet(AVFormatContext *s, AVPacket *pkt) {
     if ((ret = av_get_packet(pb, pkt, frame_size)) <= 0)
         return AVERROR(EIO);
 
-    url_fskip(pb, padding);
+    avio_skip(pb, padding);
 
     switch (frame_type) {
         case LMLM4_I_FRAME:
-            pkt->flags = PKT_FLAG_KEY;
+            pkt->flags = AV_PKT_FLAG_KEY;
         case LMLM4_P_FRAME:
         case LMLM4_B_FRAME:
             pkt->stream_index = 0;
@@ -117,7 +117,7 @@ static int lmlm4_read_packet(AVFormatContext *s, AVPacket *pkt) {
     return ret;
 }
 
-AVInputFormat lmlm4_demuxer = {
+AVInputFormat ff_lmlm4_demuxer = {
     "lmlm4",
     NULL_IF_CONFIG_SMALL("lmlm4 raw format"),
     0,

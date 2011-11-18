@@ -21,19 +21,19 @@
 
 #include <stdint.h>
 #include "config.h"
-#include "libavutil/common.h"
+#include "libavutil/attributes.h"
 
 #if HAVE_INLINE_ASM
 
-#define bswap_16 bswap_16
-static av_always_inline av_const uint16_t bswap_16(uint16_t x)
+#define av_bswap16 av_bswap16
+static av_always_inline av_const uint16_t av_bswap16(uint16_t x)
 {
     __asm__ ("swap.bh %0" : "+r"(x));
     return x;
 }
 
-#define bswap_32 bswap_32
-static av_always_inline av_const uint32_t bswap_32(uint32_t x)
+#define av_bswap32 av_bswap32
+static av_always_inline av_const uint32_t av_bswap32(uint32_t x)
 {
     __asm__ ("swap.b  %0" : "+r"(x));
     return x;

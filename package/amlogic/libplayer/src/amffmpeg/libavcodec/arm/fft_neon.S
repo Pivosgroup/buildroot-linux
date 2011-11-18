@@ -4,6 +4,9 @@
  * Copyright (c) 2009 Mans Rullgard <mans@mansr.com>
  * Copyright (c) 2009 Naotoshi Nojiri
  *
+ * This algorithm (though not any of the implementation details) is
+ * based on libdjbfft by D. J. Bernstein.
+ *
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -43,7 +46,7 @@ function fft4_neon
         vst1.32         {d0-d3}, [r0,:128]
 
         bx              lr
-.endfunc
+endfunc
 
 function fft8_neon
         mov             r1,  r0
@@ -96,7 +99,7 @@ function fft8_neon
         vst1.32         {d0-d3},   [r0,:128]
 
         bx              lr
-.endfunc
+endfunc
 
 function fft16_neon
         movrel          r1, mppm
@@ -198,7 +201,7 @@ function fft16_neon
         vst2.32         {d26-d27},[r0,:128], r1
         vst2.32         {d30-d31},[r0,:128]
         bx              lr
-.endfunc
+endfunc
 
 function fft_pass_neon
         push            {r4-r6,lr}
@@ -274,7 +277,7 @@ function fft_pass_neon
         bne             1b
 
         pop             {r4-r6,pc}
-.endfunc
+endfunc
 
 .macro  def_fft n, n2, n4
         .align 6
@@ -291,7 +294,7 @@ function fft\n\()_neon
         movrel          r1,  X(ff_cos_\n)
         mov             r2,  #\n4/2
         b               fft_pass_neon
-.endfunc
+endfunc
 .endm
 
         def_fft    32,    16,     8
@@ -314,13 +317,13 @@ function ff_fft_calc_neon, export=1
         ldr             r3,  [r3, r2, lsl #2]
         mov             r0,  r1
         bx              r3
-.endfunc
+endfunc
 
 function ff_fft_permute_neon, export=1
         push            {r4,lr}
         mov             r12, #1
         ldr             r2,  [r0]       @ nbits
-        ldr             r3,  [r0, #20]  @ tmp_buf
+        ldr             r3,  [r0, #12]  @ tmp_buf
         ldr             r0,  [r0, #8]   @ revtab
         lsl             r12, r12, r2
         mov             r2,  r12
@@ -344,7 +347,7 @@ function ff_fft_permute_neon, export=1
         bgt             1b
 
         pop             {r4,pc}
-.endfunc
+endfunc
 
         .section .rodata
         .align 4
@@ -364,7 +367,7 @@ fft_tab_neon:
         .word fft16384_neon
         .word fft32768_neon
         .word fft65536_neon
-        .size fft_tab_neon, . - fft_tab_neon
+ELF     .size fft_tab_neon, . - fft_tab_neon
 
         .align 4
 pmmp:   .float  +1.0, -1.0, -1.0, +1.0

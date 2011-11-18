@@ -52,7 +52,7 @@
 DECLARE_ASM_CONST(8, uint64_t, wm1010)= 0xFFFF0000FFFF0000ULL;
 DECLARE_ASM_CONST(8, uint64_t, d40000)= 0x0000000000040000ULL;
 
-DECLARE_ALIGNED(8, static const int16_t, coeffs[])= {
+DECLARE_ALIGNED(8, static const int16_t, coeffs)[]= {
         1<<(ROW_SHIFT-1), 0, 1<<(ROW_SHIFT-1), 0,
 //        1<<(COL_SHIFT-1), 0, 1<<(COL_SHIFT-1), 0,
 //        0, 1<<(COL_SHIFT-1-16), 0, 1<<(COL_SHIFT-1-16),
@@ -211,7 +211,7 @@ row[7] = input[13];
 
 static inline void idct(int16_t *block)
 {
-        DECLARE_ALIGNED(8, int64_t, align_tmp[16]);
+        DECLARE_ALIGNED(8, int64_t, align_tmp)[16];
         int16_t * const temp= (int16_t*)align_tmp;
 
         __asm__ volatile(
@@ -789,7 +789,7 @@ IDCT(  16(%1), 80(%1), 48(%1), 112(%1),  8(%0), 20)
 IDCT(  24(%1), 88(%1), 56(%1), 120(%1), 12(%0), 20)
         "jmp 9f                         \n\t"
 
-        "#" ASMALIGN(4)                      \
+        "# .p2align 4                   \n\t"\
         "4:                             \n\t"
 Z_COND_IDCT(  64(%0), 72(%0), 80(%0), 88(%0), 64(%1),paddd (%2), 11, 6f)
 Z_COND_IDCT(  96(%0),104(%0),112(%0),120(%0), 96(%1),paddd (%2), 11, 5f)
@@ -864,7 +864,7 @@ IDCT(  16(%1), 80(%1), 48(%1), 112(%1),  8(%0), 20)
 IDCT(  24(%1), 88(%1), 56(%1), 120(%1), 12(%0), 20)
         "jmp 9f                         \n\t"
 
-        "#" ASMALIGN(4)                      \
+        "# .p2align 4                   \n\t"\
         "6:                             \n\t"
 Z_COND_IDCT(  96(%0),104(%0),112(%0),120(%0), 96(%1),paddd (%2), 11, 7f)
 
@@ -930,7 +930,7 @@ IDCT(  16(%1), 80(%1), 48(%1), 112(%1),  8(%0), 20)
 IDCT(  24(%1), 88(%1), 56(%1), 120(%1), 12(%0), 20)
         "jmp 9f                         \n\t"
 
-        "#" ASMALIGN(4)                      \
+        "# .p2align 4                   \n\t"\
         "2:                             \n\t"
 Z_COND_IDCT(  96(%0),104(%0),112(%0),120(%0), 96(%1),paddd (%2), 11, 3f)
 
@@ -1007,7 +1007,7 @@ IDCT(  16(%1), 80(%1), 48(%1), 112(%1),  8(%0), 20)
 IDCT(  24(%1), 88(%1), 56(%1), 120(%1), 12(%0), 20)
         "jmp 9f                         \n\t"
 
-        "#" ASMALIGN(4)                      \
+        "# .p2align 4                   \n\t"\
         "3:                             \n\t"
 #undef IDCT
 #define IDCT(src0, src4, src1, src5, dst, shift) \
@@ -1071,7 +1071,7 @@ IDCT(  16(%1), 80(%1), 48(%1), 112(%1),  8(%0), 20)
 IDCT(  24(%1), 88(%1), 56(%1), 120(%1), 12(%0), 20)
         "jmp 9f                         \n\t"
 
-        "#" ASMALIGN(4)                      \
+        "# .p2align 4                   \n\t"\
         "5:                             \n\t"
 #undef IDCT
 #define IDCT(src0, src4, src1, src5, dst, shift) \
@@ -1136,7 +1136,7 @@ IDCT(  16(%1), 80(%1), 48(%1), 112(%1),  8(%0), 20)
         "jmp 9f                         \n\t"
 
 
-        "#" ASMALIGN(4)                      \
+        "# .p2align 4                   \n\t"\
         "1:                             \n\t"
 #undef IDCT
 #define IDCT(src0, src4, src1, src5, dst, shift) \
@@ -1210,7 +1210,7 @@ IDCT(  24(%1), 88(%1), 56(%1), 120(%1), 12(%0), 20)
         "jmp 9f                         \n\t"
 
 
-        "#" ASMALIGN(4)
+        "# .p2align 4                   \n\t"
         "7:                             \n\t"
 #undef IDCT
 #define IDCT(src0, src4, src1, src5, dst, shift) \
@@ -1287,10 +1287,10 @@ void ff_simple_idct_mmx(int16_t *block)
 void ff_simple_idct_put_mmx(uint8_t *dest, int line_size, DCTELEM *block)
 {
     idct(block);
-    put_pixels_clamped_mmx(block, dest, line_size);
+    ff_put_pixels_clamped_mmx(block, dest, line_size);
 }
 void ff_simple_idct_add_mmx(uint8_t *dest, int line_size, DCTELEM *block)
 {
     idct(block);
-    add_pixels_clamped_mmx(block, dest, line_size);
+    ff_add_pixels_clamped_mmx(block, dest, line_size);
 }

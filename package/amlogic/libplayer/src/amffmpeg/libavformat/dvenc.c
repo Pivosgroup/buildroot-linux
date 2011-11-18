@@ -29,7 +29,9 @@
  */
 #include <time.h>
 #include <stdarg.h>
+
 #include "avformat.h"
+#include "internal.h"
 #include "libavcodec/dvdata.h"
 #include "dv.h"
 #include "libavutil/fifo.h"
@@ -230,8 +232,8 @@ static void dv_inject_metadata(DVMuxContext *c, uint8_t* frame)
  * The following 3 functions constitute our interface to the world
  */
 
-int dv_assemble_frame(DVMuxContext *c, AVStream* st,
-                      uint8_t* data, int data_size, uint8_t** frame)
+static int dv_assemble_frame(DVMuxContext *c, AVStream* st,
+                             uint8_t* data, int data_size, uint8_t** frame)
 {
     int i, reqasize;
 
@@ -239,7 +241,7 @@ int dv_assemble_frame(DVMuxContext *c, AVStream* st,
     reqasize = 4 * dv_audio_frame_size(c->sys, c->frames);
 
     switch (st->codec->codec_type) {
-    case CODEC_TYPE_VIDEO:
+    case AVMEDIA_TYPE_VIDEO:
         /* FIXME: we have to have more sensible approach than this one */
         if (c->has_video)
             av_log(st->codec, AV_LOG_ERROR, "Can't process DV frame #%d. Insufficient audio data or severe sync problem.\n", c->frames);
@@ -247,7 +249,7 @@ int dv_assemble_frame(DVMuxContext *c, AVStream* st,
         memcpy(*frame, data, c->sys->frame_size);
         c->has_video = 1;
         break;
-    case CODEC_TYPE_AUDIO:
+    case AVMEDIA_TYPE_AUDIO:
         for (i = 0; i < c->n_ast && st != c->ast[i]; i++);
 
           /* FIXME: we have to have more sensible approach than this one */
@@ -283,7 +285,7 @@ int dv_assemble_frame(DVMuxContext *c, AVStream* st,
     return 0;
 }
 
-DVMuxContext* dv_init_mux(AVFormatContext* s)
+static DVMuxContext* dv_init_mux(AVFormatContext* s)
 {
     DVMuxContext *c = s->priv_data;
     AVStream *vst = NULL;
@@ -299,11 +301,11 @@ DVMuxContext* dv_init_mux(AVFormatContext* s)
     /* We have to sort out where audio and where video stream is */
     for (i=0; i<s->nb_streams; i++) {
         switch (s->streams[i]->codec->codec_type) {
-        case CODEC_TYPE_VIDEO:
+        case AVMEDIA_TYPE_VIDEO:
             if (vst) return NULL;
             vst = s->streams[i];
             break;
-        case CODEC_TYPE_AUDIO:
+        case AVMEDIA_TYPE_AUDIO:
             if (c->n_ast > 1) return NULL;
             c->ast[c->n_ast++] = s->streams[i];
             break;
@@ -352,14 +354,13 @@ bail_out:
     return NULL;
 }
 
-void dv_delete_mux(DVMuxContext *c)
+static void dv_delete_mux(DVMuxContext *c)
 {
     int i;
     for (i=0; i < c->n_ast; i++)
         av_fifo_free(c->audio_data[i]);
 }
 
-#if CONFIG_DV_MUXER
 static int dv_write_header(AVFormatContext *s)
 {
     if (!dv_init_mux(s)) {
@@ -380,8 +381,8 @@ static int dv_write_packet(struct AVFormatContext *s, AVPacket *pkt)
     fsize = dv_assemble_frame(s->priv_data, s->streams[pkt->stream_index],
                               pkt->data, pkt->size, &frame);
     if (fsize > 0) {
-        put_buffer(s->pb, frame, fsize);
-        put_flush_packet(s->pb);
+        avio_write(s->pb, frame, fsize);
+        avio_flush(s->pb);
     }
     return 0;
 }
@@ -398,7 +399,7 @@ static int dv_write_trailer(struct AVFormatContext *s)
     return 0;
 }
 
-AVOutputFormat dv_muxer = {
+AVOutputFormat ff_dv_muxer = {
     "dv",
     NULL_IF_CONFIG_SMALL("DV video format"),
     NULL,
@@ -410,4 +411,3 @@ AVOutputFormat dv_muxer = {
     dv_write_packet,
     dv_write_trailer,
 };
-#endif /* CONFIG_DV_MUXER */

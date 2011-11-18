@@ -27,38 +27,6 @@
 
 int off;
 
-
-void ff_bfin_idct (DCTELEM *block) attribute_l1_text;
-void ff_bfin_fdct (DCTELEM *block) attribute_l1_text;
-void ff_bfin_vp3_idct (DCTELEM *block);
-void ff_bfin_vp3_idct_put (uint8_t *dest, int line_size, DCTELEM *block);
-void ff_bfin_vp3_idct_add (uint8_t *dest, int line_size, DCTELEM *block);
-void ff_bfin_add_pixels_clamped (const DCTELEM *block, uint8_t *dest, int line_size) attribute_l1_text;
-void ff_bfin_put_pixels_clamped (const DCTELEM *block, uint8_t *dest, int line_size) attribute_l1_text;
-void ff_bfin_diff_pixels (DCTELEM *block, const uint8_t *s1, const uint8_t *s2, int stride)  attribute_l1_text;
-void ff_bfin_get_pixels  (DCTELEM *restrict block, const uint8_t *pixels, int line_size) attribute_l1_text;
-int  ff_bfin_pix_norm1  (uint8_t * pix, int line_size) attribute_l1_text;
-int  ff_bfin_z_sad8x8   (uint8_t *blk1, uint8_t *blk2, int dsz, int line_size, int h) attribute_l1_text;
-int  ff_bfin_z_sad16x16 (uint8_t *blk1, uint8_t *blk2, int dsz, int line_size, int h) attribute_l1_text;
-
-void ff_bfin_z_put_pixels16_xy2     (uint8_t *block, const uint8_t *s0, int dest_size, int line_size, int h) attribute_l1_text;
-void ff_bfin_z_put_pixels8_xy2      (uint8_t *block, const uint8_t *s0, int dest_size, int line_size, int h) attribute_l1_text;
-void ff_bfin_put_pixels16_xy2_nornd (uint8_t *block, const uint8_t *s0, int line_size, int h) attribute_l1_text;
-void ff_bfin_put_pixels8_xy2_nornd  (uint8_t *block, const uint8_t *s0, int line_size, int h) attribute_l1_text;
-
-
-int  ff_bfin_pix_sum (uint8_t *p, int stride) attribute_l1_text;
-
-void ff_bfin_put_pixels8uc        (uint8_t *block, const uint8_t *s0, const uint8_t *s1, int dest_size, int line_size, int h) attribute_l1_text;
-void ff_bfin_put_pixels16uc       (uint8_t *block, const uint8_t *s0, const uint8_t *s1, int dest_size, int line_size, int h) attribute_l1_text;
-void ff_bfin_put_pixels8uc_nornd  (uint8_t *block, const uint8_t *s0, const uint8_t *s1, int line_size, int h) attribute_l1_text;
-void ff_bfin_put_pixels16uc_nornd (uint8_t *block, const uint8_t *s0, const uint8_t *s1, int line_size, int h) attribute_l1_text;
-
-int ff_bfin_sse4  (void *v, uint8_t *pix1, uint8_t *pix2, int line_size, int h) attribute_l1_text;
-int ff_bfin_sse8  (void *v, uint8_t *pix1, uint8_t *pix2, int line_size, int h) attribute_l1_text;
-int ff_bfin_sse16 (void *v, uint8_t *pix1, uint8_t *pix2, int line_size, int h) attribute_l1_text;
-
-
 static void bfin_idct_add (uint8_t *dest, int line_size, DCTELEM *block)
 {
     ff_bfin_idct (block);
@@ -127,7 +95,7 @@ static void bfin_put_pixels16_xy2 (uint8_t *block, const uint8_t *s0, int line_s
     ff_bfin_z_put_pixels16_xy2 (block,s0,line_size, line_size, h);
 }
 
-void bfin_put_pixels8_nornd (uint8_t *block, const uint8_t *pixels, int line_size, int h)
+static void bfin_put_pixels8_nornd (uint8_t *block, const uint8_t *pixels, int line_size, int h)
 {
     ff_bfin_put_pixels8uc_nornd (block, pixels, pixels, line_size, h);
 }
@@ -143,7 +111,7 @@ static void bfin_put_pixels8_y2_nornd (uint8_t *block, const uint8_t *pixels, in
 }
 
 
-void bfin_put_pixels16_nornd (uint8_t *block, const uint8_t *pixels, int line_size, int h)
+static void bfin_put_pixels16_nornd (uint8_t *block, const uint8_t *pixels, int line_size, int h)
 {
     ff_bfin_put_pixels16uc_nornd (block, pixels, pixels, line_size, h);
 }
@@ -229,11 +197,14 @@ static int bfin_pix_abs8_xy2 (void *c, uint8_t *blk1, uint8_t *blk2, int line_si
 
 void dsputil_init_bfin( DSPContext* c, AVCodecContext *avctx )
 {
+    const int high_bit_depth = avctx->codec_id == CODEC_ID_H264 && avctx->bits_per_raw_sample > 8;
+
     c->get_pixels         = ff_bfin_get_pixels;
     c->diff_pixels        = ff_bfin_diff_pixels;
     c->put_pixels_clamped = ff_bfin_put_pixels_clamped;
     c->add_pixels_clamped = ff_bfin_add_pixels_clamped;
 
+    if (!high_bit_depth)
     c->clear_blocks       = bfin_clear_blocks;
     c->pix_sum            = ff_bfin_pix_sum;
     c->pix_norm1          = ff_bfin_pix_norm1;
@@ -260,18 +231,7 @@ void dsputil_init_bfin( DSPContext* c, AVCodecContext *avctx )
     c->sse[1] = ff_bfin_sse8;
     c->sse[2] = ff_bfin_sse4;
 
-
-    /**
-     * Halfpel motion compensation with rounding (a+b+1)>>1.
-     * This is an array[4][4] of motion compensation functions for 4
-     * horizontal blocksizes (8,16) and the 4 halfpel positions
-     * *pixels_tab[ 0->16xH 1->8xH ][ xhalfpel + 2*yhalfpel ]
-     * @param block destination where the result is stored
-     * @param pixels source
-     * @param line_size number of bytes in a horizontal line of block
-     * @param h height
-     */
-
+    if (!high_bit_depth) {
     c->put_pixels_tab[0][0] = bfin_put_pixels16;
     c->put_pixels_tab[0][1] = bfin_put_pixels16_x2;
     c->put_pixels_tab[0][2] = bfin_put_pixels16_y2;
@@ -291,6 +251,7 @@ void dsputil_init_bfin( DSPContext* c, AVCodecContext *avctx )
     c->put_no_rnd_pixels_tab[0][1] = bfin_put_pixels16_x2_nornd;
     c->put_no_rnd_pixels_tab[0][2] = bfin_put_pixels16_y2_nornd;
 /*     c->put_no_rnd_pixels_tab[0][3] = ff_bfin_put_pixels16_xy2_nornd; */
+    }
 
     if (avctx->dct_algo == FF_DCT_AUTO)
         c->fdct               = ff_bfin_fdct;

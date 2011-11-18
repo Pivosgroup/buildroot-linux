@@ -28,11 +28,12 @@
 #include <assert.h>
 #include "config.h"
 #include <unistd.h>
+#include "libavutil/pixdesc.h"
 #include "libswscale/rgb2rgb.h"
 #include "libswscale/swscale.h"
 #include "libswscale/swscale_internal.h"
 
-#ifdef __FDPIC__
+#if defined(__FDPIC__) && CONFIG_SRAM
 #define L1CODE __attribute__ ((l1_text))
 #else
 #define L1CODE
@@ -197,7 +198,7 @@ SwsFunc ff_yuv2rgb_get_func_ptr_bfin(SwsContext *c)
     }
 
     av_log(c, AV_LOG_INFO, "BlackFin accelerated color space converter %s\n",
-           sws_format_name (c->dstFormat));
+           av_get_pix_fmt_name(c->dstFormat));
 
     return f;
 }

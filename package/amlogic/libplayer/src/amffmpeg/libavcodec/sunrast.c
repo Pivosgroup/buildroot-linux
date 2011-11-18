@@ -20,6 +20,7 @@
  */
 
 #include "libavutil/intreadwrite.h"
+#include "libavutil/imgutils.h"
 #include "avcodec.h"
 
 #define RT_OLD          0
@@ -97,7 +98,7 @@ static int sunrast_decode_frame(AVCodecContext *avctx, void *data,
     if (p->data[0])
         avctx->release_buffer(avctx, p);
 
-    if (avcodec_check_dimensions(avctx, w, h))
+    if (av_image_check_size(w, h, 0, avctx))
         return -1;
     if (w != avctx->width || h != avctx->height)
         avcodec_set_dimensions(avctx, w, h);
@@ -106,7 +107,7 @@ static int sunrast_decode_frame(AVCodecContext *avctx, void *data,
         return -1;
     }
 
-    p->pict_type = FF_I_TYPE;
+    p->pict_type = AV_PICTURE_TYPE_I;
 
     if (depth != 8 && maplength) {
         av_log(avctx, AV_LOG_WARNING, "useless colormap found or file is corrupted, trying to recover\n");
@@ -183,9 +184,9 @@ static av_cold int sunrast_end(AVCodecContext *avctx) {
     return 0;
 }
 
-AVCodec sunrast_decoder = {
+AVCodec ff_sunrast_decoder = {
     "sunrast",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_SUNRAST,
     sizeof(SUNRASTContext),
     sunrast_init,

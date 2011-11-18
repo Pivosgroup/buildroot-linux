@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/resample2.c
+ * @file
  * audio resampling
  * @author Michael Niedermayer <michaelni@gmx.at>
  */
@@ -76,11 +76,13 @@ typedef struct AVResampleContext{
  */
 static double bessel(double x){
     double v=1;
+    double lastv=0;
     double t=1;
     int i;
 
     x= x*x/4;
-    for(i=1; i<50; i++){
+    for(i=1; v != lastv; i++){
+        lastv=v;
         t *= x/(i*i);
         v += t;
     }
@@ -92,11 +94,16 @@ static double bessel(double x){
  * @param factor resampling factor
  * @param scale wanted sum of coefficients for each filter
  * @param type 0->cubic, 1->blackman nuttall windowed sinc, 2..16->kaiser windowed sinc beta=2..16
+ * @return 0 on success, negative on error
  */
-void av_build_filter(FELEM *filter, double factor, int tap_count, int phase_count, int scale, int type){
+static int build_filter(FELEM *filter, double factor, int tap_count, int phase_count, int scale, int type){
     int ph, i;
-    double x, y, w, tab[tap_count];
+    double x, y, w;
+    double *tab = av_malloc(tap_count * sizeof(*tab));
     const int center= (tap_count-1)/2;
+
+    if (!tab)
+        return AVERROR(ENOMEM);
 
     /* if upsampling, only need to interpolate, no filter */
     if (factor > 1.0)
@@ -174,6 +181,9 @@ void av_build_filter(FELEM *filter, double factor, int tap_count, int phase_coun
         }
     }
 #endif
+
+    av_free(tab);
+    return 0;
 }
 
 AVResampleContext *av_resample_init(int out_rate, int in_rate, int filter_size, int phase_shift, int linear, double cutoff){
@@ -181,13 +191,19 @@ AVResampleContext *av_resample_init(int out_rate, int in_rate, int filter_size, 
     double factor= FFMIN(out_rate * cutoff / in_rate, 1.0);
     int phase_count= 1<<phase_shift;
 
+    if (!c)
+        return NULL;
+
     c->phase_shift= phase_shift;
     c->phase_mask= phase_count-1;
     c->linear= linear;
 
     c->filter_length= FFMAX((int)ceil(filter_size/factor), 1);
     c->filter_bank= av_mallocz(c->filter_length*(phase_count+1)*sizeof(FELEM));
-    av_build_filter(c->filter_bank, factor, c->filter_length, phase_count, 1<<FILTER_SHIFT, WINDOW_TYPE);
+    if (!c->filter_bank)
+        goto error;
+    if (build_filter(c->filter_bank, factor, c->filter_length, phase_count, 1<<FILTER_SHIFT, WINDOW_TYPE))
+        goto error;
     memcpy(&c->filter_bank[c->filter_length*phase_count+1], c->filter_bank, (c->filter_length-1)*sizeof(FELEM));
     c->filter_bank[c->filter_length*phase_count]= c->filter_bank[c->filter_length - 1];
 
@@ -196,6 +212,10 @@ AVResampleContext *av_resample_init(int out_rate, int in_rate, int filter_size, 
     c->index= -phase_count*((c->filter_length-1)/2);
 
     return c;
+error:
+    av_free(c->filter_bank);
+    av_free(c);
+    return NULL;
 }
 
 void av_resample_close(AVResampleContext *c){

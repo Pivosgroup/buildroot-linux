@@ -22,7 +22,7 @@
  */
 
 /**
- * @file libavcodec/mdec.c
+ * @file
  * Sony PlayStation MDEC (Motion DECoder)
  * This is very similar to intra-only MPEG-1.
  */
@@ -31,6 +31,7 @@
 #include "dsputil.h"
 #include "mpegvideo.h"
 #include "mpeg12.h"
+#include "thread.h"
 
 typedef struct MDECContext{
     AVCodecContext *avctx;
@@ -44,7 +45,7 @@ typedef struct MDECContext{
     int mb_width;
     int mb_height;
     int mb_x, mb_y;
-    DECLARE_ALIGNED_16(DCTELEM, block[6][64]);
+    DECLARE_ALIGNED(16, DCTELEM, block)[6][64];
     uint8_t *bitstream_buffer;
     unsigned int bitstream_buffer_size;
     int block_last_index[6];
@@ -125,7 +126,8 @@ static inline int decode_mb(MDECContext *a, DCTELEM block[6][64]){
     a->dsp.clear_blocks(block[0]);
 
     for(i=0; i<6; i++){
-        if( mdec_decode_block_intra(a, block[ block_index[i] ], block_index[i]) < 0)
+        if( mdec_decode_block_intra(a, block[ block_index[i] ], block_index[i]) < 0 ||
+            get_bits_left(&a->gb) < 0)
             return -1;
     }
     return 0;
@@ -162,14 +164,14 @@ static int decode_frame(AVCodecContext *avctx,
     int i;
 
     if(p->data[0])
-        avctx->release_buffer(avctx, p);
+        ff_thread_release_buffer(avctx, p);
 
     p->reference= 0;
-    if(avctx->get_buffer(avctx, p) < 0){
+    if(ff_thread_get_buffer(avctx, p) < 0){
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return -1;
     }
-    p->pict_type= FF_I_TYPE;
+    p->pict_type= AV_PICTURE_TYPE_I;
     p->key_frame= 1;
 
     av_fast_malloc(&a->bitstream_buffer, &a->bitstream_buffer_size, buf_size + FF_INPUT_BUFFER_PADDING_SIZE);
@@ -201,7 +203,7 @@ static int decode_frame(AVCodecContext *avctx,
     }
 
     p->quality= a->qscale * FF_QP2LAMBDA;
-    memset(p->qscale_table, a->qscale, p->qstride*a->mb_height);
+    memset(p->qscale_table, a->qscale, a->mb_width);
 
     *picture   = a->picture;
     *data_size = sizeof(AVPicture);
@@ -217,6 +219,7 @@ static av_cold void mdec_common_init(AVCodecContext *avctx){
     a->mb_width   = (avctx->coded_width  + 15) / 16;
     a->mb_height  = (avctx->coded_height + 15) / 16;
 
+    avcodec_get_frame_defaults(&a->picture);
     avctx->coded_frame= &a->picture;
     a->avctx= avctx;
 }
@@ -229,16 +232,33 @@ static av_cold int decode_init(AVCodecContext *avctx){
     ff_mpeg12_init_vlcs();
     ff_init_scantable(a->dsp.idct_permutation, &a->scantable, ff_zigzag_direct);
 
-    p->qstride= a->mb_width;
-    p->qscale_table= av_mallocz( p->qstride * a->mb_height);
-    avctx->pix_fmt= PIX_FMT_YUV420P;
+    if( avctx->idct_algo == FF_IDCT_AUTO )
+        avctx->idct_algo = FF_IDCT_SIMPLE;
+    p->qstride= 0;
+    p->qscale_table= av_mallocz(a->mb_width);
+    avctx->pix_fmt= PIX_FMT_YUVJ420P;
 
     return 0;
 }
 
+static av_cold int decode_init_thread_copy(AVCodecContext *avctx){
+    MDECContext * const a = avctx->priv_data;
+    AVFrame *p = (AVFrame*)&a->picture;
+
+    avctx->coded_frame= p;
+    a->avctx= avctx;
+
+    p->qscale_table= av_mallocz(a->mb_width);
+
+    return 0;
+}
+
+
 static av_cold int decode_end(AVCodecContext *avctx){
     MDECContext * const a = avctx->priv_data;
 
+    if(a->picture.data[0])
+        avctx->release_buffer(avctx, &a->picture);
     av_freep(&a->bitstream_buffer);
     av_freep(&a->picture.qscale_table);
     a->bitstream_buffer_size=0;
@@ -246,16 +266,17 @@ static av_cold int decode_end(AVCodecContext *avctx){
     return 0;
 }
 
-AVCodec mdec_decoder = {
+AVCodec ff_mdec_decoder = {
     "mdec",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_MDEC,
     sizeof(MDECContext),
     decode_init,
     NULL,
     decode_end,
     decode_frame,
-    CODEC_CAP_DR1,
+    CODEC_CAP_DR1 | CODEC_CAP_FRAME_THREADS,
     .long_name= NULL_IF_CONFIG_SMALL("Sony PlayStation MDEC (Motion DECoder)"),
+    .init_thread_copy= ONLY_IF_THREADS_ENABLED(decode_init_thread_copy)
 };
 

@@ -18,11 +18,13 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+#include <stdlib.h>
 #include <math.h>
-#include "dsputil.h"
+#include "libavutil/mathematics.h"
+#include "rdft.h"
 
 /**
- * @file libavcodec/rdft.c
+ * @file
  * (Inverse) Real Discrete Fourier Transforms.
  */
 
@@ -42,44 +44,17 @@ SINTABLE(16384);
 SINTABLE(32768);
 SINTABLE(65536);
 #endif
-SINTABLE_CONST FFTSample * const ff_sin_tabs[] = {
+static SINTABLE_CONST FFTSample * const ff_sin_tabs[] = {
     NULL, NULL, NULL, NULL,
     ff_sin_16, ff_sin_32, ff_sin_64, ff_sin_128, ff_sin_256, ff_sin_512, ff_sin_1024,
     ff_sin_2048, ff_sin_4096, ff_sin_8192, ff_sin_16384, ff_sin_32768, ff_sin_65536,
 };
 
-av_cold int ff_rdft_init(RDFTContext *s, int nbits, enum RDFTransformType trans)
-{
-    int n = 1 << nbits;
-    int i;
-    const double theta = (trans == RDFT || trans == IRIDFT ? -1 : 1)*2*M_PI/n;
-
-    s->nbits           = nbits;
-    s->inverse         = trans == IRDFT || trans == IRIDFT;
-    s->sign_convention = trans == RIDFT || trans == IRIDFT ? 1 : -1;
-
-    if (nbits < 4 || nbits > 16)
-        return -1;
-
-    if (ff_fft_init(&s->fft, nbits-1, trans == IRDFT || trans == RIDFT) < 0)
-        return -1;
-
-    ff_init_ff_cos_tabs(nbits);
-    s->tcos = ff_cos_tabs[nbits];
-    s->tsin = ff_sin_tabs[nbits]+(trans == RDFT || trans == IRIDFT)*(n>>2);
-#if !CONFIG_HARDCODED_TABLES
-    for (i = 0; i < (n>>2); i++) {
-        s->tsin[i] = sin(i*theta);
-    }
-#endif
-    return 0;
-}
-
 /** Map one real FFT into two parallel real even and odd FFTs. Then interleave
  * the two real FFTs into one complex FFT. Unmangle the results.
  * ref: http://www.engineeringproductivitytools.com/stuff/T0001/PT10.HTM
  */
-void ff_rdft_calc_c(RDFTContext* s, FFTSample* data)
+static void ff_rdft_calc_c(RDFTContext* s, FFTSample* data)
 {
     int i, i1, i2;
     FFTComplex ev, od;
@@ -90,8 +65,8 @@ void ff_rdft_calc_c(RDFTContext* s, FFTSample* data)
     const FFTSample *tsin = s->tsin;
 
     if (!s->inverse) {
-        ff_fft_permute(&s->fft, (FFTComplex*)data);
-        ff_fft_calc(&s->fft, (FFTComplex*)data);
+        s->fft.fft_permute(&s->fft, (FFTComplex*)data);
+        s->fft.fft_calc(&s->fft, (FFTComplex*)data);
     }
     /* i=0 is a special case because of packing, the DC term is real, so we
        are going to throw the N/2 term (also real) in with it. */
@@ -116,14 +91,40 @@ void ff_rdft_calc_c(RDFTContext* s, FFTSample* data)
     if (s->inverse) {
         data[0] *= k1;
         data[1] *= k1;
-        ff_fft_permute(&s->fft, (FFTComplex*)data);
-        ff_fft_calc(&s->fft, (FFTComplex*)data);
+        s->fft.fft_permute(&s->fft, (FFTComplex*)data);
+        s->fft.fft_calc(&s->fft, (FFTComplex*)data);
     }
 }
 
-void ff_rdft_calc(RDFTContext *s, FFTSample *data)
+av_cold int ff_rdft_init(RDFTContext *s, int nbits, enum RDFTransformType trans)
 {
-    ff_rdft_calc_c(s, data);
+    int n = 1 << nbits;
+    int i;
+    const double theta = (trans == DFT_R2C || trans == DFT_C2R ? -1 : 1)*2*M_PI/n;
+
+    s->nbits           = nbits;
+    s->inverse         = trans == IDFT_C2R || trans == DFT_C2R;
+    s->sign_convention = trans == IDFT_R2C || trans == DFT_C2R ? 1 : -1;
+
+    if (nbits < 4 || nbits > 16)
+        return -1;
+
+    if (ff_fft_init(&s->fft, nbits-1, trans == IDFT_C2R || trans == IDFT_R2C) < 0)
+        return -1;
+
+    ff_init_ff_cos_tabs(nbits);
+    s->tcos = ff_cos_tabs[nbits];
+    s->tsin = ff_sin_tabs[nbits]+(trans == DFT_R2C || trans == DFT_C2R)*(n>>2);
+#if !CONFIG_HARDCODED_TABLES
+    for (i = 0; i < (n>>2); i++) {
+        s->tsin[i] = sin(i*theta);
+    }
+#endif
+    s->rdft_calc   = ff_rdft_calc_c;
+
+    if (ARCH_ARM) ff_rdft_init_arm(s);
+
+    return 0;
 }
 
 av_cold void ff_rdft_end(RDFTContext *s)

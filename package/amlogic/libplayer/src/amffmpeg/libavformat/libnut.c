@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavformat/libnut.c
+ * @file
  * NUT demuxing and muxing via libnut.
  * @author Oded Shimon <ods15@ods15.dyndns.org>
  */
@@ -46,15 +46,15 @@ static const AVCodecTag nut_tags[] = {
 
 #if CONFIG_LIBNUT_MUXER
 static int av_write(void * h, size_t len, const uint8_t * buf) {
-    ByteIOContext * bc = h;
-    put_buffer(bc, buf, len);
-    //put_flush_packet(bc);
+    AVIOContext * bc = h;
+    avio_write(bc, buf, len);
+    //avio_flush(bc);
     return len;
 }
 
 static int nut_write_header(AVFormatContext * avf) {
     NUTContext * priv = avf->priv_data;
-    ByteIOContext * bc = avf->pb;
+    AVIOContext * bc = avf->pb;
     nut_muxer_opts_tt mopts = {
         .output = {
             .priv = bc,
@@ -77,14 +77,14 @@ static int nut_write_header(AVFormatContext * avf) {
         int fourcc = 0;
         int num, denom, ssize;
 
-        s[i].type = codec->codec_type == CODEC_TYPE_VIDEO ? NUT_VIDEO_CLASS : NUT_AUDIO_CLASS;
+        s[i].type = codec->codec_type == AVMEDIA_TYPE_VIDEO ? NUT_VIDEO_CLASS : NUT_AUDIO_CLASS;
 
         if (codec->codec_tag) fourcc = codec->codec_tag;
         else fourcc = ff_codec_get_tag(nut_tags, codec->codec_id);
 
         if (!fourcc) {
-            if (codec->codec_type == CODEC_TYPE_VIDEO) fourcc = ff_codec_get_tag(ff_codec_bmp_tags, codec->codec_id);
-            if (codec->codec_type == CODEC_TYPE_AUDIO) fourcc = ff_codec_get_tag(ff_codec_wav_tags, codec->codec_id);
+            if (codec->codec_type == AVMEDIA_TYPE_VIDEO) fourcc = ff_codec_get_tag(ff_codec_bmp_tags, codec->codec_id);
+            if (codec->codec_type == AVMEDIA_TYPE_AUDIO) fourcc = ff_codec_get_tag(ff_codec_wav_tags, codec->codec_id);
         }
 
         s[i].fourcc_len = 4;
@@ -102,7 +102,7 @@ static int nut_write_header(AVFormatContext * avf) {
         s[i].codec_specific_len = codec->extradata_size;
         s[i].codec_specific = codec->extradata;
 
-        if (codec->codec_type == CODEC_TYPE_VIDEO) {
+        if (codec->codec_type == AVMEDIA_TYPE_VIDEO) {
             s[i].width = codec->width;
             s[i].height = codec->height;
             s[i].sample_width = 0;
@@ -128,7 +128,7 @@ static int nut_write_packet(AVFormatContext * avf, AVPacket * pkt) {
     p.len = pkt->size;
     p.stream = pkt->stream_index;
     p.pts = pkt->pts;
-    p.flags = pkt->flags & PKT_FLAG_KEY ? NUT_FLAG_KEY : 0;
+    p.flags = pkt->flags & AV_PKT_FLAG_KEY ? NUT_FLAG_KEY : 0;
     p.next_pts = 0;
 
     nut_write_frame_reorder(priv->nut, &p, pkt->data);
@@ -137,12 +137,12 @@ static int nut_write_packet(AVFormatContext * avf, AVPacket * pkt) {
 }
 
 static int nut_write_trailer(AVFormatContext * avf) {
-    ByteIOContext * bc = avf->pb;
+    AVIOContext * bc = avf->pb;
     NUTContext * priv = avf->priv_data;
     int i;
 
     nut_muxer_uninit_reorder(priv->nut);
-    put_flush_packet(bc);
+    avio_flush(bc);
 
     for(i = 0; priv->s[i].type != -1; i++ ) av_freep(&priv->s[i].fourcc);
     av_freep(&priv->s);
@@ -150,7 +150,7 @@ static int nut_write_trailer(AVFormatContext * avf) {
     return 0;
 }
 
-AVOutputFormat libnut_muxer = {
+AVOutputFormat ff_libnut_muxer = {
     "libnut",
     "nut format",
     "video/x-nut",
@@ -172,22 +172,22 @@ static int nut_probe(AVProbeData *p) {
 }
 
 static size_t av_read(void * h, size_t len, uint8_t * buf) {
-    ByteIOContext * bc = h;
-    return get_buffer(bc, buf, len);
+    AVIOContext * bc = h;
+    return avio_read(bc, buf, len);
 }
 
 static off_t av_seek(void * h, long long pos, int whence) {
-    ByteIOContext * bc = h;
+    AVIOContext * bc = h;
     if (whence == SEEK_END) {
-        pos = url_fsize(bc) + pos;
+        pos = avio_size(bc) + pos;
         whence = SEEK_SET;
     }
-    return url_fseek(bc, pos, whence);
+    return avio_seek(bc, pos, whence);
 }
 
 static int nut_read_header(AVFormatContext * avf, AVFormatParameters * ap) {
     NUTContext * priv = avf->priv_data;
-    ByteIOContext * bc = avf->pb;
+    AVIOContext * bc = avf->pb;
     nut_demuxer_opts_tt dopts = {
         .input = {
             .priv = bc,
@@ -234,14 +234,14 @@ static int nut_read_header(AVFormatContext * avf, AVFormatParameters * ap) {
 
         switch(s[i].type) {
         case NUT_AUDIO_CLASS:
-            st->codec->codec_type = CODEC_TYPE_AUDIO;
+            st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
             if (st->codec->codec_id == CODEC_ID_NONE) st->codec->codec_id = ff_codec_get_id(ff_codec_wav_tags, st->codec->codec_tag);
 
             st->codec->channels = s[i].channel_count;
             st->codec->sample_rate = s[i].samplerate_num / s[i].samplerate_denom;
             break;
         case NUT_VIDEO_CLASS:
-            st->codec->codec_type = CODEC_TYPE_VIDEO;
+            st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
             if (st->codec->codec_id == CODEC_ID_NONE) st->codec->codec_id = ff_codec_get_id(ff_codec_bmp_tags, st->codec->codec_tag);
 
             st->codec->width = s[i].width;
@@ -269,10 +269,10 @@ static int nut_read_packet(AVFormatContext * avf, AVPacket * pkt) {
         return -1;
     }
 
-    if (pd.flags & NUT_FLAG_KEY) pkt->flags |= PKT_FLAG_KEY;
+    if (pd.flags & NUT_FLAG_KEY) pkt->flags |= AV_PKT_FLAG_KEY;
     pkt->pts = pd.pts;
     pkt->stream_index = pd.stream;
-    pkt->pos = url_ftell(avf->pb);
+    pkt->pos = avio_tell(avf->pb);
 
     ret = nut_read_frame(priv->nut, &pd.len, pkt->data);
 
@@ -297,7 +297,7 @@ static int nut_read_close(AVFormatContext *s) {
     return 0;
 }
 
-AVInputFormat libnut_demuxer = {
+AVInputFormat ff_libnut_demuxer = {
     "libnut",
     NULL_IF_CONFIG_SMALL("NUT format"),
     sizeof(NUTContext),

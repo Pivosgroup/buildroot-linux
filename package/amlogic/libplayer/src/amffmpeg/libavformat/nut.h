@@ -27,6 +27,7 @@
 //#include "libavcodec/mpegaudio.h"
 #include "avformat.h"
 #include "riff.h"
+#include "metadata.h"
 
 #define      MAIN_STARTCODE (0x7A561F5F04ADULL + (((uint64_t)('N'<<8) + 'M')<<48))
 #define    STREAM_STARTCODE (0x11405BF2F9DBULL + (((uint64_t)('N'<<8) + 'S')<<48))
@@ -81,6 +82,10 @@ typedef struct {
 } StreamContext;
 
 typedef struct {
+    AVRational *time_base;
+} ChapterContext;
+
+typedef struct {
     AVFormatContext *avf;
 //    int written_packet_size;
 //    int64_t packet_start;
@@ -89,6 +94,7 @@ typedef struct {
     const uint8_t *header[128];
     uint64_t next_startcode;     ///< stores the next startcode if it has already been parsed but the stream is not seekable
     StreamContext *stream;
+    ChapterContext *chapter;
     unsigned int max_distance;
     unsigned int time_base_count;
     int64_t last_syncpoint_pos;
@@ -98,6 +104,7 @@ typedef struct {
 } NUTContext;
 
 extern const AVCodecTag ff_nut_subtitle_tags[];
+extern const AVCodecTag ff_nut_video_tags[];
 
 typedef struct {
     char str[9];
@@ -106,10 +113,13 @@ typedef struct {
 
 void ff_nut_reset_ts(NUTContext *nut, AVRational time_base, int64_t val);
 int64_t ff_lsb2full(StreamContext *stream, int64_t lsb);
-int ff_nut_sp_pos_cmp(Syncpoint *a, Syncpoint *b);
-int ff_nut_sp_pts_cmp(Syncpoint *a, Syncpoint *b);
+int ff_nut_sp_pos_cmp(const Syncpoint *a, const Syncpoint *b);
+int ff_nut_sp_pts_cmp(const Syncpoint *a, const Syncpoint *b);
 void ff_nut_add_sp(NUTContext *nut, int64_t pos, int64_t back_ptr, int64_t ts);
+void ff_nut_free_sp(NUTContext *nut);
 
 extern const Dispositions ff_nut_dispositions[];
+
+extern const AVMetadataConv ff_nut_metadata_conv[];
 
 #endif /* AVFORMAT_NUT_H */

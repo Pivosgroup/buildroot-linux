@@ -99,12 +99,16 @@ int main(int argc, char **argv)
 
     while ((err = av_read_frame(fctx, &pkt)) >= 0) {
         int fd;
-        snprintf(pktfilename, PATH_MAX-1, fntemplate, pktnum, pkt.stream_index, pkt.pts, pkt.size, (pkt.flags & PKT_FLAG_KEY)?'K':'_');
-        printf(PKTFILESUFF"\n", pktnum, pkt.stream_index, pkt.pts, pkt.size, (pkt.flags & PKT_FLAG_KEY)?'K':'_');
+        snprintf(pktfilename, PATH_MAX-1, fntemplate, pktnum, pkt.stream_index, pkt.pts, pkt.size, (pkt.flags & AV_PKT_FLAG_KEY)?'K':'_');
+        printf(PKTFILESUFF"\n", pktnum, pkt.stream_index, pkt.pts, pkt.size, (pkt.flags & AV_PKT_FLAG_KEY)?'K':'_');
         //printf("open(\"%s\")\n", pktfilename);
         if (!nowrite) {
             fd = open(pktfilename, O_WRONLY|O_CREAT, 0644);
-            write(fd, pkt.data, pkt.size);
+            err = write(fd, pkt.data, pkt.size);
+            if (err < 0) {
+                fprintf(stderr, "write: error %d\n", err);
+                return 1;
+            }
             close(fd);
         }
         av_free_packet(&pkt);

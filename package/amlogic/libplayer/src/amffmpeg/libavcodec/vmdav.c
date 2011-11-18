@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/vmdav.c
+ * @file
  * Sierra VMD audio & video decoders
  * by Vladimir "VAG" Gneushev (vagsoft at mail.ru)
  * for more information on the Sierra VMD format, visit:
@@ -199,7 +199,6 @@ static void vmd_decode(VmdVideoContext *s)
 
     int frame_x, frame_y;
     int frame_width, frame_height;
-    int dp_size;
 
     frame_x = AV_RL16(&s->buf[6]);
     frame_y = AV_RL16(&s->buf[8]);
@@ -247,7 +246,6 @@ static void vmd_decode(VmdVideoContext *s)
         }
 
         dp = &s->frame.data[0][frame_y * s->frame.linesize[0] + frame_x];
-        dp_size = s->frame.linesize[0] * s->avctx->height;
         pp = &s->prev_frame.data[0][frame_y * s->prev_frame.linesize[0] + frame_x];
         switch (meth) {
         case 1:
@@ -358,6 +356,9 @@ static av_cold int vmdvideo_decode_init(AVCodecContext *avctx)
         palette32[i] = (r << 16) | (g << 8) | (b);
     }
 
+    avcodec_get_frame_defaults(&s->frame);
+    avcodec_get_frame_defaults(&s->prev_frame);
+
     return 0;
 }
 
@@ -414,11 +415,13 @@ static av_cold int vmdvideo_decode_end(AVCodecContext *avctx)
  * Audio Decoder
  */
 
+#define BLOCK_TYPE_AUDIO    1
+#define BLOCK_TYPE_INITIAL  2
+#define BLOCK_TYPE_SILENCE  3
+
 typedef struct VmdAudioContext {
     AVCodecContext *avctx;
-    int channels;
-    int bits;
-    int block_align;
+    int out_bps;
     int predictors[2];
 } VmdAudioContext;
 
@@ -443,13 +446,16 @@ static av_cold int vmdaudio_decode_init(AVCodecContext *avctx)
     VmdAudioContext *s = avctx->priv_data;
 
     s->avctx = avctx;
-    s->channels = avctx->channels;
-    s->bits = avctx->bits_per_coded_sample;
-    s->block_align = avctx->block_align;
-    avctx->sample_fmt = SAMPLE_FMT_S16;
+    if (avctx->bits_per_coded_sample == 16)
+        avctx->sample_fmt = AV_SAMPLE_FMT_S16;
+    else
+        avctx->sample_fmt = AV_SAMPLE_FMT_U8;
+    s->out_bps = av_get_bytes_per_sample(avctx->sample_fmt);
 
-    av_log(s->avctx, AV_LOG_DEBUG, "%d channels, %d bits/sample, block align = %d, sample rate = %d\n",
-            s->channels, s->bits, s->block_align, avctx->sample_rate);
+    av_log(avctx, AV_LOG_DEBUG, "%d channels, %d bits/sample, "
+           "block align = %d, sample rate = %d\n",
+           avctx->channels, avctx->bits_per_coded_sample, avctx->block_align,
+           avctx->sample_rate);
 
     return 0;
 }
@@ -473,49 +479,22 @@ static void vmdaudio_decode_audio(VmdAudioContext *s, unsigned char *data,
 }
 
 static int vmdaudio_loadsound(VmdAudioContext *s, unsigned char *data,
-    const uint8_t *buf, int silence, int data_size)
+    const uint8_t *buf, int silent_chunks, int data_size)
 {
-    int bytes_decoded = 0;
-    int i;
+    int silent_size = s->avctx->block_align * silent_chunks * s->out_bps;
 
-//    if (silence)
-//        av_log(s->avctx, AV_LOG_INFO, "silent block!\n");
-    if (s->channels == 2) {
-
-        /* stereo handling */
-        if (silence) {
-            memset(data, 0, data_size * 2);
-        } else {
-            if (s->bits == 16)
-                vmdaudio_decode_audio(s, data, buf, data_size, 1);
-            else {
-                /* copy the data but convert it to signed */
-                for (i = 0; i < data_size; i++){
-                    *data++ = buf[i] + 0x80;
-                    *data++ = buf[i] + 0x80;
-                }
-            }
-        }
-    } else {
-        bytes_decoded = data_size * 2;
-
-        /* mono handling */
-        if (silence) {
-            memset(data, 0, data_size * 2);
-        } else {
-            if (s->bits == 16) {
-                vmdaudio_decode_audio(s, data, buf, data_size, 0);
-            } else {
-                /* copy the data but convert it to signed */
-                for (i = 0; i < data_size; i++){
-                    *data++ = buf[i] + 0x80;
-                    *data++ = buf[i] + 0x80;
-                }
-            }
-        }
+    if (silent_chunks) {
+        memset(data, s->out_bps == 2 ? 0x00 : 0x80, silent_size);
+        data += silent_size;
+    }
+    if (s->avctx->bits_per_coded_sample == 16)
+        vmdaudio_decode_audio(s, data, buf, data_size, s->avctx->channels == 2);
+    else {
+        /* just copy the data */
+        memcpy(data, buf, data_size);
     }
 
-    return data_size * 2;
+    return silent_size + data_size * s->out_bps;
 }
 
 static int vmdaudio_decode_frame(AVCodecContext *avctx,
@@ -525,39 +504,41 @@ static int vmdaudio_decode_frame(AVCodecContext *avctx,
     const uint8_t *buf = avpkt->data;
     int buf_size = avpkt->size;
     VmdAudioContext *s = avctx->priv_data;
+    int block_type, silent_chunks;
     unsigned char *output_samples = (unsigned char *)data;
 
-    /* point to the start of the encoded data */
-    const unsigned char *p = buf + 16;
-
-    if (buf_size < 16)
-        return buf_size;
-
-    if (buf[6] == 1) {
-        /* the chunk contains audio */
-        *data_size = vmdaudio_loadsound(s, output_samples, p, 0, buf_size - 16);
-    } else if (buf[6] == 2) {
-        /* initial chunk, may contain audio and silence */
-        uint32_t flags = AV_RB32(p);
-        int raw_block_size = s->block_align * s->bits / 8;
-        int silent_chunks;
-        if(flags == 0xFFFFFFFF)
-            silent_chunks = 32;
-        else
-            silent_chunks = av_log2(flags + 1);
-        if(*data_size < (s->block_align*silent_chunks + buf_size - 20) * 2)
-            return -1;
+    if (buf_size < 16) {
+        av_log(avctx, AV_LOG_WARNING, "skipping small junk packet\n");
         *data_size = 0;
-        memset(output_samples, 0, raw_block_size * silent_chunks);
-        output_samples += raw_block_size * silent_chunks;
-        *data_size = raw_block_size * silent_chunks;
-        *data_size += vmdaudio_loadsound(s, output_samples, p + 4, 0, buf_size - 20);
-    } else if (buf[6] == 3) {
-        /* silent chunk */
-        *data_size = vmdaudio_loadsound(s, output_samples, p, 1, 0);
+        return buf_size;
     }
 
-    return buf_size;
+    block_type = buf[6];
+    if (block_type < BLOCK_TYPE_AUDIO || block_type > BLOCK_TYPE_SILENCE) {
+        av_log(avctx, AV_LOG_ERROR, "unknown block type: %d\n", block_type);
+        return AVERROR(EINVAL);
+    }
+    buf      += 16;
+    buf_size -= 16;
+
+    silent_chunks = 0;
+    if (block_type == BLOCK_TYPE_INITIAL) {
+        uint32_t flags = AV_RB32(buf);
+        silent_chunks  = av_popcount(flags);
+        buf      += 4;
+        buf_size -= 4;
+    } else if (block_type == BLOCK_TYPE_SILENCE) {
+        silent_chunks = 1;
+        buf_size = 0; // should already be zero but set it just to be sure
+    }
+
+    /* ensure output buffer is large enough */
+    if (*data_size < (avctx->block_align*silent_chunks + buf_size) * s->out_bps)
+        return -1;
+
+    *data_size = vmdaudio_loadsound(s, output_samples, buf, silent_chunks, buf_size);
+
+    return avpkt->size;
 }
 
 
@@ -565,9 +546,9 @@ static int vmdaudio_decode_frame(AVCodecContext *avctx,
  * Public Data Structures
  */
 
-AVCodec vmdvideo_decoder = {
+AVCodec ff_vmdvideo_decoder = {
     "vmdvideo",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_VMDVIDEO,
     sizeof(VmdVideoContext),
     vmdvideo_decode_init,
@@ -578,9 +559,9 @@ AVCodec vmdvideo_decoder = {
     .long_name = NULL_IF_CONFIG_SMALL("Sierra VMD video"),
 };
 
-AVCodec vmdaudio_decoder = {
+AVCodec ff_vmdaudio_decoder = {
     "vmdaudio",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_VMDAUDIO,
     sizeof(VmdAudioContext),
     vmdaudio_decode_init,

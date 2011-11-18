@@ -20,9 +20,9 @@
  */
 
 /**
- * @file libavformat/mm.c
+ * @file
  * American Laser Games MM Format Demuxer
- * by Peter Ross (suxen_drol at hotmail dot com)
+ * by Peter Ross (pross@xvid.org)
  *
  * The MM format was used by IBM-PC ports of ALG's "arcade shooter" games,
  * including Mad Dog McCree and Crime Patrol.
@@ -56,7 +56,7 @@ typedef struct {
   unsigned int audio_pts, video_pts;
 } MmDemuxContext;
 
-static int mm_probe(AVProbeData *p)
+static int probe(AVProbeData *p)
 {
     int len, type, fps, w, h;
     if (p->buf_size < MM_HEADER_LEN_AV + MM_PREAMBLE_SIZE)
@@ -80,35 +80,35 @@ static int mm_probe(AVProbeData *p)
     return AVPROBE_SCORE_MAX / 2;
 }
 
-static int mm_read_header(AVFormatContext *s,
+static int read_header(AVFormatContext *s,
                            AVFormatParameters *ap)
 {
     MmDemuxContext *mm = s->priv_data;
-    ByteIOContext *pb = s->pb;
+    AVIOContext *pb = s->pb;
     AVStream *st;
 
     unsigned int type, length;
     unsigned int frame_rate, width, height;
 
-    type = get_le16(pb);
-    length = get_le32(pb);
+    type = avio_rl16(pb);
+    length = avio_rl32(pb);
 
     if (type != MM_TYPE_HEADER)
         return AVERROR_INVALIDDATA;
 
     /* read header */
-    get_le16(pb);   /* total number of chunks */
-    frame_rate = get_le16(pb);
-    get_le16(pb);   /* ibm-pc video bios mode */
-    width = get_le16(pb);
-    height = get_le16(pb);
-    url_fseek(pb, length - 10, SEEK_CUR);  /* unknown data */
+    avio_rl16(pb);   /* total number of chunks */
+    frame_rate = avio_rl16(pb);
+    avio_rl16(pb);   /* ibm-pc video bios mode */
+    width = avio_rl16(pb);
+    height = avio_rl16(pb);
+    avio_skip(pb, length - 10);  /* unknown data */
 
     /* video stream */
     st = av_new_stream(s, 0);
     if (!st)
         return AVERROR(ENOMEM);
-    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     st->codec->codec_id = CODEC_ID_MMVIDEO;
     st->codec->codec_tag = 0;  /* no fourcc */
     st->codec->width = width;
@@ -120,7 +120,7 @@ static int mm_read_header(AVFormatContext *s,
         st = av_new_stream(s, 0);
         if (!st)
             return AVERROR(ENOMEM);
-        st->codec->codec_type = CODEC_TYPE_AUDIO;
+        st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
         st->codec->codec_tag = 0; /* no fourcc */
         st->codec->codec_id = CODEC_ID_PCM_U8;
         st->codec->channels = 1;
@@ -133,17 +133,17 @@ static int mm_read_header(AVFormatContext *s,
     return 0;
 }
 
-static int mm_read_packet(AVFormatContext *s,
+static int read_packet(AVFormatContext *s,
                            AVPacket *pkt)
 {
     MmDemuxContext *mm = s->priv_data;
-    ByteIOContext *pb = s->pb;
+    AVIOContext *pb = s->pb;
     unsigned char preamble[MM_PREAMBLE_SIZE];
     unsigned int type, length;
 
     while(1) {
 
-        if (get_buffer(pb, preamble, MM_PREAMBLE_SIZE) != MM_PREAMBLE_SIZE) {
+        if (avio_read(pb, preamble, MM_PREAMBLE_SIZE) != MM_PREAMBLE_SIZE) {
             return AVERROR(EIO);
         }
 
@@ -162,7 +162,7 @@ static int mm_read_packet(AVFormatContext *s,
             if (av_new_packet(pkt, length + MM_PREAMBLE_SIZE))
                 return AVERROR(ENOMEM);
             memcpy(pkt->data, preamble, MM_PREAMBLE_SIZE);
-            if (get_buffer(pb, pkt->data + MM_PREAMBLE_SIZE, length) != length)
+            if (avio_read(pb, pkt->data + MM_PREAMBLE_SIZE, length) != length)
                 return AVERROR(EIO);
             pkt->size = length + MM_PREAMBLE_SIZE;
             pkt->stream_index = 0;
@@ -181,18 +181,18 @@ static int mm_read_packet(AVFormatContext *s,
 
         default :
             av_log(s, AV_LOG_INFO, "unknown chunk type 0x%x\n", type);
-            url_fseek(pb, length, SEEK_CUR);
+            avio_skip(pb, length);
         }
     }
 
     return 0;
 }
 
-AVInputFormat mm_demuxer = {
+AVInputFormat ff_mm_demuxer = {
     "mm",
     NULL_IF_CONFIG_SMALL("American Laser Games MM format"),
     sizeof(MmDemuxContext),
-    mm_probe,
-    mm_read_header,
-    mm_read_packet,
+    probe,
+    read_header,
+    read_packet,
 };

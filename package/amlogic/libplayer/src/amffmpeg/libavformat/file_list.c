@@ -21,6 +21,7 @@
 
 #include "libavutil/avstring.h"
 #include "avformat.h"
+#include "url.h"
 #include <fcntl.h>
 #if HAVE_SETMODE
 #include <io.h>
@@ -79,7 +80,38 @@ int list_add_item(struct list_mgt *mgt,struct list_item*item)
 	 }
 	*list = item;
 	item->prev=prev;
-    item->next = NULL;
+       item->next = NULL;
+	mgt->item_num++;
+	return 0;
+}
+
+int list_test_and_add_item(struct list_mgt *mgt,struct list_item*item)
+{
+	struct list_item**list;
+	struct list_item*prev;
+	list=&mgt->item_list;
+	prev=NULL;
+	//test
+	if(item->file!=NULL){
+		while (*list != NULL) 
+		{	
+			if(strcmp((*list)->file,item->file)==0){//found the same item,drop it.
+				av_log(NULL, AV_LOG_INFO, "hit the same item,drop it\n");
+				return -1;
+			}
+			list = &(*list)->next;
+		}
+
+	}
+
+	while (*list != NULL) 
+	{
+		prev=*list;
+		list = &(*list)->next;
+	}
+	*list = item;
+	item->prev=prev;
+	item->next = NULL;
 	mgt->item_num++;
 	return 0;
 }
@@ -101,8 +133,11 @@ static int list_del_item(struct list_mgt *mgt,struct list_item*item)
 	}
 	mgt->item_num--;
 	av_free(item);
+	item = NULL;
 	return 0;		
 }
+
+
 
 /*=======================================================================================*/
 int url_is_file_list(ByteIOContext *s,const char *filename)
@@ -113,7 +148,7 @@ int url_is_file_list(ByteIOContext *s,const char *filename)
 	int64_t	   *oldpos=0;
 	if(!lio)
 	{
-		ret=url_fopen(&lio,filename,O_RDONLY);
+		ret=url_fopen(&lio,filename,AVIO_FLAG_READ);
 		if(ret!=0)
 		{ 
 		return AVERROR(EIO); 
@@ -144,6 +179,7 @@ static int list_open_internet(ByteIOContext **pbio,struct list_mgt *mgt,const ch
 		{
 			return AVERROR(EIO); 
 		}
+	mgt->location=bio->reallocation;
 	demux=probe_demux(bio,filename);
 	if(!demux)
 	{
@@ -173,6 +209,7 @@ static int list_open(URLContext *h, const char *filename, int flags)
 	if(!mgt)
 		return AVERROR(ENOMEM);
 	memset(mgt,0,sizeof(*mgt));
+	mgt->seq = -1;
 	mgt->filename=filename+5;
 	mgt->flags=flags;
 	if((ret=list_open_internet(&bio,mgt,mgt->filename,flags| URL_MINI_BUFFER | URL_NO_LP_BUFFER))!=0)
@@ -193,10 +230,11 @@ static int list_open(URLContext *h, const char *filename, int flags)
 	return 0;
 }
 
+
 static struct list_item * switchto_next_item(struct list_mgt *mgt)
 {
 	struct list_item *next=NULL;
-	struct list_item *current;
+	struct list_item *current = NULL;
 	if(!mgt)
 		return NULL;
 	if(mgt->current_item==NULL || mgt->current_item->next==NULL){
@@ -239,25 +277,47 @@ switchnext:
 	return next;
 }
 
+static void fresh_item_list(struct list_mgt *mgt){	
+	int retries = 5;
+	do{	
+		if((switchto_next_item(mgt))!=NULL)
+		{
+			av_log(NULL, AV_LOG_INFO, "refresh the Playlist,item num:%d,filename:%s\n",mgt->item_num,mgt->filename);		
+			break;
+		}	
+		else{			
+			usleep(50000); //50ms
+			av_log(NULL, AV_LOG_INFO, "no new item,wait next refresh,current item num:%d\n",mgt->item_num);	
+		}
+
+	}while(retries-->0);//50ms*5
+
+}
+
 static int list_read(URLContext *h, unsigned char *buf, int size)
 {   
 	struct list_mgt *mgt = h->priv_data;
     int len=AVERROR(EIO);
 	struct list_item *item=mgt->current_item;
+	int retries = 10;
 	
 retry:	
-	if (url_interrupt_cb())       
-            return AVERROR(EINTR); 
-	av_log(NULL, AV_LOG_INFO, "list_read start buf=%x,size=%d\n",buf,size);
+	if (url_interrupt_cb()){     
+		av_log(NULL, AV_LOG_ERROR," url_interrupt_cb\n");	
+            	return AVERROR(EINTR);
+
+	}
+	//av_log(NULL, AV_LOG_INFO, "list_read start buf=%x,size=%d\n",buf,size);
 	if(!mgt->cur_uio )
 	{
 		if(item && item->file)
 		{
 			ByteIOContext *bio;
 			av_log(NULL, AV_LOG_INFO, "list_read switch to new file=%s\n",item->file);
-			len=url_fopen(&bio,item->file,O_RDONLY | URL_MINI_BUFFER | URL_NO_LP_BUFFER);
+			len=url_fopen(&bio,item->file,AVIO_FLAG_READ | URL_MINI_BUFFER | URL_NO_LP_BUFFER);
 			if(len!=0)
 			{
+				av_log(NULL, AV_LOG_INFO, "list url_fopen failed =%d\n",len);
 				return len;
 			}
 			if(url_is_file_list(bio,item->file))
@@ -269,14 +329,17 @@ retry:
 				len=url_fopen(&bio,item->file,mgt->flags | URL_MINI_BUFFER | URL_NO_LP_BUFFER);
 				if(len!=0)
 				{
+					av_log(NULL, AV_LOG_INFO, "file list url_fopen failed =%d\n",len);
 					return len;
 				}
 			}
 			mgt->cur_uio=bio;
 		}
 	}
-	if(mgt->cur_uio)
+	if(mgt->cur_uio){
 		len=get_buffer(mgt->cur_uio,buf,size);
+		//av_log(NULL, AV_LOG_INFO, "list_read get_buffer=%d\n",len);
+	}
 	if(len==AVERROR(EAGAIN))
 		 return AVERROR(EAGAIN);/*not end,bug need to*/
 	else if((len<=0)&& mgt->current_item!=NULL)
@@ -287,7 +350,16 @@ retry:
 			return 0;
 		item=switchto_next_item(mgt);
 		if(!item){
-			 return AVERROR(EAGAIN);/*not end,but need to refresh the list later*/
+			if(mgt->flags&REAL_STREAMING_FLAG){
+				fresh_item_list(mgt);	
+				if(retries>0){
+					retries --;
+					goto retry;
+				}
+			}
+
+			av_log(NULL, AV_LOG_INFO, "Need more retry by player logic\n");
+			return AVERROR(EAGAIN);/*not end,but need to refresh the list later*/
 		}
 		if(mgt->cur_uio)
 			url_fclose(mgt->cur_uio);
@@ -306,6 +378,10 @@ retry:
 			goto retry;
 		}
 	}
+	if(mgt->flags&REAL_STREAMING_FLAG&&mgt->item_num<4){ //force refresh items
+		fresh_item_list(mgt);	
+	}
+
 	av_log(NULL, AV_LOG_INFO, "list_read end buf=%x,size=%d\n",buf,size);
     return len;
 }
@@ -325,23 +401,25 @@ static int64_t list_seek(URLContext *h, int64_t pos, int whence)
 	if (whence == AVSEEK_BUFFERED_TIME)
 	{
 		int64_t buffed_time=0;
-		if(mgt->current_item && mgt->current_item->duration>0){
+		if(mgt->current_item ){
 			//av_log(NULL, AV_LOG_INFO, "list_seek uui=%ld,size=%lld\n",mgt->cur_uio,url_fsize(mgt->cur_uio));
-			if(mgt->cur_uio && url_fsize(mgt->cur_uio)>0){
+			if(mgt->cur_uio && url_fsize(mgt->cur_uio)>0 && mgt->current_item->duration>=0){
 				//av_log(NULL, AV_LOG_INFO, "list_seek start_time=%ld,pos=%lld\n",mgt->current_item->start_time,url_buffed_pos(mgt->cur_uio));
 				buffed_time=mgt->current_item->start_time+url_buffed_pos(mgt->cur_uio)*mgt->current_item->duration/url_fsize(mgt->cur_uio);
 			}
 			else{
 				buffed_time=mgt->current_item->start_time;
+				if(mgt->current_item && (mgt->current_item->flags & ENDLIST_FLAG))
+					buffed_time=mgt->full_time;/*read to end list, show full bufferd*/
 			}
 		}
 		av_log(NULL, AV_LOG_INFO, "list current buffed_time=%lld\n",buffed_time);
 		return buffed_time;
 	}
 	
-	av_log(NULL, AV_LOG_INFO, "list_seek pos=%lld,whence=%x\n",pos,whence);
 	if (whence == AVSEEK_SIZE)
         return mgt->file_size;
+	av_log(NULL, AV_LOG_INFO, "list_seek pos=%lld,whence=%x\n",pos,whence);
 	if (whence == AVSEEK_FULLTIME)
 	{
 		if(mgt->have_list_end)
@@ -364,7 +442,8 @@ static int64_t list_seek(URLContext *h, int64_t pos, int whence)
 				av_log(NULL, AV_LOG_INFO, "list_seek to item->file =%s\n",item->file);
 				return item->start_time;/*pos=0;*/
 			}
-		}
+		}
+
 	}
 	av_log(NULL, AV_LOG_INFO, "list_seek failed\n");
 	return -1;

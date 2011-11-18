@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/mjpega_dump_header_bsf.c
+ * @file
  * MJPEG A dump header bitstream filter
  * modifies bitstream to be decoded by quicktime
  */
@@ -87,7 +87,7 @@ static int mjpega_dump_header(AVBitStreamFilterContext *bsfc, AVCodecContext *av
     return 0;
 }
 
-AVBitStreamFilter mjpega_dump_header_bsf = {
+AVBitStreamFilter ff_mjpega_dump_header_bsf = {
     "mjpegadump",
     0,
     mjpega_dump_header,

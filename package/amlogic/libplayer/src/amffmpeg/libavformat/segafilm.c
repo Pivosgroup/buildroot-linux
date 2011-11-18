@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavformat/segafilm.c
+ * @file
  * Sega FILM (.cpk) file demuxer
  * by Mike Melanson (melanson@pcisys.net)
  * For more information regarding the Sega FILM file format, visit:
@@ -77,7 +77,7 @@ static int film_read_header(AVFormatContext *s,
                             AVFormatParameters *ap)
 {
     FilmDemuxContext *film = s->priv_data;
-    ByteIOContext *pb = s->pb;
+    AVIOContext *pb = s->pb;
     AVStream *st;
     unsigned char scratch[256];
     int i;
@@ -89,7 +89,7 @@ static int film_read_header(AVFormatContext *s,
     film->stereo_buffer_size = 0;
 
     /* load the main FILM header */
-    if (get_buffer(pb, scratch, 16) != 16)
+    if (avio_read(pb, scratch, 16) != 16)
         return AVERROR(EIO);
     data_offset = AV_RB32(&scratch[4]);
     film->version = AV_RB32(&scratch[8]);
@@ -97,7 +97,7 @@ static int film_read_header(AVFormatContext *s,
     /* load the FDSC chunk */
     if (film->version == 0) {
         /* special case for Lemmings .film files; 20-byte header */
-        if (get_buffer(pb, scratch, 20) != 20)
+        if (avio_read(pb, scratch, 20) != 20)
             return AVERROR(EIO);
         /* make some assumptions about the audio parameters */
         film->audio_type = CODEC_ID_PCM_S8;
@@ -106,7 +106,7 @@ static int film_read_header(AVFormatContext *s,
         film->audio_bits = 8;
     } else {
         /* normal Saturn .cpk files; 32-byte header */
-        if (get_buffer(pb, scratch, 32) != 32)
+        if (avio_read(pb, scratch, 32) != 32)
             return AVERROR(EIO);
         film->audio_samplerate = AV_RB16(&scratch[24]);
         film->audio_channels = scratch[21];
@@ -133,7 +133,7 @@ static int film_read_header(AVFormatContext *s,
         if (!st)
             return AVERROR(ENOMEM);
         film->video_stream_index = st->index;
-        st->codec->codec_type = CODEC_TYPE_VIDEO;
+        st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
         st->codec->codec_id = film->video_type;
         st->codec->codec_tag = 0;  /* no fourcc */
         st->codec->width = AV_RB32(&scratch[16]);
@@ -145,7 +145,7 @@ static int film_read_header(AVFormatContext *s,
         if (!st)
             return AVERROR(ENOMEM);
         film->audio_stream_index = st->index;
-        st->codec->codec_type = CODEC_TYPE_AUDIO;
+        st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
         st->codec->codec_id = film->audio_type;
         st->codec->codec_tag = 1;
         st->codec->channels = film->audio_channels;
@@ -158,7 +158,7 @@ static int film_read_header(AVFormatContext *s,
     }
 
     /* load the sample table */
-    if (get_buffer(pb, scratch, 16) != 16)
+    if (avio_read(pb, scratch, 16) != 16)
         return AVERROR(EIO);
     if (AV_RB32(&scratch[0]) != STAB_TAG)
         return AVERROR_INVALIDDATA;
@@ -174,7 +174,7 @@ static int film_read_header(AVFormatContext *s,
     audio_frame_counter = 0;
     for (i = 0; i < film->sample_count; i++) {
         /* load the next sample record and transfer it to an internal struct */
-        if (get_buffer(pb, scratch, 16) != 16) {
+        if (avio_read(pb, scratch, 16) != 16) {
             av_free(film->sample_table);
             return AVERROR(EIO);
         }
@@ -205,7 +205,7 @@ static int film_read_packet(AVFormatContext *s,
                             AVPacket *pkt)
 {
     FilmDemuxContext *film = s->priv_data;
-    ByteIOContext *pb = s->pb;
+    AVIOContext *pb = s->pb;
     film_sample *sample;
     int ret = 0;
     int i;
@@ -217,15 +217,15 @@ static int film_read_packet(AVFormatContext *s,
     sample = &film->sample_table[film->current_sample];
 
     /* position the stream (will probably be there anyway) */
-    url_fseek(pb, sample->sample_offset, SEEK_SET);
+    avio_seek(pb, sample->sample_offset, SEEK_SET);
 
     /* do a special song and dance when loading FILM Cinepak chunks */
     if ((sample->stream == film->video_stream_index) &&
         (film->video_type == CODEC_ID_CINEPAK)) {
-        pkt->pos= url_ftell(pb);
+        pkt->pos= avio_tell(pb);
         if (av_new_packet(pkt, sample->sample_size))
             return AVERROR(ENOMEM);
-        get_buffer(pb, pkt->data, sample->sample_size);
+        avio_read(pb, pkt->data, sample->sample_size);
     } else if ((sample->stream == film->audio_stream_index) &&
         (film->audio_channels == 2)) {
         /* stereo PCM needs to be interleaved */
@@ -240,8 +240,8 @@ static int film_read_packet(AVFormatContext *s,
             film->stereo_buffer = av_malloc(film->stereo_buffer_size);
         }
 
-        pkt->pos= url_ftell(pb);
-        ret = get_buffer(pb, film->stereo_buffer, sample->sample_size);
+        pkt->pos= avio_tell(pb);
+        ret = avio_read(pb, film->stereo_buffer, sample->sample_size);
         if (ret != sample->sample_size)
             ret = AVERROR(EIO);
 
@@ -282,7 +282,7 @@ static int film_read_close(AVFormatContext *s)
     return 0;
 }
 
-AVInputFormat segafilm_demuxer = {
+AVInputFormat ff_segafilm_demuxer = {
     "film_cpk",
     NULL_IF_CONFIG_SMALL("Sega FILM/CPK format"),
     sizeof(FilmDemuxContext),

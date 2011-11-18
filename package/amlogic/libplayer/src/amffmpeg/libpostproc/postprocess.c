@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libpostproc/postprocess.c
+ * @file
  * postprocessing.
  */
 
@@ -71,7 +71,7 @@ try to unroll inner for(x=0 ... loop to avoid these damn if(x ... checks
 ...
 */
 
-//Changelog: use the Subversion log
+//Changelog: use git log
 
 #include "config.h"
 #include "libavutil/avutil.h"
@@ -86,18 +86,19 @@ try to unroll inner for(x=0 ... loop to avoid these damn if(x ... checks
 //#define DEBUG_BRIGHTNESS
 #include "postprocess.h"
 #include "postprocess_internal.h"
+#include "libavutil/avstring.h"
 
 unsigned postproc_version(void)
 {
     return LIBPOSTPROC_VERSION_INT;
 }
 
-const char * postproc_configuration(void)
+const char *postproc_configuration(void)
 {
     return FFMPEG_CONFIGURATION;
 }
 
-const char * postproc_license(void)
+const char *postproc_license(void)
 {
 #define LICENSE_PREFIX "libpostproc license: "
     return LICENSE_PREFIX FFMPEG_LICENSE + sizeof(LICENSE_PREFIX) - 1;
@@ -766,7 +767,8 @@ pp_mode *pp_get_mode_by_name_and_quality(const char *name, int quality)
     ppMode->maxClippedThreshold= 0.01;
     ppMode->error=0;
 
-    strncpy(temp, name, GET_MODE_BUFFER_SIZE);
+    memset(temp, 0, GET_MODE_BUFFER_SIZE);
+    av_strlcpy(temp, name, GET_MODE_BUFFER_SIZE - 1);
 
     av_log(NULL, AV_LOG_DEBUG, "pp: %s\n", name);
 
@@ -817,12 +819,11 @@ pp_mode *pp_get_mode_by_name_and_quality(const char *name, int quality)
                 int plen;
                 int spaceLeft;
 
-                if(p==NULL) p= temp, *p=0;      //last filter
-                else p--, *p=',';               //not last filter
+                p--, *p=',';
 
                 plen= strlen(p);
                 spaceLeft= p - temp + plen;
-                if(spaceLeft + newlen  >= GET_MODE_BUFFER_SIZE){
+                if(spaceLeft + newlen  >= GET_MODE_BUFFER_SIZE - 1){
                     ppMode->error++;
                     break;
                 }
@@ -1103,4 +1104,3 @@ void  pp_postprocess(const uint8_t * src[3], const int srcStride[3],
         }
     }
 }
-

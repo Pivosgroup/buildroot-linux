@@ -30,7 +30,6 @@
 #include "libavutil/avutil.h"
 #include "get_bits.h"
 
-#include "g729.h"
 #include "lsp.h"
 #include "celp_math.h"
 #include "acelp_filters.h"
@@ -70,6 +69,12 @@
  * 13017 (equals to 0.7945) instead of it.
  */
 #define SHARP_MAX                  13017
+
+/**
+ * subframe size
+ */
+#define SUBFRAME_SIZE              40
+
 
 typedef struct {
     uint8_t ac_index_bits[2];   ///< adaptive codebook index for second subframe (size in bits)
@@ -171,7 +176,7 @@ static av_cold int decoder_init(AVCodecContext * avctx)
 
     if (avctx->channels != 1) {
         av_log(avctx, AV_LOG_ERROR, "Only mono sound is supported (requested channels: %d).\n", avctx->channels);
-        return AVERROR_NOFMT;
+        return AVERROR(EINVAL);
     }
 
     /* Both 8kbit/s and 6.4kbit/s modes uses two subframes per frame. */
@@ -224,7 +229,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size,
         av_log(avctx, AV_LOG_DEBUG, "Packet type: %s\n", "G.729D @ 6.4kbit/s");
     } else {
         av_log(avctx, AV_LOG_ERROR, "Packet size %d is unknown.\n", buf_size);
-        return (AVERROR_NOFMT);
+        return AVERROR_INVALIDDATA;
     }
 
     for (i=0; i < buf_size; i++)
@@ -312,10 +317,10 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size,
     return buf_size;
 }
 
-AVCodec g729_decoder =
+AVCodec ff_g729_decoder =
 {
     "g729",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_G729,
     sizeof(G729Context),
     decoder_init,

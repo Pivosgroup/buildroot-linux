@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/imgutils.h"
 #include "avcodec.h"
 #include "pnm.h"
 
@@ -59,16 +60,20 @@ int ff_pnm_decode_header(AVCodecContext *avctx, PNMContext * const s)
     int h, w, depth, maxval;
 
     pnm_get(s, buf1, sizeof(buf1));
-    if (!strcmp(buf1, "P4")) {
+    s->type= buf1[1]-'0';
+    if(buf1[0] != 'P')
+        return -1;
+
+    if (s->type==1 || s->type==4) {
         avctx->pix_fmt = PIX_FMT_MONOWHITE;
-    } else if (!strcmp(buf1, "P5")) {
+    } else if (s->type==2 || s->type==5) {
         if (avctx->codec_id == CODEC_ID_PGMYUV)
             avctx->pix_fmt = PIX_FMT_YUV420P;
         else
             avctx->pix_fmt = PIX_FMT_GRAY8;
-    } else if (!strcmp(buf1, "P6")) {
+    } else if (s->type==3 || s->type==6) {
         avctx->pix_fmt = PIX_FMT_RGB24;
-    } else if (!strcmp(buf1, "P7")) {
+    } else if (s->type==7) {
         w      = -1;
         h      = -1;
         maxval = -1;
@@ -97,7 +102,7 @@ int ff_pnm_decode_header(AVCodecContext *avctx, PNMContext * const s)
             }
         }
         /* check that all tags are present */
-        if (w <= 0 || h <= 0 || maxval <= 0 || depth <= 0 || tuple_type[0] == '\0' || avcodec_check_dimensions(avctx, w, h))
+        if (w <= 0 || h <= 0 || maxval <= 0 || depth <= 0 || tuple_type[0] == '\0' || av_image_check_size(w, h, 0, avctx))
             return -1;
 
         avctx->width  = w;
@@ -130,11 +135,15 @@ int ff_pnm_decode_header(AVCodecContext *avctx, PNMContext * const s)
         return -1;
     pnm_get(s, buf1, sizeof(buf1));
     avctx->height = atoi(buf1);
-    if(avcodec_check_dimensions(avctx, avctx->width, avctx->height))
+    if(avctx->height <= 0 || av_image_check_size(avctx->width, avctx->height, 0, avctx))
         return -1;
     if (avctx->pix_fmt != PIX_FMT_MONOWHITE) {
         pnm_get(s, buf1, sizeof(buf1));
         s->maxval = atoi(buf1);
+        if (s->maxval <= 0) {
+            av_log(avctx, AV_LOG_ERROR, "Invalid maxval: %d\n", s->maxval);
+            s->maxval = 255;
+        }
         if (s->maxval >= 256) {
             if (avctx->pix_fmt == PIX_FMT_GRAY8) {
                 avctx->pix_fmt = PIX_FMT_GRAY16BE;
@@ -149,7 +158,8 @@ int ff_pnm_decode_header(AVCodecContext *avctx, PNMContext * const s)
                 return -1;
             }
         }
-    }
+    }else
+        s->maxval=1;
     /* more check if YUV420 */
     if (avctx->pix_fmt == PIX_FMT_YUV420P) {
         if ((avctx->width & 1) != 0)

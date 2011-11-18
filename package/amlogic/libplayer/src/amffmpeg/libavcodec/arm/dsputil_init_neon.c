@@ -32,6 +32,10 @@ void ff_simple_idct_add_neon(uint8_t *dest, int line_size, DCTELEM *data);
 void ff_vp3_idct_neon(DCTELEM *data);
 void ff_vp3_idct_put_neon(uint8_t *dest, int line_size, DCTELEM *data);
 void ff_vp3_idct_add_neon(uint8_t *dest, int line_size, DCTELEM *data);
+void ff_vp3_idct_dc_add_neon(uint8_t *dest, int line_size, const DCTELEM *data);
+
+void ff_clear_block_neon(DCTELEM *block);
+void ff_clear_blocks_neon(DCTELEM *blocks);
 
 void ff_put_pixels16_neon(uint8_t *, const uint8_t *, int, int);
 void ff_put_pixels16_x2_neon(uint8_t *, const uint8_t *, int, int);
@@ -90,85 +94,53 @@ void ff_put_h264_qpel8_mc23_neon(uint8_t *, uint8_t *, int);
 void ff_put_h264_qpel8_mc33_neon(uint8_t *, uint8_t *, int);
 
 void ff_avg_h264_qpel16_mc00_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc10_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc20_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc30_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc01_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc11_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc21_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc31_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc02_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc12_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc22_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc32_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc03_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc13_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc23_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel16_mc33_neon(uint8_t *, uint8_t *, int);
 
 void ff_avg_h264_qpel8_mc00_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc10_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc20_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc30_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc01_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc11_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc21_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc31_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc02_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc12_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc22_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc32_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc03_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc13_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc23_neon(uint8_t *, uint8_t *, int);
+void ff_avg_h264_qpel8_mc33_neon(uint8_t *, uint8_t *, int);
 
 void ff_put_h264_chroma_mc8_neon(uint8_t *, uint8_t *, int, int, int, int);
 void ff_put_h264_chroma_mc4_neon(uint8_t *, uint8_t *, int, int, int, int);
+void ff_put_h264_chroma_mc2_neon(uint8_t *, uint8_t *, int, int, int, int);
 
 void ff_avg_h264_chroma_mc8_neon(uint8_t *, uint8_t *, int, int, int, int);
 void ff_avg_h264_chroma_mc4_neon(uint8_t *, uint8_t *, int, int, int, int);
-
-void ff_h264_v_loop_filter_luma_neon(uint8_t *pix, int stride, int alpha,
-                                     int beta, int8_t *tc0);
-void ff_h264_h_loop_filter_luma_neon(uint8_t *pix, int stride, int alpha,
-                                     int beta, int8_t *tc0);
-void ff_h264_v_loop_filter_chroma_neon(uint8_t *pix, int stride, int alpha,
-                                       int beta, int8_t *tc0);
-void ff_h264_h_loop_filter_chroma_neon(uint8_t *pix, int stride, int alpha,
-                                       int beta, int8_t *tc0);
-
-void ff_weight_h264_pixels_16x16_neon(uint8_t *ds, int stride, int log2_den,
-                                      int weight, int offset);
-void ff_weight_h264_pixels_16x8_neon(uint8_t *ds, int stride, int log2_den,
-                                     int weight, int offset);
-void ff_weight_h264_pixels_8x16_neon(uint8_t *ds, int stride, int log2_den,
-                                     int weight, int offset);
-void ff_weight_h264_pixels_8x8_neon(uint8_t *ds, int stride, int log2_den,
-                                    int weight, int offset);
-void ff_weight_h264_pixels_8x4_neon(uint8_t *ds, int stride, int log2_den,
-                                    int weight, int offset);
-void ff_weight_h264_pixels_4x8_neon(uint8_t *ds, int stride, int log2_den,
-                                    int weight, int offset);
-void ff_weight_h264_pixels_4x4_neon(uint8_t *ds, int stride, int log2_den,
-                                    int weight, int offset);
-void ff_weight_h264_pixels_4x2_neon(uint8_t *ds, int stride, int log2_den,
-                                    int weight, int offset);
-
-void ff_biweight_h264_pixels_16x16_neon(uint8_t *dst, uint8_t *src, int stride,
-                                        int log2_den, int weightd, int weights,
-                                        int offset);
-void ff_biweight_h264_pixels_16x8_neon(uint8_t *dst, uint8_t *src, int stride,
-                                       int log2_den, int weightd, int weights,
-                                       int offset);
-void ff_biweight_h264_pixels_8x16_neon(uint8_t *dst, uint8_t *src, int stride,
-                                       int log2_den, int weightd, int weights,
-                                       int offset);
-void ff_biweight_h264_pixels_8x8_neon(uint8_t *dst, uint8_t *src, int stride,
-                                      int log2_den, int weightd, int weights,
-                                      int offset);
-void ff_biweight_h264_pixels_8x4_neon(uint8_t *dst, uint8_t *src, int stride,
-                                      int log2_den, int weightd, int weights,
-                                      int offset);
-void ff_biweight_h264_pixels_4x8_neon(uint8_t *dst, uint8_t *src, int stride,
-                                      int log2_den, int weightd, int weights,
-                                      int offset);
-void ff_biweight_h264_pixels_4x4_neon(uint8_t *dst, uint8_t *src, int stride,
-                                      int log2_den, int weightd, int weights,
-                                      int offset);
-void ff_biweight_h264_pixels_4x2_neon(uint8_t *dst, uint8_t *src, int stride,
-                                      int log2_den, int weightd, int weights,
-                                      int offset);
-
-void ff_h264_idct_add_neon(uint8_t *dst, DCTELEM *block, int stride);
-void ff_h264_idct_dc_add_neon(uint8_t *dst, DCTELEM *block, int stride);
-void ff_h264_idct_add16_neon(uint8_t *dst, const int *block_offset,
-                             DCTELEM *block, int stride,
-                             const uint8_t nnzc[6*8]);
-void ff_h264_idct_add16intra_neon(uint8_t *dst, const int *block_offset,
-                                  DCTELEM *block, int stride,
-                                  const uint8_t nnzc[6*8]);
-void ff_h264_idct_add8_neon(uint8_t **dest, const int *block_offset,
-                            DCTELEM *block, int stride,
-                            const uint8_t nnzc[6*8]);
+void ff_avg_h264_chroma_mc2_neon(uint8_t *, uint8_t *, int, int, int, int);
 
 void ff_vp3_v_loop_filter_neon(uint8_t *, int, int *);
 void ff_vp3_h_loop_filter_neon(uint8_t *, int, int *);
 
-void ff_vector_fmul_neon(float *dst, const float *src, int len);
+void ff_vector_fmul_neon(float *dst, const float *src0, const float *src1, int len);
 void ff_vector_fmul_window_neon(float *dst, const float *src0,
-                                const float *src1, const float *win,
-                                float add_bias, int len);
+                                const float *src1, const float *win, int len);
 void ff_vector_fmul_scalar_neon(float *dst, const float *src, float mul,
                                 int len);
 void ff_vector_fmul_sv_scalar_2_neon(float *dst, const float *src,
@@ -181,8 +153,6 @@ void ff_sv_fmul_scalar_4_neon(float *dst, const float **vp, float mul,
                               int len);
 void ff_butterflies_float_neon(float *v1, float *v2, int len);
 float ff_scalarproduct_float_neon(const float *v1, const float *v2, int len);
-void ff_int32_to_float_fmul_scalar_neon(float *dst, const int *src,
-                                        float mul, int len);
 void ff_vector_fmul_reverse_neon(float *dst, const float *src0,
                                  const float *src1, int len);
 void ff_vector_fmul_add_neon(float *dst, const float *src0, const float *src1,
@@ -190,13 +160,21 @@ void ff_vector_fmul_add_neon(float *dst, const float *src0, const float *src1,
 
 void ff_vector_clipf_neon(float *dst, const float *src, float min, float max,
                           int len);
-void ff_float_to_int16_neon(int16_t *, const float *, long);
-void ff_float_to_int16_interleave_neon(int16_t *, const float **, long, int);
 
 void ff_vorbis_inverse_coupling_neon(float *mag, float *ang, int blocksize);
 
+int32_t ff_scalarproduct_int16_neon(const int16_t *v1, const int16_t *v2, int len,
+                                    int shift);
+int32_t ff_scalarproduct_and_madd_int16_neon(int16_t *v1, const int16_t *v2,
+                                             const int16_t *v3, int len, int mul);
+
+void ff_apply_window_int16_neon(int16_t *dst, const int16_t *src,
+                                const int16_t *window, unsigned n);
+
 void ff_dsputil_init_neon(DSPContext *c, AVCodecContext *avctx)
 {
+    const int high_bit_depth = avctx->codec_id == CODEC_ID_H264 && avctx->bits_per_raw_sample > 8;
+
     if (!avctx->lowres) {
         if (avctx->idct_algo == FF_IDCT_AUTO ||
             avctx->idct_algo == FF_IDCT_SIMPLENEON) {
@@ -213,6 +191,10 @@ void ff_dsputil_init_neon(DSPContext *c, AVCodecContext *avctx)
             c->idct_permutation_type = FF_TRANSPOSE_IDCT_PERM;
         }
     }
+
+    if (!high_bit_depth) {
+    c->clear_block  = ff_clear_block_neon;
+    c->clear_blocks = ff_clear_blocks_neon;
 
     c->put_pixels_tab[0][0] = ff_put_pixels16_neon;
     c->put_pixels_tab[0][1] = ff_put_pixels16_x2_neon;
@@ -234,17 +216,21 @@ void ff_dsputil_init_neon(DSPContext *c, AVCodecContext *avctx)
 
     c->avg_pixels_tab[0][0] = ff_avg_pixels16_neon;
     c->avg_pixels_tab[1][0] = ff_avg_pixels8_neon;
+    }
 
     c->add_pixels_clamped = ff_add_pixels_clamped_neon;
     c->put_pixels_clamped = ff_put_pixels_clamped_neon;
     c->put_signed_pixels_clamped = ff_put_signed_pixels_clamped_neon;
 
     if (CONFIG_H264_DECODER) {
+        if (!high_bit_depth) {
         c->put_h264_chroma_pixels_tab[0] = ff_put_h264_chroma_mc8_neon;
         c->put_h264_chroma_pixels_tab[1] = ff_put_h264_chroma_mc4_neon;
+        c->put_h264_chroma_pixels_tab[2] = ff_put_h264_chroma_mc2_neon;
 
         c->avg_h264_chroma_pixels_tab[0] = ff_avg_h264_chroma_mc8_neon;
         c->avg_h264_chroma_pixels_tab[1] = ff_avg_h264_chroma_mc4_neon;
+        c->avg_h264_chroma_pixels_tab[2] = ff_avg_h264_chroma_mc2_neon;
 
         c->put_h264_qpel_pixels_tab[0][ 0] = ff_put_h264_qpel16_mc00_neon;
         c->put_h264_qpel_pixels_tab[0][ 1] = ff_put_h264_qpel16_mc10_neon;
@@ -281,42 +267,45 @@ void ff_dsputil_init_neon(DSPContext *c, AVCodecContext *avctx)
         c->put_h264_qpel_pixels_tab[1][15] = ff_put_h264_qpel8_mc33_neon;
 
         c->avg_h264_qpel_pixels_tab[0][ 0] = ff_avg_h264_qpel16_mc00_neon;
+        c->avg_h264_qpel_pixels_tab[0][ 1] = ff_avg_h264_qpel16_mc10_neon;
+        c->avg_h264_qpel_pixels_tab[0][ 2] = ff_avg_h264_qpel16_mc20_neon;
+        c->avg_h264_qpel_pixels_tab[0][ 3] = ff_avg_h264_qpel16_mc30_neon;
+        c->avg_h264_qpel_pixels_tab[0][ 4] = ff_avg_h264_qpel16_mc01_neon;
+        c->avg_h264_qpel_pixels_tab[0][ 5] = ff_avg_h264_qpel16_mc11_neon;
+        c->avg_h264_qpel_pixels_tab[0][ 6] = ff_avg_h264_qpel16_mc21_neon;
+        c->avg_h264_qpel_pixels_tab[0][ 7] = ff_avg_h264_qpel16_mc31_neon;
+        c->avg_h264_qpel_pixels_tab[0][ 8] = ff_avg_h264_qpel16_mc02_neon;
+        c->avg_h264_qpel_pixels_tab[0][ 9] = ff_avg_h264_qpel16_mc12_neon;
+        c->avg_h264_qpel_pixels_tab[0][10] = ff_avg_h264_qpel16_mc22_neon;
+        c->avg_h264_qpel_pixels_tab[0][11] = ff_avg_h264_qpel16_mc32_neon;
+        c->avg_h264_qpel_pixels_tab[0][12] = ff_avg_h264_qpel16_mc03_neon;
+        c->avg_h264_qpel_pixels_tab[0][13] = ff_avg_h264_qpel16_mc13_neon;
+        c->avg_h264_qpel_pixels_tab[0][14] = ff_avg_h264_qpel16_mc23_neon;
+        c->avg_h264_qpel_pixels_tab[0][15] = ff_avg_h264_qpel16_mc33_neon;
 
         c->avg_h264_qpel_pixels_tab[1][ 0] = ff_avg_h264_qpel8_mc00_neon;
-
-        c->h264_v_loop_filter_luma   = ff_h264_v_loop_filter_luma_neon;
-        c->h264_h_loop_filter_luma   = ff_h264_h_loop_filter_luma_neon;
-        c->h264_v_loop_filter_chroma = ff_h264_v_loop_filter_chroma_neon;
-        c->h264_h_loop_filter_chroma = ff_h264_h_loop_filter_chroma_neon;
-
-        c->weight_h264_pixels_tab[0] = ff_weight_h264_pixels_16x16_neon;
-        c->weight_h264_pixels_tab[1] = ff_weight_h264_pixels_16x8_neon;
-        c->weight_h264_pixels_tab[2] = ff_weight_h264_pixels_8x16_neon;
-        c->weight_h264_pixels_tab[3] = ff_weight_h264_pixels_8x8_neon;
-        c->weight_h264_pixels_tab[4] = ff_weight_h264_pixels_8x4_neon;
-        c->weight_h264_pixels_tab[5] = ff_weight_h264_pixels_4x8_neon;
-        c->weight_h264_pixels_tab[6] = ff_weight_h264_pixels_4x4_neon;
-        c->weight_h264_pixels_tab[7] = ff_weight_h264_pixels_4x2_neon;
-
-        c->biweight_h264_pixels_tab[0] = ff_biweight_h264_pixels_16x16_neon;
-        c->biweight_h264_pixels_tab[1] = ff_biweight_h264_pixels_16x8_neon;
-        c->biweight_h264_pixels_tab[2] = ff_biweight_h264_pixels_8x16_neon;
-        c->biweight_h264_pixels_tab[3] = ff_biweight_h264_pixels_8x8_neon;
-        c->biweight_h264_pixels_tab[4] = ff_biweight_h264_pixels_8x4_neon;
-        c->biweight_h264_pixels_tab[5] = ff_biweight_h264_pixels_4x8_neon;
-        c->biweight_h264_pixels_tab[6] = ff_biweight_h264_pixels_4x4_neon;
-        c->biweight_h264_pixels_tab[7] = ff_biweight_h264_pixels_4x2_neon;
-
-        c->h264_idct_add        = ff_h264_idct_add_neon;
-        c->h264_idct_dc_add     = ff_h264_idct_dc_add_neon;
-        c->h264_idct_add16      = ff_h264_idct_add16_neon;
-        c->h264_idct_add16intra = ff_h264_idct_add16intra_neon;
-        c->h264_idct_add8       = ff_h264_idct_add8_neon;
+        c->avg_h264_qpel_pixels_tab[1][ 1] = ff_avg_h264_qpel8_mc10_neon;
+        c->avg_h264_qpel_pixels_tab[1][ 2] = ff_avg_h264_qpel8_mc20_neon;
+        c->avg_h264_qpel_pixels_tab[1][ 3] = ff_avg_h264_qpel8_mc30_neon;
+        c->avg_h264_qpel_pixels_tab[1][ 4] = ff_avg_h264_qpel8_mc01_neon;
+        c->avg_h264_qpel_pixels_tab[1][ 5] = ff_avg_h264_qpel8_mc11_neon;
+        c->avg_h264_qpel_pixels_tab[1][ 6] = ff_avg_h264_qpel8_mc21_neon;
+        c->avg_h264_qpel_pixels_tab[1][ 7] = ff_avg_h264_qpel8_mc31_neon;
+        c->avg_h264_qpel_pixels_tab[1][ 8] = ff_avg_h264_qpel8_mc02_neon;
+        c->avg_h264_qpel_pixels_tab[1][ 9] = ff_avg_h264_qpel8_mc12_neon;
+        c->avg_h264_qpel_pixels_tab[1][10] = ff_avg_h264_qpel8_mc22_neon;
+        c->avg_h264_qpel_pixels_tab[1][11] = ff_avg_h264_qpel8_mc32_neon;
+        c->avg_h264_qpel_pixels_tab[1][12] = ff_avg_h264_qpel8_mc03_neon;
+        c->avg_h264_qpel_pixels_tab[1][13] = ff_avg_h264_qpel8_mc13_neon;
+        c->avg_h264_qpel_pixels_tab[1][14] = ff_avg_h264_qpel8_mc23_neon;
+        c->avg_h264_qpel_pixels_tab[1][15] = ff_avg_h264_qpel8_mc33_neon;
+        }
     }
 
     if (CONFIG_VP3_DECODER) {
         c->vp3_v_loop_filter = ff_vp3_v_loop_filter_neon;
         c->vp3_h_loop_filter = ff_vp3_h_loop_filter_neon;
+        c->vp3_idct_dc_add   = ff_vp3_idct_dc_add_neon;
     }
 
     c->vector_fmul                = ff_vector_fmul_neon;
@@ -324,7 +313,6 @@ void ff_dsputil_init_neon(DSPContext *c, AVCodecContext *avctx)
     c->vector_fmul_scalar         = ff_vector_fmul_scalar_neon;
     c->butterflies_float          = ff_butterflies_float_neon;
     c->scalarproduct_float        = ff_scalarproduct_float_neon;
-    c->int32_to_float_fmul_scalar = ff_int32_to_float_fmul_scalar_neon;
     c->vector_fmul_reverse        = ff_vector_fmul_reverse_neon;
     c->vector_fmul_add            = ff_vector_fmul_add_neon;
     c->vector_clipf               = ff_vector_clipf_neon;
@@ -335,11 +323,11 @@ void ff_dsputil_init_neon(DSPContext *c, AVCodecContext *avctx)
     c->sv_fmul_scalar[0] = ff_sv_fmul_scalar_2_neon;
     c->sv_fmul_scalar[1] = ff_sv_fmul_scalar_4_neon;
 
-    if (!(avctx->flags & CODEC_FLAG_BITEXACT)) {
-        c->float_to_int16            = ff_float_to_int16_neon;
-        c->float_to_int16_interleave = ff_float_to_int16_interleave_neon;
-    }
-
     if (CONFIG_VORBIS_DECODER)
         c->vorbis_inverse_coupling = ff_vorbis_inverse_coupling_neon;
+
+    c->scalarproduct_int16 = ff_scalarproduct_int16_neon;
+    c->scalarproduct_and_madd_int16 = ff_scalarproduct_and_madd_int16_neon;
+
+    c->apply_window_int16 = ff_apply_window_int16_neon;
 }

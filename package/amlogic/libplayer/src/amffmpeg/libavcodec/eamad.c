@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/eamad.c
+ * @file
  * Electronic Arts Madcow Video Decoder
  * by Peter Ross <pross@xvid.org>
  *
@@ -34,6 +34,7 @@
 #include "aandcttab.h"
 #include "mpeg12.h"
 #include "mpeg12data.h"
+#include "libavutil/imgutils.h"
 
 #define EA_PREAMBLE_SIZE    8
 #define MADk_TAG MKTAG('M', 'A', 'D', 'k')    /* MAD i-frame */
@@ -46,14 +47,14 @@ typedef struct MadContext {
     AVFrame last_frame;
     void *bitstream_buf;
     unsigned int bitstream_buf_size;
-    DECLARE_ALIGNED_16(DCTELEM, block[64]);
+    DECLARE_ALIGNED(16, DCTELEM, block)[64];
 } MadContext;
 
 static void bswap16_buf(uint16_t *dst, const uint16_t *src, int count)
 {
     int i;
     for (i=0; i<count; i++)
-        dst[i] = bswap_16(src[i]);
+        dst[i] = av_bswap16(src[i]);
 }
 
 static av_cold int decode_init(AVCodecContext *avctx)
@@ -260,7 +261,7 @@ static int decode_frame(AVCodecContext *avctx,
     buf += 16;
 
     if (avctx->width != s->width || avctx->height != s->height) {
-        if (avcodec_check_dimensions(avctx, s->width, s->height) < 0)
+        if (av_image_check_size(s->width, s->height, 0, avctx) < 0)
             return -1;
         avcodec_set_dimensions(avctx, s->width, s->height);
         if (t->frame.data[0])
@@ -305,9 +306,9 @@ static av_cold int decode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec eamad_decoder = {
+AVCodec ff_eamad_decoder = {
     "eamad",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_MAD,
     sizeof(MadContext),
     decode_init,

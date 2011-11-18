@@ -2,11 +2,12 @@
 
 @settitle Developer Documentation
 @titlepage
-@sp 7
 @center @titlefont{Developer Documentation}
-@sp 3
 @end titlepage
 
+@top
+
+@contents
 
 @chapter Developers Guide
 
@@ -73,7 +74,7 @@ Indent size is 4.
 The presentation is one inspired by 'indent -i4 -kr -nut'.
 The TAB character is forbidden outside of Makefiles as is any
 form of trailing whitespace. Commits containing either will be
-rejected by the Subversion repository.
+rejected by the git repository.
 
 The main priority in FFmpeg is simplicity and small code size in order to
 minimize the bug count.
@@ -149,9 +150,9 @@ should also be avoided if they don't make the code easier to understand.
    Also if you have doubts about splitting or not splitting, do not hesitate to
    ask/discuss it on the developer mailing list.
 @item
-   Do not change behavior of the program (renaming options etc) without
-   first discussing it on the ffmpeg-devel mailing list. Do not remove
-   functionality from the code. Just improve!
+   Do not change behavior of the programs (renaming options etc) or public
+   API or ABI without first discussing it on the ffmpeg-devel mailing list.
+   Do not remove functionality from the code. Just improve!
 
    Note: Redundant code can be removed.
 @item
@@ -179,10 +180,13 @@ should also be avoided if they don't make the code easier to understand.
    Always fill out the commit log message. Describe in a few lines what you
    changed and why. You can refer to mailing list postings if you fix a
    particular bug. Comments such as "fixed!" or "Changed it." are unacceptable.
+   Recommanded format:
+   area changed: Short 1 line description
+
+   details describing what and why and giving references.
 @item
-   If you apply a patch by someone else, include the name and email address in
-   the log message. Since the ffmpeg-cvslog mailing list is publicly
-   archived you should add some SPAM protection to the email address. Send an
+   Make sure the author of the commit is set correctly. (see git commit --author)
+   If you apply a patch, send an
    answer to ffmpeg-devel (or wherever you got the patch from) saying that
    you applied the patch.
 @item
@@ -240,10 +244,10 @@ Note, these rules are mostly borrowed from the MPlayer project.
 
 @section Submitting patches
 
-First, (@pxref{Coding Rules}) above if you did not yet.
+First, read the (@pxref{Coding Rules}) above if you did not yet.
 
-When you submit your patch, try to send a unified diff (diff '-up'
-option). We cannot read other diffs :-)
+When you submit your patch, please use @code{git format-patch} or
+@code{git send-email}. We cannot read other diffs :-)
 
 Also please do not submit a patch which contains several unrelated changes.
 Split it into separate, self-contained pieces. This does not mean splitting
@@ -252,13 +256,16 @@ keeping it as a logical unit that contains an individual change, even
 if it spans multiple files. This makes reviewing your patches much easier
 for us and greatly increases your chances of getting your patch applied.
 
+Use the patcheck tool of FFmpeg to check your patch.
+The tool is located in the tools directory.
+
 Run the regression tests before submitting a patch so that you can
 verify that there are no big problems.
 
 Patches should be posted as base64 encoded attachments (or any other
 encoding which ensures that the patch will not be trashed during
 transmission) to the ffmpeg-devel mailing list, see
-@url{http://lists.mplayerhq.hu/mailman/listinfo/ffmpeg-devel}
+@url{http://lists.ffmpeg.org/mailman/listinfo/ffmpeg-devel}
 
 It also helps quite a bit if you tell us what the patch does (for example
 'replaces lrint by lrintf'), and why (for example '*BSD isn't C99 compliant
@@ -286,8 +293,8 @@ send a reminder by email. Your patch should eventually be dealt with.
     Did you add a long_name under NULL_IF_CONFIG_SMALL to the AVCodec or
     AVInputFormat/AVOutputFormat struct?
 @item
-    Did you bump the minor version number in @file{avcodec.h} or
-    @file{avformat.h}?
+    Did you bump the minor version number (and reset the micro version
+    number) in @file{avcodec.h} or @file{avformat.h}?
 @item
     Did you register it in @file{allcodecs.c} or @file{allformats.c}?
 @item
@@ -300,28 +307,37 @@ send a reminder by email. Your patch should eventually be dealt with.
     Remember to do this even if you're just adding a format to a file that is
     already being compiled by some other rule, like a raw demuxer.
 @item
-    Did you add an entry to the table of supported formats or codecs in the
-    documentation?
+    Did you add an entry to the table of supported formats or codecs in
+    @file{doc/general.texi}?
 @item
     Did you add an entry in the Changelog?
 @item
     If it depends on a parser or a library, did you add that dependency in
     configure?
 @item
-    Did you "svn add" the appropriate files before commiting?
+    Did you @code{git add} the appropriate files before committing?
+@item
+    Did you make sure it compiles standalone, i.e. with
+    @code{configure --disable-everything --enable-decoder=foo}
+    (or @code{--enable-demuxer} or whatever your component is)?
 @end enumerate
+
 
 @section patch submission checklist
 
 @enumerate
 @item
-    Do the regression tests pass with the patch applied?
+    Does 'make fate' pass with the patch applied?
 @item
-    Does @code{make checkheaders} pass with the patch applied?
+    Was the patch generated with git format-patch or send-email?
 @item
-    Is the patch a unified diff?
+    Did you sign off your patch? (git commit -s)
+    See @url{http://kerneltrap.org/files/Jeremy/DCO.txt} for the meaning
+    of sign off.
 @item
-    Is the patch against latest FFmpeg SVN?
+    Did you provide a clear git commit log message?
+@item
+    Is the patch against latest FFmpeg git master branch?
 @item
     Are you subscribed to ffmpeg-dev?
     (the list is subscribers only due to spam)
@@ -339,9 +355,6 @@ send a reminder by email. Your patch should eventually be dealt with.
     Did you test your decoder or demuxer against damaged data? If no, see
     tools/trasher and the noise bitstream filter. Your decoder or demuxer
     should not crash or end in a (near) infinite loop when fed damaged data.
-@item
-    Is the patch created from the root of the source tree, so it can be
-    applied with @code{patch -p0}?
 @item
     Does the patch not mix functional and cosmetic changes?
 @item
@@ -378,13 +391,15 @@ send a reminder by email. Your patch should eventually be dealt with.
     Lines with similar content should be aligned vertically when doing so
     improves readability.
 @item
-    Did you provide a suggestion for a clear commit log message?
+    Consider to add a regression test for your code.
+@item
+    If you added YASM code please check that things still work with --disable-yasm
 @end enumerate
 
 @section Patch review process
 
 All patches posted to ffmpeg-devel will be reviewed, unless they contain a
-clear note that the patch is not for SVN.
+clear note that the patch is not for the git master branch.
 Reviews and comments will be posted as replies to the patch on the
 mailing list. The patch submitter then has to take care of every comment,
 that can be by resubmitting a changed patch or by discussion. Resubmitted
@@ -411,13 +426,18 @@ The regression tests build a synthetic video stream and a synthetic
 audio stream. These are then encoded and decoded with all codecs or
 formats. The CRC (or MD5) of each generated file is recorded in a
 result file. A 'diff' is launched to compare the reference results and
-the result file.
+the result file. The output is checked immediately after each test
+has run.
 
 The regression tests then go on to test the FFserver code with a
 limited set of streams. It is important that this step runs correctly
 as well.
 
-Run 'make test' to test all the codecs and formats.
+Run 'make test' to test all the codecs and formats. Commands like
+'make regtest-mpeg2' can be used to run a single test. By default,
+make will abort if any test fails. To run all tests regardless,
+use make -k. To get a more verbose output, use 'make V=1 test' or
+'make V=2 test'.
 
 Run 'make fulltest' to test all the codecs, formats and FFserver.
 

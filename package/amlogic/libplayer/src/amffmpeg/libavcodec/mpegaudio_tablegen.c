@@ -25,36 +25,18 @@
 #include "mpegaudio_tablegen.h"
 #include "tableprint.h"
 
-void tableinit(void)
+int main(void)
 {
     mpegaudio_tableinit();
-}
 
-const struct tabledef tables[] = {
-    {
-        "static const int8_t table_4_3_exp[TABLE_4_3_SIZE]",
-        write_int8_array,
-        table_4_3_exp,
-        TABLE_4_3_SIZE
-    },
-    {
-        "static const uint32_t table_4_3_value[TABLE_4_3_SIZE]",
-        write_uint32_array,
-        table_4_3_value,
-        TABLE_4_3_SIZE
-    },
-    {
-        "static const uint32_t exp_table[512]",
-        write_uint32_array,
-        exp_table,
-        512
-    },
-    {
-        "static const uint32_t expval_table[512][16]",
-        write_uint32_2d_array,
-        expval_table,
-        512,
-        16
-    },
-    { NULL }
-};
+    write_fileheader();
+
+    WRITE_ARRAY("static const", int8_t, table_4_3_exp);
+    WRITE_ARRAY("static const", uint32_t, table_4_3_value);
+    WRITE_ARRAY("static const", uint32_t, exp_table_fixed);
+    WRITE_ARRAY("static const", float, exp_table_float);
+    WRITE_2D_ARRAY("static const", uint32_t, expval_table_fixed);
+    WRITE_2D_ARRAY("static const", float, expval_table_float);
+
+    return 0;
+}

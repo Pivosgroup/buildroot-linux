@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/dnxhd_parser.c
+ * @file
  * DNxHD/VC-3 parser
  */
 
@@ -86,7 +86,7 @@ static int dnxhd_parse(AVCodecParserContext *s,
     return next;
 }
 
-AVCodecParser dnxhd_parser = {
+AVCodecParser ff_dnxhd_parser = {
     { CODEC_ID_DNXHD },
     sizeof(ParseContext),
     NULL,

@@ -19,7 +19,7 @@
  */
 
 /**
- * @file libavutil/tree.h
+ * @file
  * A tree container.
  * Insertion, removal, finding equal, largest which is smaller than and
  * smallest which is larger than, all have O(log n) worst case complexity.
@@ -33,7 +33,7 @@ struct AVTreeNode;
 extern const int av_tree_node_size;
 
 /**
- * Finds an element.
+ * Find an element.
  * @param root a pointer to the root node of the tree
  * @param next If next is not NULL, then next[0] will contain the previous
  *             element and next[1] the next element. If either does not exist,
@@ -44,7 +44,7 @@ extern const int av_tree_node_size;
 void *av_tree_find(const struct AVTreeNode *root, void *key, int (*cmp)(void *key, const void *b), void *next[2]);
 
 /**
- * Inserts or removes an element.
+ * Insert or remove an element.
  * If *next is NULL, then the supplied element will be removed if it exists.
  * If *next is not NULL, then the supplied element will be inserted, unless
  * it already exists in the tree.
@@ -67,7 +67,7 @@ void *av_tree_find(const struct AVTreeNode *root, void *key, int (*cmp)(void *ke
  *                 return av_tree_insert(rootp, key, cmp, next);
  *             }
  *             void *tree_remove(struct AVTreeNode **rootp, void *key, int (*cmp)(void *key, const void *b, AVTreeNode **next)){
- *                 if(*next) av_freep(next);
+ *                 av_freep(next);
  *                 return av_tree_insert(rootp, key, cmp, next);
  *             }
  *             @endcode
@@ -78,5 +78,18 @@ void *av_tree_find(const struct AVTreeNode *root, void *key, int (*cmp)(void *ke
  */
 void *av_tree_insert(struct AVTreeNode **rootp, void *key, int (*cmp)(void *key, const void *b), struct AVTreeNode **next);
 void av_tree_destroy(struct AVTreeNode *t);
+
+/**
+ * Apply enu(opaque, &elem) to all the elements in the tree in a given range.
+ *
+ * @param cmp a comparison function that returns < 0 for a element below the
+ *            range, > 0 for a element above the range and == 0 for a
+ *            element inside the range
+ *
+ * @note The cmp function should use the same ordering used to construct the
+ *       tree.
+ */
+void av_tree_enumerate(struct AVTreeNode *t, void *opaque, int (*cmp)(void *opaque, void *elem), int (*enu)(void *opaque, void *elem));
+
 
 #endif /* AVUTIL_TREE_H */

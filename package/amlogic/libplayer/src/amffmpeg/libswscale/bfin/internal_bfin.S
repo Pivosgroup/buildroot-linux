@@ -94,7 +94,7 @@ to do with the memory system.
 */
 
 #define mL3 .text
-#ifdef __FDPIC__
+#if defined(__FDPIC__) && CONFIG_SRAM
 #define mL1 .l1.text
 #else
 #define mL1 mL3
@@ -466,8 +466,8 @@ DEFUN_END(yuv2rgb24_line)
 #define ARG_srcStride   40
 
 DEFUN(uyvytoyv12, mL3,  (const uint8_t *src, uint8_t *ydst, uint8_t *udst, uint8_t *vdst,
-                         long width, long height,
-                         long lumStride, long chromStride, long srcStride)):
+                         int width, int height,
+                         int lumStride, int chromStride, int srcStride)):
         link 0;
         [--sp] = (r7:4,p5:4);
 
@@ -479,9 +479,6 @@ DEFUN(uyvytoyv12, mL3,  (const uint8_t *src, uint8_t *ydst, uint8_t *udst, uint8
 
         r1 = [fp + ARG_srcStride];
         r2 = r0 + r1;
-        r1 += -8;  // i0,i1 is pre read need to correct
-        m0 = r1;
-
         i0 = r0;  // uyvy_T even
         i1 = r2;  // uyvy_B odd
 
@@ -493,6 +490,12 @@ DEFUN(uyvytoyv12, mL3,  (const uint8_t *src, uint8_t *ydst, uint8_t *udst, uint8
         r0 = p5;
         p4 = p4 >> 1;
         p5 = p5 >> 2;
+
+        r2 = r0 << 1;
+        r1 = r1 << 1;
+        r1 = r1 - r2;  // srcStride + (srcStride - 2*width)
+        r1 += -8;  // i0,i1 is pre read need to correct
+        m0 = r1;
 
         r2 = [fp + ARG_chromStride];
         r0 = r0 >> 1;
@@ -536,8 +539,8 @@ DEFUN(uyvytoyv12, mL3,  (const uint8_t *src, uint8_t *ydst, uint8_t *udst, uint8
 DEFUN_END(uyvytoyv12)
 
 DEFUN(yuyvtoyv12, mL3,  (const uint8_t *src, uint8_t *ydst, uint8_t *udst, uint8_t *vdst,
-                         long width, long height,
-                         long lumStride, long chromStride, long srcStride)):
+                         int width, int height,
+                         int lumStride, int chromStride, int srcStride)):
         link 0;
         [--sp] = (r7:4,p5:4);
 
@@ -549,8 +552,6 @@ DEFUN(yuyvtoyv12, mL3,  (const uint8_t *src, uint8_t *ydst, uint8_t *udst, uint8
 
         r1 = [fp + ARG_srcStride];
         r2 = r0 + r1;
-        r1 += -8;  // i0,i1 is pre read need to correct
-        m0 = r1;
 
         i0 = r0;  // uyvy_T even
         i1 = r2;  // uyvy_B odd
@@ -563,6 +564,12 @@ DEFUN(yuyvtoyv12, mL3,  (const uint8_t *src, uint8_t *ydst, uint8_t *udst, uint8
         r0 = p5;
         p4 = p4 >> 1;
         p5 = p5 >> 2;
+
+        r2 = r0 << 1;
+        r1 = r1 << 1;
+        r1 = r1 - r2;  // srcStride + (srcStride - 2*width)
+        r1 += -8;  // i0,i1 is pre read need to correct
+        m0 = r1;
 
         r2 = [fp + ARG_chromStride];
         r0 = r0 >> 1;

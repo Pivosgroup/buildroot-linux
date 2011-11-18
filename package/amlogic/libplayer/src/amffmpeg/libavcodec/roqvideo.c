@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/roqvideo.c
+ * @file
  * id RoQ Video common functions based on work by Dr. Tim Ferguson
  */
 
@@ -112,6 +112,11 @@ static inline void apply_motion_generic(RoqContext *ri, int x, int y, int deltax
         (my < 0) || (my > ri->height - sz)) {
         av_log(ri->avctx, AV_LOG_ERROR, "motion vector out of bounds: MV = (%d, %d), boundaries = (0, 0, %d, %d)\n",
             mx, my, ri->width, ri->height);
+        return;
+    }
+
+    if (ri->last_frame->data[0] == NULL) {
+        av_log(ri->avctx, AV_LOG_ERROR, "Invalid decode type. Invalid header?\n");
         return;
     }
 

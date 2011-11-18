@@ -24,7 +24,7 @@ static int daud_header(AVFormatContext *s, AVFormatParameters *ap) {
     AVStream *st = av_new_stream(s, 0);
     if (!st)
         return AVERROR(ENOMEM);
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id = CODEC_ID_PCM_S24DAUD;
     st->codec->codec_tag = MKTAG('d', 'a', 'u', 'd');
     st->codec->channels = 6;
@@ -36,12 +36,12 @@ static int daud_header(AVFormatContext *s, AVFormatParameters *ap) {
 }
 
 static int daud_packet(AVFormatContext *s, AVPacket *pkt) {
-    ByteIOContext *pb = s->pb;
+    AVIOContext *pb = s->pb;
     int ret, size;
     if (url_feof(pb))
         return AVERROR(EIO);
-    size = get_be16(pb);
-    get_be16(pb); // unknown
+    size = avio_rb16(pb);
+    avio_rb16(pb); // unknown
     ret = av_get_packet(pb, pkt, size);
     pkt->stream_index = 0;
     return ret;
@@ -57,15 +57,20 @@ static int daud_write_header(struct AVFormatContext *s)
 
 static int daud_write_packet(struct AVFormatContext *s, AVPacket *pkt)
 {
-    put_be16(s->pb, pkt->size);
-    put_be16(s->pb, 0x8010); // unknown
-    put_buffer(s->pb, pkt->data, pkt->size);
-    put_flush_packet(s->pb);
+    if (pkt->size > 65535) {
+        av_log(s, AV_LOG_ERROR,
+               "Packet size too large for s302m. (%d > 65535)\n", pkt->size);
+        return -1;
+    }
+    avio_wb16(s->pb, pkt->size);
+    avio_wb16(s->pb, 0x8010); // unknown
+    avio_write(s->pb, pkt->data, pkt->size);
+    avio_flush(s->pb);
     return 0;
 }
 
 #if CONFIG_DAUD_DEMUXER
-AVInputFormat daud_demuxer = {
+AVInputFormat ff_daud_demuxer = {
     "daud",
     NULL_IF_CONFIG_SMALL("D-Cinema audio format"),
     0,
@@ -79,7 +84,7 @@ AVInputFormat daud_demuxer = {
 #endif
 
 #if CONFIG_DAUD_MUXER
-AVOutputFormat daud_muxer =
+AVOutputFormat ff_daud_muxer =
 {
     "daud",
     NULL_IF_CONFIG_SMALL("D-Cinema audio format"),

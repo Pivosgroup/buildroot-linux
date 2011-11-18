@@ -39,11 +39,12 @@
  */
 
 #include "libavcodec/dsputil.h"
+#include "libavutil/x86_cpu.h"
 #include "idct_xvid.h"
 #include "dsputil_mmx.h"
 
 /*!
- * @file libavcodec/x86/idct_sse2_xvid.c
+ * @file
  * @brief SSE2 idct compatible with xvidmmx
  */
 
@@ -52,41 +53,41 @@
 #define ROW_SHIFT 11
 #define COL_SHIFT 6
 
-DECLARE_ASM_CONST(16, int16_t, tan1[]) = {X8(13036)}; // tan( pi/16)
-DECLARE_ASM_CONST(16, int16_t, tan2[]) = {X8(27146)}; // tan(2pi/16) = sqrt(2)-1
-DECLARE_ASM_CONST(16, int16_t, tan3[]) = {X8(43790)}; // tan(3pi/16)-1
-DECLARE_ASM_CONST(16, int16_t, sqrt2[])= {X8(23170)}; // 0.5/sqrt(2)
-DECLARE_ASM_CONST(8,  uint8_t, m127[]) = {X8(127)};
+DECLARE_ASM_CONST(16, int16_t, tan1)[] = {X8(13036)}; // tan( pi/16)
+DECLARE_ASM_CONST(16, int16_t, tan2)[] = {X8(27146)}; // tan(2pi/16) = sqrt(2)-1
+DECLARE_ASM_CONST(16, int16_t, tan3)[] = {X8(43790)}; // tan(3pi/16)-1
+DECLARE_ASM_CONST(16, int16_t, sqrt2)[]= {X8(23170)}; // 0.5/sqrt(2)
+DECLARE_ASM_CONST(8,  uint8_t, m127)[] = {X8(127)};
 
-DECLARE_ASM_CONST(16, int16_t, iTab1[]) = {
+DECLARE_ASM_CONST(16, int16_t, iTab1)[] = {
  0x4000, 0x539f, 0xc000, 0xac61, 0x4000, 0xdd5d, 0x4000, 0xdd5d,
  0x4000, 0x22a3, 0x4000, 0x22a3, 0xc000, 0x539f, 0x4000, 0xac61,
  0x3249, 0x11a8, 0x4b42, 0xee58, 0x11a8, 0x4b42, 0x11a8, 0xcdb7,
  0x58c5, 0x4b42, 0xa73b, 0xcdb7, 0x3249, 0xa73b, 0x4b42, 0xa73b
 };
 
-DECLARE_ASM_CONST(16, int16_t, iTab2[]) = {
+DECLARE_ASM_CONST(16, int16_t, iTab2)[] = {
  0x58c5, 0x73fc, 0xa73b, 0x8c04, 0x58c5, 0xcff5, 0x58c5, 0xcff5,
  0x58c5, 0x300b, 0x58c5, 0x300b, 0xa73b, 0x73fc, 0x58c5, 0x8c04,
  0x45bf, 0x187e, 0x6862, 0xe782, 0x187e, 0x6862, 0x187e, 0xba41,
  0x7b21, 0x6862, 0x84df, 0xba41, 0x45bf, 0x84df, 0x6862, 0x84df
 };
 
-DECLARE_ASM_CONST(16, int16_t, iTab3[]) = {
+DECLARE_ASM_CONST(16, int16_t, iTab3)[] = {
  0x539f, 0x6d41, 0xac61, 0x92bf, 0x539f, 0xd2bf, 0x539f, 0xd2bf,
  0x539f, 0x2d41, 0x539f, 0x2d41, 0xac61, 0x6d41, 0x539f, 0x92bf,
  0x41b3, 0x1712, 0x6254, 0xe8ee, 0x1712, 0x6254, 0x1712, 0xbe4d,
  0x73fc, 0x6254, 0x8c04, 0xbe4d, 0x41b3, 0x8c04, 0x6254, 0x8c04
 };
 
-DECLARE_ASM_CONST(16, int16_t, iTab4[]) = {
+DECLARE_ASM_CONST(16, int16_t, iTab4)[] = {
  0x4b42, 0x6254, 0xb4be, 0x9dac, 0x4b42, 0xd746, 0x4b42, 0xd746,
  0x4b42, 0x28ba, 0x4b42, 0x28ba, 0xb4be, 0x6254, 0x4b42, 0x9dac,
  0x3b21, 0x14c3, 0x587e, 0xeb3d, 0x14c3, 0x587e, 0x14c3, 0xc4df,
  0x6862, 0x587e, 0x979e, 0xc4df, 0x3b21, 0x979e, 0x587e, 0x979e
 };
 
-DECLARE_ASM_CONST(16, int32_t, walkenIdctRounders[]) = {
+DECLARE_ASM_CONST(16, int32_t, walkenIdctRounders)[] = {
  65536, 65536, 65536, 65536,
   3597,  3597,  3597,  3597,
   2260,  2260,  2260,  2260,
@@ -355,7 +356,7 @@ inline void ff_idct_xvid_sse2(short *block)
     TEST_TWO_ROWS("5*16(%0)", "6*16(%0)", "%%eax", "%%edx", CLEAR_ODD(ROW5), CLEAR_EVEN(ROW6))
     TEST_ONE_ROW("7*16(%0)", "%%esi", CLEAR_ODD(ROW7))
     iLLM_HEAD
-    ASMALIGN(4)
+    ".p2align 4 \n\t"
     JNZ("%%ecx", "2f")
     JNZ("%%eax", "3f")
     JNZ("%%edx", "4f")
@@ -379,17 +380,24 @@ inline void ff_idct_xvid_sse2(short *block)
     "6:                                                          \n\t"
     : "+r"(block)
     :
-    : "%eax", "%ecx", "%edx", "%esi", "memory");
+    : XMM_CLOBBERS("%xmm0" , "%xmm1" , "%xmm2" , "%xmm3" ,
+                   "%xmm4" , "%xmm5" , "%xmm6" , "%xmm7" ,)
+#if ARCH_X86_64
+      XMM_CLOBBERS("%xmm8" , "%xmm9" , "%xmm10", "%xmm11",
+                   "%xmm12", "%xmm13", "%xmm14",)
+#endif
+      "%eax", "%ecx", "%edx", "%esi", "memory"
+    );
 }
 
 void ff_idct_xvid_sse2_put(uint8_t *dest, int line_size, short *block)
 {
     ff_idct_xvid_sse2(block);
-    put_pixels_clamped_mmx(block, dest, line_size);
+    ff_put_pixels_clamped_mmx(block, dest, line_size);
 }
 
 void ff_idct_xvid_sse2_add(uint8_t *dest, int line_size, short *block)
 {
     ff_idct_xvid_sse2(block);
-    add_pixels_clamped_mmx(block, dest, line_size);
+    ff_add_pixels_clamped_mmx(block, dest, line_size);
 }

@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/ac3dec_data.c
+ * @file
  * Tables taken directly from the AC-3 spec.
  */
 
@@ -43,12 +43,6 @@ const uint8_t ff_ac3_ungroup_3_in_5_bits_tab[32][3] = {
     { 3, 0, 1 }, { 3, 0, 2 }, { 3, 1, 0 }, { 3, 1, 1 }
 };
 
-/**
- * Table of bin locations for rematrixing bands
- * reference: Section 7.5.2 Rematrixing : Frequency Band Definitions
- */
-const uint8_t ff_ac3_rematrix_band_tab[5] = { 13, 25, 37, 61, 253 };
-
 const uint8_t ff_eac3_hebap_tab[64] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 8,
     8, 8, 9, 9, 9, 10, 10, 10, 10, 11,
@@ -60,7 +54,7 @@ const uint8_t ff_eac3_hebap_tab[64] = {
 };
 
 /**
- * Table E2.16 Default Coupling Banding Structure
+ * Table E2.15 Default Spectral Extension Banding Structure
  */
-const uint8_t ff_eac3_default_cpl_band_struct[18] =
-{ 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1 };
+const uint8_t ff_eac3_default_spx_band_struct[17] =
+{ 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 };

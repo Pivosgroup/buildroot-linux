@@ -22,7 +22,7 @@
  */
 
 /**
- * @file libavcodec/mjpeg_parser.c
+ * @file
  * MJPEG parser.
  */
 
@@ -96,7 +96,7 @@ static int jpeg_parse(AVCodecParserContext *s,
 }
 
 
-AVCodecParser mjpeg_parser = {
+AVCodecParser ff_mjpeg_parser = {
     { CODEC_ID_MJPEG },
     sizeof(ParseContext),
     NULL,

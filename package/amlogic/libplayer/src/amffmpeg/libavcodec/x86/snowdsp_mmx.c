@@ -19,13 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/cpu.h"
 #include "libavutil/x86_cpu.h"
 #include "libavcodec/avcodec.h"
 #include "libavcodec/snow.h"
+#include "libavcodec/dwt.h"
+#include "dsputil_mmx.h"
 
-void ff_snow_horizontal_compose97i_sse2(IDWTELEM *b, int width){
+static void ff_snow_horizontal_compose97i_sse2(IDWTELEM *b, int width){
     const int w2= (width+1)>>1;
-    DECLARE_ALIGNED_16(IDWTELEM, temp[width>>1]);
+    DECLARE_ALIGNED(16, IDWTELEM, temp)[width>>1];
     const int w_l= (width>>1);
     const int w_r= w2 - 1;
     int i;
@@ -212,7 +215,7 @@ void ff_snow_horizontal_compose97i_sse2(IDWTELEM *b, int width){
     }
 }
 
-void ff_snow_horizontal_compose97i_mmx(IDWTELEM *b, int width){
+static void ff_snow_horizontal_compose97i_mmx(IDWTELEM *b, int width){
     const int w2= (width+1)>>1;
     IDWTELEM temp[width >> 1];
     const int w_l= (width>>1);
@@ -435,7 +438,7 @@ void ff_snow_horizontal_compose97i_mmx(IDWTELEM *b, int width){
         "movdqa %%"s2", %%"t2" \n\t"\
         "movdqa %%"s3", %%"t3" \n\t"
 
-void ff_snow_vertical_compose97i_sse2(IDWTELEM *b0, IDWTELEM *b1, IDWTELEM *b2, IDWTELEM *b3, IDWTELEM *b4, IDWTELEM *b5, int width){
+static void ff_snow_vertical_compose97i_sse2(IDWTELEM *b0, IDWTELEM *b1, IDWTELEM *b2, IDWTELEM *b3, IDWTELEM *b4, IDWTELEM *b5, int width){
     x86_reg i = width;
 
     while(i & 0x1F)
@@ -533,7 +536,7 @@ void ff_snow_vertical_compose97i_sse2(IDWTELEM *b0, IDWTELEM *b1, IDWTELEM *b2, 
         "movq %%"s3", %%"t3" \n\t"
 
 
-void ff_snow_vertical_compose97i_mmx(IDWTELEM *b0, IDWTELEM *b1, IDWTELEM *b2, IDWTELEM *b3, IDWTELEM *b4, IDWTELEM *b5, int width){
+static void ff_snow_vertical_compose97i_mmx(IDWTELEM *b0, IDWTELEM *b1, IDWTELEM *b2, IDWTELEM *b3, IDWTELEM *b4, IDWTELEM *b5, int width){
     x86_reg i = width;
     while(i & 15)
     {
@@ -809,7 +812,7 @@ snow_inner_add_yblock_sse2_end_16
              "add %%"REG_c", "PTR_SIZE"*2(%%"REG_a");\n\t"\
              "add %%"REG_c", "PTR_SIZE"*1(%%"REG_a");\n\t"\
              "add %%"REG_c", (%%"REG_a")     \n\t"\
-             "add $"PTR_SIZE"*1, %1          \n\t"\
+             "add"OPSIZE " $"PTR_SIZE"*1, %1 \n\t"\
              "add %%"REG_c", %0              \n\t"\
              "dec %2                         \n\t"\
              "jnz 1b                         \n\t"\
@@ -846,7 +849,7 @@ snow_inner_add_yblock_mmx_mix("16", "8")
 snow_inner_add_yblock_mmx_end("32")
 }
 
-void ff_snow_inner_add_yblock_sse2(const uint8_t *obmc, const int obmc_stride, uint8_t * * block, int b_w, int b_h,
+static void ff_snow_inner_add_yblock_sse2(const uint8_t *obmc, const int obmc_stride, uint8_t * * block, int b_w, int b_h,
                            int src_x, int src_y, int src_stride, slice_buffer * sb, int add, uint8_t * dst8){
 
     if (b_w == 16)
@@ -860,7 +863,7 @@ void ff_snow_inner_add_yblock_sse2(const uint8_t *obmc, const int obmc_stride, u
          ff_snow_inner_add_yblock(obmc, obmc_stride, block, b_w, b_h, src_x,src_y, src_stride, sb, add, dst8);
 }
 
-void ff_snow_inner_add_yblock_mmx(const uint8_t *obmc, const int obmc_stride, uint8_t * * block, int b_w, int b_h,
+static void ff_snow_inner_add_yblock_mmx(const uint8_t *obmc, const int obmc_stride, uint8_t * * block, int b_w, int b_h,
                           int src_x, int src_y, int src_stride, slice_buffer * sb, int add, uint8_t * dst8){
     if (b_w == 16)
         inner_add_yblock_bw_16_obmc_32_mmx(obmc, obmc_stride, block, b_w, b_h, src_x,src_y, src_stride, sb, add, dst8);
@@ -868,4 +871,28 @@ void ff_snow_inner_add_yblock_mmx(const uint8_t *obmc, const int obmc_stride, ui
         inner_add_yblock_bw_8_obmc_16_mmx(obmc, obmc_stride, block, b_w, b_h, src_x,src_y, src_stride, sb, add, dst8);
     else
         ff_snow_inner_add_yblock(obmc, obmc_stride, block, b_w, b_h, src_x,src_y, src_stride, sb, add, dst8);
+}
+
+void ff_dwt_init_x86(DWTContext *c)
+{
+    int mm_flags = av_get_cpu_flags();
+
+    if (mm_flags & AV_CPU_FLAG_MMX) {
+        if(mm_flags & AV_CPU_FLAG_SSE2 & 0){
+            c->horizontal_compose97i = ff_snow_horizontal_compose97i_sse2;
+#if HAVE_7REGS
+            c->vertical_compose97i = ff_snow_vertical_compose97i_sse2;
+#endif
+            c->inner_add_yblock = ff_snow_inner_add_yblock_sse2;
+        }
+        else{
+            if(mm_flags & AV_CPU_FLAG_MMX2){
+            c->horizontal_compose97i = ff_snow_horizontal_compose97i_mmx;
+#if HAVE_7REGS
+            c->vertical_compose97i = ff_snow_vertical_compose97i_mmx;
+#endif
+            }
+            c->inner_add_yblock = ff_snow_inner_add_yblock_mmx;
+        }
+    }
 }

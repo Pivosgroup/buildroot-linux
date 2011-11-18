@@ -39,7 +39,7 @@ static int pnm_encode_frame(AVCodecContext *avctx, unsigned char *outbuf,
     }
 
     *p           = *pict;
-    p->pict_type = FF_I_TYPE;
+    p->pict_type = AV_PICTURE_TYPE_I;
     p->key_frame = 1;
 
     s->bytestream_start =
@@ -113,9 +113,9 @@ static int pnm_encode_frame(AVCodecContext *avctx, unsigned char *outbuf,
 
 
 #if CONFIG_PGM_ENCODER
-AVCodec pgm_encoder = {
+AVCodec ff_pgm_encoder = {
     "pgm",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_PGM,
     sizeof(PNMContext),
     ff_pnm_init,
@@ -126,9 +126,9 @@ AVCodec pgm_encoder = {
 #endif
 
 #if CONFIG_PGMYUV_ENCODER
-AVCodec pgmyuv_encoder = {
+AVCodec ff_pgmyuv_encoder = {
     "pgmyuv",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_PGMYUV,
     sizeof(PNMContext),
     ff_pnm_init,
@@ -139,9 +139,9 @@ AVCodec pgmyuv_encoder = {
 #endif
 
 #if CONFIG_PPM_ENCODER
-AVCodec ppm_encoder = {
+AVCodec ff_ppm_encoder = {
     "ppm",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_PPM,
     sizeof(PNMContext),
     ff_pnm_init,
@@ -152,9 +152,9 @@ AVCodec ppm_encoder = {
 #endif
 
 #if CONFIG_PBM_ENCODER
-AVCodec pbm_encoder = {
+AVCodec ff_pbm_encoder = {
     "pbm",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_PBM,
     sizeof(PNMContext),
     ff_pnm_init,

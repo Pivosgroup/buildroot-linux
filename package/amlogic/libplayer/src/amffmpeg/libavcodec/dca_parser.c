@@ -22,10 +22,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-/**
- * @file libavcodec/dca_parser.c
- */
-
 #include "parser.h"
 #include "dca.h"
 
@@ -129,7 +125,7 @@ static int dca_parse(AVCodecParserContext * s,
     return next;
 }
 
-AVCodecParser dca_parser = {
+AVCodecParser ff_dca_parser = {
     {CODEC_ID_DTS},
     sizeof(DCAParseContext),
     dca_parse_init,

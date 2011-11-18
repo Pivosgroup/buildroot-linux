@@ -21,6 +21,7 @@
 
 #include "avcodec.h"
 #include "bytestream.h"
+#include "put_bits.h"
 #include "pnm.h"
 
 
@@ -32,8 +33,9 @@ static int pnm_decode_frame(AVCodecContext *avctx, void *data,
     PNMContext * const s = avctx->priv_data;
     AVFrame *picture     = data;
     AVFrame * const p    = (AVFrame*)&s->picture;
-    int i, n, linesize, h, upgrade = 0;
+    int i, j, n, linesize, h, upgrade = 0, is_mono = 0;
     unsigned char *ptr;
+    int components, sample_len;
 
     s->bytestream_start =
     s->bytestream       = buf;
@@ -50,7 +52,7 @@ static int pnm_decode_frame(AVCodecContext *avctx, void *data,
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return -1;
     }
-    p->pict_type = FF_I_TYPE;
+    p->pict_type = AV_PICTURE_TYPE_I;
     p->key_frame = 1;
 
     switch (avctx->pix_fmt) {
@@ -58,29 +60,67 @@ static int pnm_decode_frame(AVCodecContext *avctx, void *data,
         return -1;
     case PIX_FMT_RGB48BE:
         n = avctx->width * 6;
+        components=3;
+        sample_len=16;
         goto do_read;
     case PIX_FMT_RGB24:
         n = avctx->width * 3;
+        components=3;
+        sample_len=8;
         goto do_read;
     case PIX_FMT_GRAY8:
         n = avctx->width;
+        components=1;
+        sample_len=8;
         if (s->maxval < 255)
             upgrade = 1;
         goto do_read;
     case PIX_FMT_GRAY16BE:
     case PIX_FMT_GRAY16LE:
         n = avctx->width * 2;
+        components=1;
+        sample_len=16;
         if (s->maxval < 65535)
             upgrade = 2;
         goto do_read;
     case PIX_FMT_MONOWHITE:
     case PIX_FMT_MONOBLACK:
         n = (avctx->width + 7) >> 3;
+        components=1;
+        sample_len=1;
+        is_mono = 1;
     do_read:
         ptr      = p->data[0];
         linesize = p->linesize[0];
         if (s->bytestream + n * avctx->height > s->bytestream_end)
             return -1;
+        if(s->type < 4){
+            for (i=0; i<avctx->height; i++) {
+                PutBitContext pb;
+                init_put_bits(&pb, ptr, linesize);
+                for(j=0; j<avctx->width * components; j++){
+                    unsigned int c=0;
+                    int v=0;
+                    while(s->bytestream < s->bytestream_end && (*s->bytestream < '0' || *s->bytestream > '9' ))
+                        s->bytestream++;
+                    if(s->bytestream >= s->bytestream_end)
+                        return -1;
+                    if (is_mono) {
+                        /* read a single digit */
+                        v = (*s->bytestream++) - '0';
+                    } else {
+                        /* read a sequence of digits */
+                        do {
+                            v = 10*v + c;
+                            c = (*s->bytestream++) - '0';
+                        } while (c <= 9);
+                    }
+                    put_bits(&pb, sample_len, (((1<<sample_len)-1)*v + (s->maxval>>1))/s->maxval);
+                }
+                flush_put_bits(&pb);
+                ptr+= linesize;
+            }
+        }else{
         for (i = 0; i < avctx->height; i++) {
             if (!upgrade)
                 memcpy(ptr, s->bytestream, n);
@@ -91,12 +131,13 @@ static int pnm_decode_frame(AVCodecContext *avctx, void *data,
             } else if (upgrade == 2) {
                 unsigned int j, v, f = (65535 * 32768 + s->maxval / 2) / s->maxval;
                 for (j = 0; j < n / 2; j++) {
-                    v = be2me_16(((uint16_t *)s->bytestream)[j]);
+                    v = av_be2ne16(((uint16_t *)s->bytestream)[j]);
                     ((uint16_t *)ptr)[j] = (v * f + 16384) >> 15;
                 }
             }
             s->bytestream += n;
             ptr           += linesize;
+        }
         }
         break;
     case PIX_FMT_YUV420P:
@@ -154,9 +195,9 @@ static int pnm_decode_frame(AVCodecContext *avctx, void *data,
 
 
 #if CONFIG_PGM_DECODER
-AVCodec pgm_decoder = {
+AVCodec ff_pgm_decoder = {
     "pgm",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_PGM,
     sizeof(PNMContext),
     ff_pnm_init,
@@ -170,9 +211,9 @@ AVCodec pgm_decoder = {
 #endif
 
 #if CONFIG_PGMYUV_DECODER
-AVCodec pgmyuv_decoder = {
+AVCodec ff_pgmyuv_decoder = {
     "pgmyuv",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_PGMYUV,
     sizeof(PNMContext),
     ff_pnm_init,
@@ -186,9 +227,9 @@ AVCodec pgmyuv_decoder = {
 #endif
 
 #if CONFIG_PPM_DECODER
-AVCodec ppm_decoder = {
+AVCodec ff_ppm_decoder = {
     "ppm",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_PPM,
     sizeof(PNMContext),
     ff_pnm_init,
@@ -202,9 +243,9 @@ AVCodec ppm_decoder = {
 #endif
 
 #if CONFIG_PBM_DECODER
-AVCodec pbm_decoder = {
+AVCodec ff_pbm_decoder = {
     "pbm",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_PBM,
     sizeof(PNMContext),
     ff_pnm_init,
@@ -218,9 +259,9 @@ AVCodec pbm_decoder = {
 #endif
 
 #if CONFIG_PAM_DECODER
-AVCodec pam_decoder = {
+AVCodec ff_pam_decoder = {
     "pam",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_PAM,
     sizeof(PNMContext),
     ff_pnm_init,

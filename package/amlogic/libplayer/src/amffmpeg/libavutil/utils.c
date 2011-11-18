@@ -20,7 +20,7 @@
 #include "avutil.h"
 
 /**
- * @file libavutil/utils.c
+ * @file
  * various utility functions
  */
 
@@ -29,13 +29,27 @@ unsigned avutil_version(void)
     return LIBAVUTIL_VERSION_INT;
 }
 
-const char * avutil_configuration(void)
+const char *avutil_configuration(void)
 {
     return FFMPEG_CONFIGURATION;
 }
 
-const char * avutil_license(void)
+const char *avutil_license(void)
 {
 #define LICENSE_PREFIX "libavutil license: "
     return LICENSE_PREFIX FFMPEG_LICENSE + sizeof(LICENSE_PREFIX) - 1;
+}
+
+char av_get_picture_type_char(enum AVPictureType pict_type)
+{
+    switch (pict_type) {
+    case AV_PICTURE_TYPE_I:  return 'I';
+    case AV_PICTURE_TYPE_P:  return 'P';
+    case AV_PICTURE_TYPE_B:  return 'B';
+    case AV_PICTURE_TYPE_S:  return 'S';
+    case AV_PICTURE_TYPE_SI: return 'i';
+    case AV_PICTURE_TYPE_SP: return 'p';
+    case AV_PICTURE_TYPE_BI: return 'b';
+    default:                 return '?';
+    }
 }

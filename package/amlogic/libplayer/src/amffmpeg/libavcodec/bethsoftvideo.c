@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/bethsoftvideo.c
+ * @file
  * @brief Bethesda Softworks VID Video Decoder
  * @author Nicholas Tung [ntung (at. ntung com] (2007-03)
  * @sa http://wiki.multimedia.cx/index.php?title=Bethsoft_VID
@@ -39,6 +39,7 @@ typedef struct BethsoftvidContext {
 static av_cold int bethsoftvid_decode_init(AVCodecContext *avctx)
 {
     BethsoftvidContext *vid = avctx->priv_data;
+    avcodec_get_frame_defaults(&vid->frame);
     vid->frame.reference = 1;
     vid->frame.buffer_hints = FF_BUFFER_HINTS_VALID |
         FF_BUFFER_HINTS_PRESERVE | FF_BUFFER_HINTS_REUSABLE;
@@ -130,9 +131,9 @@ static av_cold int bethsoftvid_decode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec bethsoftvid_decoder = {
+AVCodec ff_bethsoftvid_decoder = {
     .name = "bethsoftvid",
-    .type = CODEC_TYPE_VIDEO,
+    .type = AVMEDIA_TYPE_VIDEO,
     .id = CODEC_ID_BETHSOFTVID,
     .priv_data_size = sizeof(BethsoftvidContext),
     .init = bethsoftvid_decode_init,

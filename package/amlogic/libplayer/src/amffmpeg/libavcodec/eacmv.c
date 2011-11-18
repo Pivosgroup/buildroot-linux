@@ -20,15 +20,16 @@
  */
 
 /**
- * @file libavcodec/eacmv.c
+ * @file
  * Electronic Arts CMV Video Decoder
- * by Peter Ross (suxen_drol at hotmail dot com)
+ * by Peter Ross (pross@xvid.org)
  *
  * Technical details here:
  * http://wiki.multimedia.cx/index.php?title=Electronic_Arts_CMV
  */
 
 #include "libavutil/intreadwrite.h"
+#include "libavutil/imgutils.h"
 #include "avcodec.h"
 
 typedef struct CmvContext {
@@ -42,6 +43,10 @@ typedef struct CmvContext {
 
 static av_cold int cmv_decode_init(AVCodecContext *avctx){
     CmvContext *s = avctx->priv_data;
+    avcodec_get_frame_defaults(&s->frame);
+    avcodec_get_frame_defaults(&s->last_frame);
+    avcodec_get_frame_defaults(&s->last2_frame);
+
     s->avctx = avctx;
     avctx->pix_fmt = PIX_FMT_PAL8;
     return 0;
@@ -96,9 +101,10 @@ static void cmv_decode_inter(CmvContext * s, const uint8_t *buf, const uint8_t *
             }else if(raw<buf_end) {  /* inter using second-last frame as reference */
                 int xoffset = (*raw & 0xF) - 7;
                 int yoffset = ((*raw >> 4)) - 7;
-                cmv_motcomp(s->frame.data[0], s->frame.linesize[0],
-                            s->last2_frame.data[0], s->last2_frame.linesize[0],
-                            x*4, y*4, xoffset, yoffset, s->avctx->width, s->avctx->height);
+                if (s->last2_frame.data[0])
+                    cmv_motcomp(s->frame.data[0], s->frame.linesize[0],
+                                s->last2_frame.data[0], s->last2_frame.linesize[0],
+                                x*4, y*4, xoffset, yoffset, s->avctx->width, s->avctx->height);
                 raw++;
             }
         }else{  /* inter using last frame as reference */
@@ -156,7 +162,7 @@ static int cmv_decode_frame(AVCodecContext *avctx,
         return buf_size;
     }
 
-    if (avcodec_check_dimensions(s->avctx, s->width, s->height))
+    if (av_image_check_size(s->width, s->height, 0, s->avctx))
         return -1;
 
     /* shuffle */
@@ -178,10 +184,10 @@ static int cmv_decode_frame(AVCodecContext *avctx,
     if ((buf[0]&1)) {  // subtype
         cmv_decode_inter(s, buf+2, buf_end);
         s->frame.key_frame = 0;
-        s->frame.pict_type = FF_P_TYPE;
+        s->frame.pict_type = AV_PICTURE_TYPE_P;
     }else{
         s->frame.key_frame = 1;
-        s->frame.pict_type = FF_I_TYPE;
+        s->frame.pict_type = AV_PICTURE_TYPE_I;
         cmv_decode_intra(s, buf+2, buf_end);
     }
 
@@ -203,9 +209,9 @@ static av_cold int cmv_decode_end(AVCodecContext *avctx){
     return 0;
 }
 
-AVCodec eacmv_decoder = {
+AVCodec ff_eacmv_decoder = {
     "eacmv",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_CMV,
     sizeof(CmvContext),
     cmv_decode_init,

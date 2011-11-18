@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavformat/psxstr.c
+ * @file
  * PSX STR file demuxer
  * by Mike Melanson (melanson@pcisys.net)
  * This module handles streams that have been ripped from Sony Playstation
@@ -98,21 +98,21 @@ static int str_probe(AVProbeData *p)
 static int str_read_header(AVFormatContext *s,
                            AVFormatParameters *ap)
 {
-    ByteIOContext *pb = s->pb;
+    AVIOContext *pb = s->pb;
     StrDemuxContext *str = s->priv_data;
     unsigned char sector[RAW_CD_SECTOR_SIZE];
     int start;
     int i;
 
     /* skip over any RIFF header */
-    if (get_buffer(pb, sector, RIFF_HEADER_SIZE) != RIFF_HEADER_SIZE)
+    if (avio_read(pb, sector, RIFF_HEADER_SIZE) != RIFF_HEADER_SIZE)
         return AVERROR(EIO);
     if (AV_RL32(&sector[0]) == RIFF_TAG)
         start = RIFF_HEADER_SIZE;
     else
         start = 0;
 
-    url_fseek(pb, start, SEEK_SET);
+    avio_seek(pb, start, SEEK_SET);
 
     for(i=0; i<32; i++){
         str->channels[i].video_stream_index=
@@ -127,7 +127,7 @@ static int str_read_header(AVFormatContext *s,
 static int str_read_packet(AVFormatContext *s,
                            AVPacket *ret_pkt)
 {
-    ByteIOContext *pb = s->pb;
+    AVIOContext *pb = s->pb;
     StrDemuxContext *str = s->priv_data;
     unsigned char sector[RAW_CD_SECTOR_SIZE];
     int channel;
@@ -136,7 +136,7 @@ static int str_read_packet(AVFormatContext *s,
 
     while (1) {
 
-        if (get_buffer(pb, sector, RAW_CD_SECTOR_SIZE) != RAW_CD_SECTOR_SIZE)
+        if (avio_read(pb, sector, RAW_CD_SECTOR_SIZE) != RAW_CD_SECTOR_SIZE)
             return AVERROR(EIO);
 
         channel = sector[0x11];
@@ -169,7 +169,7 @@ static int str_read_packet(AVFormatContext *s,
 
                     str->channels[channel].video_stream_index = st->index;
 
-                    st->codec->codec_type = CODEC_TYPE_VIDEO;
+                    st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
                     st->codec->codec_id   = CODEC_ID_MDEC;
                     st->codec->codec_tag  = 0;  /* no fourcc */
                     st->codec->width      = AV_RL16(&sector[0x28]);
@@ -186,7 +186,7 @@ static int str_read_packet(AVFormatContext *s,
                     if (av_new_packet(pkt, sector_count*VIDEO_DATA_CHUNK_SIZE))
                         return AVERROR(EIO);
 
-                    pkt->pos= url_ftell(pb) - RAW_CD_SECTOR_SIZE;
+                    pkt->pos= avio_tell(pb) - RAW_CD_SECTOR_SIZE;
                     pkt->stream_index =
                         str->channels[channel].video_stream_index;
                 }
@@ -216,7 +216,7 @@ static int str_read_packet(AVFormatContext *s,
 
                 str->channels[channel].audio_stream_index = st->index;
 
-                st->codec->codec_type  = CODEC_TYPE_AUDIO;
+                st->codec->codec_type  = AVMEDIA_TYPE_AUDIO;
                 st->codec->codec_id    = CODEC_ID_ADPCM_XA;
                 st->codec->codec_tag   = 0;  /* no fourcc */
                 st->codec->channels    = (fmt&1)?2:1;
@@ -258,7 +258,7 @@ static int str_read_close(AVFormatContext *s)
     return 0;
 }
 
-AVInputFormat str_demuxer = {
+AVInputFormat ff_str_demuxer = {
     "psxstr",
     NULL_IF_CONFIG_SMALL("Sony Playstation STR format"),
     sizeof(StrDemuxContext),

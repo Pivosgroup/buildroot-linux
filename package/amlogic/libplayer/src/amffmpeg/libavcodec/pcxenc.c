@@ -21,7 +21,7 @@
 
 /**
  * PCX image encoder
- * @file libavcodec/pcxenc.c
+ * @file
  * @author Daniel Verkamp
  * @sa http://www.qzx.com/pc-gpe/pcx.txt
  */
@@ -33,7 +33,7 @@ typedef struct PCXContext {
     AVFrame picture;
 } PCXContext;
 
-static const uint32_t monoblack_pal[] = { 0x000000, 0xFFFFFF };
+static const uint32_t monoblack_pal[16] = { 0x000000, 0xFFFFFF };
 
 static av_cold int pcx_encode_init(AVCodecContext *avctx)
 {
@@ -108,7 +108,7 @@ static int pcx_encode_frame(AVCodecContext *avctx,
     const uint8_t *src;
 
     *pict = *(AVFrame *)data;
-    pict->pict_type = FF_I_TYPE;
+    pict->pict_type = AV_PICTURE_TYPE_I;
     pict->key_frame = 1;
 
     if (avctx->width > 65535 || avctx->height > 65535) {
@@ -189,9 +189,9 @@ static int pcx_encode_frame(AVCodecContext *avctx,
     return buf - buf_start;
 }
 
-AVCodec pcx_encoder = {
+AVCodec ff_pcx_encoder = {
     "pcx",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_PCX,
     sizeof(PCXContext),
     pcx_encode_init,

@@ -18,17 +18,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "fft.h"
 #include "synth_filter.h"
 
-void ff_synth_filter_float(FFTContext *imdct,
+static void synth_filter_float(FFTContext *imdct,
                            float *synth_buf_ptr, int *synth_buf_offset,
                            float synth_buf2[32], const float window[512],
-                           float out[32], const float in[32], float scale, float bias)
+                           float out[32], const float in[32], float scale)
 {
     float *synth_buf= synth_buf_ptr + *synth_buf_offset;
     int i, j;
 
-    ff_imdct_half(imdct, synth_buf, in);
+    imdct->imdct_half(imdct, synth_buf, in);
 
     for (i = 0; i < 16; i++){
         float a= synth_buf2[i     ];
@@ -47,10 +48,17 @@ void ff_synth_filter_float(FFTContext *imdct,
             c += window[i + j + 32]*( synth_buf[16 + i + j - 512]);
             d += window[i + j + 48]*( synth_buf[31 - i + j - 512]);
         }
-        out[i     ] = a*scale + bias;
-        out[i + 16] = b*scale + bias;
+        out[i     ] = a*scale;
+        out[i + 16] = b*scale;
         synth_buf2[i     ] = c;
         synth_buf2[i + 16] = d;
     }
     *synth_buf_offset= (*synth_buf_offset - 32)&511;
+}
+
+av_cold void ff_synth_filter_init(SynthFilterContext *c)
+{
+    c->synth_filter_float = synth_filter_float;
+
+    if (ARCH_ARM) ff_synth_filter_init_arm(c);
 }

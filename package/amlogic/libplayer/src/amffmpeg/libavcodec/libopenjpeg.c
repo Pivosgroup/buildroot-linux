@@ -20,10 +20,11 @@
  */
 
 /**
-* @file libavcodec/libopenjpeg.c
+* @file
 * JPEG 2000 decoder using libopenjpeg
 */
 
+#include "libavutil/imgutils.h"
 #include "avcodec.h"
 #include "libavutil/intreadwrite.h"
 #define  OPJ_STATIC
@@ -52,6 +53,7 @@ static av_cold int libopenjpeg_decode_init(AVCodecContext *avctx)
     LibOpenJPEGContext *ctx = avctx->priv_data;
 
     opj_set_default_decoder_parameters(&ctx->dec_params);
+    avcodec_get_frame_defaults(&ctx->image);
     avctx->coded_frame = &ctx->image;
     return 0;
 }
@@ -113,7 +115,7 @@ static int libopenjpeg_decode_frame(AVCodecContext *avctx,
     }
     width  = image->comps[0].w << avctx->lowres;
     height = image->comps[0].h << avctx->lowres;
-    if(avcodec_check_dimensions(avctx, width, height) < 0) {
+    if(av_image_check_size(width, height, 0, avctx) < 0) {
         av_log(avctx, AV_LOG_ERROR, "%dx%d dimension invalid.\n", width, height);
         goto done;
     }
@@ -131,7 +133,7 @@ static int libopenjpeg_decode_frame(AVCodecContext *avctx,
                  }
                  break;
         case 4:  has_alpha = 1;
-                 avctx->pix_fmt = PIX_FMT_RGB32;
+                 avctx->pix_fmt = PIX_FMT_RGBA;
                  break;
         default: av_log(avctx, AV_LOG_ERROR, "%d components unsupported.\n", image->numcomps);
                  goto done;
@@ -183,9 +185,9 @@ static av_cold int libopenjpeg_decode_close(AVCodecContext *avctx)
 }
 
 
-AVCodec libopenjpeg_decoder = {
+AVCodec ff_libopenjpeg_decoder = {
     "libopenjpeg",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_JPEG2000,
     sizeof(LibOpenJPEGContext),
     libopenjpeg_decode_init,
@@ -193,5 +195,6 @@ AVCodec libopenjpeg_decoder = {
     libopenjpeg_decode_close,
     libopenjpeg_decode_frame,
     CODEC_CAP_DR1,
+    .max_lowres = 5,
     .long_name = NULL_IF_CONFIG_SMALL("OpenJPEG based JPEG 2000 decoder"),
 } ;

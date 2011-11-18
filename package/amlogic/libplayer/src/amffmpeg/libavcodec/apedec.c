@@ -25,9 +25,10 @@
 #include "dsputil.h"
 #include "get_bits.h"
 #include "bytestream.h"
+#include "libavutil/audioconvert.h"
 
 /**
- * @file libavcodec/apedec.c
+ * @file
  * Monkey's Audio lossless audio decoder
  */
 
@@ -198,8 +199,8 @@ static av_cold int ape_decode_init(AVCodecContext * avctx)
     }
 
     dsputil_init(&s->dsp, avctx);
-    avctx->sample_fmt = SAMPLE_FMT_S16;
-    avctx->channel_layout = (avctx->channels==2) ? CH_LAYOUT_STEREO : CH_LAYOUT_MONO;
+    avctx->sample_fmt = AV_SAMPLE_FMT_S16;
+    avctx->channel_layout = (avctx->channels==2) ? AV_CH_LAYOUT_STEREO : AV_CH_LAYOUT_MONO;
     return 0;
 }
 
@@ -211,6 +212,7 @@ static av_cold int ape_decode_close(AVCodecContext * avctx)
     for (i = 0; i < APE_FILTER_LEVELS; i++)
         av_freep(&s->filterbuf[i]);
 
+    av_freep(&s->data);
     return 0;
 }
 
@@ -517,9 +519,9 @@ static inline int APESIGN(int32_t x) {
     return (x < 0) - (x > 0);
 }
 
-static int predictor_update_filter(APEPredictor *p, const int decoded, const int filter, const int delayA, const int delayB, const int adaptA, const int adaptB)
+static av_always_inline int predictor_update_filter(APEPredictor *p, const int decoded, const int filter, const int delayA, const int delayB, const int adaptA, const int adaptB)
 {
-    int32_t predictionA, predictionB;
+    int32_t predictionA, predictionB, sign;
 
     p->buf[delayA]     = p->lastA[filter];
     p->buf[adaptA]     = APESIGN(p->buf[delayA]);
@@ -547,48 +549,32 @@ static int predictor_update_filter(APEPredictor *p, const int decoded, const int
     p->lastA[filter] = decoded + ((predictionA + (predictionB >> 1)) >> 10);
     p->filterA[filter] = p->lastA[filter] + ((p->filterA[filter] * 31) >> 5);
 
-    if (!decoded) // no need updating filter coefficients
-        return p->filterA[filter];
+    sign = APESIGN(decoded);
+    p->coeffsA[filter][0] += p->buf[adaptA    ] * sign;
+    p->coeffsA[filter][1] += p->buf[adaptA - 1] * sign;
+    p->coeffsA[filter][2] += p->buf[adaptA - 2] * sign;
+    p->coeffsA[filter][3] += p->buf[adaptA - 3] * sign;
+    p->coeffsB[filter][0] += p->buf[adaptB    ] * sign;
+    p->coeffsB[filter][1] += p->buf[adaptB - 1] * sign;
+    p->coeffsB[filter][2] += p->buf[adaptB - 2] * sign;
+    p->coeffsB[filter][3] += p->buf[adaptB - 3] * sign;
+    p->coeffsB[filter][4] += p->buf[adaptB - 4] * sign;
 
-    if (decoded > 0) {
-        p->coeffsA[filter][0] -= p->buf[adaptA    ];
-        p->coeffsA[filter][1] -= p->buf[adaptA - 1];
-        p->coeffsA[filter][2] -= p->buf[adaptA - 2];
-        p->coeffsA[filter][3] -= p->buf[adaptA - 3];
-
-        p->coeffsB[filter][0] -= p->buf[adaptB    ];
-        p->coeffsB[filter][1] -= p->buf[adaptB - 1];
-        p->coeffsB[filter][2] -= p->buf[adaptB - 2];
-        p->coeffsB[filter][3] -= p->buf[adaptB - 3];
-        p->coeffsB[filter][4] -= p->buf[adaptB - 4];
-    } else {
-        p->coeffsA[filter][0] += p->buf[adaptA    ];
-        p->coeffsA[filter][1] += p->buf[adaptA - 1];
-        p->coeffsA[filter][2] += p->buf[adaptA - 2];
-        p->coeffsA[filter][3] += p->buf[adaptA - 3];
-
-        p->coeffsB[filter][0] += p->buf[adaptB    ];
-        p->coeffsB[filter][1] += p->buf[adaptB - 1];
-        p->coeffsB[filter][2] += p->buf[adaptB - 2];
-        p->coeffsB[filter][3] += p->buf[adaptB - 3];
-        p->coeffsB[filter][4] += p->buf[adaptB - 4];
-    }
     return p->filterA[filter];
 }
 
 static void predictor_decode_stereo(APEContext * ctx, int count)
 {
-    int32_t predictionA, predictionB;
     APEPredictor *p = &ctx->predictor;
     int32_t *decoded0 = ctx->decoded0;
     int32_t *decoded1 = ctx->decoded1;
 
     while (count--) {
         /* Predictor Y */
-        predictionA = predictor_update_filter(p, *decoded0, 0, YDELAYA, YDELAYB, YADAPTCOEFFSA, YADAPTCOEFFSB);
-        predictionB = predictor_update_filter(p, *decoded1, 1, XDELAYA, XDELAYB, XADAPTCOEFFSA, XADAPTCOEFFSB);
-        *(decoded0++) = predictionA;
-        *(decoded1++) = predictionB;
+        *decoded0 = predictor_update_filter(p, *decoded0, 0, YDELAYA, YDELAYB, YADAPTCOEFFSA, YADAPTCOEFFSB);
+        decoded0++;
+        *decoded1 = predictor_update_filter(p, *decoded1, 1, XDELAYA, XDELAYB, XADAPTCOEFFSA, XADAPTCOEFFSB);
+        decoded1++;
 
         /* Combined */
         p->buf++;
@@ -605,7 +591,7 @@ static void predictor_decode_mono(APEContext * ctx, int count)
 {
     APEPredictor *p = &ctx->predictor;
     int32_t *decoded0 = ctx->decoded0;
-    int32_t predictionA, currentA, A;
+    int32_t predictionA, currentA, A, sign;
 
     currentA = p->lastA[0];
 
@@ -625,17 +611,11 @@ static void predictor_decode_mono(APEContext * ctx, int count)
         p->buf[YADAPTCOEFFSA]     = APESIGN(p->buf[YDELAYA    ]);
         p->buf[YADAPTCOEFFSA - 1] = APESIGN(p->buf[YDELAYA - 1]);
 
-        if (A > 0) {
-            p->coeffsA[0][0] -= p->buf[YADAPTCOEFFSA    ];
-            p->coeffsA[0][1] -= p->buf[YADAPTCOEFFSA - 1];
-            p->coeffsA[0][2] -= p->buf[YADAPTCOEFFSA - 2];
-            p->coeffsA[0][3] -= p->buf[YADAPTCOEFFSA - 3];
-        } else if (A < 0) {
-            p->coeffsA[0][0] += p->buf[YADAPTCOEFFSA    ];
-            p->coeffsA[0][1] += p->buf[YADAPTCOEFFSA - 1];
-            p->coeffsA[0][2] += p->buf[YADAPTCOEFFSA - 2];
-            p->coeffsA[0][3] += p->buf[YADAPTCOEFFSA - 3];
-        }
+        sign = APESIGN(A);
+        p->coeffsA[0][0] += p->buf[YADAPTCOEFFSA    ] * sign;
+        p->coeffsA[0][1] += p->buf[YADAPTCOEFFSA - 1] * sign;
+        p->coeffsA[0][2] += p->buf[YADAPTCOEFFSA - 2] * sign;
+        p->coeffsA[0][3] += p->buf[YADAPTCOEFFSA - 3] * sign;
 
         p->buf++;
 
@@ -670,22 +650,16 @@ static void init_filter(APEContext * ctx, APEFilter *f, int16_t * buf, int order
     do_init_filter(&f[1], buf + order * 3 + HISTORY_SIZE, order);
 }
 
-static inline void do_apply_filter(APEContext * ctx, int version, APEFilter *f, int32_t *data, int count, int order, int fracbits)
+static void do_apply_filter(APEContext * ctx, int version, APEFilter *f, int32_t *data, int count, int order, int fracbits)
 {
     int res;
     int absres;
 
     while (count--) {
         /* round fixedpoint scalar product */
-        res = (ctx->dsp.scalarproduct_int16(f->delay - order, f->coeffs, order, 0) + (1 << (fracbits - 1))) >> fracbits;
-
-        if (*data < 0)
-            ctx->dsp.add_int16(f->coeffs, f->adaptcoeffs - order, order);
-        else if (*data > 0)
-            ctx->dsp.sub_int16(f->coeffs, f->adaptcoeffs - order, order);
-
+        res = ctx->dsp.scalarproduct_and_madd_int16(f->coeffs, f->delay - order, f->adaptcoeffs - order, order, APESIGN(*data));
+        res = (res + (1 << (fracbits - 1))) >> fracbits;
         res += *data;
-
         *data++ = res;
 
         /* Update the output history */
@@ -700,14 +674,9 @@ static inline void do_apply_filter(APEContext * ctx, int version, APEFilter *f, 
             /* Version 3.98 and later files */
 
             /* Update the adaption coefficients */
-            absres = (res < 0 ? -res : res);
-
-            if (absres > (f->avg * 3))
-                *f->adaptcoeffs = ((res >> 25) & 64) - 32;
-            else if (absres > (f->avg * 4) / 3)
-                *f->adaptcoeffs = ((res >> 26) & 32) - 16;
-            else if (absres > 0)
-                *f->adaptcoeffs = ((res >> 27) & 16) - 8;
+            absres = FFABS(res);
+            if (absres)
+                *f->adaptcoeffs = ((res & (1<<31)) - (1<<30)) >> (25 + (absres <= f->avg*3) + (absres <= f->avg*4/3));
             else
                 *f->adaptcoeffs = 0;
 
@@ -887,6 +856,7 @@ static int ape_decode_frame(AVCodecContext * avctx,
         ape_unpack_mono(s, blockstodecode);
     else
         ape_unpack_stereo(s, blockstodecode);
+    emms_c();
 
     if(s->error || s->ptr > s->data_end){
         s->samples=0;
@@ -908,9 +878,15 @@ static int ape_decode_frame(AVCodecContext * avctx,
     return bytes_used;
 }
 
-AVCodec ape_decoder = {
+static void ape_flush(AVCodecContext *avctx)
+{
+    APEContext *s = avctx->priv_data;
+    s->samples= 0;
+}
+
+AVCodec ff_ape_decoder = {
     "ape",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_APE,
     sizeof(APEContext),
     ape_decode_init,
@@ -918,5 +894,6 @@ AVCodec ape_decoder = {
     ape_decode_close,
     ape_decode_frame,
     .capabilities = CODEC_CAP_SUBFRAMES,
+    .flush = ape_flush,
     .long_name = NULL_IF_CONFIG_SMALL("Monkey's Audio"),
 };

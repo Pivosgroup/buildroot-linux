@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libavdevice/alsa-audio-dec.c
+ * @file
  * ALSA input and output: input
  * @author Luca Abeni ( lucabe72 email it )
  * @author Benoit Fouet ( benoit fouet free fr )
@@ -45,32 +45,28 @@
  * plugin.
  */
 
-#include "libavformat/avformat.h"
 #include <alsa/asoundlib.h>
+#include "libavutil/opt.h"
 
+#include "avdevice.h"
 #include "alsa-audio.h"
 
-av_cold static int audio_read_header(AVFormatContext *s1,
+static av_cold int audio_read_header(AVFormatContext *s1,
                                      AVFormatParameters *ap)
 {
     AlsaData *s = s1->priv_data;
     AVStream *st;
     int ret;
-    unsigned int sample_rate;
     enum CodecID codec_id;
     snd_pcm_sw_params_t *sw_params;
 
-    if (ap->sample_rate <= 0) {
-        av_log(s1, AV_LOG_ERROR, "Bad sample rate %d\n", ap->sample_rate);
+#if FF_API_FORMAT_PARAMETERS
+    if (ap->sample_rate > 0)
+        s->sample_rate = ap->sample_rate;
 
-        return AVERROR(EIO);
-    }
-
-    if (ap->channels <= 0) {
-        av_log(s1, AV_LOG_ERROR, "Bad channels number %d\n", ap->channels);
-
-        return AVERROR(EIO);
-    }
+    if (ap->channels > 0)
+        s->channels = ap->channels;
+#endif
 
     st = av_new_stream(s1, 0);
     if (!st) {
@@ -78,10 +74,9 @@ av_cold static int audio_read_header(AVFormatContext *s1,
 
         return AVERROR(ENOMEM);
     }
-    sample_rate = ap->sample_rate;
-    codec_id    = ap->audio_codec_id;
+    codec_id    = s1->audio_codec_id;
 
-    ret = ff_alsa_open(s1, SND_PCM_STREAM_CAPTURE, &sample_rate, ap->channels,
+    ret = ff_alsa_open(s1, SND_PCM_STREAM_CAPTURE, &s->sample_rate, s->channels,
         &codec_id);
     if (ret < 0) {
         return AVERROR(EIO);
@@ -111,10 +106,10 @@ av_cold static int audio_read_header(AVFormatContext *s1,
     }
 
     /* take real parameters */
-    st->codec->codec_type  = CODEC_TYPE_AUDIO;
+    st->codec->codec_type  = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id    = codec_id;
-    st->codec->sample_rate = sample_rate;
-    st->codec->channels    = ap->channels;
+    st->codec->sample_rate = s->sample_rate;
+    st->codec->channels    = s->channels;
     av_set_pts_info(st, 64, 1, 1000000);  /* 64 bits pts in us */
 
     return 0;
@@ -163,7 +158,20 @@ static int audio_read_packet(AVFormatContext *s1, AVPacket *pkt)
     return 0;
 }
 
-AVInputFormat alsa_demuxer = {
+static const AVOption options[] = {
+    { "sample_rate", "", offsetof(AlsaData, sample_rate), FF_OPT_TYPE_INT, {.dbl = 48000}, 1, INT_MAX, AV_OPT_FLAG_DECODING_PARAM },
+    { "channels",    "", offsetof(AlsaData, channels),    FF_OPT_TYPE_INT, {.dbl = 2},     1, INT_MAX, AV_OPT_FLAG_DECODING_PARAM },
+    { NULL },
+};
+
+static const AVClass alsa_demuxer_class = {
+    .class_name     = "ALSA demuxer",
+    .item_name      = av_default_item_name,
+    .option         = options,
+    .version        = LIBAVUTIL_VERSION_INT,
+};
+
+AVInputFormat ff_alsa_demuxer = {
     "alsa",
     NULL_IF_CONFIG_SMALL("ALSA audio input"),
     sizeof(AlsaData),
@@ -172,4 +180,5 @@ AVInputFormat alsa_demuxer = {
     audio_read_packet,
     ff_alsa_close,
     .flags = AVFMT_NOFILE,
+    .priv_class = &alsa_demuxer_class,
 };

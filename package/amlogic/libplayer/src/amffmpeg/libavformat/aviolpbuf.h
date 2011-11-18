@@ -8,6 +8,9 @@
 #define lp_lock_init(x,v) 	pthread_mutex_init(x,v)
 #define lp_lock(x)		pthread_mutex_lock(x)
 #define lp_unlock(x)   	pthread_mutex_unlock(x)
+#define lp_trylock(x)   pthread_mutex_trylock(x)
+
+
 
 typedef struct  url_lpbuf{
 	unsigned char *buffer;
@@ -19,6 +22,8 @@ typedef struct  url_lpbuf{
 	int block_read_size;
 	int64_t file_size;
 	lock_t mutex;
+	int cache_enable;
+	unsigned long cache_id;
 }url_lpbuf_t;
 #define IO_LP_BUFFER_SIZE (1024*1024*6)
 #define IO_LP_BUFFER_MINI_SIZE (1024*64)

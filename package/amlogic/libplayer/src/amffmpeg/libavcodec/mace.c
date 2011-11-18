@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/mace.c
+ * @file
  * MACE decoder.
  */
 
@@ -230,7 +230,7 @@ static av_cold int mace_decode_init(AVCodecContext * avctx)
 {
     if (avctx->channels > 2)
         return -1;
-    avctx->sample_fmt = SAMPLE_FMT_S16;
+    avctx->sample_fmt = AV_SAMPLE_FMT_S16;
     return 0;
 }
 
@@ -279,9 +279,9 @@ static int mace_decode_frame(AVCodecContext *avctx,
     return buf_size;
 }
 
-AVCodec mace3_decoder = {
+AVCodec ff_mace3_decoder = {
     "mace3",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_MACE3,
     sizeof(MACEContext),
     mace_decode_init,
@@ -291,9 +291,9 @@ AVCodec mace3_decoder = {
     .long_name = NULL_IF_CONFIG_SMALL("MACE (Macintosh Audio Compression/Expansion) 3:1"),
 };
 
-AVCodec mace6_decoder = {
+AVCodec ff_mace6_decoder = {
     "mace6",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_MACE6,
     sizeof(MACEContext),
     mace_decode_init,

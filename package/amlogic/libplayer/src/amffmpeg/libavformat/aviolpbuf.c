@@ -29,6 +29,8 @@
 #include "avformat.h"
 #include "avio.h"
 #include <stdarg.h>
+#include "aviolpcache.h"
+#include "aviolpbuf.h"
 
 /*
 										Pos		
@@ -80,8 +82,10 @@ Can seek back size:
 int url_lpopen(URLContext *s,int size)
 {
 	url_lpbuf_t *lp;
+	lp_bprint( AV_LOG_INFO,"url_lpopen=%d\n",size);
 	if(!s)
 		return -1;
+		lp_bprint( AV_LOG_INFO,"url_lpopen2=%d\n",size);
 	lp=av_mallocz(sizeof(url_lpbuf_t));
 	if(!lp)
 		return AVERROR(ENOMEM);
@@ -91,6 +95,7 @@ int url_lpopen(URLContext *s,int size)
 		av_free(lp->buffer);
 		return AVERROR(ENOMEM);
 	}
+		lp_bprint( AV_LOG_INFO,"url_lpopen3=%d\n",size);
 	s->lpbuf=lp;
 	lp->buffer_size=size;
 	lp->rp=lp->buffer;
@@ -101,6 +106,11 @@ int url_lpopen(URLContext *s,int size)
 	lp->block_read_size=FFMIN(32*1024,size>>4);
 	lp_lock_init(&lp->mutex,NULL);
 	lp->file_size=url_lpseek(s,0,AVSEEK_SIZE);
+	lp->cache_enable=0;
+	lp->cache_id=aviolp_cache_open(s->filename,url_filesize(s));
+	if(lp->cache_id!=0)
+		lp->cache_enable=1;
+		lp_bprint( AV_LOG_INFO,"url_lpopen4%d\n",size);
 	return 0;
 }
 
@@ -108,8 +118,10 @@ int url_lpopen(URLContext *s,int size)
 int url_lpfillbuffer(URLContext *s,int size)
 {
 	url_lpbuf_t *lp;
-	int rlen;
+	int rlen=0;
 	int ssread;
+	int cache_read_len=0;
+	int64_t tmprp;
 	
 	if(!s || !s->lpbuf)
 		return AVERROR(EINVAL);
@@ -132,9 +144,36 @@ int url_lpfillbuffer(URLContext *s,int size)
 		rlen=0;
 		goto release;
 	}
-	rlen=s->prot->url_read(s,lp->wp,ssread);
+	if(lp->cache_enable){
+		/*do read on cache first*/
+		rlen=aviolp_cache_read(lp->cache_id,lp->pos,lp->wp,ssread);
+		cache_read_len=rlen;
+		lp_bprint(AV_LOG_INFO,"filled buffer from cache=%d\n",cache_read_len);
+	}
+	if(rlen<=0){
+		if(lp->file_size>0 && lp->pos>=lp->file_size){
+			rlen=0;/*file read end*/
+			goto release;
+		}else if(lp->cache_enable && s->prot->url_seek(s,0,SEEK_CUR)!=lp->pos){/*maybe do read from cache file before,so seek it now*/
+			int ret=s->prot->url_seek(s,lp->pos,SEEK_SET);
+			if(ret!=lp->pos){
+				rlen=-1;/*error*/
+				goto release;
+			}	
+		}
+		tmprp=lp->pos;
+		lp_unlock(&lp->mutex);/*release lock for long time read*/
+		rlen=s->prot->url_read(s,lp->wp,ssread);
+		lp_lock(&lp->mutex);
+		if(tmprp!=lp->pos)
+			rlen=AVERROR(EAGAIN);;/*pos have changed,so I think we have a seek on read*/
+		lp_bprint(AV_LOG_INFO,"filled buffer from remote=%d\n",rlen);
+		
+	}	
 	if(rlen>0)
 	{
+		if(lp->cache_enable&& cache_read_len<=0)/*not read from cache itself*/
+			aviolp_cache_write(lp->cache_id,lp->pos,lp->wp,rlen);
 		lp->valid_data_size+=rlen;
 		lp->pos+=rlen;
 		lp->wp+=rlen;
@@ -144,6 +183,7 @@ int url_lpfillbuffer(URLContext *s,int size)
 	}
 release:
 	lp_unlock(&lp->mutex);
+	lp_bprint( AV_LOG_INFO,"lpfilld=%d\n",rlen);
 	return rlen;
 }
 
@@ -294,18 +334,30 @@ int64_t url_lpseek(URLContext *s, int64_t offset, int whence)
 			(offset1<lp->buffer_size-lp->block_read_size) && 
 			(lp->file_size<=0 || (lp->file_size>0 && offset1<lp->file_size/2)))/*if offset1>filesize/2,thendo first seek end,don't buffer*/
 	{/*seek to buffer end,but buffer is not full,do read seek*/
+		int read_offset,ret;
 		lp_sprint( AV_LOG_INFO, "url_lpseek:buffer read seek forward offset=%lld offset1=%lld  whence=%d\n",offset,offset1,whence);
 		lp->rp+=valid_data_can_seek_forward;
 		if(lp->rp>=lp->buffer_end)
 			lp->rp-=lp->buffer_size;
 		lp_unlock(&lp->mutex);
-		url_lpread(s,NULL,offset1-valid_data_can_seek_forward);/*do read seek*/
+		read_offset=offset1-valid_data_can_seek_forward;
+		while(read_offset>0){
+			ret=url_lpread(s,NULL,read_offset);/*do read seek*/
+			if(ret>0)
+				read_offset-=ret;
+			else if(ret!=AVERROR(EAGAIN)){
+				offset=ret;/*get error,exit now*/
+				break;
+			}
+		}
 		lp_lock(&lp->mutex);
 	}else
 	{/*not support in buffer seek,do low level seek now*/
 		lp_sprint( AV_LOG_INFO, "url_lpseek:buffer lowlevel seek  offset=%lld  offset1=%lld whence=%d\n",offset,offset1,whence);
-		
-		if ((offset1=s->prot->url_seek(s, offset, SEEK_SET)) < 0)
+		if(lp->cache_enable && offset<lp->file_size){
+			/*if cache enable not need to seek here,seek  on cache missed*/
+			;/*do't do seek here*/
+		}else if ((offset1=s->prot->url_seek(s, offset, SEEK_SET)) < 0)
 		{
 			lp->valid_data_size=0;/*seek failed clear all old datas*/
 			s->prot->url_seek(s, lp->pos, SEEK_SET);/*clear the lowlevel errors*/
@@ -396,12 +448,21 @@ int64_t url_lp_get_buffed_pos(URLContext *s)
 {
 	url_lpbuf_t *lp;
 	int64_t pos;
+	int buffer_in_cache=0;
 	if(!s || !s->lpbuf)
 			return AVERROR(EINVAL);
 	lp=s->lpbuf;
-	lp_lock(&lp->mutex);
 	pos=lp->pos;
-	lp_unlock(&lp->mutex);
+	if(lp->cache_enable && !lp_trylock(&lp->mutex)){
+		if(lp->cache_enable){
+			buffer_in_cache=aviolp_cache_next_valid_bytes(lp->cache_id,pos,INT_MAX);
+			if(buffer_in_cache>0)
+				pos+=buffer_in_cache;
+		}
+		lp_unlock(&lp->mutex);
+	}
+	/*lp_sprint(AV_LOG_INFO,"buffered pos=%lld,file_size=%lld,percent=%d.%02d%%,buffer_in_cache=%d\n",
+		pos,lp->file_size,(int)(pos*100/lp->file_size),(int)((pos*10000/lp->file_size)%100),buffer_in_cache);*/
 	return pos;
 }
 
@@ -433,6 +494,8 @@ int url_lpfree(URLContext *s)
 	if(s->lpbuf)
 	{
 		lp_lock(&s->lpbuf->mutex);
+		if(s->lpbuf->cache_enable)
+			aviolp_cache_close(s->lpbuf->cache_id);
 		/*release other threadlater...*/
 		lp_unlock(&s->lpbuf->mutex);
 		if(s->lpbuf->buffer)

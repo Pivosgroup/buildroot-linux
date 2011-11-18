@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/cavs_parser.c
+ * @file
  * Chinese AVS video (AVS1-P2, JiZhun profile) parser
  * @author Stefan Gehrer <stefan.gehrer@gmx.de>
  */
@@ -97,7 +97,7 @@ static int cavsvideo_parse(AVCodecParserContext *s,
     return next;
 }
 
-AVCodecParser cavsvideo_parser = {
+AVCodecParser ff_cavsvideo_parser = {
     { CODEC_ID_CAVS },
     sizeof(ParseContext1),
     NULL,

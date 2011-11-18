@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/asv1.c
+ * @file
  * ASUS V1/V2 codec.
  */
 
@@ -48,7 +48,7 @@ typedef struct ASV1Context{
     int mb_height;
     int mb_width2;
     int mb_height2;
-    DECLARE_ALIGNED_16(DCTELEM, block[6][64]);
+    DECLARE_ALIGNED(16, DCTELEM, block)[6][64];
     uint16_t intra_matrix[64];
     int q_intra_matrix[64];
     uint8_t *bitstream_buffer;
@@ -405,7 +405,7 @@ static int decode_frame(AVCodecContext *avctx,
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return -1;
     }
-    p->pict_type= FF_I_TYPE;
+    p->pict_type= AV_PICTURE_TYPE_I;
     p->key_frame= 1;
 
     av_fast_malloc(&a->bitstream_buffer, &a->bitstream_buffer_size, buf_size + FF_INPUT_BUFFER_PADDING_SIZE);
@@ -450,17 +450,6 @@ static int decode_frame(AVCodecContext *avctx,
             idct_put(a, mb_x, mb_y);
         }
     }
-#if 0
-int i;
-printf("%d %d\n", 8*buf_size, get_bits_count(&a->gb));
-for(i=get_bits_count(&a->gb); i<8*buf_size; i++){
-    printf("%d", get_bits1(&a->gb));
-}
-
-for(i=0; i<s->avctx->extradata_size; i++){
-    printf("%c\n", ((uint8_t*)s->avctx->extradata)[i]);
-}
-#endif
 
     *picture= *(AVFrame*)&a->picture;
     *data_size = sizeof(AVPicture);
@@ -481,7 +470,7 @@ static int encode_frame(AVCodecContext *avctx, unsigned char *buf, int buf_size,
     init_put_bits(&a->pb, buf, buf_size);
 
     *p = *pict;
-    p->pict_type= FF_I_TYPE;
+    p->pict_type= AV_PICTURE_TYPE_I;
     p->key_frame= 1;
 
     for(mb_y=0; mb_y<a->mb_height2; mb_y++){
@@ -588,8 +577,8 @@ static av_cold int encode_init(AVCodecContext *avctx){
 
     avctx->extradata= av_mallocz(8);
     avctx->extradata_size=8;
-    ((uint32_t*)avctx->extradata)[0]= le2me_32(a->inv_qscale);
-    ((uint32_t*)avctx->extradata)[1]= le2me_32(AV_RL32("ASUS"));
+    ((uint32_t*)avctx->extradata)[0]= av_le2ne32(a->inv_qscale);
+    ((uint32_t*)avctx->extradata)[1]= av_le2ne32(AV_RL32("ASUS"));
 
     for(i=0; i<64; i++){
         int q= 32*scale*ff_mpeg1_default_intra_matrix[i];
@@ -613,9 +602,9 @@ static av_cold int decode_end(AVCodecContext *avctx){
     return 0;
 }
 
-AVCodec asv1_decoder = {
+AVCodec ff_asv1_decoder = {
     "asv1",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_ASV1,
     sizeof(ASV1Context),
     decode_init,
@@ -626,9 +615,9 @@ AVCodec asv1_decoder = {
     .long_name= NULL_IF_CONFIG_SMALL("ASUS V1"),
 };
 
-AVCodec asv2_decoder = {
+AVCodec ff_asv2_decoder = {
     "asv2",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_ASV2,
     sizeof(ASV1Context),
     decode_init,
@@ -640,9 +629,9 @@ AVCodec asv2_decoder = {
 };
 
 #if CONFIG_ASV1_ENCODER
-AVCodec asv1_encoder = {
+AVCodec ff_asv1_encoder = {
     "asv1",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_ASV1,
     sizeof(ASV1Context),
     encode_init,
@@ -654,9 +643,9 @@ AVCodec asv1_encoder = {
 #endif
 
 #if CONFIG_ASV2_ENCODER
-AVCodec asv2_encoder = {
+AVCodec ff_asv2_encoder = {
     "asv2",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_ASV2,
     sizeof(ASV1Context),
     encode_init,

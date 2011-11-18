@@ -1,5 +1,5 @@
 /**
- * @file libavformat/flv.h
+ * @file
  * FLV common header
  *
  * Copyright (c) 2006 The FFmpeg Project
@@ -46,6 +46,7 @@
 #define KEYFRAMES_TIMESTAMP_TAG  "times"
 #define KEYFRAMES_BYTEOFFSET_TAG "filepositions"
 
+
 enum {
     FLV_HEADER_FLAG_HASVIDEO = 1,
     FLV_HEADER_FLAG_HASAUDIO = 4,
@@ -79,6 +80,7 @@ enum {
     FLV_CODECID_ADPCM                = 1 << FLV_AUDIO_CODECID_OFFSET,
     FLV_CODECID_MP3                  = 2 << FLV_AUDIO_CODECID_OFFSET,
     FLV_CODECID_PCM_LE               = 3 << FLV_AUDIO_CODECID_OFFSET,
+    FLV_CODECID_NELLYMOSER_16KHZ_MONO = 4 << FLV_AUDIO_CODECID_OFFSET,
     FLV_CODECID_NELLYMOSER_8KHZ_MONO = 5 << FLV_AUDIO_CODECID_OFFSET,
     FLV_CODECID_NELLYMOSER           = 6 << FLV_AUDIO_CODECID_OFFSET,
     FLV_CODECID_AAC                  = 10<< FLV_AUDIO_CODECID_OFFSET,

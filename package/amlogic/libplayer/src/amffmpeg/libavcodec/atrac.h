@@ -21,16 +21,14 @@
  */
 
 /**
- * @file libavcodec/atrac.h
+ * @file
  * Atrac common header
  */
 
 #ifndef AVCODEC_ATRAC_H
 #define AVCODEC_ATRAC_H
 
-
-extern float sf_table[64];
-extern float qmf_window[48];
+extern float ff_atrac_sf_table[64];
 
 void atrac_generate_tables(void);
 void atrac_iqmf (float *inlo, float *inhi, unsigned int nIn, float *pOut, float *delayBuf, float *temp);

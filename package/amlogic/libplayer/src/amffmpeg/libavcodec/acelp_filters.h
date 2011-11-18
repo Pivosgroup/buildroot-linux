@@ -38,7 +38,7 @@ extern const int16_t ff_acelp_interp_filter[61];
 
 /**
  * Generic FIR interpolation routine.
- * @param out [out] buffer for interpolated data
+ * @param[out] out buffer for interpolated data
  * @param in input data
  * @param filter_coeffs interpolation filter coefficients (0.15)
  * @param precision sub sample factor, that is the precision of the position
@@ -65,8 +65,8 @@ void ff_acelp_interpolatef(float *out, const float *in,
 
 /**
  * high-pass filtering and upscaling (4.2.5 of G.729).
- * @param out [out] output buffer for filtered speech data
- * @param hpf_f [in/out] past filtered data from previous (2 items long)
+ * @param[out]     out   output buffer for filtered speech data
+ * @param[in,out]  hpf_f past filtered data from previous (2 items long)
  *                       frames (-0x20000000 <= (14.13) < 0x20000000)
  * @param in speech data to process
  * @param length input data size
@@ -92,14 +92,15 @@ void ff_acelp_high_pass_filter(int16_t* out, int hpf_f[2],
 /**
  * Apply an order 2 rational transfer function in-place.
  *
- * @param samples [in/out]
+ * @param out output buffer for filtered speech samples
+ * @param in input buffer containing speech data (may be the same as out)
  * @param zero_coeffs z^-1 and z^-2 coefficients of the numerator
  * @param pole_coeffs z^-1 and z^-2 coefficients of the denominator
  * @param gain scale factor for final output
  * @param mem intermediate values used by filter (should be 0 initially)
  * @param n number of samples
  */
-void ff_acelp_apply_order_2_transfer_function(float *samples,
+void ff_acelp_apply_order_2_transfer_function(float *out, const float *in,
                                               const float zero_coeffs[2],
                                               const float pole_coeffs[2],
                                               float gain,

@@ -21,26 +21,150 @@
  */
 
 /**
- * @file libavdevice/alsa-audio-common.c
+ * @file
  * ALSA input and output: common code
  * @author Luca Abeni ( lucabe72 email it )
  * @author Benoit Fouet ( benoit fouet free fr )
  * @author Nicolas George ( nicolas george normalesup org )
  */
 
-#include "libavformat/avformat.h"
 #include <alsa/asoundlib.h>
+#include "avdevice.h"
 
 #include "alsa-audio.h"
 
 static av_cold snd_pcm_format_t codec_id_to_pcm_format(int codec_id)
 {
     switch(codec_id) {
+        case CODEC_ID_PCM_F64LE: return SND_PCM_FORMAT_FLOAT64_LE;
+        case CODEC_ID_PCM_F64BE: return SND_PCM_FORMAT_FLOAT64_BE;
+        case CODEC_ID_PCM_F32LE: return SND_PCM_FORMAT_FLOAT_LE;
+        case CODEC_ID_PCM_F32BE: return SND_PCM_FORMAT_FLOAT_BE;
+        case CODEC_ID_PCM_S32LE: return SND_PCM_FORMAT_S32_LE;
+        case CODEC_ID_PCM_S32BE: return SND_PCM_FORMAT_S32_BE;
+        case CODEC_ID_PCM_U32LE: return SND_PCM_FORMAT_U32_LE;
+        case CODEC_ID_PCM_U32BE: return SND_PCM_FORMAT_U32_BE;
+        case CODEC_ID_PCM_S24LE: return SND_PCM_FORMAT_S24_3LE;
+        case CODEC_ID_PCM_S24BE: return SND_PCM_FORMAT_S24_3BE;
+        case CODEC_ID_PCM_U24LE: return SND_PCM_FORMAT_U24_3LE;
+        case CODEC_ID_PCM_U24BE: return SND_PCM_FORMAT_U24_3BE;
         case CODEC_ID_PCM_S16LE: return SND_PCM_FORMAT_S16_LE;
         case CODEC_ID_PCM_S16BE: return SND_PCM_FORMAT_S16_BE;
+        case CODEC_ID_PCM_U16LE: return SND_PCM_FORMAT_U16_LE;
+        case CODEC_ID_PCM_U16BE: return SND_PCM_FORMAT_U16_BE;
         case CODEC_ID_PCM_S8:    return SND_PCM_FORMAT_S8;
+        case CODEC_ID_PCM_U8:    return SND_PCM_FORMAT_U8;
+        case CODEC_ID_PCM_MULAW: return SND_PCM_FORMAT_MU_LAW;
+        case CODEC_ID_PCM_ALAW:  return SND_PCM_FORMAT_A_LAW;
         default:                 return SND_PCM_FORMAT_UNKNOWN;
     }
+}
+
+#define REORDER_OUT_50(NAME, TYPE) \
+static void alsa_reorder_ ## NAME ## _out_50(const void *in_v, void *out_v, int n) \
+{ \
+    const TYPE *in = in_v; \
+    TYPE * out = out_v; \
+\
+    while (n-- > 0) { \
+        out[0] = in[0]; \
+        out[1] = in[1]; \
+        out[2] = in[3]; \
+        out[3] = in[4]; \
+        out[4] = in[2]; \
+        in  += 5; \
+        out += 5; \
+    } \
+}
+
+#define REORDER_OUT_51(NAME, TYPE) \
+static void alsa_reorder_ ## NAME ## _out_51(const void *in_v, void *out_v, int n) \
+{ \
+    const TYPE *in = in_v; \
+    TYPE * out = out_v; \
+\
+    while (n-- > 0) { \
+        out[0] = in[0]; \
+        out[1] = in[1]; \
+        out[2] = in[4]; \
+        out[3] = in[5]; \
+        out[4] = in[2]; \
+        out[5] = in[3]; \
+        in  += 6; \
+        out += 6; \
+    } \
+}
+
+#define REORDER_OUT_71(NAME, TYPE) \
+static void alsa_reorder_ ## NAME ## _out_71(const void *in_v, void *out_v, int n) \
+{ \
+    const TYPE *in = in_v; \
+    TYPE * out = out_v; \
+\
+    while (n-- > 0) { \
+        out[0] = in[0]; \
+        out[1] = in[1]; \
+        out[2] = in[4]; \
+        out[3] = in[5]; \
+        out[4] = in[2]; \
+        out[5] = in[3]; \
+        out[6] = in[6]; \
+        out[7] = in[7]; \
+        in  += 8; \
+        out += 8; \
+    } \
+}
+
+REORDER_OUT_50(int16, int16_t)
+REORDER_OUT_51(int16, int16_t)
+REORDER_OUT_71(int16, int16_t)
+REORDER_OUT_50(int32, int32_t)
+REORDER_OUT_51(int32, int32_t)
+REORDER_OUT_71(int32, int32_t)
+REORDER_OUT_50(f32, float)
+REORDER_OUT_51(f32, float)
+REORDER_OUT_71(f32, float)
+
+#define REORDER_DUMMY ((void *)1)
+
+static av_cold ff_reorder_func find_reorder_func(int codec_id,
+                                                 int64_t layout,
+                                                 int out)
+{
+    return
+    codec_id == CODEC_ID_PCM_U16LE || codec_id == CODEC_ID_PCM_U16BE ||
+    codec_id == CODEC_ID_PCM_S16LE || codec_id == CODEC_ID_PCM_S16BE ?
+        layout == AV_CH_LAYOUT_QUAD || layout == AV_CH_LAYOUT_2_2 ?
+            REORDER_DUMMY :
+        layout == AV_CH_LAYOUT_5POINT0_BACK || layout == AV_CH_LAYOUT_5POINT0 ?
+            out ? alsa_reorder_int16_out_50 : NULL :
+        layout == AV_CH_LAYOUT_5POINT1_BACK || layout == AV_CH_LAYOUT_5POINT1 ?
+            out ? alsa_reorder_int16_out_51 : NULL :
+        layout == AV_CH_LAYOUT_7POINT1 ?
+            out ? alsa_reorder_int16_out_71 : NULL :
+            NULL :
+    codec_id == CODEC_ID_PCM_U32LE || codec_id == CODEC_ID_PCM_U32BE ||
+    codec_id == CODEC_ID_PCM_S32LE || codec_id == CODEC_ID_PCM_S32BE ?
+        layout == AV_CH_LAYOUT_QUAD || layout == AV_CH_LAYOUT_2_2 ?
+            REORDER_DUMMY :
+        layout == AV_CH_LAYOUT_5POINT0_BACK || layout == AV_CH_LAYOUT_5POINT0 ?
+            out ? alsa_reorder_int32_out_50 : NULL :
+        layout == AV_CH_LAYOUT_5POINT1_BACK || layout == AV_CH_LAYOUT_5POINT1 ?
+            out ? alsa_reorder_int32_out_51 : NULL :
+        layout == AV_CH_LAYOUT_7POINT1 ?
+            out ? alsa_reorder_int32_out_71 : NULL :
+            NULL :
+    codec_id == CODEC_ID_PCM_F32LE || codec_id == CODEC_ID_PCM_F32BE ?
+        layout == AV_CH_LAYOUT_QUAD || layout == AV_CH_LAYOUT_2_2 ?
+            REORDER_DUMMY :
+        layout == AV_CH_LAYOUT_5POINT0_BACK || layout == AV_CH_LAYOUT_5POINT0 ?
+            out ? alsa_reorder_f32_out_50 : NULL :
+        layout == AV_CH_LAYOUT_5POINT1_BACK || layout == AV_CH_LAYOUT_5POINT1 ?
+            out ? alsa_reorder_f32_out_51 : NULL :
+        layout == AV_CH_LAYOUT_7POINT1 ?
+            out ? alsa_reorder_f32_out_71 : NULL :
+            NULL :
+        NULL;
 }
 
 av_cold int ff_alsa_open(AVFormatContext *ctx, snd_pcm_stream_t mode,
@@ -54,6 +178,7 @@ av_cold int ff_alsa_open(AVFormatContext *ctx, snd_pcm_stream_t mode,
     snd_pcm_t *h;
     snd_pcm_hw_params_t *hw_params;
     snd_pcm_uframes_t buffer_size, period_size;
+    int64_t layout = ctx->streams[0]->codec->channel_layout;
 
     if (ctx->filename[0] == 0) audio_device = "default";
     else                       audio_device = ctx->filename;
@@ -74,7 +199,7 @@ av_cold int ff_alsa_open(AVFormatContext *ctx, snd_pcm_stream_t mode,
     if (res < 0) {
         av_log(ctx, AV_LOG_ERROR, "cannot open audio device %s (%s)\n",
                audio_device, snd_strerror(res));
-        return AVERROR_IO;
+        return AVERROR(EIO);
     }
 
     res = snd_pcm_hw_params_malloc(&hw_params);
@@ -146,6 +271,26 @@ av_cold int ff_alsa_open(AVFormatContext *ctx, snd_pcm_stream_t mode,
 
     snd_pcm_hw_params_free(hw_params);
 
+    if (channels > 2 && layout) {
+        s->reorder_func = find_reorder_func(*codec_id, layout,
+                                            mode == SND_PCM_STREAM_PLAYBACK);
+        if (s->reorder_func == REORDER_DUMMY) {
+            s->reorder_func = NULL;
+        } else if (s->reorder_func) {
+            s->reorder_buf_size = buffer_size;
+            s->reorder_buf = av_malloc(s->reorder_buf_size * s->frame_size);
+            if (!s->reorder_buf)
+                goto fail1;
+        } else {
+            char name[32];
+            av_get_channel_layout_string(name, sizeof(name), channels, layout);
+            av_log(ctx, AV_LOG_WARNING,
+                   "ALSA channel layout unknown or unimplemented for %s %s.\n",
+                   name,
+                   mode == SND_PCM_STREAM_PLAYBACK ? "playback" : "capture");
+        }
+    }
+
     s->h = h;
     return 0;
 
@@ -153,13 +298,14 @@ fail:
     snd_pcm_hw_params_free(hw_params);
 fail1:
     snd_pcm_close(h);
-    return AVERROR_IO;
+    return AVERROR(EIO);
 }
 
 av_cold int ff_alsa_close(AVFormatContext *s1)
 {
     AlsaData *s = s1->priv_data;
 
+    av_freep(&s->reorder_buf);
     snd_pcm_close(s->h);
     return 0;
 }
@@ -175,7 +321,7 @@ int ff_alsa_xrun_recover(AVFormatContext *s1, int err)
         if (err < 0) {
             av_log(s1, AV_LOG_ERROR, "cannot recover from underrun (snd_pcm_prepare failed: %s)\n", snd_strerror(err));
 
-            return AVERROR_IO;
+            return AVERROR(EIO);
         }
     } else if (err == -ESTRPIPE) {
         av_log(s1, AV_LOG_ERROR, "-ESTRPIPE... Unsupported!\n");
@@ -183,4 +329,19 @@ int ff_alsa_xrun_recover(AVFormatContext *s1, int err)
         return -1;
     }
     return err;
+}
+
+int ff_alsa_extend_reorder_buf(AlsaData *s, int min_size)
+{
+    int size = s->reorder_buf_size;
+    void *r;
+
+    while (size < min_size)
+        size *= 2;
+    r = av_realloc(s->reorder_buf, size * s->frame_size);
+    if (!r)
+        return AVERROR(ENOMEM);
+    s->reorder_buf = r;
+    s->reorder_buf_size = size;
+    return 0;
 }

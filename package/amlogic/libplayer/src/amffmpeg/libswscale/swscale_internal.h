@@ -31,15 +31,11 @@
 
 #define STR(s)         AV_TOSTRING(s) //AV_STRINGIFY is too long
 
+#define FAST_BGR2YV12 //use 7-bit instead of 15-bit coefficients
+
 #define MAX_FILTER_SIZE 256
 
-#if ARCH_X86
-#define VOFW 5120
-#else
-#define VOFW 2048 // faster on PPC and not tested on others
-#endif
-
-#define VOF  (VOFW*2)
+#define DITHER1XBPP
 
 #if HAVE_BIGENDIAN
 #define ALT32_CORR (-1)
@@ -59,9 +55,44 @@
 
 struct SwsContext;
 
-typedef int (*SwsFunc)(struct SwsContext *context, uint8_t* src[],
+typedef int (*SwsFunc)(struct SwsContext *context, const uint8_t* src[],
                        int srcStride[], int srcSliceY, int srcSliceH,
                        uint8_t* dst[], int dstStride[]);
+
+typedef void (*yuv2planar1_fn) (struct SwsContext *c,
+                                const int16_t *lumSrc, const int16_t *chrUSrc,
+                                const int16_t *chrVSrc, const int16_t *alpSrc,
+                                uint8_t *dest,
+                                uint8_t *uDest, uint8_t *vDest, uint8_t *aDest,
+                                int dstW, int chrDstW, const uint8_t *lumDither, const uint8_t *chrDither);
+typedef void (*yuv2planarX_fn) (struct SwsContext *c,
+                                const int16_t *lumFilter, const int16_t **lumSrc, int lumFilterSize,
+                                const int16_t *chrFilter, const int16_t **chrUSrc,
+                                const int16_t **chrVSrc, int chrFilterSize,
+                                const int16_t **alpSrc,
+                                uint8_t *dest,
+                                uint8_t *uDest, uint8_t *vDest, uint8_t *aDest,
+                                int dstW, int chrDstW, const uint8_t *lumDither, const uint8_t *chrDither);
+typedef void (*yuv2packed1_fn) (struct SwsContext *c,
+                                const uint16_t *buf0,
+                                const uint16_t *ubuf0, const uint16_t *ubuf1,
+                                const uint16_t *vbuf0, const uint16_t *vbuf1,
+                                const uint16_t *abuf0,
+                                uint8_t *dest,
+                                int dstW, int uvalpha, int dstFormat, int flags, int y);
+typedef void (*yuv2packed2_fn) (struct SwsContext *c,
+                                const uint16_t *buf0, const uint16_t *buf1,
+                                const uint16_t *ubuf0, const uint16_t *ubuf1,
+                                const uint16_t *vbuf0, const uint16_t *vbuf1,
+                                const uint16_t *abuf0, const uint16_t *abuf1,
+                                uint8_t *dest,
+                                int dstW, int yalpha, int uvalpha, int y);
+typedef void (*yuv2packedX_fn) (struct SwsContext *c,
+                                const int16_t *lumFilter, const int16_t **lumSrc, int lumFilterSize,
+                                const int16_t *chrFilter, const int16_t **chrUSrc,
+                                const int16_t **chrVSrc, int chrFilterSize,
+                                const int16_t **alpSrc, uint8_t *dest,
+                                int dstW, int dstY);
 
 /* This struct should be aligned on at least a 32-byte boundary. */
 typedef struct SwsContext {
@@ -75,59 +106,91 @@ typedef struct SwsContext {
      * sws_scale() wrapper so they can be freely modified here.
      */
     SwsFunc swScale;
-    int srcW, srcH, dstH;
-    int chrSrcW, chrSrcH, chrDstW, chrDstH;
+    int srcW;                     ///< Width  of source      luma/alpha planes.
+    int srcH;                     ///< Height of source      luma/alpha planes.
+    int dstH;                     ///< Height of destination luma/alpha planes.
+    int chrSrcW;                  ///< Width  of source      chroma     planes.
+    int chrSrcH;                  ///< Height of source      chroma     planes.
+    int chrDstW;                  ///< Width  of destination chroma     planes.
+    int chrDstH;                  ///< Height of destination chroma     planes.
     int lumXInc, chrXInc;
     int lumYInc, chrYInc;
-    enum PixelFormat dstFormat, srcFormat;  ///< format 4:2:0 type is always YV12
-    int origDstFormat, origSrcFormat;       ///< format
-    int chrSrcHSubSample, chrSrcVSubSample;
-    int chrDstHSubSample, chrDstVSubSample;
-    int vChrDrop;
-    int sliceDir;
-    double param[2];
+    enum PixelFormat dstFormat;   ///< Destination pixel format.
+    enum PixelFormat srcFormat;   ///< Source      pixel format.
+    int dstFormatBpp;             ///< Number of bits per pixel of the destination pixel format.
+    int srcFormatBpp;             ///< Number of bits per pixel of the source      pixel format.
+    int chrSrcHSubSample;         ///< Binary logarithm of horizontal subsampling factor between luma/alpha and chroma planes in source      image.
+    int chrSrcVSubSample;         ///< Binary logarithm of vertical   subsampling factor between luma/alpha and chroma planes in source      image.
+    int chrDstHSubSample;         ///< Binary logarithm of horizontal subsampling factor between luma/alpha and chroma planes in destination image.
+    int chrDstVSubSample;         ///< Binary logarithm of vertical   subsampling factor between luma/alpha and chroma planes in destination image.
+    int vChrDrop;                 ///< Binary logarithm of extra vertical subsampling factor in source image chroma planes specified by user.
+    int sliceDir;                 ///< Direction that slices are fed to the scaler (1 = top-to-bottom, -1 = bottom-to-top).
+    double param[2];              ///< Input parameters for scaling algorithms that need them.
 
     uint32_t pal_yuv[256];
     uint32_t pal_rgb[256];
 
-    int16_t **lumPixBuf;
-    int16_t **chrPixBuf;
-    int16_t **alpPixBuf;
-    int16_t *hLumFilter;
-    int16_t *hLumFilterPos;
-    int16_t *hChrFilter;
-    int16_t *hChrFilterPos;
-    int16_t *vLumFilter;
-    int16_t *vLumFilterPos;
-    int16_t *vChrFilter;
-    int16_t *vChrFilterPos;
+    /**
+     * @name Scaled horizontal lines ring buffer.
+     * The horizontal scaler keeps just enough scaled lines in a ring buffer
+     * so they may be passed to the vertical scaler. The pointers to the
+     * allocated buffers for each line are duplicated in sequence in the ring
+     * buffer to simplify indexing and avoid wrapping around between lines
+     * inside the vertical scaler code. The wrapping is done before the
+     * vertical scaler is called.
+     */
+    //@{
+    int16_t **lumPixBuf;          ///< Ring buffer for scaled horizontal luma   plane lines to be fed to the vertical scaler.
+    int16_t **chrUPixBuf;         ///< Ring buffer for scaled horizontal chroma plane lines to be fed to the vertical scaler.
+    int16_t **chrVPixBuf;         ///< Ring buffer for scaled horizontal chroma plane lines to be fed to the vertical scaler.
+    int16_t **alpPixBuf;          ///< Ring buffer for scaled horizontal alpha  plane lines to be fed to the vertical scaler.
+    int       vLumBufSize;        ///< Number of vertical luma/alpha lines allocated in the ring buffer.
+    int       vChrBufSize;        ///< Number of vertical chroma     lines allocated in the ring buffer.
+    int       lastInLumBuf;       ///< Last scaled horizontal luma/alpha line from source in the ring buffer.
+    int       lastInChrBuf;       ///< Last scaled horizontal chroma     line from source in the ring buffer.
+    int       lumBufIndex;        ///< Index in ring buffer of the last scaled horizontal luma/alpha line from source.
+    int       chrBufIndex;        ///< Index in ring buffer of the last scaled horizontal chroma     line from source.
+    //@}
 
-    uint8_t formatConvBuffer[VOF]; //FIXME dynamic allocation, but we have to change a lot of code for this to be useful
+    uint8_t *formatConvBuffer;
 
-    int hLumFilterSize;
-    int hChrFilterSize;
-    int vLumFilterSize;
-    int vChrFilterSize;
-    int vLumBufSize;
-    int vChrBufSize;
+    /**
+     * @name Horizontal and vertical filters.
+     * To better understand the following fields, here is a pseudo-code of
+     * their usage in filtering a horizontal line:
+     * @code
+     * for (i = 0; i < width; i++) {
+     *     dst[i] = 0;
+     *     for (j = 0; j < filterSize; j++)
+     *         dst[i] += src[ filterPos[i] + j ] * filter[ filterSize * i + j ];
+     *     dst[i] >>= FRAC_BITS; // The actual implementation is fixed-point.
+     * }
+     * @endcode
+     */
+    //@{
+    int16_t *hLumFilter;          ///< Array of horizontal filter coefficients for luma/alpha planes.
+    int16_t *hChrFilter;          ///< Array of horizontal filter coefficients for chroma     planes.
+    int16_t *vLumFilter;          ///< Array of vertical   filter coefficients for luma/alpha planes.
+    int16_t *vChrFilter;          ///< Array of vertical   filter coefficients for chroma     planes.
+    int16_t *hLumFilterPos;       ///< Array of horizontal filter starting positions for each dst[i] for luma/alpha planes.
+    int16_t *hChrFilterPos;       ///< Array of horizontal filter starting positions for each dst[i] for chroma     planes.
+    int16_t *vLumFilterPos;       ///< Array of vertical   filter starting positions for each dst[i] for luma/alpha planes.
+    int16_t *vChrFilterPos;       ///< Array of vertical   filter starting positions for each dst[i] for chroma     planes.
+    int      hLumFilterSize;      ///< Horizontal filter size for luma/alpha pixels.
+    int      hChrFilterSize;      ///< Horizontal filter size for chroma     pixels.
+    int      vLumFilterSize;      ///< Vertical   filter size for luma/alpha pixels.
+    int      vChrFilterSize;      ///< Vertical   filter size for chroma     pixels.
+    //@}
 
-    int lumMmx2FilterCodeSize;
-    int chrMmx2FilterCodeSize;
-    uint8_t *lumMmx2FilterCode;
-    uint8_t *chrMmx2FilterCode;
-    int32_t *lumMmx2FilterPos;
-    int32_t *chrMmx2FilterPos;
-    int16_t *lumMmx2Filter;
-    int16_t *chrMmx2Filter;
+    int lumMmx2FilterCodeSize;    ///< Runtime-generated MMX2 horizontal fast bilinear scaler code size for luma/alpha planes.
+    int chrMmx2FilterCodeSize;    ///< Runtime-generated MMX2 horizontal fast bilinear scaler code size for chroma     planes.
+    uint8_t *lumMmx2FilterCode;   ///< Runtime-generated MMX2 horizontal fast bilinear scaler code for luma/alpha planes.
+    uint8_t *chrMmx2FilterCode;   ///< Runtime-generated MMX2 horizontal fast bilinear scaler code for chroma     planes.
 
     int canMMX2BeUsed;
 
-    int lastInLumBuf;
-    int lastInChrBuf;
-    int lumBufIndex;
-    int chrBufIndex;
-    int dstY;
-    int flags;
+    int dstY;                     ///< Last destination vertical line output from last slice.
+    int flags;                    ///< Flags passed by the user to select scaler algorithm, optimizations, subsampling, etc...
     void * yuvTable;            // pointer to the yuv->rgb table start so it can be freed()
     uint8_t * table_rV[256];
     uint8_t * table_gU[256];
@@ -138,7 +201,8 @@ typedef struct SwsContext {
     int contrast, brightness, saturation;    // for sws_getColorspaceDetails
     int srcColorspaceTable[4];
     int dstColorspaceTable[4];
-    int srcRange, dstRange;
+    int srcRange;                 ///< 0 = MPG YUV range, 1 = JPG YUV range (source      image).
+    int dstRange;                 ///< 0 = MPG YUV range, 1 = JPG YUV range (destination image).
     int yuv2rgb_y_offset;
     int yuv2rgb_y_coeff;
     int yuv2rgb_v2r_coeff;
@@ -166,6 +230,10 @@ typedef struct SwsContext {
 #define V_TEMP                "11*8+4*4*256*2+32"
 #define Y_TEMP                "11*8+4*4*256*2+40"
 #define ALP_MMX_FILTER_OFFSET "11*8+4*4*256*2+48"
+#define UV_OFF                "11*8+4*4*256*3+48"
+#define UV_OFFx2              "11*8+4*4*256*3+56"
+#define DITHER16              "11*8+4*4*256*3+64"
+#define DITHER32              "11*8+4*4*256*3+64+16"
 
     DECLARE_ALIGNED(8, uint64_t, redDither);
     DECLARE_ALIGNED(8, uint64_t, greenDither);
@@ -181,23 +249,27 @@ typedef struct SwsContext {
     DECLARE_ALIGNED(8, uint64_t, vOffset);
     int32_t  lumMmxFilter[4*MAX_FILTER_SIZE];
     int32_t  chrMmxFilter[4*MAX_FILTER_SIZE];
-    int dstW;
+    int dstW;                     ///< Width  of destination luma/alpha planes.
     DECLARE_ALIGNED(8, uint64_t, esp);
     DECLARE_ALIGNED(8, uint64_t, vRounder);
     DECLARE_ALIGNED(8, uint64_t, u_temp);
     DECLARE_ALIGNED(8, uint64_t, v_temp);
     DECLARE_ALIGNED(8, uint64_t, y_temp);
     int32_t  alpMmxFilter[4*MAX_FILTER_SIZE];
+    DECLARE_ALIGNED(8, ptrdiff_t, uv_off); ///< offset (in pixels) between u and v planes
+    DECLARE_ALIGNED(8, ptrdiff_t, uv_offx2); ///< offset (in bytes) between u and v planes
+    uint16_t dither16[8];
+    uint32_t dither32[8];
 
 #if HAVE_ALTIVEC
-  vector signed short   CY;
-  vector signed short   CRV;
-  vector signed short   CBU;
-  vector signed short   CGU;
-  vector signed short   CGV;
-  vector signed short   OY;
-  vector unsigned short CSHIFT;
-  vector signed short   *vYCoeffsBank, *vCCoeffsBank;
+    vector signed short   CY;
+    vector signed short   CRV;
+    vector signed short   CBU;
+    vector signed short   CGU;
+    vector signed short   CGV;
+    vector signed short   OY;
+    vector unsigned short CSHIFT;
+    vector signed short   *vYCoeffsBank, *vCCoeffsBank;
 #endif
 
 #if ARCH_BFIN
@@ -215,63 +287,43 @@ typedef struct SwsContext {
 #endif
 
 #if HAVE_VIS
-    DECLARE_ALIGNED(8, uint64_t, sparc_coeffs[10]);
+    DECLARE_ALIGNED(8, uint64_t, sparc_coeffs)[10];
 #endif
 
     /* function pointers for swScale() */
-    void (*yuv2nv12X  )(struct SwsContext *c,
-                        const int16_t *lumFilter, const int16_t **lumSrc, int lumFilterSize,
-                        const int16_t *chrFilter, const int16_t **chrSrc, int chrFilterSize,
-                        uint8_t *dest, uint8_t *uDest,
-                        int dstW, int chrDstW, int dstFormat);
-    void (*yuv2yuv1   )(struct SwsContext *c,
-                        const int16_t *lumSrc, const int16_t *chrSrc, const int16_t *alpSrc,
-                        uint8_t *dest,
-                        uint8_t *uDest, uint8_t *vDest, uint8_t *aDest,
-                        long dstW, long chrDstW);
-    void (*yuv2yuvX   )(struct SwsContext *c,
-                        const int16_t *lumFilter, const int16_t **lumSrc, int lumFilterSize,
-                        const int16_t *chrFilter, const int16_t **chrSrc, int chrFilterSize,
-                        const int16_t **alpSrc,
-                        uint8_t *dest,
-                        uint8_t *uDest, uint8_t *vDest, uint8_t *aDest,
-                        long dstW, long chrDstW);
-    void (*yuv2packed1)(struct SwsContext *c,
-                        const uint16_t *buf0,
-                        const uint16_t *uvbuf0, const uint16_t *uvbuf1,
-                        const uint16_t *abuf0,
-                        uint8_t *dest,
-                        int dstW, int uvalpha, int dstFormat, int flags, int y);
-    void (*yuv2packed2)(struct SwsContext *c,
-                        const uint16_t *buf0, const uint16_t *buf1,
-                        const uint16_t *uvbuf0, const uint16_t *uvbuf1,
-                        const uint16_t *abuf0, const uint16_t *abuf1,
-                        uint8_t *dest,
-                        int dstW, int yalpha, int uvalpha, int y);
-    void (*yuv2packedX)(struct SwsContext *c,
-                        const int16_t *lumFilter, const int16_t **lumSrc, int lumFilterSize,
-                        const int16_t *chrFilter, const int16_t **chrSrc, int chrFilterSize,
-                        const int16_t **alpSrc, uint8_t *dest,
-                        long dstW, long dstY);
+    yuv2planar1_fn yuv2yuv1;
+    yuv2planarX_fn yuv2yuvX;
+    yuv2packed1_fn yuv2packed1;
+    yuv2packed2_fn yuv2packed2;
+    yuv2packedX_fn yuv2packedX;
 
-    void (*hyscale_internal)(uint8_t *dst, const uint8_t *src,
-                             long width, uint32_t *pal);
-    void (*hascale_internal)(uint8_t *dst, const uint8_t *src,
-                             long width, uint32_t *pal);
-    void (*hcscale_internal)(uint8_t *dstU, uint8_t *dstV,
-                             const uint8_t *src1, const uint8_t *src2,
-                             long width, uint32_t *pal);
+    void (*lumToYV12)(uint8_t *dst, const uint8_t *src,
+                      int width, uint32_t *pal); ///< Unscaled conversion of luma plane to YV12 for horizontal scaler.
+    void (*alpToYV12)(uint8_t *dst, const uint8_t *src,
+                      int width, uint32_t *pal); ///< Unscaled conversion of alpha plane to YV12 for horizontal scaler.
+    void (*chrToYV12)(uint8_t *dstU, uint8_t *dstV,
+                      const uint8_t *src1, const uint8_t *src2,
+                      int width, uint32_t *pal); ///< Unscaled conversion of chroma planes to YV12 for horizontal scaler.
     void (*hyscale_fast)(struct SwsContext *c,
                          int16_t *dst, int dstWidth,
                          const uint8_t *src, int srcW, int xInc);
     void (*hcscale_fast)(struct SwsContext *c,
-                         int16_t *dst, int dstWidth,
+                         int16_t *dst1, int16_t *dst2, int dstWidth,
                          const uint8_t *src1, const uint8_t *src2,
                          int srcW, int xInc);
 
     void (*hScale)(int16_t *dst, int dstW, const uint8_t *src, int srcW,
                    int xInc, const int16_t *filter, const int16_t *filterPos,
-                   long filterSize);
+                   int filterSize);
+
+    void (*hScale16)(int16_t *dst, int dstW, const uint16_t *src, int srcW,
+                   int xInc, const int16_t *filter, const int16_t *filterPos,
+                   long filterSize, int shift);
+
+    void (*lumConvertRange)(int16_t *dst, int width); ///< Color range conversion function for luma plane if needed.
+    void (*chrConvertRange)(int16_t *dst1, int16_t *dst2, int width); ///< Color range conversion function for chroma planes if needed.
+
+    int needs_hcscale; ///< Set if there are chroma planes to be converted.
 
 } SwsContext;
 //FIXME check init (where 0)
@@ -283,32 +335,54 @@ int ff_yuv2rgb_c_init_tables(SwsContext *c, const int inv_table[4],
 
 void ff_yuv2rgb_init_tables_altivec(SwsContext *c, const int inv_table[4],
                                     int brightness, int contrast, int saturation);
+void updateMMXDitherTables(SwsContext *c, int dstY, int lumBufIndex, int chrBufIndex,
+                           int lastInLumBuf, int lastInChrBuf);
+
 SwsFunc ff_yuv2rgb_init_mmx(SwsContext *c);
 SwsFunc ff_yuv2rgb_init_vis(SwsContext *c);
 SwsFunc ff_yuv2rgb_init_mlib(SwsContext *c);
 SwsFunc ff_yuv2rgb_init_altivec(SwsContext *c);
 SwsFunc ff_yuv2rgb_get_func_ptr_bfin(SwsContext *c);
 void ff_bfin_get_unscaled_swscale(SwsContext *c);
-void ff_yuv2packedX_altivec(SwsContext *c,
-                            const int16_t *lumFilter, int16_t **lumSrc, int lumFilterSize,
-                            const int16_t *chrFilter, int16_t **chrSrc, int chrFilterSize,
-                            uint8_t *dest, int dstW, int dstY);
 
+#if FF_API_SWS_FORMAT_NAME
+/**
+ * @deprecated Use av_get_pix_fmt_name() instead.
+ */
+attribute_deprecated
 const char *sws_format_name(enum PixelFormat format);
+#endif
 
 //FIXME replace this with something faster
 #define is16BPS(x)      (           \
            (x)==PIX_FMT_GRAY16BE    \
         || (x)==PIX_FMT_GRAY16LE    \
+        || (x)==PIX_FMT_BGR48BE     \
+        || (x)==PIX_FMT_BGR48LE     \
         || (x)==PIX_FMT_RGB48BE     \
         || (x)==PIX_FMT_RGB48LE     \
-        || (x)==PIX_FMT_YUV420P16LE   \
-        || (x)==PIX_FMT_YUV422P16LE   \
-        || (x)==PIX_FMT_YUV444P16LE   \
-        || (x)==PIX_FMT_YUV420P16BE   \
-        || (x)==PIX_FMT_YUV422P16BE   \
-        || (x)==PIX_FMT_YUV444P16BE   \
+        || (x)==PIX_FMT_YUV420P16LE \
+        || (x)==PIX_FMT_YUV422P16LE \
+        || (x)==PIX_FMT_YUV444P16LE \
+        || (x)==PIX_FMT_YUV420P16BE \
+        || (x)==PIX_FMT_YUV422P16BE \
+        || (x)==PIX_FMT_YUV444P16BE \
     )
+#define isNBPS(x)       (           \
+           (x)==PIX_FMT_YUV420P9LE  \
+        || (x)==PIX_FMT_YUV420P9BE  \
+        || (x)==PIX_FMT_YUV444P9BE  \
+        || (x)==PIX_FMT_YUV444P9LE  \
+        || (x)==PIX_FMT_YUV422P10BE \
+        || (x)==PIX_FMT_YUV422P10LE \
+        || (x)==PIX_FMT_YUV444P10BE \
+        || (x)==PIX_FMT_YUV444P10LE \
+        || (x)==PIX_FMT_YUV420P10LE \
+        || (x)==PIX_FMT_YUV420P10BE \
+        || (x)==PIX_FMT_YUV422P10LE \
+        || (x)==PIX_FMT_YUV422P10BE \
+    )
+#define is9_OR_10BPS isNBPS //for ronald
 #define isBE(x) ((x)&1)
 #define isPlanar8YUV(x) (           \
            (x)==PIX_FMT_YUV410P     \
@@ -323,12 +397,24 @@ const char *sws_format_name(enum PixelFormat format);
     )
 #define isPlanarYUV(x)  (           \
         isPlanar8YUV(x)             \
-        || (x)==PIX_FMT_YUV420P16LE   \
-        || (x)==PIX_FMT_YUV422P16LE   \
-        || (x)==PIX_FMT_YUV444P16LE   \
-        || (x)==PIX_FMT_YUV420P16BE   \
-        || (x)==PIX_FMT_YUV422P16BE   \
-        || (x)==PIX_FMT_YUV444P16BE   \
+        || (x)==PIX_FMT_YUV420P9LE  \
+        || (x)==PIX_FMT_YUV444P9LE  \
+        || (x)==PIX_FMT_YUV420P10LE \
+        || (x)==PIX_FMT_YUV422P10LE \
+        || (x)==PIX_FMT_YUV444P10LE \
+        || (x)==PIX_FMT_YUV420P16LE \
+        || (x)==PIX_FMT_YUV422P10LE \
+        || (x)==PIX_FMT_YUV422P16LE \
+        || (x)==PIX_FMT_YUV444P16LE \
+        || (x)==PIX_FMT_YUV420P9BE  \
+        || (x)==PIX_FMT_YUV444P9BE  \
+        || (x)==PIX_FMT_YUV420P10BE \
+        || (x)==PIX_FMT_YUV422P10BE \
+        || (x)==PIX_FMT_YUV444P10BE \
+        || (x)==PIX_FMT_YUV420P16BE \
+        || (x)==PIX_FMT_YUV422P10BE \
+        || (x)==PIX_FMT_YUV422P16BE \
+        || (x)==PIX_FMT_YUV444P16BE \
     )
 #define isYUV(x)        (           \
            (x)==PIX_FMT_UYVY422     \
@@ -337,6 +423,7 @@ const char *sws_format_name(enum PixelFormat format);
     )
 #define isGray(x)       (           \
            (x)==PIX_FMT_GRAY8       \
+        || (x)==PIX_FMT_GRAY8A      \
         || (x)==PIX_FMT_GRAY16BE    \
         || (x)==PIX_FMT_GRAY16LE    \
     )
@@ -344,81 +431,101 @@ const char *sws_format_name(enum PixelFormat format);
            (x)==PIX_FMT_GRAY16BE    \
         || (x)==PIX_FMT_GRAY16LE    \
     )
-#define isRGB(x)        (           \
+#define isRGBinInt(x)   (           \
            (x)==PIX_FMT_RGB48BE     \
         || (x)==PIX_FMT_RGB48LE     \
         || (x)==PIX_FMT_RGB32       \
         || (x)==PIX_FMT_RGB32_1     \
         || (x)==PIX_FMT_RGB24       \
-        || (x)==PIX_FMT_RGB565      \
-        || (x)==PIX_FMT_RGB555      \
+        || (x)==PIX_FMT_RGB565BE    \
+        || (x)==PIX_FMT_RGB565LE    \
+        || (x)==PIX_FMT_RGB555BE    \
+        || (x)==PIX_FMT_RGB555LE    \
+        || (x)==PIX_FMT_RGB444BE    \
+        || (x)==PIX_FMT_RGB444LE    \
         || (x)==PIX_FMT_RGB8        \
         || (x)==PIX_FMT_RGB4        \
         || (x)==PIX_FMT_RGB4_BYTE   \
         || (x)==PIX_FMT_MONOBLACK   \
         || (x)==PIX_FMT_MONOWHITE   \
     )
-#define isBGR(x)        (           \
-           (x)==PIX_FMT_BGR32       \
+#define isBGRinInt(x)   (           \
+           (x)==PIX_FMT_BGR48BE     \
+        || (x)==PIX_FMT_BGR48LE     \
+        || (x)==PIX_FMT_BGR32       \
         || (x)==PIX_FMT_BGR32_1     \
         || (x)==PIX_FMT_BGR24       \
-        || (x)==PIX_FMT_BGR565      \
-        || (x)==PIX_FMT_BGR555      \
+        || (x)==PIX_FMT_BGR565BE    \
+        || (x)==PIX_FMT_BGR565LE    \
+        || (x)==PIX_FMT_BGR555BE    \
+        || (x)==PIX_FMT_BGR555LE    \
+        || (x)==PIX_FMT_BGR444BE    \
+        || (x)==PIX_FMT_BGR444LE    \
         || (x)==PIX_FMT_BGR8        \
         || (x)==PIX_FMT_BGR4        \
         || (x)==PIX_FMT_BGR4_BYTE   \
         || (x)==PIX_FMT_MONOBLACK   \
         || (x)==PIX_FMT_MONOWHITE   \
     )
+#define isRGBinBytes(x) (           \
+           (x)==PIX_FMT_RGB48BE     \
+        || (x)==PIX_FMT_RGB48LE     \
+        || (x)==PIX_FMT_RGBA        \
+        || (x)==PIX_FMT_ARGB        \
+        || (x)==PIX_FMT_RGB24       \
+    )
+#define isBGRinBytes(x) (           \
+           (x)==PIX_FMT_BGR48BE     \
+        || (x)==PIX_FMT_BGR48LE     \
+        || (x)==PIX_FMT_BGRA        \
+        || (x)==PIX_FMT_ABGR        \
+        || (x)==PIX_FMT_BGR24       \
+    )
+#define isAnyRGB(x)     (           \
+            isRGBinInt(x)           \
+        ||  isBGRinInt(x)           \
+    )
 #define isALPHA(x)      (           \
            (x)==PIX_FMT_BGR32       \
         || (x)==PIX_FMT_BGR32_1     \
         || (x)==PIX_FMT_RGB32       \
         || (x)==PIX_FMT_RGB32_1     \
+        || (x)==PIX_FMT_PAL8        \
+        || (x)==PIX_FMT_GRAY8A      \
         || (x)==PIX_FMT_YUVA420P    \
     )
-
-static inline int fmt_depth(int fmt)
-{
-    switch(fmt) {
-    case PIX_FMT_RGB48BE:
-    case PIX_FMT_RGB48LE:
-        return 48;
-    case PIX_FMT_BGRA:
-    case PIX_FMT_ABGR:
-    case PIX_FMT_RGBA:
-    case PIX_FMT_ARGB:
-        return 32;
-    case PIX_FMT_BGR24:
-    case PIX_FMT_RGB24:
-        return 24;
-    case PIX_FMT_BGR565:
-    case PIX_FMT_RGB565:
-    case PIX_FMT_GRAY16BE:
-    case PIX_FMT_GRAY16LE:
-        return 16;
-    case PIX_FMT_BGR555:
-    case PIX_FMT_RGB555:
-        return 15;
-    case PIX_FMT_BGR8:
-    case PIX_FMT_RGB8:
-        return 8;
-    case PIX_FMT_BGR4:
-    case PIX_FMT_RGB4:
-    case PIX_FMT_BGR4_BYTE:
-    case PIX_FMT_RGB4_BYTE:
-        return 4;
-    case PIX_FMT_MONOBLACK:
-    case PIX_FMT_MONOWHITE:
-        return 1;
-    default:
-        return 0;
-    }
-}
+#define isPacked(x)         (       \
+           (x)==PIX_FMT_PAL8        \
+        || (x)==PIX_FMT_YUYV422     \
+        || (x)==PIX_FMT_UYVY422     \
+        || (x)==PIX_FMT_Y400A       \
+        || isAnyRGB(x)              \
+    )
+#define usePal(x) ((av_pix_fmt_descriptors[x].flags & PIX_FMT_PAL) || (x) == PIX_FMT_GRAY8A)
 
 extern const uint64_t ff_dither4[2];
 extern const uint64_t ff_dither8[2];
+extern const uint8_t dithers[8][8][8];
+extern const uint16_t dither_scale[15][16];
+
 
 extern const AVClass sws_context_class;
+
+/**
+ * Sets c->swScale to an unscaled converter if one exists for the specific
+ * source and destination formats, bit depths, flags, etc.
+ */
+void ff_get_unscaled_swscale(SwsContext *c);
+
+void ff_swscale_get_unscaled_altivec(SwsContext *c);
+
+/**
+ * Returns function pointer to fastest main scaler path function depending
+ * on architecture and available optimizations.
+ */
+SwsFunc ff_getSwsFunc(SwsContext *c);
+
+void ff_sws_init_swScale_altivec(SwsContext *c);
+void ff_sws_init_swScale_mmx(SwsContext *c);
 
 #endif /* SWSCALE_SWSCALE_INTERNAL_H */

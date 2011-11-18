@@ -297,10 +297,10 @@ int av_des_init(AVDES *d, const uint8_t *key, int key_bits, int decrypt) {
 }
 
 void av_des_crypt(AVDES *d, uint8_t *dst, const uint8_t *src, int count, uint8_t *iv, int decrypt) {
-    uint64_t iv_val = iv ? be2me_64(*(uint64_t *)iv) : 0;
+    uint64_t iv_val = iv ? av_be2ne64(*(uint64_t *)iv) : 0;
     while (count-- > 0) {
         uint64_t dst_val;
-        uint64_t src_val = src ? be2me_64(*(const uint64_t *)src) : 0;
+        uint64_t src_val = src ? av_be2ne64(*(const uint64_t *)src) : 0;
         if (decrypt) {
             uint64_t tmp = src_val;
             if (d->triple_des) {
@@ -317,12 +317,12 @@ void av_des_crypt(AVDES *d, uint8_t *dst, const uint8_t *src, int count, uint8_t
             }
             iv_val = iv ? dst_val : 0;
         }
-        *(uint64_t *)dst = be2me_64(dst_val);
+        *(uint64_t *)dst = av_be2ne64(dst_val);
         src += 8;
         dst += 8;
     }
     if (iv)
-        *(uint64_t *)iv = be2me_64(iv_val);
+        *(uint64_t *)iv = av_be2ne64(iv_val);
 }
 
 #ifdef TEST
@@ -339,10 +339,10 @@ static uint64_t rand64(void) {
 }
 
 static const uint8_t test_key[] = {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0};
-static const DECLARE_ALIGNED(8, uint8_t, plain[]) = {0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10};
-static const DECLARE_ALIGNED(8, uint8_t, crypt[]) = {0x4a, 0xb6, 0x5b, 0x3d, 0x4b, 0x06, 0x15, 0x18};
-static DECLARE_ALIGNED(8, uint8_t, tmp[8]);
-static DECLARE_ALIGNED(8, uint8_t, large_buffer[10002][8]);
+static const DECLARE_ALIGNED(8, uint8_t, plain)[] = {0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10};
+static const DECLARE_ALIGNED(8, uint8_t, crypt)[] = {0x4a, 0xb6, 0x5b, 0x3d, 0x4b, 0x06, 0x15, 0x18};
+static DECLARE_ALIGNED(8, uint8_t, tmp)[8];
+static DECLARE_ALIGNED(8, uint8_t, large_buffer)[10002][8];
 static const uint8_t cbc_key[] = {
     0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
     0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01,

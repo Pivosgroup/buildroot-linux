@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libavdevice/alsa-audio.h
+ * @file
  * ALSA input and output: definitions and structures
  * @author Luca Abeni ( lucabe72 email it )
  * @author Benoit Fouet ( benoit fouet free fr )
@@ -32,25 +32,30 @@
 
 #include <alsa/asoundlib.h>
 #include "config.h"
-#include "libavformat/avformat.h"
+#include "libavutil/log.h"
+#include "avdevice.h"
 
 /* XXX: we make the assumption that the soundcard accepts this format */
 /* XXX: find better solution with "preinit" method, needed also in
         other formats */
-#if HAVE_BIGENDIAN
-#define DEFAULT_CODEC_ID CODEC_ID_PCM_S16BE
-#else
-#define DEFAULT_CODEC_ID CODEC_ID_PCM_S16LE
-#endif
+#define DEFAULT_CODEC_ID AV_NE(CODEC_ID_PCM_S16BE, CODEC_ID_PCM_S16LE)
+
+typedef void (*ff_reorder_func)(const void *, void *, int);
 
 typedef struct {
+    AVClass *class;
     snd_pcm_t *h;
     int frame_size;  ///< preferred size for reads and writes
     int period_size; ///< bytes per sample * channels
+    ff_reorder_func reorder_func;
+    void *reorder_buf;
+    int reorder_buf_size; ///< in frames
+    int sample_rate; ///< sample rate set by user
+    int channels;    ///< number of channels set by user
 } AlsaData;
 
 /**
- * Opens an ALSA PCM.
+ * Open an ALSA PCM.
  *
  * @param s media file handle
  * @param mode either SND_PCM_STREAM_CAPTURE or SND_PCM_STREAM_PLAYBACK
@@ -68,7 +73,7 @@ int ff_alsa_open(AVFormatContext *s, snd_pcm_stream_t mode,
                  int channels, enum CodecID *codec_id);
 
 /**
- * Closes the ALSA PCM.
+ * Close the ALSA PCM.
  *
  * @param s1 media file handle
  *
@@ -77,7 +82,7 @@ int ff_alsa_open(AVFormatContext *s, snd_pcm_stream_t mode,
 int ff_alsa_close(AVFormatContext *s1);
 
 /**
- * Tries to recover from ALSA buffer underrun.
+ * Try to recover from ALSA buffer underrun.
  *
  * @param s1 media file handle
  * @param err error code reported by the previous ALSA call
@@ -85,5 +90,7 @@ int ff_alsa_close(AVFormatContext *s1);
  * @return 0 if OK, AVERROR_xxx on error
  */
 int ff_alsa_xrun_recover(AVFormatContext *s1, int err);
+
+int ff_alsa_extend_reorder_buf(AlsaData *s, int size);
 
 #endif /* AVDEVICE_ALSA_AUDIO_H */

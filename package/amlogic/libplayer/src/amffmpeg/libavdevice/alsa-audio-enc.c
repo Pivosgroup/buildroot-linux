@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libavdevice/alsa-audio-enc.c
+ * @file
  * ALSA input and output: output
  * @author Luca Abeni ( lucabe72 email it )
  * @author Benoit Fouet ( benoit fouet free fr )
@@ -37,12 +37,12 @@
  * which gives a low latency suitable for real-time playback.
  */
 
-#include "libavformat/avformat.h"
 #include <alsa/asoundlib.h>
 
+#include "avdevice.h"
 #include "alsa-audio.h"
 
-av_cold static int audio_write_header(AVFormatContext *s1)
+static av_cold int audio_write_header(AVFormatContext *s1)
 {
     AlsaData *s = s1->priv_data;
     AVStream *st;
@@ -76,7 +76,15 @@ static int audio_write_packet(AVFormatContext *s1, AVPacket *pkt)
     int size     = pkt->size;
     uint8_t *buf = pkt->data;
 
-    while((res = snd_pcm_writei(s->h, buf, size / s->frame_size)) < 0) {
+    size /= s->frame_size;
+    if (s->reorder_func) {
+        if (size > s->reorder_buf_size)
+            if (ff_alsa_extend_reorder_buf(s, size))
+                return AVERROR(ENOMEM);
+        s->reorder_func(buf, s->reorder_buf, size);
+        buf = s->reorder_buf;
+    }
+    while ((res = snd_pcm_writei(s->h, buf, size)) < 0) {
         if (res == -EAGAIN) {
 
             return AVERROR(EAGAIN);
@@ -93,7 +101,7 @@ static int audio_write_packet(AVFormatContext *s1, AVPacket *pkt)
     return 0;
 }
 
-AVOutputFormat alsa_muxer = {
+AVOutputFormat ff_alsa_muxer = {
     "alsa",
     NULL_IF_CONFIG_SMALL("ALSA audio output"),
     "",

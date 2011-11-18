@@ -1,5 +1,5 @@
 /**
- * @file libavcodec/vp5.c
+ * @file
  * VP5 compatible video decoder
  *
  * Copyright (C) 2006  Aurelien Jacobs <aurel@gnuage.org>
@@ -39,10 +39,10 @@ static int vp5_parse_header(VP56Context *s, const uint8_t *buf, int buf_size,
     VP56RangeCoder *c = &s->c;
     int rows, cols;
 
-    vp56_init_range_decoder(&s->c, buf, buf_size);
+    ff_vp56_init_range_decoder(&s->c, buf, buf_size);
     s->framep[VP56_FRAME_CURRENT]->key_frame = !vp56_rac_get(c);
     vp56_rac_get(c);
-    vp56_init_dequant(s, vp56_rac_gets(c, 6));
+    ff_vp56_init_dequant(s, vp56_rac_gets(c, 6));
     if (s->framep[VP56_FRAME_CURRENT]->key_frame)
     {
         vp56_rac_gets(c, 8);
@@ -67,23 +67,6 @@ static int vp5_parse_header(VP56Context *s, const uint8_t *buf, int buf_size,
     } else if (!s->macroblocks)
         return 0;
     return 1;
-}
-
-/* Gives very similar result than the vp6 version except in a few cases */
-static int vp5_adjust(int v, int t)
-{
-    int s2, s1 = v >> 31;
-    v ^= s1;
-    v -= s1;
-    v *= v < 2*t;
-    v -= t;
-    s2 = v >> 31;
-    v ^= s2;
-    v -= s2;
-    v = t - v;
-    v += s1;
-    v ^= s1;
-    return v;
 }
 
 static void vp5_parse_vector_adjustment(VP56Context *s, VP56mv *vect)
@@ -271,10 +254,9 @@ static av_cold int vp5_decode_init(AVCodecContext *avctx)
 {
     VP56Context *s = avctx->priv_data;
 
-    vp56_init(avctx, 1, 0);
+    ff_vp56_init(avctx, 1, 0);
     s->vp56_coord_div = vp5_coord_div;
     s->parse_vector_adjustment = vp5_parse_vector_adjustment;
-    s->adjust = vp5_adjust;
     s->parse_coeff = vp5_parse_coeff;
     s->default_models_init = vp5_default_models_init;
     s->parse_vector_models = vp5_parse_vector_models;
@@ -284,15 +266,15 @@ static av_cold int vp5_decode_init(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec vp5_decoder = {
+AVCodec ff_vp5_decoder = {
     "vp5",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_VP5,
     sizeof(VP56Context),
     vp5_decode_init,
     NULL,
-    vp56_free,
-    vp56_decode_frame,
+    ff_vp56_free,
+    ff_vp56_decode_frame,
     CODEC_CAP_DR1,
     .long_name = NULL_IF_CONFIG_SMALL("On2 VP5"),
 };

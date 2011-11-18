@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libavcodec/aac.h
+ * @file
  * AAC definitions and structures
  * @author Oded Shimon  ( ods15 ods15 dyndns org )
  * @author Maxim Gavrilov ( maxim.gavrilov gmail com )
@@ -32,20 +32,18 @@
 
 #include "avcodec.h"
 #include "dsputil.h"
+#include "fft.h"
 #include "mpeg4audio.h"
+#include "sbr.h"
+#include "fmtconvert.h"
 
 #include <stdint.h>
-
-#define AAC_INIT_VLC_STATIC(num, size) \
-    INIT_VLC_STATIC(&vlc_spectral[num], 6, ff_aac_spectral_sizes[num], \
-         ff_aac_spectral_bits[num], sizeof( ff_aac_spectral_bits[num][0]), sizeof( ff_aac_spectral_bits[num][0]), \
-        ff_aac_spectral_codes[num], sizeof(ff_aac_spectral_codes[num][0]), sizeof(ff_aac_spectral_codes[num][0]), \
-        size);
 
 #define MAX_CHANNELS 64
 #define MAX_ELEM_ID 16
 
 #define TNS_MAX_ORDER 20
+#define MAX_LTP_LONG_SFB 40
 
 enum RawDataBlockType {
     TYPE_SCE,
@@ -109,6 +107,7 @@ enum OCStatus {
     OC_NONE,        //< Output unconfigured
     OC_TRIAL_PCE,   //< Output configuration under trial specified by an inband PCE
     OC_TRIAL_FRAME, //< Output configuration under trial specified by a frame header
+    OC_GLOBAL_HDR,  //< Output configuration set in a global header but not yet locked
     OC_LOCKED,      //< Output configuration locked in place
 };
 
@@ -131,6 +130,17 @@ typedef struct {
 #define SCALE_MAX_POS   255    ///< scalefactor index maximum value
 #define SCALE_MAX_DIFF   60    ///< maximum scalefactor difference allowed by standard
 #define SCALE_DIFF_ZERO  60    ///< codebook index corresponding to zero scalefactor indices difference
+#define POW_SF2_ZERO    200    ///< ff_aac_pow2sf_tab index corresponding to pow(2, 0);
+
+/**
+ * Long Term Prediction
+ */
+typedef struct {
+    int8_t present;
+    int16_t lag;
+    float coef;
+    int8_t used[MAX_LTP_LONG_SFB];
+} LongTermPrediction;
 
 /**
  * Individual Channel Stream
@@ -141,6 +151,7 @@ typedef struct {
     uint8_t use_kb_window[2];   ///< If set, use Kaiser-Bessel window, otherwise use a sinus window.
     int num_window_groups;
     uint8_t group_len[8];
+    LongTermPrediction ltp;
     const uint16_t *swb_offset; ///< table of offsets to the lowest spectral coefficient of a scalefactor band, sfb, for a particular window
     const uint8_t *swb_sizes;   ///< table of scalefactor band sizes for a particular window
     int num_swb;                ///< number of scalefactor window bands
@@ -208,14 +219,15 @@ typedef struct {
     IndividualChannelStream ics;
     TemporalNoiseShaping tns;
     Pulse pulse;
-    enum BandType band_type[128];             ///< band types
-    int band_type_run_end[120];               ///< band type run end points
-    float sf[120];                            ///< scalefactors
-    int sf_idx[128];                          ///< scalefactor indices (used by encoder)
-    uint8_t zeroes[128];                      ///< band is not coded (used by encoder)
-    DECLARE_ALIGNED_16(float, coeffs[1024]);  ///< coefficients for IMDCT
-    DECLARE_ALIGNED_16(float, saved[1024]);   ///< overlap
-    DECLARE_ALIGNED_16(float, ret[1024]);     ///< PCM output
+    enum BandType band_type[128];                   ///< band types
+    int band_type_run_end[120];                     ///< band type run end points
+    float sf[120];                                  ///< scalefactors
+    int sf_idx[128];                                ///< scalefactor indices (used by encoder)
+    uint8_t zeroes[128];                            ///< band is not coded (used by encoder)
+    DECLARE_ALIGNED(32, float,   coeffs)[1024];     ///< coefficients for IMDCT
+    DECLARE_ALIGNED(32, float,   saved)[1024];      ///< overlap
+    DECLARE_ALIGNED(32, float,   ret)[2048];        ///< PCM output
+    DECLARE_ALIGNED(16, float,   ltp_state)[3072];  ///< time signal for LTP
     PredictorState predictor_state[MAX_PREDICTORS];
 } SingleChannelElement;
 
@@ -231,13 +243,14 @@ typedef struct {
     SingleChannelElement ch[2];
     // CCE specific
     ChannelCoupling coup;
+    SpectralBandReplication sbr;
 } ChannelElement;
 
 /**
  * main AAC context
  */
 typedef struct {
-    AVCodecContext * avccontext;
+    AVCodecContext *avctx;
 
     MPEG4AudioConfig m4ac;
 
@@ -251,8 +264,8 @@ typedef struct {
     enum ChannelPosition che_pos[4][MAX_ELEM_ID]; /**< channel element channel mapping with the
                                                    *   first index as the first 4 raw data block types
                                                    */
-    ChannelElement * che[4][MAX_ELEM_ID];
-    ChannelElement * tag_che_map[4][MAX_ELEM_ID];
+    ChannelElement          *che[4][MAX_ELEM_ID];
+    ChannelElement  *tag_che_map[4][MAX_ELEM_ID];
     int tags_mapped;
     /** @} */
 
@@ -260,7 +273,7 @@ typedef struct {
      * @defgroup temporary aligned temporary buffers (We do not want to have these on the stack.)
      * @{
      */
-    DECLARE_ALIGNED_16(float, buf_mdct[1024]);
+    DECLARE_ALIGNED(32, float, buf_mdct)[1024];
     /** @} */
 
     /**
@@ -269,7 +282,9 @@ typedef struct {
      */
     FFTContext mdct;
     FFTContext mdct_small;
+    FFTContext mdct_ltp;
     DSPContext dsp;
+    FmtConvertContext fmt_conv;
     int random_state;
     /** @} */
 
@@ -278,12 +293,9 @@ typedef struct {
      * @{
      */
     float *output_data[MAX_CHANNELS];                 ///< Points to each element's 'ret' buffer (PCM output).
-    float add_bias;                                   ///< offset for dsp.float_to_int16
-    float sf_scale;                                   ///< Pre-scale for correct IMDCT and dsp.float_to_int16.
-    int sf_offset;                                    ///< offset into pow2sf_tab as appropriate for dsp.float_to_int16
     /** @} */
 
-    DECLARE_ALIGNED(16, float, temp[128]);
+    DECLARE_ALIGNED(32, float, temp)[128];
 
     enum OCStatus output_configured;
 } AACContext;

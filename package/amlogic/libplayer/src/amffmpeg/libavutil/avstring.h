@@ -47,6 +47,20 @@ int av_strstart(const char *str, const char *pfx, const char **ptr);
 int av_stristart(const char *str, const char *pfx, const char **ptr);
 
 /**
+ * Locate the first case-independent occurrence in the string haystack
+ * of the string needle.  A zero-length string needle is considered to
+ * match at the start of haystack.
+ *
+ * This function is a case-insensitive version of the standard strstr().
+ *
+ * @param haystack string to search in
+ * @param needle   string to search for
+ * @return         pointer to the located match within haystack
+ *                 or a null pointer if no match
+ */
+char *av_stristr(const char *haystack, const char *needle);
+
+/**
  * Copy the string src to dst, but no more than size - 1 bytes, and
  * null-terminate dst.
  *
@@ -83,7 +97,7 @@ size_t av_strlcat(char *dst, const char *src, size_t size);
 
 /**
  * Append output to a string, according to a format. Never write out of
- * the destination buffer, and and always put a terminating 0 within
+ * the destination buffer, and always put a terminating 0 within
  * the buffer.
  * @param dst destination buffer (string to which the output is
  *  appended)
@@ -94,5 +108,26 @@ size_t av_strlcat(char *dst, const char *src, size_t size);
  *  if enough space had been available
  */
 size_t av_strlcatf(char *dst, size_t size, const char *fmt, ...);
+
+/**
+ * Convert a number to a av_malloced string.
+ */
+char *av_d2str(double d);
+
+/**
+ * Unescape the given string until a non escaped terminating char,
+ * and return the token corresponding to the unescaped string.
+ *
+ * The normal \ and ' escaping is supported. Leading and trailing
+ * whitespaces are removed, unless they are escaped with '\' or are
+ * enclosed between ''.
+ *
+ * @param buf the buffer to parse, buf will be updated to point to the
+ * terminating char
+ * @param term a 0-terminated list of terminating chars
+ * @return the malloced unescaped string, which must be av_freed by
+ * the user, NULL in case of allocation failure
+ */
+char *av_get_token(const char **buf, const char *term);
 
 #endif /* AVUTIL_AVSTRING_H */

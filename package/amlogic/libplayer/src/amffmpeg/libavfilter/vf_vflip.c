@@ -1,5 +1,5 @@
 /*
- * copyright (c) 2007 Bobby Bingham
+ * Copyright (c) 2007 Bobby Bingham
  *
  * This file is part of FFmpeg.
  *
@@ -19,10 +19,11 @@
  */
 
 /**
- * @file libavfilter/vf_vflip.c
+ * @file
  * video vertical flip filter
  */
 
+#include "libavutil/pixdesc.h"
 #include "avfilter.h"
 
 typedef struct {
@@ -32,27 +33,28 @@ typedef struct {
 static int config_input(AVFilterLink *link)
 {
     FlipContext *flip = link->dst->priv;
-    int tmp;
 
-    avcodec_get_chroma_sub_sample(link->format, &tmp, &flip->vsub);
+    flip->vsub = av_pix_fmt_descriptors[link->format].log2_chroma_h;
 
     return 0;
 }
 
-static AVFilterPicRef *get_video_buffer(AVFilterLink *link, int perms,
+static AVFilterBufferRef *get_video_buffer(AVFilterLink *link, int perms,
                                         int w, int h)
 {
     FlipContext *flip = link->dst->priv;
+    AVFilterBufferRef *picref;
     int i;
 
-    AVFilterPicRef *picref = avfilter_get_video_buffer(link->dst->outputs[0],
-                                                       perms, w, h);
+    if (!(perms & AV_PERM_NEG_LINESIZES))
+        return avfilter_default_get_video_buffer(link, perms, w, h);
 
-    picref->data[0] += (h-1) * picref->linesize[0];
-    picref->linesize[0] = -picref->linesize[0];
-    for (i = 1; i < 4; i ++) {
+    picref = avfilter_get_video_buffer(link->dst->outputs[0], perms, w, h);
+    for (i = 0; i < 4; i ++) {
+        int vsub = i == 1 || i == 2 ? flip->vsub : 0;
+
         if (picref->data[i]) {
-            picref->data[i] += ((h >> flip->vsub)-1) * picref->linesize[i];
+            picref->data[i] += ((h >> vsub)-1) * picref->linesize[i];
             picref->linesize[i] = -picref->linesize[i];
         }
     }
@@ -60,29 +62,29 @@ static AVFilterPicRef *get_video_buffer(AVFilterLink *link, int perms,
     return picref;
 }
 
-static void start_frame(AVFilterLink *link, AVFilterPicRef *picref)
+static void start_frame(AVFilterLink *link, AVFilterBufferRef *inpicref)
 {
     FlipContext *flip = link->dst->priv;
-    AVFilterPicRef *ref2 = avfilter_ref_pic(picref, ~0);
+    AVFilterBufferRef *outpicref = avfilter_ref_buffer(inpicref, ~0);
     int i;
 
-    ref2->data[0] += (link->h-1) * ref2->linesize[0];
-    ref2->linesize[0] = -ref2->linesize[0];
-    for (i = 1; i < 4; i ++) {
-        if (ref2->data[i]) {
-            ref2->data[i] += ((link->h >> flip->vsub)-1) * ref2->linesize[i];
-            ref2->linesize[i] = -ref2->linesize[i];
+    for (i = 0; i < 4; i ++) {
+        int vsub = i == 1 || i == 2 ? flip->vsub : 0;
+
+        if (outpicref->data[i]) {
+            outpicref->data[i] += ((link->h >> vsub)-1) * outpicref->linesize[i];
+            outpicref->linesize[i] = -outpicref->linesize[i];
         }
     }
 
-    avfilter_start_frame(link->dst->outputs[0], ref2);
+    avfilter_start_frame(link->dst->outputs[0], outpicref);
 }
 
-static void draw_slice(AVFilterLink *link, int y, int h)
+static void draw_slice(AVFilterLink *link, int y, int h, int slice_dir)
 {
     AVFilterContext *ctx = link->dst;
 
-    avfilter_draw_slice(ctx->outputs[0], link->h - (y+h), h);
+    avfilter_draw_slice(ctx->outputs[0], link->h - (y+h), h, -1 * slice_dir);
 }
 
 AVFilter avfilter_vf_vflip = {
@@ -92,13 +94,13 @@ AVFilter avfilter_vf_vflip = {
     .priv_size = sizeof(FlipContext),
 
     .inputs    = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = CODEC_TYPE_VIDEO,
+                                    .type             = AVMEDIA_TYPE_VIDEO,
                                     .get_video_buffer = get_video_buffer,
                                     .start_frame      = start_frame,
                                     .draw_slice       = draw_slice,
                                     .config_props     = config_input, },
                                   { .name = NULL}},
     .outputs   = (AVFilterPad[]) {{ .name             = "default",
-                                    .type             = CODEC_TYPE_VIDEO, },
+                                    .type             = AVMEDIA_TYPE_VIDEO, },
                                   { .name = NULL}},
 };

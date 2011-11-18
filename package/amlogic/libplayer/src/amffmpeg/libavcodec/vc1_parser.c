@@ -21,7 +21,7 @@
  */
 
 /**
- * @file libavcodec/vc1_parser.c
+ * @file
  * VC-1 and WMV3 parser
  */
 
@@ -67,9 +67,9 @@ static void vc1_extract_headers(AVCodecParserContext *s, AVCodecContext *avctx,
             else
                 vc1_parse_frame_header_adv(&vpc->v, &gb);
 
-            /* keep FF_BI_TYPE internal to VC1 */
-            if (vpc->v.s.pict_type == FF_BI_TYPE)
-                s->pict_type = FF_B_TYPE;
+            /* keep AV_PICTURE_TYPE_BI internal to VC1 */
+            if (vpc->v.s.pict_type == AV_PICTURE_TYPE_BI)
+                s->pict_type = AV_PICTURE_TYPE_B;
             else
                 s->pict_type = vpc->v.s.pict_type;
 
@@ -77,6 +77,7 @@ static void vc1_extract_headers(AVCodecParserContext *s, AVCodecContext *avctx,
         }
     }
 
+    avctx->frame_interlace = vpc->v.interlace && vpc->v.fcm;
     av_free(buf2);
 }
 
@@ -169,7 +170,7 @@ static int vc1_split(AVCodecContext *avctx,
     return 0;
 }
 
-AVCodecParser vc1_parser = {
+AVCodecParser ff_vc1_parser = {
     { CODEC_ID_VC1 },
     sizeof(VC1ParseContext),
     NULL,

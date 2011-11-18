@@ -24,6 +24,7 @@
 
 #include "dsputil.h"
 #include "mpegvideo.h"
+#include "cavsdsp.h"
 
 #define SLICE_MAX_START_CODE    0x000001af
 #define EXT_START_CODE          0x000001b5
@@ -136,7 +137,7 @@ enum cavs_mv_loc {
   MV_BWD_X3
 };
 
-DECLARE_ALIGNED_8(typedef, struct) {
+DECLARE_ALIGNED(8, typedef, struct) {
     int16_t x;
     int16_t y;
     int16_t dist;
@@ -153,6 +154,7 @@ struct dec_2dvlc {
 
 typedef struct {
     MpegEncContext s;
+    CAVSDSPContext cdsp;
     Picture picture; ///< currently decoded frame
     Picture DPB[2];  ///< reference frames
     int dist[2];     ///< temporal distances from current frame to ref frames
@@ -160,6 +162,7 @@ typedef struct {
     int aspect_ratio;
     int mb_width, mb_height;
     int pic_type;
+    int stream_revision; ///<0 for samples from 2006, 1 for rm52j encoder
     int progressive;
     int pic_structure;
     int skip_mode_flag; ///< select between skip_count or one skip_flag per MB
@@ -230,15 +233,16 @@ extern const struct dec_2dvlc ff_cavs_chroma_dec[5];
 extern const uint8_t     ff_cavs_chroma_qp[64];
 extern const uint8_t     ff_cavs_scan3x3[4];
 extern const uint8_t     ff_cavs_partition_flags[30];
-extern const int_fast8_t ff_left_modifier_l[8];
-extern const int_fast8_t ff_top_modifier_l[8];
-extern const int_fast8_t ff_left_modifier_c[7];
-extern const int_fast8_t ff_top_modifier_c[7];
+extern const int8_t      ff_left_modifier_l[8];
+extern const int8_t      ff_top_modifier_l[8];
+extern const int8_t      ff_left_modifier_c[7];
+extern const int8_t      ff_top_modifier_c[7];
 extern const cavs_vector ff_cavs_intra_mv;
 extern const cavs_vector ff_cavs_un_mv;
 extern const cavs_vector ff_cavs_dir_mv;
 
-static inline void modify_pred(const int_fast8_t *mod_table, int *mode) {
+static inline void modify_pred(const int8_t *mod_table, int *mode)
+{
     *mode = mod_table[*mode];
     if(*mode < 0) {
         av_log(NULL, AV_LOG_ERROR, "Illegal intra prediction mode\n");
@@ -247,8 +251,13 @@ static inline void modify_pred(const int_fast8_t *mod_table, int *mode) {
 }
 
 static inline void set_intra_mode_default(AVSContext *h) {
-    h->pred_mode_Y[3] =  h->pred_mode_Y[6] = INTRA_L_LP;
-    h->top_pred_Y[h->mbx*2+0] = h->top_pred_Y[h->mbx*2+1] = INTRA_L_LP;
+    if(h->stream_revision > 0) {
+        h->pred_mode_Y[3] =  h->pred_mode_Y[6] = NOT_AVAIL;
+        h->top_pred_Y[h->mbx*2+0] = h->top_pred_Y[h->mbx*2+1] = NOT_AVAIL;
+    } else {
+        h->pred_mode_Y[3] =  h->pred_mode_Y[6] = INTRA_L_LP;
+        h->top_pred_Y[h->mbx*2+0] = h->top_pred_Y[h->mbx*2+1] = INTRA_L_LP;
+    }
 }
 
 static inline void set_mvs(cavs_vector *mv, enum cavs_block size) {
@@ -270,7 +279,7 @@ static inline void set_mv_intra(AVSContext *h) {
     set_mvs(&h->mv[MV_FWD_X0], BLK_16X16);
     h->mv[MV_BWD_X0] = ff_cavs_intra_mv;
     set_mvs(&h->mv[MV_BWD_X0], BLK_16X16);
-    if(h->pic_type != FF_B_TYPE)
+    if(h->pic_type != AV_PICTURE_TYPE_B)
         h->col_type_base[h->mbidx] = I_8X8;
 }
 

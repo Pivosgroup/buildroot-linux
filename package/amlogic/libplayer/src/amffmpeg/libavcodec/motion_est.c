@@ -23,13 +23,14 @@
  */
 
 /**
- * @file libavcodec/motion_est.c
+ * @file
  * Motion estimation.
  */
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
+#include "libavutil/intmath.h"
 #include "avcodec.h"
 #include "dsputil.h"
 #include "mathops.h"
@@ -103,25 +104,17 @@ static int get_flags(MotionEstContext *c, int direct, int chroma){
            + (chroma ? FLAG_CHROMA : 0);
 }
 
-/*! \brief compares a block (either a full macroblock or a partition thereof)
-    against a proposed motion-compensated prediction of that block
- */
-static av_always_inline int cmp(MpegEncContext *s, const int x, const int y, const int subx, const int suby,
+static av_always_inline int cmp_direct_inline(MpegEncContext *s, const int x, const int y, const int subx, const int suby,
                       const int size, const int h, int ref_index, int src_index,
-                      me_cmp_func cmp_func, me_cmp_func chroma_cmp_func, const int flags){
+                      me_cmp_func cmp_func, me_cmp_func chroma_cmp_func, int qpel){
     MotionEstContext * const c= &s->me;
     const int stride= c->stride;
-    const int uvstride= c->uvstride;
-    const int qpel= flags&FLAG_QPEL;
-    const int chroma= flags&FLAG_CHROMA;
-    const int dxy= subx + (suby<<(1+qpel)); //FIXME log2_subpel?
     const int hx= subx + (x<<(1+qpel));
     const int hy= suby + (y<<(1+qpel));
     uint8_t * const * const ref= c->ref[ref_index];
     uint8_t * const * const src= c->src[src_index];
     int d;
     //FIXME check chroma 4mv, (no crashes ...)
-    if(flags&FLAG_DIRECT){
         assert(x >= c->xmin && hx <= c->xmax<<(qpel+1) && y >= c->ymin && hy <= c->ymax<<(qpel+1));
         if(x >= c->xmin && hx <= c->xmax<<(qpel+1) && y >= c->ymin && hy <= c->ymax<<(qpel+1)){
             const int time_pp= s->pp_time;
@@ -180,7 +173,22 @@ static av_always_inline int cmp(MpegEncContext *s, const int x, const int y, con
             d = cmp_func(s, c->temp, src[0], stride, 16);
         }else
             d= 256*256*256*32;
-    }else{
+    return d;
+}
+
+static av_always_inline int cmp_inline(MpegEncContext *s, const int x, const int y, const int subx, const int suby,
+                      const int size, const int h, int ref_index, int src_index,
+                      me_cmp_func cmp_func, me_cmp_func chroma_cmp_func, int qpel, int chroma){
+    MotionEstContext * const c= &s->me;
+    const int stride= c->stride;
+    const int uvstride= c->uvstride;
+    const int dxy= subx + (suby<<(1+qpel)); //FIXME log2_subpel?
+    const int hx= subx + (x<<(1+qpel));
+    const int hy= suby + (y<<(1+qpel));
+    uint8_t * const * const ref= c->ref[ref_index];
+    uint8_t * const * const src= c->src[src_index];
+    int d;
+    //FIXME check chroma 4mv, (no crashes ...)
         int uvdxy;              /* no, it might not be used uninitialized */
         if(dxy){
             if(qpel){
@@ -211,16 +219,71 @@ static av_always_inline int cmp(MpegEncContext *s, const int x, const int y, con
             d += chroma_cmp_func(s, uvtemp  , src[1], uvstride, h>>1);
             d += chroma_cmp_func(s, uvtemp+8, src[2], uvstride, h>>1);
         }
-    }
-#if 0
-    if(full_pel){
-        const int index= (((y)<<ME_MAP_SHIFT) + (x))&(ME_MAP_SIZE-1);
-        score_map[index]= d;
-    }
-
-    d += (c->mv_penalty[hx - c->pred_x] + c->mv_penalty[hy - c->pred_y])*c->penalty_factor;
-#endif
     return d;
+}
+
+static int cmp_simple(MpegEncContext *s, const int x, const int y,
+                      int ref_index, int src_index,
+                      me_cmp_func cmp_func, me_cmp_func chroma_cmp_func){
+    return cmp_inline(s,x,y,0,0,0,16,ref_index,src_index, cmp_func, chroma_cmp_func, 0, 0);
+}
+
+static int cmp_fpel_internal(MpegEncContext *s, const int x, const int y,
+                      const int size, const int h, int ref_index, int src_index,
+                      me_cmp_func cmp_func, me_cmp_func chroma_cmp_func, const int flags){
+    if(flags&FLAG_DIRECT){
+        return cmp_direct_inline(s,x,y,0,0,size,h,ref_index,src_index, cmp_func, chroma_cmp_func, flags&FLAG_QPEL);
+    }else{
+        return cmp_inline(s,x,y,0,0,size,h,ref_index,src_index, cmp_func, chroma_cmp_func, 0, flags&FLAG_CHROMA);
+    }
+}
+
+static int cmp_internal(MpegEncContext *s, const int x, const int y, const int subx, const int suby,
+                      const int size, const int h, int ref_index, int src_index,
+                      me_cmp_func cmp_func, me_cmp_func chroma_cmp_func, const int flags){
+    if(flags&FLAG_DIRECT){
+        return cmp_direct_inline(s,x,y,subx,suby,size,h,ref_index,src_index, cmp_func, chroma_cmp_func, flags&FLAG_QPEL);
+    }else{
+        return cmp_inline(s,x,y,subx,suby,size,h,ref_index,src_index, cmp_func, chroma_cmp_func, flags&FLAG_QPEL, flags&FLAG_CHROMA);
+    }
+}
+
+/*! \brief compares a block (either a full macroblock or a partition thereof)
+    against a proposed motion-compensated prediction of that block
+ */
+static av_always_inline int cmp(MpegEncContext *s, const int x, const int y, const int subx, const int suby,
+                      const int size, const int h, int ref_index, int src_index,
+                      me_cmp_func cmp_func, me_cmp_func chroma_cmp_func, const int flags){
+    if(av_builtin_constant_p(flags) && av_builtin_constant_p(h) && av_builtin_constant_p(size)
+       && av_builtin_constant_p(subx) && av_builtin_constant_p(suby)
+       && flags==0 && h==16 && size==0 && subx==0 && suby==0){
+        return cmp_simple(s,x,y,ref_index,src_index, cmp_func, chroma_cmp_func);
+    }else if(av_builtin_constant_p(subx) && av_builtin_constant_p(suby)
+       && subx==0 && suby==0){
+        return cmp_fpel_internal(s,x,y,size,h,ref_index,src_index, cmp_func, chroma_cmp_func,flags);
+    }else{
+        return cmp_internal(s,x,y,subx,suby,size,h,ref_index,src_index, cmp_func, chroma_cmp_func, flags);
+    }
+}
+
+static int cmp_hpel(MpegEncContext *s, const int x, const int y, const int subx, const int suby,
+                      const int size, const int h, int ref_index, int src_index,
+                      me_cmp_func cmp_func, me_cmp_func chroma_cmp_func, const int flags){
+    if(flags&FLAG_DIRECT){
+        return cmp_direct_inline(s,x,y,subx,suby,size,h,ref_index,src_index, cmp_func, chroma_cmp_func, 0);
+    }else{
+        return cmp_inline(s,x,y,subx,suby,size,h,ref_index,src_index, cmp_func, chroma_cmp_func, 0, flags&FLAG_CHROMA);
+    }
+}
+
+static int cmp_qpel(MpegEncContext *s, const int x, const int y, const int subx, const int suby,
+                      const int size, const int h, int ref_index, int src_index,
+                      me_cmp_func cmp_func, me_cmp_func chroma_cmp_func, const int flags){
+    if(flags&FLAG_DIRECT){
+        return cmp_direct_inline(s,x,y,subx,suby,size,h,ref_index,src_index, cmp_func, chroma_cmp_func, 1);
+    }else{
+        return cmp_inline(s,x,y,subx,suby,size,h,ref_index,src_index, cmp_func, chroma_cmp_func, 1, flags&FLAG_CHROMA);
+    }
 }
 
 #include "motion_est_template.c"
@@ -849,8 +912,8 @@ static inline int check_input_motion(MpegEncContext * s, int mb_x, int mb_y, int
         }
 
         if(USES_LIST(mb_type, 0)){
-            int field_select0= p->ref_index[0][xy ];
-            int field_select1= p->ref_index[0][xy2];
+            int field_select0= p->ref_index[0][4*mb_xy  ];
+            int field_select1= p->ref_index[0][4*mb_xy+2];
             assert(field_select0==0 ||field_select0==1);
             assert(field_select1==0 ||field_select1==1);
             init_interlaced_ref(s, 0);
@@ -877,8 +940,8 @@ static inline int check_input_motion(MpegEncContext * s, int mb_x, int mb_y, int
             d+= cmp(s, x>>shift, y>>shift, x&mask, y&mask, 0, 8, field_select1, 1, cmpf, chroma_cmpf, flags);
         }
         if(USES_LIST(mb_type, 1)){
-            int field_select0= p->ref_index[1][xy ];
-            int field_select1= p->ref_index[1][xy2];
+            int field_select0= p->ref_index[1][4*mb_xy  ];
+            int field_select1= p->ref_index[1][4*mb_xy+2];
             assert(field_select0==0 ||field_select0==1);
             assert(field_select1==0 ||field_select1==1);
             init_interlaced_ref(s, 2);
@@ -1056,10 +1119,6 @@ void ff_estimate_p_frame_motion(MpegEncContext * s,
 //    pic->mb_cmp_score[s->mb_stride * mb_y + mb_x] = dmin;
     c->mc_mb_var_sum_temp += (vard+128)>>8;
 
-#if 0
-    printf("varc=%4d avg_var=%4d (sum=%4d) vard=%4d mx=%2d my=%2d\n",
-           varc, s->avg_mb_var, sum, vard, mx - xx, my - yy);
-#endif
     if(mb_type){
         int p_score= FFMIN(vard, varc-500+(s->lambda2>>FF_LAMBDA_SHIFT)*100);
         int i_score= varc-500+(s->lambda2>>FF_LAMBDA_SHIFT)*20;
@@ -1412,12 +1471,13 @@ static inline int bidir_refine(MpegEncContext * s, int mb_x, int mb_y)
     const int ymin= c->ymin<<shift;
     const int xmax= c->xmax<<shift;
     const int ymax= c->ymax<<shift;
-    uint8_t map[8][8][8][8];
+#define HASH(fx,fy,bx,by) ((fx)+17*(fy)+63*(bx)+117*(by))
+#define HASH8(fx,fy,bx,by) ((uint8_t)HASH(fx,fy,bx,by))
+    int hashidx= HASH(motion_fx,motion_fy, motion_bx, motion_by);
+    uint8_t map[256];
 
     memset(map,0,sizeof(map));
-#define BIDIR_MAP(fx,fy,bx,by) \
-    map[(motion_fx+fx)&7][(motion_fy+fy)&7][(motion_bx+bx)&7][(motion_by+by)&7]
-    BIDIR_MAP(0,0,0,0) = 1;
+    map[hashidx&255] = 1;
 
     fbmin= check_bidir_mv(s, motion_fx, motion_fy,
                           motion_bx, motion_by,
@@ -1426,14 +1486,53 @@ static inline int bidir_refine(MpegEncContext * s, int mb_x, int mb_y)
                           0, 16);
 
     if(s->avctx->bidir_refine){
-        int score, end;
+        int end;
+        static const uint8_t limittab[5]={0,8,32,64,80};
+        const int limit= limittab[s->avctx->bidir_refine];
+        static const int8_t vect[][4]={
+{ 0, 0, 0, 1}, { 0, 0, 0,-1}, { 0, 0, 1, 0}, { 0, 0,-1, 0}, { 0, 1, 0, 0}, { 0,-1, 0, 0}, { 1, 0, 0, 0}, {-1, 0, 0, 0},
+
+{ 0, 0, 1, 1}, { 0, 0,-1,-1}, { 0, 1, 1, 0}, { 0,-1,-1, 0}, { 1, 1, 0, 0}, {-1,-1, 0, 0}, { 1, 0, 0, 1}, {-1, 0, 0,-1},
+{ 0, 1, 0, 1}, { 0,-1, 0,-1}, { 1, 0, 1, 0}, {-1, 0,-1, 0},
+{ 0, 0,-1, 1}, { 0, 0, 1,-1}, { 0,-1, 1, 0}, { 0, 1,-1, 0}, {-1, 1, 0, 0}, { 1,-1, 0, 0}, { 1, 0, 0,-1}, {-1, 0, 0, 1},
+{ 0,-1, 0, 1}, { 0, 1, 0,-1}, {-1, 0, 1, 0}, { 1, 0,-1, 0},
+
+{ 0, 1, 1, 1}, { 0,-1,-1,-1}, { 1, 1, 1, 0}, {-1,-1,-1, 0}, { 1, 1, 0, 1}, {-1,-1, 0,-1}, { 1, 0, 1, 1}, {-1, 0,-1,-1},
+{ 0,-1, 1, 1}, { 0, 1,-1,-1}, {-1, 1, 1, 0}, { 1,-1,-1, 0}, { 1, 1, 0,-1}, {-1,-1, 0, 1}, { 1, 0,-1, 1}, {-1, 0, 1,-1},
+{ 0, 1,-1, 1}, { 0,-1, 1,-1}, { 1,-1, 1, 0}, {-1, 1,-1, 0}, {-1, 1, 0, 1}, { 1,-1, 0,-1}, { 1, 0, 1,-1}, {-1, 0,-1, 1},
+{ 0, 1, 1,-1}, { 0,-1,-1, 1}, { 1, 1,-1, 0}, {-1,-1, 1, 0}, { 1,-1, 0, 1}, {-1, 1, 0,-1}, {-1, 0, 1, 1}, { 1, 0,-1,-1},
+
+{ 1, 1, 1, 1}, {-1,-1,-1,-1},
+{ 1, 1, 1,-1}, {-1,-1,-1, 1}, { 1, 1,-1, 1}, {-1,-1, 1,-1}, { 1,-1, 1, 1}, {-1, 1,-1,-1}, {-1, 1, 1, 1}, { 1,-1,-1,-1},
+{ 1, 1,-1,-1}, {-1,-1, 1, 1}, { 1,-1,-1, 1}, {-1, 1, 1,-1}, { 1,-1, 1,-1}, {-1, 1,-1, 1},
+        };
+        static const uint8_t hash[]={
+HASH8( 0, 0, 0, 1), HASH8( 0, 0, 0,-1), HASH8( 0, 0, 1, 0), HASH8( 0, 0,-1, 0), HASH8( 0, 1, 0, 0), HASH8( 0,-1, 0, 0), HASH8( 1, 0, 0, 0), HASH8(-1, 0, 0, 0),
+
+HASH8( 0, 0, 1, 1), HASH8( 0, 0,-1,-1), HASH8( 0, 1, 1, 0), HASH8( 0,-1,-1, 0), HASH8( 1, 1, 0, 0), HASH8(-1,-1, 0, 0), HASH8( 1, 0, 0, 1), HASH8(-1, 0, 0,-1),
+HASH8( 0, 1, 0, 1), HASH8( 0,-1, 0,-1), HASH8( 1, 0, 1, 0), HASH8(-1, 0,-1, 0),
+HASH8( 0, 0,-1, 1), HASH8( 0, 0, 1,-1), HASH8( 0,-1, 1, 0), HASH8( 0, 1,-1, 0), HASH8(-1, 1, 0, 0), HASH8( 1,-1, 0, 0), HASH8( 1, 0, 0,-1), HASH8(-1, 0, 0, 1),
+HASH8( 0,-1, 0, 1), HASH8( 0, 1, 0,-1), HASH8(-1, 0, 1, 0), HASH8( 1, 0,-1, 0),
+
+HASH8( 0, 1, 1, 1), HASH8( 0,-1,-1,-1), HASH8( 1, 1, 1, 0), HASH8(-1,-1,-1, 0), HASH8( 1, 1, 0, 1), HASH8(-1,-1, 0,-1), HASH8( 1, 0, 1, 1), HASH8(-1, 0,-1,-1),
+HASH8( 0,-1, 1, 1), HASH8( 0, 1,-1,-1), HASH8(-1, 1, 1, 0), HASH8( 1,-1,-1, 0), HASH8( 1, 1, 0,-1), HASH8(-1,-1, 0, 1), HASH8( 1, 0,-1, 1), HASH8(-1, 0, 1,-1),
+HASH8( 0, 1,-1, 1), HASH8( 0,-1, 1,-1), HASH8( 1,-1, 1, 0), HASH8(-1, 1,-1, 0), HASH8(-1, 1, 0, 1), HASH8( 1,-1, 0,-1), HASH8( 1, 0, 1,-1), HASH8(-1, 0,-1, 1),
+HASH8( 0, 1, 1,-1), HASH8( 0,-1,-1, 1), HASH8( 1, 1,-1, 0), HASH8(-1,-1, 1, 0), HASH8( 1,-1, 0, 1), HASH8(-1, 1, 0,-1), HASH8(-1, 0, 1, 1), HASH8( 1, 0,-1,-1),
+
+HASH8( 1, 1, 1, 1), HASH8(-1,-1,-1,-1),
+HASH8( 1, 1, 1,-1), HASH8(-1,-1,-1, 1), HASH8( 1, 1,-1, 1), HASH8(-1,-1, 1,-1), HASH8( 1,-1, 1, 1), HASH8(-1, 1,-1,-1), HASH8(-1, 1, 1, 1), HASH8( 1,-1,-1,-1),
+HASH8( 1, 1,-1,-1), HASH8(-1,-1, 1, 1), HASH8( 1,-1,-1, 1), HASH8(-1, 1, 1,-1), HASH8( 1,-1, 1,-1), HASH8(-1, 1,-1, 1),
+};
+
 #define CHECK_BIDIR(fx,fy,bx,by)\
-    if( !BIDIR_MAP(fx,fy,bx,by)\
+    if( !map[(hashidx+HASH(fx,fy,bx,by))&255]\
        &&(fx<=0 || motion_fx+fx<=xmax) && (fy<=0 || motion_fy+fy<=ymax) && (bx<=0 || motion_bx+bx<=xmax) && (by<=0 || motion_by+by<=ymax)\
        &&(fx>=0 || motion_fx+fx>=xmin) && (fy>=0 || motion_fy+fy>=ymin) && (bx>=0 || motion_bx+bx>=xmin) && (by>=0 || motion_by+by>=ymin)){\
-        BIDIR_MAP(fx,fy,bx,by) = 1;\
+        int score;\
+        map[(hashidx+HASH(fx,fy,bx,by))&255] = 1;\
         score= check_bidir_mv(s, motion_fx+fx, motion_fy+fy, motion_bx+bx, motion_by+by, pred_fx, pred_fy, pred_bx, pred_by, 0, 16);\
         if(score < fbmin){\
+            hashidx += HASH(fx,fy,bx,by);\
             fbmin= score;\
             motion_fx+=fx;\
             motion_fy+=fy;\
@@ -1446,34 +1545,45 @@ static inline int bidir_refine(MpegEncContext * s, int mb_x, int mb_y)
 CHECK_BIDIR(a,b,c,d)\
 CHECK_BIDIR(-(a),-(b),-(c),-(d))
 
-#define CHECK_BIDIRR(a,b,c,d)\
-CHECK_BIDIR2(a,b,c,d)\
-CHECK_BIDIR2(b,c,d,a)\
-CHECK_BIDIR2(c,d,a,b)\
-CHECK_BIDIR2(d,a,b,c)
-
         do{
+            int i;
+            int borderdist=0;
             end=1;
 
-            CHECK_BIDIRR( 0, 0, 0, 1)
-            if(s->avctx->bidir_refine > 1){
-                CHECK_BIDIRR( 0, 0, 1, 1)
-                CHECK_BIDIR2( 0, 1, 0, 1)
-                CHECK_BIDIR2( 1, 0, 1, 0)
-                CHECK_BIDIRR( 0, 0,-1, 1)
-                CHECK_BIDIR2( 0,-1, 0, 1)
-                CHECK_BIDIR2(-1, 0, 1, 0)
-                if(s->avctx->bidir_refine > 2){
-                    CHECK_BIDIRR( 0, 1, 1, 1)
-                    CHECK_BIDIRR( 0,-1, 1, 1)
-                    CHECK_BIDIRR( 0, 1,-1, 1)
-                    CHECK_BIDIRR( 0, 1, 1,-1)
-                    if(s->avctx->bidir_refine > 3){
-                        CHECK_BIDIR2( 1, 1, 1, 1)
-                        CHECK_BIDIRR( 1, 1, 1,-1)
-                        CHECK_BIDIR2( 1, 1,-1,-1)
-                        CHECK_BIDIR2( 1,-1,-1, 1)
-                        CHECK_BIDIR2( 1,-1, 1,-1)
+            CHECK_BIDIR2(0,0,0,1)
+            CHECK_BIDIR2(0,0,1,0)
+            CHECK_BIDIR2(0,1,0,0)
+            CHECK_BIDIR2(1,0,0,0)
+
+            for(i=8; i<limit; i++){
+                int fx= motion_fx+vect[i][0];
+                int fy= motion_fy+vect[i][1];
+                int bx= motion_bx+vect[i][2];
+                int by= motion_by+vect[i][3];
+                if(borderdist<=0){
+                    int a= (xmax - FFMAX(fx,bx))|(FFMIN(fx,bx) - xmin);
+                    int b= (ymax - FFMAX(fy,by))|(FFMIN(fy,by) - ymin);
+                    if((a|b) < 0)
+                        map[(hashidx+hash[i])&255] = 1;
+                }
+                if(!map[(hashidx+hash[i])&255]){
+                    int score;
+                    map[(hashidx+hash[i])&255] = 1;
+                    score= check_bidir_mv(s, fx, fy, bx, by, pred_fx, pred_fy, pred_bx, pred_by, 0, 16);
+                    if(score < fbmin){
+                        hashidx += hash[i];
+                        fbmin= score;
+                        motion_fx=fx;
+                        motion_fy=fy;
+                        motion_bx=bx;
+                        motion_by=by;
+                        end=0;
+                        borderdist--;
+                        if(borderdist<=0){
+                            int a= FFMIN(xmax - FFMAX(fx,bx), FFMIN(fx,bx) - xmin);
+                            int b= FFMIN(ymax - FFMAX(fy,by), FFMIN(fy,by) - ymin);
+                            borderdist= FFMIN(a,b);
+                        }
                     }
                 }
             }
@@ -1781,7 +1891,7 @@ int ff_get_best_fcode(MpegEncContext * s, int16_t (*mv_table)[2], int type)
                             continue;
 
                     for(j=0; j<fcode && j<8; j++){
-                        if(s->pict_type==FF_B_TYPE || s->current_picture.mc_mb_var[xy] < s->current_picture.mb_var[xy])
+                        if(s->pict_type==AV_PICTURE_TYPE_B || s->current_picture.mc_mb_var[xy] < s->current_picture.mb_var[xy])
                             score[j]-= 170;
                     }
                 }
@@ -1813,7 +1923,7 @@ void ff_fix_long_p_mvs(MpegEncContext * s)
     MotionEstContext * const c= &s->me;
     const int f_code= s->f_code;
     int y, range;
-    assert(s->pict_type==FF_P_TYPE);
+    assert(s->pict_type==AV_PICTURE_TYPE_P);
 
     range = (((s->out_format == FMT_MPEG1 || s->msmpeg4_version) ? 8 : 16) << f_code);
 

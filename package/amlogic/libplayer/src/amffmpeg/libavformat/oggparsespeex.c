@@ -32,20 +32,27 @@
 
 struct speex_params {
     int final_packet_duration;
+    int seq;
 };
 
 static int speex_header(AVFormatContext *s, int idx) {
     struct ogg *ogg = s->priv_data;
     struct ogg_stream *os = ogg->streams + idx;
+    struct speex_params *spxp = os->private;
     AVStream *st = s->streams[idx];
     uint8_t *p = os->buf + os->pstart;
 
-    if (os->seq > 1)
+    if (!spxp) {
+        spxp = av_mallocz(sizeof(*spxp));
+        os->private = spxp;
+    }
+
+    if (spxp->seq > 1)
         return 0;
 
-    if (os->seq == 0) {
+    if (spxp->seq == 0) {
         int frames_per_packet;
-        st->codec->codec_type = CODEC_TYPE_AUDIO;
+        st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
         st->codec->codec_id = CODEC_ID_SPEEX;
 
         st->codec->sample_rate = AV_RL32(p + 36);
@@ -65,11 +72,11 @@ static int speex_header(AVFormatContext *s, int idx) {
                                          + FF_INPUT_BUFFER_PADDING_SIZE);
         memcpy(st->codec->extradata, p, st->codec->extradata_size);
 
-        st->time_base.num = 1;
-        st->time_base.den = st->codec->sample_rate;
+        av_set_pts_info(st, 64, 1, st->codec->sample_rate);
     } else
-        vorbis_comment(s, p, os->psize);
+        ff_vorbis_comment(s, &st->metadata, p, os->psize);
 
+    spxp->seq++;
     return 1;
 }
 
@@ -90,20 +97,16 @@ static int speex_packet(AVFormatContext *s, int idx)
     struct speex_params *spxp = os->private;
     int packet_size = s->streams[idx]->codec->frame_size;
 
-    if (!spxp) {
-        spxp = av_mallocz(sizeof(*spxp));
-        os->private = spxp;
-    }
-
-    if (os->flags & OGG_FLAG_EOS && os->lastgp != -1 && os->granule > 0) {
+    if (os->flags & OGG_FLAG_EOS && os->lastpts != AV_NOPTS_VALUE &&
+        os->granule > 0) {
         /* first packet of final page. we have to calculate the final packet
            duration here because it is the only place we know the next-to-last
            granule position. */
-        spxp->final_packet_duration = os->granule - os->lastgp -
+        spxp->final_packet_duration = os->granule - os->lastpts -
                                       packet_size * (ogg_page_packets(os) - 1);
     }
 
-    if (!os->lastgp && os->granule > 0)
+    if (!os->lastpts && os->granule > 0)
         /* first packet */
         os->pduration = os->granule - packet_size * (ogg_page_packets(os) - 1);
     else if (os->flags & OGG_FLAG_EOS && os->segp == os->nsegs &&

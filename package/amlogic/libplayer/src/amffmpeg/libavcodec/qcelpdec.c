@@ -20,7 +20,7 @@
  */
 
 /**
- * @file libavcodec/qcelpdec.c
+ * @file
  * QCELP decoder
  * @author Reynaldo H. Verdejo Pinochet
  * @remark FFmpeg merging spearheaded by Kenan Gillet
@@ -37,6 +37,7 @@
 
 #include "celp_math.h"
 #include "celp_filters.h"
+#include "acelp_filters.h"
 #include "acelp_vectors.h"
 #include "lsp.h"
 
@@ -74,6 +75,11 @@ typedef struct
     uint8_t  pitch_lag[4];
     uint16_t first16bits;
     uint8_t  warned_buf_mismatch_bitrate;
+
+    /* postfilter */
+    float    postfilter_synth_mem[10];
+    float    postfilter_agc_mem;
+    float    postfilter_tilt_mem;
 } QCELPContext;
 
 /**
@@ -86,7 +92,7 @@ static av_cold int qcelp_decode_init(AVCodecContext *avctx)
     QCELPContext *q = avctx->priv_data;
     int i;
 
-    avctx->sample_fmt = SAMPLE_FMT_FLT;
+    avctx->sample_fmt = AV_SAMPLE_FMT_FLT;
 
     for(i=0; i<10; i++)
         q->prev_lspf[i] = (i+1)/11.;
@@ -95,8 +101,8 @@ static av_cold int qcelp_decode_init(AVCodecContext *avctx)
 }
 
 /**
- * Decodes the 10 quantized LSP frequencies from the LSPV/LSP
- * transmission codes of any bitrate and checks for badly received packets.
+ * Decode the 10 quantized LSP frequencies from the LSPV/LSP
+ * transmission codes of any bitrate and check for badly received packets.
  *
  * @param q the context
  * @param lspf line spectral pair frequencies
@@ -191,7 +197,7 @@ static int decode_lspf(QCELPContext *q, float *lspf)
 }
 
 /**
- * Converts codebook transmission codes to GAIN and INDEX.
+ * Convert codebook transmission codes to GAIN and INDEX.
  *
  * @param q the context
  * @param gain array holding the decoded gain
@@ -303,7 +309,7 @@ static int codebook_sanity_check_for_rate_quarter(const uint8_t *cbgain)
 }
 
 /**
- * Computes the scaled codebook vector Cdn From INDEX and GAIN
+ * Compute the scaled codebook vector Cdn From INDEX and GAIN
  * for all rates.
  *
  * The specification lacks some information here.
@@ -558,8 +564,8 @@ static void apply_pitch_filters(QCELPContext *q, float *cdn_vector)
 }
 
 /**
- * Reconstructs LPC coefficients from the line spectral pair frequencies
- * and performs bandwidth expansion.
+ * Reconstruct LPC coefficients from the line spectral pair frequencies
+ * and perform bandwidth expansion.
  *
  * @param lspf line spectral pair frequencies
  * @param lpc linear predictive coding coefficients
@@ -588,7 +594,7 @@ static void lspf2lpc(const float *lspf, float *lpc)
 }
 
 /**
- * Interpolates LSP frequencies and computes LPC coefficients
+ * Interpolate LSP frequencies and compute LPC coefficients
  * for a given bitrate & pitch subframe.
  *
  * TIA/EIA/IS-733 2.4.3.3.4, 2.4.8.7.2
@@ -598,8 +604,8 @@ static void lspf2lpc(const float *lspf, float *lpc)
  * @param lpc float vector for the resulting LPC
  * @param subframe_num frame number in decoded stream
  */
-void interpolate_lpc(QCELPContext *q, const float *curr_lspf, float *lpc,
-                     const int subframe_num)
+static void interpolate_lpc(QCELPContext *q, const float *curr_lspf,
+                            float *lpc, const int subframe_num)
 {
     float interpolated_lspf[10];
     float weight;
@@ -693,6 +699,36 @@ static void warn_insufficient_frame_quality(AVCodecContext *avctx,
 {
     av_log(avctx, AV_LOG_WARNING, "Frame #%d, IFQ: %s\n", avctx->frame_number,
            message);
+}
+
+static void postfilter(QCELPContext *q, float *samples, float *lpc)
+{
+    static const float pow_0_775[10] = {
+        0.775000, 0.600625, 0.465484, 0.360750, 0.279582,
+        0.216676, 0.167924, 0.130141, 0.100859, 0.078166
+    }, pow_0_625[10] = {
+        0.625000, 0.390625, 0.244141, 0.152588, 0.095367,
+        0.059605, 0.037253, 0.023283, 0.014552, 0.009095
+    };
+    float lpc_s[10], lpc_p[10], pole_out[170], zero_out[160];
+    int n;
+
+    for (n = 0; n < 10; n++) {
+        lpc_s[n] = lpc[n] * pow_0_625[n];
+        lpc_p[n] = lpc[n] * pow_0_775[n];
+    }
+
+    ff_celp_lp_zero_synthesis_filterf(zero_out, lpc_s,
+                                      q->formant_mem + 10, 160, 10);
+    memcpy(pole_out, q->postfilter_synth_mem,       sizeof(float) * 10);
+    ff_celp_lp_synthesis_filterf(pole_out + 10, lpc_p, zero_out, 160, 10);
+    memcpy(q->postfilter_synth_mem, pole_out + 160, sizeof(float) * 10);
+
+    ff_tilt_compensation(&q->postfilter_tilt_mem, 0.3, pole_out + 10, 160);
+
+    ff_adaptive_gain_control(samples, pole_out + 10,
+        ff_dot_productf(q->formant_mem + 10, q->formant_mem + 10, 160),
+        160, 0.9375, &q->postfilter_agc_mem);
 }
 
 static int qcelp_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
@@ -792,15 +828,11 @@ erasure:
                                      10);
         formant_mem += 40;
     }
+
+    // postfilter, as per TIA/EIA/IS-733 2.4.8.6
+    postfilter(q, outbuffer, lpc);
+
     memcpy(q->formant_mem, q->formant_mem + 160, 10 * sizeof(float));
-
-    // FIXME: postfilter and final gain control should be here.
-    // TIA/EIA/IS-733 2.4.8.6
-
-    formant_mem = q->formant_mem + 10;
-    for(i=0; i<160; i++)
-        *outbuffer++ = av_clipf(*formant_mem++, QCELP_CLIP_LOWER_BOUND,
-                                QCELP_CLIP_UPPER_BOUND);
 
     memcpy(q->prev_lspf, quantized_lspf, sizeof(q->prev_lspf));
     q->prev_bitrate = q->bitrate;
@@ -810,10 +842,10 @@ erasure:
     return *data_size;
 }
 
-AVCodec qcelp_decoder =
+AVCodec ff_qcelp_decoder =
 {
     .name   = "qcelp",
-    .type   = CODEC_TYPE_AUDIO,
+    .type   = AVMEDIA_TYPE_AUDIO,
     .id     = CODEC_ID_QCELP,
     .init   = qcelp_decode_init,
     .decode = qcelp_decode_frame,

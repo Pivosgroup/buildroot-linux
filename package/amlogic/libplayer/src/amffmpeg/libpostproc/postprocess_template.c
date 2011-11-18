@@ -19,7 +19,7 @@
  */
 
 /**
- * @file libpostproc/postprocess_template.c
+ * @file
  * mmx/mmx2/3dnow postprocess code.
  */
 
@@ -27,6 +27,7 @@
 
 #define ALIGN_MASK "$-8"
 
+#undef REAL_PAVGB
 #undef PAVGB
 #undef PMINUB
 #undef PMAXUB
@@ -1059,6 +1060,7 @@ static inline void RENAME(dering)(uint8_t src[], int stride, PPContext *c)
 //        0        1        2        3        4        5        6        7        8        9
 //        %0        eax        eax+%1        eax+2%1        %0+4%1        edx        edx+%1        edx+2%1        %0+8%1        edx+4%1
 
+#undef REAL_FIND_MIN_MAX
 #undef FIND_MIN_MAX
 #if HAVE_MMX2
 #define REAL_FIND_MIN_MAX(addr)\
@@ -1388,7 +1390,7 @@ DERING_CORE((%0, %1, 8)    ,(%%REGd, %1, 4),%%mm2,%%mm4,%%mm0,%%mm3,%%mm5,%%mm1,
 #endif //HAVE_ALTIVEC
 
 /**
- * Deinterlaces the given block by linearly interpolating every second line.
+ * Deinterlace the given block by linearly interpolating every second line.
  * will be called for every 8x8 block and can read & write from line 4-15
  * lines 0-3 have been passed through the deblock / dering filters already, but can be read, too.
  * lines 4-12 will be read into the deblocking filter and should be deinterlaced
@@ -1440,7 +1442,7 @@ static inline void RENAME(deInterlaceInterpolateLinear)(uint8_t src[], int strid
 }
 
 /**
- * Deinterlaces the given block by cubic interpolating every second line.
+ * Deinterlace the given block by cubic interpolating every second line.
  * will be called for every 8x8 block and can read & write from line 4-15
  * lines 0-3 have been passed through the deblock / dering filters already, but can be read, too.
  * lines 4-12 will be read into the deblocking filter and should be deinterlaced
@@ -1504,7 +1506,7 @@ DEINT_CUBIC((%%REGd, %1), (%0, %1, 8) , (%%REGd, %1, 4), (%%REGc)    , (%%REGc, 
 }
 
 /**
- * Deinterlaces the given block by filtering every second line with a (-1 4 2 4 -1) filter.
+ * Deinterlace the given block by filtering every second line with a (-1 4 2 4 -1) filter.
  * will be called for every 8x8 block and can read & write from line 4-15
  * lines 0-3 have been passed through the deblock / dering filters already, but can be read, too.
  * lines 4-12 will be read into the deblocking filter and should be deinterlaced
@@ -1583,7 +1585,7 @@ DEINT_FF((%%REGd, %1), (%%REGd, %1, 2), (%0, %1, 8) , (%%REGd, %1, 4))
 }
 
 /**
- * Deinterlaces the given block by filtering every line with a (-1 2 6 2 -1) filter.
+ * Deinterlace the given block by filtering every line with a (-1 2 6 2 -1) filter.
  * will be called for every 8x8 block and can read & write from line 4-15
  * lines 0-3 have been passed through the deblock / dering filters already, but can be read, too.
  * lines 4-12 will be read into the deblocking filter and should be deinterlaced
@@ -1684,7 +1686,7 @@ DEINT_L5(%%mm1, %%mm0, (%%REGd, %1, 2), (%0, %1, 8)    , (%%REGd, %1, 4))
 }
 
 /**
- * Deinterlaces the given block by filtering all lines with a (1 2 1) filter.
+ * Deinterlace the given block by filtering all lines with a (1 2 1) filter.
  * will be called for every 8x8 block and can read & write from line 4-15
  * lines 0-3 have been passed through the deblock / dering filters already, but can be read, too.
  * lines 4-12 will be read into the deblocking filter and should be deinterlaced
@@ -1786,7 +1788,7 @@ static inline void RENAME(deInterlaceBlendLinear)(uint8_t src[], int stride, uin
 }
 
 /**
- * Deinterlaces the given block by applying a median filter to every second line.
+ * Deinterlace the given block by applying a median filter to every second line.
  * will be called for every 8x8 block and can read & write from line 4-15,
  * lines 0-3 have been passed through the deblock / dering filters already, but can be read, too.
  * lines 4-12 will be read into the deblocking filter and should be deinterlaced
@@ -3004,9 +3006,10 @@ static void RENAME(postProcess)(const uint8_t src[], int srcStride, uint8_t dst[
                                 const QP_STORE_T QPs[], int QPStride, int isColor, PPContext *c);
 
 /**
- * Copies a block from src to dst and fixes the blacklevel.
+ * Copy a block from src to dst and fixes the blacklevel.
  * levelFix == 0 -> do not touch the brighness & contrast
  */
+#undef REAL_SCALED_CPY
 #undef SCALED_CPY
 
 static inline void RENAME(blockCopy)(uint8_t dst[], int dstStride, const uint8_t src[], int srcStride,
@@ -3135,7 +3138,7 @@ SIMPLE_CPY((%%REGa, %2), (%%REGa, %2, 2), (%%REGd, %3), (%%REGd, %3, 2))
 }
 
 /**
- * Duplicates the given 8 src pixels ? times upward
+ * Duplicate the given 8 src pixels ? times upward
  */
 static inline void RENAME(duplicate)(uint8_t src[], int stride)
 {
@@ -3160,7 +3163,7 @@ static inline void RENAME(duplicate)(uint8_t src[], int stride)
 }
 
 /**
- * Filters array of bytes (Y or U or V values)
+ * Filter array of bytes (Y or U or V values)
  */
 static void RENAME(postProcess)(const uint8_t src[], int srcStride, uint8_t dst[], int dstStride, int width, int height,
                                 const QP_STORE_T QPs[], int QPStride, int isColor, PPContext *c2)
@@ -3514,7 +3517,7 @@ static void RENAME(postProcess)(const uint8_t src[], int srcStride, uint8_t dst[
                     horizX1Filter(dstBlock-4, stride, QP);
                 else if(mode & H_DEBLOCK){
 #if HAVE_ALTIVEC
-                    DECLARE_ALIGNED(16, unsigned char, tempBlock[272]);
+                    DECLARE_ALIGNED(16, unsigned char, tempBlock)[272];
                     transpose_16x8_char_toPackedAlign_altivec(tempBlock, dstBlock - (4 + 1), stride);
 
                     const int t=vertClassify_altivec(tempBlock-48, 16, &c);

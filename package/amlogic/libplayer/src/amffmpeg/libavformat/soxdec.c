@@ -24,14 +24,15 @@
 
 /**
  * SoX native format demuxer
- * @file libavformat/soxdec.c
+ * @file
  * @author Daniel Verkamp
  * @sa http://wiki.multimedia.cx/index.php?title=SoX_native_intermediate_format
  */
 
 #include "libavutil/intreadwrite.h"
+#include "libavutil/dict.h"
 #include "avformat.h"
-#include "raw.h"
+#include "pcm.h"
 #include "sox.h"
 
 static int sox_probe(AVProbeData *p)
@@ -44,7 +45,7 @@ static int sox_probe(AVProbeData *p)
 static int sox_read_header(AVFormatContext *s,
                            AVFormatParameters *ap)
 {
-    ByteIOContext *pb = s->pb;
+    AVIOContext *pb = s->pb;
     unsigned header_size, comment_size;
     double sample_rate, sample_rate_frac;
     AVStream *st;
@@ -53,22 +54,22 @@ static int sox_read_header(AVFormatContext *s,
     if (!st)
         return AVERROR(ENOMEM);
 
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
 
-    if (get_le32(pb) == SOX_TAG) {
+    if (avio_rl32(pb) == SOX_TAG) {
         st->codec->codec_id = CODEC_ID_PCM_S32LE;
-        header_size         = get_le32(pb);
-        url_fskip(pb, 8); /* sample count */
-        sample_rate         = av_int2dbl(get_le64(pb));
-        st->codec->channels = get_le32(pb);
-        comment_size        = get_le32(pb);
+        header_size         = avio_rl32(pb);
+        avio_skip(pb, 8); /* sample count */
+        sample_rate         = av_int2dbl(avio_rl64(pb));
+        st->codec->channels = avio_rl32(pb);
+        comment_size        = avio_rl32(pb);
     } else {
         st->codec->codec_id = CODEC_ID_PCM_S32BE;
-        header_size         = get_be32(pb);
-        url_fskip(pb, 8); /* sample count */
-        sample_rate         = av_int2dbl(get_be64(pb));
-        st->codec->channels = get_be32(pb);
-        comment_size        = get_be32(pb);
+        header_size         = avio_rb32(pb);
+        avio_skip(pb, 8); /* sample count */
+        sample_rate         = av_int2dbl(avio_rb64(pb));
+        st->codec->channels = avio_rb32(pb);
+        comment_size        = avio_rb32(pb);
     }
 
     if (comment_size > 0xFFFFFFFFU - SOX_FIXED_HDR - 4U) {
@@ -93,18 +94,19 @@ static int sox_read_header(AVFormatContext *s,
         return -1;
     }
 
-    if (comment_size &&
-        comment_size + FF_INPUT_BUFFER_PADDING_SIZE >= comment_size) {
-        char *comment = av_mallocz(comment_size + FF_INPUT_BUFFER_PADDING_SIZE);
-        if (get_buffer(pb, comment, comment_size) != comment_size) {
+    if (comment_size && comment_size < UINT_MAX) {
+        char *comment = av_malloc(comment_size+1);
+        if (avio_read(pb, comment, comment_size) != comment_size) {
             av_freep(&comment);
-            return AVERROR_IO;
+            return AVERROR(EIO);
         }
-        av_metadata_set(&s->metadata, "comment", comment);
-        av_freep(&comment);
+        comment[comment_size] = 0;
+
+        av_dict_set(&s->metadata, "comment", comment,
+                               AV_DICT_DONT_STRDUP_VAL);
     }
 
-    url_fskip(pb, header_size - SOX_FIXED_HDR - comment_size);
+    avio_skip(pb, header_size - SOX_FIXED_HDR - comment_size);
 
     st->codec->sample_rate           = sample_rate;
     st->codec->bits_per_coded_sample = 32;
@@ -139,7 +141,7 @@ static int sox_read_packet(AVFormatContext *s,
     return 0;
 }
 
-AVInputFormat sox_demuxer = {
+AVInputFormat ff_sox_demuxer = {
     "sox",
     NULL_IF_CONFIG_SMALL("SoX native format"),
     0,

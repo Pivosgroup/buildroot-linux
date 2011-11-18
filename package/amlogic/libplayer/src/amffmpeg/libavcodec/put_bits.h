@@ -19,7 +19,7 @@
  */
 
 /**
- * @file libavcodec/put_bits.h
+ * @file
  * bitstream writer API
  */
 
@@ -34,6 +34,7 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/log.h"
 #include "mathops.h"
+#include "config.h"
 
 //#define ALT_BITSTREAM_WRITER
 //#define ALIGNED_BITSTREAM_WRITER
@@ -52,7 +53,7 @@ typedef struct PutBitContext {
 } PutBitContext;
 
 /**
- * Initializes the PutBitContext s.
+ * Initialize the PutBitContext s.
  *
  * @param buffer the buffer where to put bits
  * @param buffer_size the size in bytes of buffer
@@ -79,7 +80,7 @@ static inline void init_put_bits(PutBitContext *s, uint8_t *buffer, int buffer_s
 }
 
 /**
- * Returns the total number of bits written to the bitstream.
+ * @return the total number of bits written to the bitstream.
  */
 static inline int put_bits_count(PutBitContext *s)
 {
@@ -91,7 +92,7 @@ static inline int put_bits_count(PutBitContext *s)
 }
 
 /**
- * Pads the end of the output stream with zeros.
+ * Pad the end of the output stream with zeros.
  */
 static inline void flush_put_bits(PutBitContext *s)
 {
@@ -117,24 +118,30 @@ static inline void flush_put_bits(PutBitContext *s)
 #endif
 }
 
+#if defined(ALT_BITSTREAM_WRITER) || defined(BITSTREAM_WRITER_LE)
+#define align_put_bits align_put_bits_unsupported_here
+#define ff_put_string ff_put_string_unsupported_here
+#define ff_copy_bits ff_copy_bits_unsupported_here
+#else
 /**
- * Pads the bitstream with zeros up to the next byte boundary.
+ * Pad the bitstream with zeros up to the next byte boundary.
  */
 void align_put_bits(PutBitContext *s);
 
 /**
- * Puts the string s in the bitstream.
+ * Put the string string in the bitstream.
  *
  * @param terminate_string 0-terminates the written string if value is 1
  */
-void ff_put_string(PutBitContext * pbc, const char *s, int terminate_string);
+void ff_put_string(PutBitContext *pb, const char *string, int terminate_string);
 
 /**
- * Copies the content of src to the bitstream.
+ * Copy the content of src to the bitstream.
  *
  * @param length the number of bits of src to copy
  */
 void ff_copy_bits(PutBitContext *pb, const uint8_t *src, int length);
+#endif
 
 /**
  * Write up to 31 bits into a bitstream.
@@ -162,7 +169,7 @@ static inline void put_bits(PutBitContext *s, int n, unsigned int value)
             AV_WL32(s->buf_ptr, bit_buf);
         } else
 #endif
-        *(uint32_t *)s->buf_ptr = le2me_32(bit_buf);
+        *(uint32_t *)s->buf_ptr = av_le2ne32(bit_buf);
         s->buf_ptr+=4;
         bit_buf = (bit_left==32)?0:value >> bit_left;
         bit_left+=32;
@@ -180,7 +187,7 @@ static inline void put_bits(PutBitContext *s, int n, unsigned int value)
             AV_WB32(s->buf_ptr, bit_buf);
         } else
 #endif
-        *(uint32_t *)s->buf_ptr = be2me_32(bit_buf);
+        *(uint32_t *)s->buf_ptr = av_be2ne32(bit_buf);
         //printf("bitbuf = %08x\n", bit_buf);
         s->buf_ptr+=4;
         bit_left+=32 - n;
@@ -218,8 +225,8 @@ static inline void put_bits(PutBitContext *s, int n, unsigned int value)
 
     value<<= 32-n;
 
-    ptr[0] |= be2me_32(value>>(index&31));
-    ptr[1]  = be2me_32(value<<(32-(index&31)));
+    ptr[0] |= av_be2ne32(value>>(index&31));
+    ptr[1]  = av_be2ne32(value<<(32-(index&31)));
 //if(n>24) printf("%d %d\n", n, value);
     index+= n;
     s->index= index;
@@ -246,7 +253,7 @@ static inline void put_bits(PutBitContext *s, int n, unsigned int value)
     int index= s->index;
     uint32_t *ptr= (uint32_t*)(((uint8_t *)s->buf)+(index>>3));
 
-    ptr[0] |= be2me_32(value<<(32-n-(index&7) ));
+    ptr[0] |= av_be2ne32(value<<(32-n-(index&7) ));
     ptr[1] = 0;
 //if(n>24) printf("%d %d\n", n, value);
     index+= n;
@@ -256,21 +263,21 @@ static inline void put_bits(PutBitContext *s, int n, unsigned int value)
 }
 #endif
 
-static inline void put_sbits(PutBitContext *pb, int bits, int32_t val)
+static inline void put_sbits(PutBitContext *pb, int n, int32_t value)
 {
-    assert(bits >= 0 && bits <= 31);
+    assert(n >= 0 && n <= 31);
 
-    put_bits(pb, bits, val & ((1<<bits)-1));
+    put_bits(pb, n, value & ((1<<n)-1));
 }
 
 /**
- * Write exactly 32 bits into a bitstream
+ * Write exactly 32 bits into a bitstream.
  */
 static void av_unused put_bits32(PutBitContext *s, uint32_t value)
 {
     int lo = value & 0xffff;
     int hi = value >> 16;
-#ifdef ALT_BITSTREAM_WRITER_LE
+#ifdef BITSTREAM_WRITER_LE
     put_bits(s, 16, lo);
     put_bits(s, 16, hi);
 #else
@@ -280,7 +287,7 @@ static void av_unused put_bits32(PutBitContext *s, uint32_t value)
 }
 
 /**
- * Returns the pointer to the byte where the bitstream writer will put
+ * Return the pointer to the byte where the bitstream writer will put
  * the next bit.
  */
 static inline uint8_t* put_bits_ptr(PutBitContext *s)
@@ -293,10 +300,11 @@ static inline uint8_t* put_bits_ptr(PutBitContext *s)
 }
 
 /**
- * Skips the given number of bytes.
+ * Skip the given number of bytes.
  * PutBitContext must be flushed & aligned to a byte boundary before calling this.
  */
-static inline void skip_put_bytes(PutBitContext *s, int n){
+static inline void skip_put_bytes(PutBitContext *s, int n)
+{
         assert((put_bits_count(s)&7)==0);
 #ifdef ALT_BITSTREAM_WRITER
         FIXME may need some cleaning of the buffer
@@ -308,11 +316,12 @@ static inline void skip_put_bytes(PutBitContext *s, int n){
 }
 
 /**
- * Skips the given number of bits.
+ * Skip the given number of bits.
  * Must only be used if the actual values in the bitstream do not matter.
  * If n is 0 the behavior is undefined.
  */
-static inline void skip_put_bits(PutBitContext *s, int n){
+static inline void skip_put_bits(PutBitContext *s, int n)
+{
 #ifdef ALT_BITSTREAM_WRITER
     s->index += n;
 #else
@@ -323,11 +332,12 @@ static inline void skip_put_bits(PutBitContext *s, int n){
 }
 
 /**
- * Changes the end of the buffer.
+ * Change the end of the buffer.
  *
  * @param size the new size in bytes of the buffer where to put bits
  */
-static inline void set_put_bits_buffer_size(PutBitContext *s, int size){
+static inline void set_put_bits_buffer_size(PutBitContext *s, int size)
+{
     s->buf_end= s->buf + size;
 }
 
