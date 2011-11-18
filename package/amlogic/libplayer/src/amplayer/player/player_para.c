@@ -638,6 +638,15 @@ int player_dec_reset(play_para_t *p_para)
         return DECODER_RESET_FAILED;
     }
 
+    /* make sure have enabled. */
+    if (p_para->astream_info.has_audio && p_para->vstream_info.has_video) {
+        set_tsync_enable(1);
+        p_para->playctrl_info.avsync_enable = 1;
+    } else {
+        set_tsync_enable(0);
+        p_para->playctrl_info.avsync_enable = 0;
+    }
+
     if (decoder->init(p_para) != PLAYER_SUCCESS) {
         log_print("[player_dec_reset] deocder init failed!\n");
         return DECODER_RESET_FAILED;
