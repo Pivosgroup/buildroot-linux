@@ -11,7 +11,7 @@ AMFFMPEG_INSTALL_STAGING=YES
 AMFFMPEG_DEPENDENCIES = alsa-lib
 
 AMFFMPEG_CONF_OPT= --disable-static --enable-shared \
-                --disable-ffmpeg --disable-ffplay --disable-ffserver --disable-ffprobe --disable-doc \
+                --disable-ffmpeg --disable-ffplay --disable-ffserver --disable-doc \
                 --disable-encoders --disable-muxers --disable-altivec \
                 --disable-amd3dnow --disable-amd3dnowext --disable-mmx --disable-mmx2 --disable-sse --disable-ssse3 \
                 --disable-armv5te --disable-armv6t2 --disable-iwmmxt --disable-mmi --disable-vis --disable-yasm \
