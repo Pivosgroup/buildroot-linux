@@ -141,7 +141,7 @@ endef
 
 
 define DOWNLOAD_CP
-        test -e $(DL_DIR)/$($(PKG)_SOURCE) || \
+	(test -e $(DL_DIR)/$($(PKG)_SOURCE) && test -z `find $($(PKG)_SITE) -newer $(DL_DIR)/$($(PKG)_SOURCE)`) || \
         tar -C $($(PKG)_SITE) . -czf $(DL_DIR)/$($(PKG)_SOURCE)
 endef
 
