@@ -519,7 +519,7 @@ int av_probe_input_buffer(AVIOContext *pb, AVInputFormat **fmt,
         return AVERROR(EINVAL);
     }
 
-	if (av_match_ext(filename, "ts") || av_match_ext(filename, "m2ts")) {
+	if (s && (av_match_ext(filename, "ts") || av_match_ext(filename, "m2ts"))) {
 		do{
 			pre_data = avio_r8(pb);
 			data_offset ++;	
