@@ -14,7 +14,7 @@ define OPENGL_INSTALL_STAGING_CMDS
 	cd $(STAGING_DIR)/usr/lib; mv libEGL.so.1.4 libEGL.so
 	cd $(STAGING_DIR)/usr/lib; mv libGLESv1_CM.so.1.1 libGLESv1_CM.so
 	cd $(STAGING_DIR)/usr/lib; mv libGLESv2.so.2.0 libGLESv2.so
-	cd $(STAGING_DIR)/usr/lib; rm libGLESv1_CM.so.1 #corrupt file
+	cd $(STAGING_DIR)/usr/lib; rm -f libGLESv1_CM.so.1 #corrupt file
 	cp -rf  $(@D)/include/* $(STAGING_DIR)/usr/include
 endef
 
@@ -23,7 +23,7 @@ define OPENGL_INSTALL_TARGET_CMDS
 	cd $(TARGET_DIR)/usr/lib; mv libEGL.so.1.4 libEGL.so
 	cd $(TARGET_DIR)/usr/lib; mv libGLESv1_CM.so.1.1 libGLESv1_CM.so
 	cd $(TARGET_DIR)/usr/lib; mv libGLESv2.so.2.0 libGLESv2.so
-	cd $(TARGET_DIR)/usr/lib; rm libGLESv1_CM.so.1 #corrupt file
+	cd $(TARGET_DIR)/usr/lib; rm -f libGLESv1_CM.so.1 #corrupt file
 endef
 
 $(eval $(call GENTARGETS,package/amlogic,opengl))
