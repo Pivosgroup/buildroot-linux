@@ -24,10 +24,10 @@ ADEC_BEGIN_DECLS
 #define  AUDIO_CTRL_DEVICE    "/dev/amaudio_ctl"
 
 #define AMAUDIO_IOC_MAGIC  'A'
-#define AMAUDIO_IOC_SET_LEFT_MONO               _IOW(AMAUDIO_IOC_MAGIC, 0x06, int)
-#define AMAUDIO_IOC_SET_RIGHT_MONO              _IOW(AMAUDIO_IOC_MAGIC, 0x07, int)
-#define AMAUDIO_IOC_SET_STEREO               _IOW(AMAUDIO_IOC_MAGIC, 0x08, int)
-#define AMAUDIO_IOC_SET_CHANNEL_SWAP            _IOW(AMAUDIO_IOC_MAGIC, 0x09, int)
+#define AMAUDIO_IOC_SET_LEFT_MONO               _IOW(AMAUDIO_IOC_MAGIC, 0x0e, int)
+#define AMAUDIO_IOC_SET_RIGHT_MONO              _IOW(AMAUDIO_IOC_MAGIC, 0x0f, int)
+#define AMAUDIO_IOC_SET_STEREO               _IOW(AMAUDIO_IOC_MAGIC, 0x10, int)
+#define AMAUDIO_IOC_SET_CHANNEL_SWAP            _IOW(AMAUDIO_IOC_MAGIC, 0x11, int)
 
 /*******************************************************************************************/
 
@@ -44,6 +44,8 @@ struct aml_audio_dec {
     int auto_mute;
     int muted;
     int decoded_nb_frames;
+    int avsync_threshold;
+    float volume;
     audio_out_operations_t aout_ops;
     dsp_operations_t adsp_ops;
     message_pool_t message_pool;

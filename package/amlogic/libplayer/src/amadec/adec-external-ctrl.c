@@ -66,6 +66,11 @@ int audio_decode_start(void *handle)
     adec_cmd_t *cmd;
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
 
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
+
     cmd = adec_message_alloc();
     if (cmd) {
         cmd->ctrl_cmd = CMD_START;
@@ -88,6 +93,11 @@ int audio_decode_pause(void *handle)
     int ret;
     adec_cmd_t *cmd;
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
+
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
 
     cmd = adec_message_alloc();
     if (cmd) {
@@ -112,6 +122,11 @@ int audio_decode_resume(void *handle)
     adec_cmd_t *cmd;
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
 
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
+
     cmd = adec_message_alloc();
     if (cmd) {
         cmd->ctrl_cmd = CMD_RESUME;
@@ -134,6 +149,11 @@ int audio_decode_stop(void *handle)
     int ret;
     adec_cmd_t *cmd;
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
+
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
 
     audec->need_stop = 1;
 
@@ -159,6 +179,11 @@ int audio_decode_release(void **handle)
     int ret;
     adec_cmd_t *cmd;
     aml_audio_dec_t *audec = (aml_audio_dec_t *) * handle;
+
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
 
     cmd = adec_message_alloc();
     if (cmd) {
@@ -188,6 +213,11 @@ int audio_decode_automute(void *handle, int stat)
 {
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
 
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
+
     audec->auto_mute = 1;
     return 0;
 }
@@ -203,6 +233,11 @@ int audio_decode_set_mute(void *handle, int en)
     int ret;
     adec_cmd_t *cmd;
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
+
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
 
     cmd = adec_message_alloc();
     if (cmd) {
@@ -230,16 +265,44 @@ int audio_decode_set_volume(void *handle, float vol)
     adec_cmd_t *cmd;
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
 
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
+
     cmd = adec_message_alloc();
     if (cmd) {
         cmd->ctrl_cmd = CMD_SET_VOL;
         cmd->value.volume = vol;
+	 audec->volume = vol;
         cmd->has_arg = 1;
         ret = adec_send_message(audec, cmd);
     } else {
         adec_print("message alloc failed, no memory!");
         ret = -1;
     }
+
+    return ret;
+}
+
+/**
+ * \brief set audio volume
+ * \param handle pointer to player private data
+ * \param vol volume value
+ * \return 0 on success otherwise -1 if an error occurred
+ */
+int audio_decode_get_volume(void *handle, float *vol)
+{
+    int ret;
+    adec_cmd_t *cmd;
+    aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
+
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
+
+    *vol = audec->volume;
 
     return ret;
 }
@@ -254,6 +317,11 @@ int audio_channels_swap(void *handle)
     int ret;
     adec_cmd_t *cmd;
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
+
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
 
     cmd = adec_message_alloc();
     if (cmd) {
@@ -278,6 +346,11 @@ int audio_channel_left_mono(void *handle)
     adec_cmd_t *cmd;
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
 
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
+
     cmd = adec_message_alloc();
     if (cmd) {
         cmd->ctrl_cmd = CMD_LEFT_MONO;
@@ -300,6 +373,11 @@ int audio_channel_right_mono(void *handle)
     int ret;
     adec_cmd_t *cmd;
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
+
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
 
     cmd = adec_message_alloc();
     if (cmd) {
@@ -324,6 +402,11 @@ int audio_channel_stereo(void *handle)
     adec_cmd_t *cmd;
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
 
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
+
     cmd = adec_message_alloc();
     if (cmd) {
         cmd->ctrl_cmd = CMD_STEREO;
@@ -345,6 +428,11 @@ int audio_output_muted(void *handle)
 {
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
 
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
+
     return audec->muted;
 }
 
@@ -356,6 +444,11 @@ int audio_output_muted(void *handle)
 int audio_dec_ready(void *handle)
 {
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
+
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
 
     if (audec->state > INITTED) {
         return 1;
@@ -373,6 +466,11 @@ int audio_get_decoded_nb_frames(void *handle)
 {
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
 
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
+
     audec->decoded_nb_frames = audiodsp_get_decoded_nb_frames(&audec->adsp_ops);
     //adec_print("audio_get_decoded_nb_frames:  %d!", audec->decoded_nb_frames);
     if (audec->decoded_nb_frames >= 0) {
@@ -382,3 +480,23 @@ int audio_get_decoded_nb_frames(void *handle)
     }
 }
 
+/**
+ * \brief set av sync threshold in ms.
+ * \param handle pointer to player private data
+ * \param threshold av sync time threshold in ms
+ */
+void audio_set_av_sync_threshold(void *handle, int threshold)
+{
+    aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
+
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
+
+    if ((threshold > 500) || (threshold < 60)) {
+        adec_print("threshold %d id too small or too large.\n", threshold);
+    }
+
+    audec->avsync_threshold = threshold * 90;
+}

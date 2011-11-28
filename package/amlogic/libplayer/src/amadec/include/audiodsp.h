@@ -27,6 +27,9 @@ ADEC_BEGIN_DECLS
 #define AUDIODSP_REGISTER_FIRMWARE          _IOW('a',6,long)
 #define AUDIODSP_UNREGISTER_ALLFIRMWARE     _IOW('a',7,long)
 
+#ifdef ENABLE_WAIT_FORMAT
+#define AUDIODSP_WAIT_FORMAT                 _IOW('a',11,long)
+#endif
 
 #define AUDIODSP_GET_CHANNELS_NUM           _IOR('r',1,long)
 #define AUDIODSP_GET_SAMPLERATE             _IOR('r',2,long)
@@ -75,6 +78,8 @@ typedef struct dsp_operations dsp_operations_t;
 struct dsp_operations {
     int dsp_file_fd;
     int dsp_on;
+    unsigned long kernel_audio_pts;
+    unsigned long last_audio_pts;
     unsigned long last_pts_valid;
     int (*dsp_read)(dsp_operations_t *dsp_ops, char *buffer, int len);                                        /* read pcm stream from dsp */
     unsigned long(*get_cur_pts)(dsp_operations_t *);

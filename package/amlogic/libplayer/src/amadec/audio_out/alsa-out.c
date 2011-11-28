@@ -455,11 +455,17 @@ static void *alsa_playback_loop(void *args)
     audec = (aml_audio_dec_t *)args;
     alsa_params = (alsa_param_t *)audec->aout_ops.private_data;
 
-    pthread_mutex_init(&alsa_params->playback_mutex, NULL);
-    pthread_cond_init(&alsa_params->playback_cond, NULL);
+ /*   pthread_mutex_init(&alsa_params->playback_mutex, NULL);
+    pthread_cond_init(&alsa_params->playback_cond, NULL);*/
 
     pthread_mutex_lock(&alsa_params->playback_mutex);
-    pthread_cond_wait(&alsa_params->playback_cond, &alsa_params->playback_mutex);
+    
+    while( !alsa_params->wait_flag )	
+    {
+        adec_print("yvonnepthread_cond_wait\n");
+         pthread_cond_wait(&alsa_params->playback_cond, &alsa_params->playback_mutex);
+    }
+    alsa_params->wait_flag=1;
     pthread_mutex_unlock(&alsa_params->playback_mutex);
 
     adec_print("alsa playback loop start to run !\n");
@@ -582,6 +588,7 @@ int alsa_init(struct aml_audio_dec* audec)
     alsa_param->realchanl = audec->channels;
     //alsa_param->rate = audec->samplerate;
     alsa_param->format = SND_PCM_FORMAT_S16_LE;
+   alsa_param->wait_flag=0;
 
 #ifdef USE_INTERPOLATION
     memset(pass1_history, 0, 64 * sizeof(int));
@@ -605,6 +612,8 @@ int alsa_init(struct aml_audio_dec* audec)
     out_ops->private_data = (void *)alsa_param;
 
     /*TODO:  create play thread */
+    pthread_mutex_init(&alsa_param->playback_mutex, NULL);
+    pthread_cond_init(&alsa_param->playback_cond, NULL);
     err = pthread_create(&tid, NULL, (void *)alsa_playback_loop, (void *)audec);
     if (err != 0) {
         adec_print("alsa_playback_loop thread create failed!");
@@ -633,6 +642,8 @@ int alsa_start(struct aml_audio_dec* audec)
     alsa_param_t *alsa_param = (alsa_param_t *)out_ops->private_data;
 
     pthread_mutex_lock(&alsa_param->playback_mutex);
+    adec_print("yvonne pthread_cond_signalalsa_param->wait_flag=1\n");
+    alsa_param->wait_flag=1;//yvonneadded
     pthread_cond_signal(&alsa_param->playback_cond);
     pthread_mutex_unlock(&alsa_param->playback_mutex);
 
@@ -697,7 +708,7 @@ int alsa_stop(struct aml_audio_dec* audec)
     alsa_params = (alsa_param_t *)audec->aout_ops.private_data;
 
     alsa_params->stop_flag = 1;
-
+    alsa_params->wait_flag = 0;
     pthread_cond_signal(&alsa_params->playback_cond);
     pthread_join(alsa_params->playback_tid, NULL);
     pthread_mutex_destroy(&alsa_params->playback_mutex);

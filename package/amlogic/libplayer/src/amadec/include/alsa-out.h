@@ -20,5 +20,6 @@ typedef struct {
     int flag;
     int stop_flag;
     int pause_flag;
+    int wait_flag;
 } alsa_param_t;
 #endif

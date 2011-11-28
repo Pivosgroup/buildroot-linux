@@ -213,10 +213,22 @@ int audiodsp_start(aml_audio_dec_t *audec)
         return -3;
     }
 
+#ifdef ENABLE_WAIT_FORMAT
+    ret = ioctl(dsp_ops->dsp_file_fd, AUDIODSP_DECODE_START, 0);
+    if(ret==0){
+        do{
+            ret = ioctl(dsp_ops->dsp_file_fd, AUDIODSP_WAIT_FORMAT, 0);
+	    if(ret!=0 && !audec->need_stop){
+                usleep(10000);
+	    }
+        }while(!audec->need_stop && (ret!=0));
+    }
+#else
     ret = -1;
     while (ret != 0 && dsp_ops->dsp_file_fd >= 0 && (!audec->need_stop)) {
         ret = ioctl(dsp_ops->dsp_file_fd, AUDIODSP_DECODE_START, 0);
     }
+#endif
 
     if (ret != 0) {
         return -4;

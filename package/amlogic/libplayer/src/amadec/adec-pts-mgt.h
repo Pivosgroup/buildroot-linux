@@ -20,7 +20,7 @@ ADEC_BEGIN_DECLS
 #define TSYNC_APTS      "/sys/class/tsync/pts_audio"
 #define TSYNC_ENABLE  "/sys/class/tsync/enable"
 
-#define SYSTIME_CORRECTION_THRESHOLD        (90000/10)
+#define SYSTIME_CORRECTION_THRESHOLD        (90000*15/100)
 #define APTS_DISCONTINUE_THRESHOLD          (90000*3)
 #define REFRESH_PTS_TIME_MS                 (1000/10)
 

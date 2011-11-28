@@ -35,7 +35,7 @@ unsigned long adec_calc_pts(aml_audio_dec_t *audec)
         adec_print("get get_cur_pts failed\n");
         return -1;
     }
-
+    dsp_ops->kernel_audio_pts = pts;
 
     if (out_ops == NULL || out_ops->latency == NULL) {
         adec_print("cur_out is NULL!\n ");
@@ -69,6 +69,12 @@ int adec_pts_start(aml_audio_dec_t *audec)
     adec_print("adec_pts_start");
     dsp_ops = &audec->adsp_ops;
     memset(buf, 0, sizeof(buf));
+
+    if (audec->avsync_threshold <= 0) {
+        audec->avsync_threshold = SYSTIME_CORRECTION_THRESHOLD;
+        adec_print("use default av sync threshold!\n");
+    }
+    adec_print("av sync threshold is %d \n", audec->avsync_threshold);
 
     dsp_ops->last_pts_valid = 0;
 
@@ -162,9 +168,14 @@ int adec_refresh_pts(aml_audio_dec_t *audec)
 {
     unsigned long pts;
     unsigned long systime;
-    static unsigned long last_pts = -1;
+    unsigned long last_pts = audec->adsp_ops.last_audio_pts;
+    unsigned long last_kernel_pts = audec->adsp_ops.kernel_audio_pts;
     int fd;
     char buf[64];
+
+    if (audec->auto_mute == 1) {
+        return 0;
+    }
 
     memset(buf, 0, sizeof(buf));
 
@@ -188,9 +199,9 @@ int adec_refresh_pts(aml_audio_dec_t *audec)
     pts = adec_calc_pts(audec);
     if (pts == -1 || last_pts == pts) {
         close(fd);
-        if (pts == -1) {
-            return -1;
-        }
+        //if (pts == -1) {
+        return -1;
+        //}
     }
 
     //adec_print("adec_get_pts() pts=%x\n",pts);
@@ -211,16 +222,21 @@ int adec_refresh_pts(aml_audio_dec_t *audec)
         write(fd, buf, strlen(buf));
         close(fd);
 
-        last_pts = pts;
+        audec->adsp_ops.last_audio_pts = pts;
         audec->adsp_ops.last_pts_valid = 1;
+        audec->auto_mute = 1;
 
         return 0;
     }
 
-    last_pts = pts;
+    if (last_kernel_pts == audec->adsp_ops.kernel_audio_pts) {
+        return 0;
+    }
+
+    audec->adsp_ops.last_audio_pts = pts;
     audec->adsp_ops.last_pts_valid = 1;
 
-    if (abs(pts - systime) < SYSTIME_CORRECTION_THRESHOLD) {
+    if (abs(pts - systime) < audec->avsync_threshold) {
         return 0;
     }
 
@@ -302,7 +318,7 @@ int track_switch_pts(aml_audio_dec_t *audec)
         return 1;
     }
 
-    if (abs(apts - pcr) < SYSTIME_CORRECTION_THRESHOLD || (apts <= pcr)) {
+    if (abs(apts - pcr) < audec->avsync_threshold || (apts <= pcr)) {
         return 0;
     } else {
         return 1;
