@@ -35,7 +35,8 @@ typedef enum
     FLV_FILE		= 15,
     P2P_FILE        = 16,
     ASF_FILE        = 17,
-    FILE_MAX		= 18,        
+    STREAM_FILE     = 18,
+    FILE_MAX		= 19,        
 }pfile_type;
 
 #endif

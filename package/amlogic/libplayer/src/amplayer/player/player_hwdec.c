@@ -149,9 +149,10 @@ int extract_adts_header_info(play_para_t *para)
     return PLAYER_SUCCESS;
 }
 
-void adts_add_header(play_para_t *para, am_packet_t *pkt)
+void adts_add_header(play_para_t *para)
 {
     unsigned char *buf ;
+	am_packet_t *pkt = para->p_pkt;
     int i;
     int size = ADTS_HEADER_SIZE + pkt->data_size;   // 13bit valid
     size &= 0x1fff;
@@ -219,17 +220,18 @@ static int mjpeg_data_prefeeding(am_packet_t *pkt)
     }
     return PLAYER_SUCCESS;
 }
-static int mjpeg_write_header(play_para_t *para, am_packet_t *pkt)
+static int mjpeg_write_header(play_para_t *para)
 {
+	am_packet_t *pkt = para->p_pkt;
     mjpeg_data_prefeeding(pkt);
     if (para->vcodec) {
         pkt->codec = para->vcodec;
     } else {
-        log_print("[pre_header_feeding]invalid codec!");
+        log_print("[mjpeg_write_header]invalid codec!");
         return PLAYER_EMPTY_P;
     }
     pkt->avpkt_newflag = 1;
-    write_av_packet(para, pkt);
+    write_av_packet(para);
     return PLAYER_SUCCESS;
 }
 /*************************************************************************/
@@ -255,17 +257,18 @@ static int divx3_data_prefeeding(am_packet_t *pkt, unsigned w, unsigned h)
     return PLAYER_SUCCESS;
 }
 
-static int divx3_write_header(play_para_t *para, am_packet_t *pkt)
+static int divx3_write_header(play_para_t *para)
 {
+	am_packet_t *pkt = para->p_pkt;
     divx3_data_prefeeding(pkt, para->vstream_info.video_width, para->vstream_info.video_height);
     if (para->vcodec) {
         pkt->codec = para->vcodec;
     } else {
-        log_print("[pre_header_feeding]invalid codec!");
+        log_print("[divx3_write_header]invalid codec!");
         return PLAYER_EMPTY_P;
     }
     pkt->avpkt_newflag = 1;
-    write_av_packet(para, pkt);
+    write_av_packet(para);
     return PLAYER_SUCCESS;
 }
 /*************************************************************************/
@@ -280,6 +283,13 @@ static int h264_add_header(unsigned char *buf, int size,  am_packet_t *pkt)
     char* buffer = pkt->hdr->data;
 
     p = extradata;
+	 if((p[0]==0 && p[1]==0 && p[2]==0 && p[3]==1) && size<HDR_BUF_SIZE){
+		log_print("add 264 header in stream before header len=%d",size);
+    	MEMCPY(buffer,buf,size);
+		pkt->hdr->size = size;
+   	 	pkt->type = CODEC_VIDEO;
+		return PLAYER_SUCCESS;
+	}
     if (size < 4) {
         return PLAYER_FAILED;
     }
@@ -325,17 +335,18 @@ static int h264_add_header(unsigned char *buf, int size,  am_packet_t *pkt)
     return PLAYER_SUCCESS;
 }
 
-static int h264_write_header(play_para_t *para, am_packet_t *pkt)
+static int h264_write_header(play_para_t *para)
 {
     AVStream *pStream = NULL;
     AVCodecContext *avcodec;
+	am_packet_t *pkt = para->p_pkt;
     int ret = -1;
     int index = para->vstream_info.video_index;
+	
     if (-1 == index) {
         return PLAYER_ERROR_PARAM;
     }
-
-
+	
     pStream = para->pFormatCtx->streams[index];
     avcodec = pStream->codec;
     ret = h264_add_header(avcodec->extradata, avcodec->extradata_size, pkt);
@@ -343,15 +354,51 @@ static int h264_write_header(play_para_t *para, am_packet_t *pkt)
         if (para->vcodec) {
             pkt->codec = para->vcodec;
         } else {
-            log_print("[pre_header_feeding]invalid video codec!\n");
+            log_print("[h264_add_header]invalid video codec!\n");
             return PLAYER_EMPTY_P;
         }
 
         pkt->avpkt_newflag = 1;
-        ret = write_av_packet(para, pkt);
+        ret = write_av_packet(para);
     }
     return ret;
 }
+static int write_stream_header(play_para_t *para)
+{
+    AVStream *pStream = NULL;
+    AVCodecContext *avcodec;
+	am_packet_t *pkt = para->p_pkt;
+    int ret = -1;
+    int index = para->vstream_info.video_index;
+	
+    if (-1 == index) {
+        return PLAYER_ERROR_PARAM;
+    }
+	
+    pStream = para->pFormatCtx->streams[index];
+    avcodec = pStream->codec;
+    ret = PLAYER_FAILED;
+	 if(avcodec->extradata_size<HDR_BUF_SIZE){
+    	MEMCPY(pkt->hdr->data,avcodec->extradata,avcodec->extradata_size);
+		pkt->hdr->size = avcodec->extradata_size;
+   	 	pkt->type = CODEC_VIDEO;
+		ret=PLAYER_SUCCESS;
+	}
+    if (ret == PLAYER_SUCCESS) {
+        if (para->vcodec) {
+            pkt->codec = para->vcodec;
+        } else {
+            log_print("[h264_add_header]invalid video codec!\n");
+            return PLAYER_EMPTY_P;
+        }
+
+        pkt->avpkt_newflag = 1;
+        ret = write_av_packet(para);
+    }
+    return ret;
+}
+
+
 /*************************************************************************/
 static int m4s2_dx50_mp4v_add_header(unsigned char *buf, int size,  am_packet_t *pkt)
 {
@@ -373,12 +420,14 @@ static int m4s2_dx50_mp4v_add_header(unsigned char *buf, int size,  am_packet_t 
     return PLAYER_SUCCESS;
 }
 
-static int m4s2_dx50_mp4v_write_header(play_para_t *para, am_packet_t * pkt)
+static int m4s2_dx50_mp4v_write_header(play_para_t *para)
 {
     AVStream *pStream = NULL;
     AVCodecContext *avcodec;
     int ret = -1;
     int index = para->vstream_info.video_index;
+	am_packet_t * pkt = para->p_pkt;
+		
     if (-1 == index) {
         return PLAYER_ERROR_PARAM;
     }
@@ -391,11 +440,11 @@ static int m4s2_dx50_mp4v_write_header(play_para_t *para, am_packet_t * pkt)
         if (para->vcodec) {
             pkt->codec = para->vcodec;
         } else {
-            log_print("[pre_header_feeding]invalid video codec!\n");
+            log_print("[m4s2_dx50_mp4v_add_header]invalid video codec!\n");
             return PLAYER_EMPTY_P;
         }
         pkt->avpkt_newflag = 1;
-        ret = write_av_packet(para, pkt);
+        ret = write_av_packet(para);
     }
     return ret;
 }
@@ -423,11 +472,13 @@ static int avi_add_seqheader(AVStream *pStream, am_packet_t *pkt)
     return PLAYER_SUCCESS;
 }
 
-static int avi_write_header(play_para_t *para, am_packet_t *pkt)
+static int avi_write_header(play_para_t *para)
 {
     AVStream *pStream = NULL;
     int ret = -1;
     int index = para->vstream_info.video_index;
+	am_packet_t *pkt = para->p_pkt;
+	
     if (-1 == index) {
         return PLAYER_ERROR_PARAM;
     }
@@ -438,23 +489,24 @@ static int avi_write_header(play_para_t *para, am_packet_t *pkt)
         if (para->vcodec) {
             pkt->codec = para->vcodec;
         } else {
-            log_print("[pre_header_feeding]invalid video codec!\n");
+            log_print("[avi_write_header]invalid video codec!\n");
             return PLAYER_EMPTY_P;
         }
         pkt->avpkt_newflag = 1;
-        ret = write_av_packet(para, pkt);
+        ret = write_av_packet(para);
     }
     return ret;
 }
 /*************************************************************************/
-static int mkv_write_header(play_para_t *para, am_packet_t *pkt)
+static int mkv_write_header(play_para_t *para)
 {
     int head_size = para->vstream_info.extradata_size;
-
+	am_packet_t *pkt = para->p_pkt;
+	
     if (para->vcodec) {
         pkt->codec = para->vcodec;
     } else {
-        log_print("[pre_header_feeding]invalid codec!");
+        log_print("[mkv_write_header]invalid codec!");
         return PLAYER_EMPTY_P;
     }
 
@@ -474,15 +526,16 @@ static int mkv_write_header(play_para_t *para, am_packet_t *pkt)
     MEMCPY(pkt->hdr->data, para->vstream_info.extradata, head_size);
 
     pkt->avpkt_newflag = 1;
-    return write_av_packet(para, pkt);
+    return write_av_packet(para);
 }
 /*************************************************************************/
-static int wmv3_write_header(play_para_t *para, am_packet_t *pkt)
+static int wmv3_write_header(play_para_t *para)
 {
     unsigned i, check_sum = 0;
     unsigned data_len = para->vstream_info.extradata_size + 4;
     int ret;
-
+	am_packet_t *pkt = para->p_pkt;
+		
     pkt->hdr->data[0] = 0;
     pkt->hdr->data[1] = 0;
     pkt->hdr->data[2] = 1;
@@ -523,29 +576,31 @@ static int wmv3_write_header(play_para_t *para, am_packet_t *pkt)
     if (para->vcodec) {
         pkt->codec = para->vcodec;
     } else {
-        log_print("[pre_header_feeding]invalid codec!");
+        log_print("[wmv3_write_header]invalid codec!");
         return PLAYER_EMPTY_P;
     }
     pkt->avpkt_newflag = 1;
     pkt->type = CODEC_VIDEO;
-    ret = write_av_packet(para, pkt);
+    ret = write_av_packet(para);
     return ret;
 }
 /*************************************************************************/
-static int wvc1_write_header(play_para_t *para, am_packet_t *pkt)
+static int wvc1_write_header(play_para_t *para)
 {
     int ret = -1;
+	am_packet_t *pkt = para->p_pkt;
+	
     MEMCPY(pkt->hdr->data, para->vstream_info.extradata + 1, para->vstream_info.extradata_size - 1);
     pkt->hdr->size = para->vstream_info.extradata_size - 1;
     if (para->vcodec) {
         pkt->codec = para->vcodec;
     } else {
-        log_print("[pre_header_feeding]invalid codec!");
+        log_print("[wvc1_write_header]invalid codec!");
         return PLAYER_EMPTY_P;
     }
     pkt->avpkt_newflag = 1;
     pkt->type = CODEC_VIDEO;
-    ret = write_av_packet(para, pkt);
+    ret = write_av_packet(para);
     return ret;
 }
 /*************************************************************************/
@@ -631,7 +686,7 @@ int mpeg_check_sequence(play_para_t *para)
     }
     return 0;
 }
-static int mpeg_add_header(play_para_t *para, am_packet_t *pkt)
+static int mpeg_add_header(play_para_t *para)
 {
 #define STUFF_BYTES_LENGTH     (256)
     int size;
@@ -643,6 +698,8 @@ static int mpeg_add_header(play_para_t *para, am_packet_t *pkt)
         0x1f, 0xff, 0xff, 0xff, 0xff, /* DTS */
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff
     };
+	am_packet_t *pkt = para->p_pkt;
+	
     size = para->vstream_info.extradata_size + sizeof(packet_wrapper);
     packet_wrapper[4] = size >> 8 ;
     packet_wrapper[5] = size & 0xff ;
@@ -659,7 +716,7 @@ static int mpeg_add_header(play_para_t *para, am_packet_t *pkt)
     if (para->codec) {
         pkt->codec = para->codec;
     } else {
-        log_print("[pre_header_feeding]invalid codec!");
+        log_print("[mpeg_add_header]invalid codec!");
         return PLAYER_EMPTY_P;
     }
 #ifdef DEBUG_MPEG_SEARCH
@@ -672,7 +729,7 @@ static int mpeg_add_header(play_para_t *para, am_packet_t *pkt)
     }
 #endif
     pkt->avpkt_newflag = 1;
-    return write_av_packet(para, pkt);
+    return write_av_packet(para);
 }
 static int generate_vorbis_header(unsigned char *extra_data, unsigned size,unsigned char** vorbis_headers,unsigned *vorbis_header_sizes)
 {
@@ -708,11 +765,11 @@ static int generate_vorbis_header(unsigned char *extra_data, unsigned size,unsig
 
     return 0;
 }
-static int audio_add_header(play_para_t *para, am_packet_t *pkt)
+static int audio_add_header(play_para_t *para)
 {
     unsigned ext_size = para->pFormatCtx->streams[para->astream_info.audio_index]->codec->extradata_size;
     unsigned char *extradata = para->pFormatCtx->streams[para->astream_info.audio_index]->codec->extradata;
-
+	am_packet_t *pkt = para->p_pkt;
     if (ext_size > 0) {
         log_print("==============audio add header =======================\n");
 	 if(para->astream_info.audio_format == 	AFORMAT_VORBIS){
@@ -750,18 +807,19 @@ static int audio_add_header(play_para_t *para, am_packet_t *pkt)
         pkt->type = CODEC_AUDIO;
 	 if(ext_size > 4)	
         	log_print("audio header first four bytes[0x%x],[0x%x],[0x%x],[0x%x]\n",extradata[0],extradata[1],extradata[2],extradata[3]);
-        return write_av_packet(para, pkt);
+        return write_av_packet(para);
     }
     return 0;
 
 }
 
-int pre_header_feeding(play_para_t *para, am_packet_t *pkt)
+int pre_header_feeding(play_para_t *para)
 {
     int ret = -1;
     AVStream *pStream = NULL;
     AVCodecContext *avcodec;
     int index = para->vstream_info.video_index;
+	am_packet_t *pkt = para->p_pkt;
     int extra_size = 0;	
     if (-1 == index) {
         return PLAYER_ERROR_PARAM;
@@ -769,8 +827,8 @@ int pre_header_feeding(play_para_t *para, am_packet_t *pkt)
 
     pStream = para->pFormatCtx->streams[index];
     avcodec = pStream->codec;
-    if (IS_AUIDO_NEED_PREFEED_HEADER(para->astream_info.audio_format)&& para->astream_info.has_audio) {
-
+    if (IS_AUIDO_NEED_PREFEED_HEADER(para->astream_info.audio_format) && 
+		para->astream_info.has_audio) {
         if (pkt->hdr == NULL) {
             pkt->hdr = MALLOC(sizeof(hdr_buf_t));
 	     extra_size = para->pFormatCtx->streams[para->astream_info.audio_index]->codec->extradata_size;		
@@ -782,7 +840,7 @@ int pre_header_feeding(play_para_t *para, am_packet_t *pkt)
 	            }
 	     	}
         }
-        ret = audio_add_header(para, pkt);
+        ret = audio_add_header(para);
         if (pkt->hdr) {
             if (pkt->hdr->data) {
                 FREE(pkt->hdr->data);
@@ -794,6 +852,7 @@ int pre_header_feeding(play_para_t *para, am_packet_t *pkt)
 	  if(	ret != PLAYER_SUCCESS)
 	  	return ret;
     }
+	
     if (para->stream_type == STREAM_ES && para->vstream_info.has_video) {
         if (pkt->hdr == NULL) {
             pkt->hdr = MALLOC(sizeof(hdr_buf_t));
@@ -805,25 +864,30 @@ int pre_header_feeding(play_para_t *para, am_packet_t *pkt)
         }
 
         if (VFORMAT_MJPEG == para->vstream_info.video_format) {
-            ret = mjpeg_write_header(para, pkt);
+            ret = mjpeg_write_header(para);
             if (ret != PLAYER_SUCCESS) {
                 return ret;
             }
-        } else if ((VFORMAT_MPEG4 == para->vstream_info.video_format) &&
+        } if ((STREAM_FILE == para->file_type) ) {
+            ret = write_stream_header(para);
+            if (ret != PLAYER_SUCCESS) {
+                return ret;
+            }
+   		}else if ((VFORMAT_MPEG4 == para->vstream_info.video_format) &&
                    (VIDEO_DEC_FORMAT_MPEG4_3 == para->vstream_info.video_codec_type)) {
-            ret = divx3_write_header(para, pkt);
+            ret = divx3_write_header(para);
             if (ret != PLAYER_SUCCESS) {
                 return ret;
             }
-        } else if (VFORMAT_H264 == para->vstream_info.video_format) {
-            ret = h264_write_header(para, pkt);
+        } else if ((VFORMAT_H264 == para->vstream_info.video_format) || (VFORMAT_H264MVC == para->vstream_info.video_format)) {
+            ret = h264_write_header(para);
             if (ret != PLAYER_SUCCESS) {
                 return ret;
             }
         } else if ((CODEC_TAG_M4S2 == avcodec->codec_tag) ||
                    (CODEC_TAG_DX50 == avcodec->codec_tag) ||
                    (CODEC_TAG_mp4v == avcodec->codec_tag)) {
-            ret = m4s2_dx50_mp4v_write_header(para, pkt);
+            ret = m4s2_dx50_mp4v_write_header(para);
             if (ret != PLAYER_SUCCESS) {
                 return ret;
             }
@@ -831,22 +895,22 @@ int pre_header_feeding(play_para_t *para, am_packet_t *pkt)
                    && (VIDEO_DEC_FORMAT_MPEG4_3 != para->vstream_info.video_codec_type)
                    && (VFORMAT_H264 != para->vstream_info.video_format)
                    && (VFORMAT_VC1 != para->vstream_info.video_format)) {
-            ret = avi_write_header(para, pkt);
+            ret = avi_write_header(para);
             if (ret != PLAYER_SUCCESS) {
                 return ret;
             }
         } else if (CODEC_TAG_WMV3 == avcodec->codec_tag) {
-            ret = wmv3_write_header(para, pkt);
+            ret = wmv3_write_header(para);
             if (ret != PLAYER_SUCCESS) {
                 return ret;
             }
         } else if ((CODEC_TAG_WVC1 == avcodec->codec_tag) || (CODEC_TAG_WMVA == avcodec->codec_tag)) {
-            ret = wvc1_write_header(para, pkt);
+            ret = wvc1_write_header(para);
             if (ret != PLAYER_SUCCESS) {
                 return ret;
             }
         } else if ((MKV_FILE == para->file_type) && (VFORMAT_MPEG4 == para->vstream_info.video_format)) {
-            ret = mkv_write_header(para, pkt);
+            ret = mkv_write_header(para);
             if (ret != PLAYER_SUCCESS) {
                 return ret;
             }
@@ -873,7 +937,7 @@ int pre_header_feeding(play_para_t *para, am_packet_t *pkt)
         if ((CODEC_ID_MPEG1VIDEO == avcodec->codec_id)
             || (CODEC_ID_MPEG2VIDEO == avcodec->codec_id)
             || (CODEC_ID_MPEG2VIDEO_XVMC == avcodec->codec_id)) {
-            ret = mpeg_add_header(para, pkt);
+            ret = mpeg_add_header(para);
             if (ret != PLAYER_SUCCESS) {
                 return ret;
             }

@@ -46,15 +46,21 @@ typedef struct AVIStream {
     uint32_t pal[256];
     int has_pal;
     int dshow_block_align;            ///< block align variable used to emulate bugs in the MS dshow demuxer
+
+    AVFormatContext *sub_ctx;
+    AVPacket sub_pkt;
+    uint8_t *sub_buffer;
+
+    int64_t seek_pos;
     int sequence_head_size;
     unsigned int sequence_head_offset;
     char *sequence_head;
 } AVIStream;
 
-int pre_header_feeding(play_para_t *para, am_packet_t *pkt);
+int pre_header_feeding(play_para_t *para);
 int h264_add_frame_header(unsigned char* data, int size);
 int h264_update_frame_header(am_packet_t *pkt);
-void adts_add_header(play_para_t *para, am_packet_t *pkt);
+void adts_add_header(play_para_t *para);
 int extract_adts_header_info(play_para_t *para);
 int divx3_prefix(am_packet_t *pkt);
 int mpeg_check_sequence(play_para_t *para);

@@ -144,7 +144,7 @@ static int check_decoder_worksta(play_para_t *para)
 						(para->vbuffer.check_rp_change_cnt < CHECK_VIDEO_HALT_CNT && para->playctrl_info.video_low_buffer)) && 
 						((para->state.full_time - para->state.current_time) > 6 )){
 						para->vbuffer.check_rp_change_cnt = CHECK_VIDEO_HALT_CNT;
-						para->playctrl_info.time_point = para->state.current_time;
+						para->playctrl_info.time_point = para->state.current_time + 1;
                         para->playctrl_info.reset_flag = 1;
                         para->playctrl_info.end_flag = 1;							
                         log_print("[%s]time=%d cnt=%d vlevel=%.03f vdec err, need reset\n", __FUNCTION__, para->playctrl_info.time_point, para->vbuffer.check_rp_change_cnt, para->state.video_bufferlevel);
@@ -155,13 +155,62 @@ static int check_decoder_worksta(play_para_t *para)
     }
     if (para->astream_info.has_audio) {
         if (check_audiodsp_fatal_err() == AUDIO_DSP_FATAL_ERROR) {
-            para->playctrl_info.time_point = para->state.current_time;
+            para->playctrl_info.time_point = para->state.current_time ;
             para->playctrl_info.reset_flag = 1;
             para->playctrl_info.end_flag = 1;
             log_print("adec err::[%s:%d]time=%d ret=%d, need reset\n", __FUNCTION__, __LINE__, para->playctrl_info.time_point, ret);
         }
     }
     return PLAYER_SUCCESS;
+}
+
+static int check_subtitle_info(play_para_t *player)
+{
+	int sub_stream_num = 0;
+	int cur_sub_id = -1;
+	int i;
+	subtitle_info_t sub_info[MAX_SUB_NUM];		
+
+	if (player->start_param->hassub == 0){
+		return PLAYER_SUCCESS;
+	}
+	if (player->stream_type == STREAM_PS && !player->sstream_info.sub_has_found) {
+		if (!player->codec) {
+			return PLAYER_EMPTY_P;
+		}
+		memset(sub_info, -1, sizeof(subtitle_info_t) * MAX_SUB_NUM);
+		
+		sub_stream_num = codec_get_sub_num(player->codec);
+		if (sub_stream_num > player->media_info.stream_info.total_sub_num) {
+			
+			codec_get_sub_info(player->codec, sub_info);			
+			if (set_ps_subtitle_info(player, sub_info, sub_stream_num) == PLAYER_SUCCESS) {
+				set_subtitle_num(sub_stream_num);			
+				set_subtitle_enable(1);	
+				set_player_state(player, PLAYER_FOUND_SUB);
+                update_playing_info(player);
+                update_player_states(player, 1);
+			}
+			
+			if (sub_info[1].id != -1 && sub_info[1].id != player->codec->sub_pid) {
+				player->codec->sub_pid = sub_info[1].id;
+				player->codec->sub_type = 0x17000;
+				log_print("[%s]defatult:sub_info[1] id=0x%x\n", __FUNCTION__, sub_info[1].id);			
+				
+				if (player->astream_info.start_time > 0) {
+					set_subtitle_startpts(player->astream_info.start_time);
+				} else if (player->vstream_info.start_time > 0) {
+					set_subtitle_startpts(player->vstream_info.start_time);
+				} else {
+					set_subtitle_startpts(0);
+				}
+				codec_set_sub_type(player->codec);
+				codec_set_sub_id(player->codec);
+				codec_reset_subtile(player->codec);						
+			}
+		}
+	}
+	return PLAYER_SUCCESS;
 }
 
 /******************************
@@ -228,27 +277,37 @@ static void check_msg(play_para_t *para, player_cmd_t *msg)
     } else if (msg->ctrl_cmd & CMD_RESUME) {
         para->playctrl_info.pause_flag = 0;
     } else if (msg->ctrl_cmd & CMD_FF) {
-        para->playctrl_info.init_ff_fr = 0;
-        if (msg->param == 0) {
-            para->playctrl_info.f_step = 0;
-        } else {
-            para->playctrl_info.f_step = msg->param * FF_FB_BASE_STEP;
-            para->playctrl_info.fast_forward = 1;
-            para->playctrl_info.fast_backward = 0;
-			para->playctrl_info.pause_flag = 0;
-			set_player_state(para, PLAYER_RUNNING);
-        }
+    	if (para->vstream_info.has_video){
+	        para->playctrl_info.init_ff_fr = 0;
+	        if (msg->param == 0) {
+	            para->playctrl_info.f_step = 0;
+	        } else {
+	            para->playctrl_info.f_step = msg->param * FF_FB_BASE_STEP;
+	            para->playctrl_info.fast_forward = 1;
+	            para->playctrl_info.fast_backward = 0;
+				para->playctrl_info.pause_flag = 0;
+				set_player_state(para, PLAYER_RUNNING);
+	        }
+    	} else{
+    		log_error("pid[%d]::no video, can't support ff!\n", para->player_id);
+			set_player_error_no(para, PLAYER_FFFB_UNSUPPORT);
+    	}
     } else if (msg->ctrl_cmd & CMD_FB) {
-        para->playctrl_info.init_ff_fr = 0;
-        if (msg->param == 0) {
-            para->playctrl_info.f_step = 0;
-        } else {
-            para->playctrl_info.f_step = msg->param * FF_FB_BASE_STEP;
-            para->playctrl_info.fast_backward = 1;
-            para->playctrl_info.fast_forward = 0;
-			para->playctrl_info.pause_flag = 0;
-			set_player_state(para, PLAYER_RUNNING);
-        }
+    	if (para->vstream_info.has_video){
+	        para->playctrl_info.init_ff_fr = 0;
+	        if (msg->param == 0) {
+	            para->playctrl_info.f_step = 0;
+	        } else {
+	            para->playctrl_info.f_step = msg->param * FF_FB_BASE_STEP;
+	            para->playctrl_info.fast_backward = 1;
+	            para->playctrl_info.fast_forward = 0;
+				para->playctrl_info.pause_flag = 0;
+				set_player_state(para, PLAYER_RUNNING);
+	        }
+    	} else{
+    		log_error("pid[%d]::no video, can't support fb!\n", para->player_id);
+			set_player_error_no(para, PLAYER_FFFB_UNSUPPORT);
+    	}
     } else if (msg->ctrl_cmd & CMD_SWITCH_AID) {
         para->playctrl_info.audio_switch_flag = 1;
         para->playctrl_info.switch_audio_id = msg->param;
@@ -281,7 +340,7 @@ int check_flag(play_para_t *p_para)
     AVCodecContext *pCodec;
     int find_subtitle_index = 0;
     unsigned int i = 0;
-    int subtitle_curr = av_get_subtitle_curr();
+    int subtitle_curr = 0;
 
     msg = get_message(p_para);  //msg: pause, resume, timesearch,add file, rm file, move up, move down,...
     if (msg) {
@@ -357,6 +416,9 @@ int check_flag(play_para_t *p_para)
         return NONO_FLAG;
     }
 
+	if (p_para->sstream_info.has_sub){
+		subtitle_curr = av_get_subtitle_curr();
+	}
     if (subtitle_curr >= 0 && subtitle_curr < p_para->sstream_num && \
         subtitle_curr != p_para->sstream_info.cur_subindex) {
         log_print("start change subtitle from %d to %d \n", p_para->sstream_info.cur_subindex, subtitle_curr);
@@ -464,14 +526,17 @@ static int check_stop_cmd(play_para_t *player)
 {
     player_cmd_t *msg = NULL;
     int ret = -1;
+
     msg = get_message(player);
-    if (msg) {
+    while (msg && ret!=1) {
         log_print("pid[%d]::[player_thread:%d]cmd=%x set_mode=%x info=%x param=%d\n", player->player_id, __LINE__, msg->ctrl_cmd, msg->set_mode, msg->info_cmd, msg->param);
         if (msg->ctrl_cmd & CMD_STOP) {
             ret = 1;
         }
         message_free(msg);
-        msg = NULL;
+		msg=NULL;
+		if(ret!=1)/*maybe we have more than one msg,and the last is STOP cmd*/
+       		msg = get_message(player);
     }
     return ret;
 }
@@ -486,6 +551,7 @@ static void player_para_init(play_para_t *para)
     para->sstream_info.sub_index = -1;
     para->discontinue_point = 0;
     para->discontinue_flag = 0;
+    para->first_index = -1;
 }
 
 ///////////////////*main function *//////////////////////////////////////
@@ -532,7 +598,7 @@ void *player_thread(play_para_t *player)
         log_print("[player_dec_init]ffmpeg_open_file failed(%s)*****ret=%x!\n", player->file_name, ret);
         goto release0;
     }	
-	
+
     ffmpeg_parse_file_type(player, &filetype);
     set_player_state(player, PLAYER_TYPE_REDY);
     send_event(player, PLAYER_EVENTS_STATE_CHANGED, PLAYER_TYPE_REDY, 0);
@@ -559,7 +625,33 @@ void *player_thread(play_para_t *player)
     set_player_state(player, PLAYER_INITOK);
     update_playing_info(player);
     update_player_states(player, 1);
-
+#if 0
+    switch(player->pFormatCtx->drm.drm_check_value){
+    case 1: // unauthorized
+      set_player_state(player, PLAYER_DIVX_AUTHORERR);
+      //send_event(player, PLAYER_EVENTS_STATE_CHANGED,PLAYER_DIVX_AUTHORERR, "Divx Author Failed");
+      update_playing_info(player);
+      update_player_states(player, 1);
+//  goto release0;
+      break;
+    case 2: // expired
+      //send_event(player, PLAYER_EVENTS_STATE_CHANGED, PLAYER_DIVX_RENTAL_EXPIRED, "Divx Author Expired");
+      set_player_state(player, PLAYER_DIVX_RENTAL_EXPIRED);
+      update_playing_info(player);
+      update_player_states(player, 1);
+//  goto release0;
+      break;
+    case 3: // rental
+      //send_event(player, PLAYER_EVENTS_STATE_CHANGED, PLAYER_DIVX_RENTAL_VIEW, player->pFormatCtx->drm.drm_rental_value);
+      set_drm_rental(player, player->pFormatCtx->drm.drm_rental_value);
+      set_player_state(player, PLAYER_DIVX_RENTAL_VIEW);
+      update_playing_info(player);
+      update_player_states(player, 1);
+      break;
+    default:
+      break;
+    }
+#endif
     if (player->start_param->need_start) {
         int flag = 0;
         do {
@@ -577,7 +669,20 @@ void *player_thread(play_para_t *player)
             }
         } while (1);
     }
-    
+#if 0    
+    /* if drm rental , continue playback here
+     * caution:
+     * 1. resume play, should not call drmCommitPlayback
+     * 2. 
+     * */
+    if(player->pFormatCtx->drm.drm_header && player->pFormatCtx->drm.drm_check_value == 3){       
+	     ret = drmCommitPlayback();
+	     if (ret != 0) {
+		   log_error(" not unauthorized 9:result=%d, err=%d\n", ret, drmGetLastError());
+	       player->pFormatCtx->drm.drm_check_value = 1; // unauthorized, should popup a dialog
+	      }
+    }
+#endif
 	log_print("pid[%d]::decoder prepare\n", player->player_id);
     ret = player_decoder_init(player);
     if (ret != PLAYER_SUCCESS) {
@@ -593,7 +698,7 @@ void *player_thread(play_para_t *player)
     set_player_state(player, PLAYER_START);
     update_playing_info(player);
     update_player_states(player, 1);
-
+	player_mate_init(player,1000*100);
     if (player->vstream_info.video_format == VFORMAT_SW) {
         log_print("Use SW video decoder\n");
 
@@ -641,7 +746,7 @@ void *player_thread(play_para_t *player)
         if ((!(player->vstream_info.video_format == VFORMAT_SW)
              && !(player->vstream_info.video_format == VFORMAT_VC1 && player->vstream_info.video_codec_type == VIDEO_DEC_FORMAT_WMV3)) || \
             (IS_AUIDO_NEED_PREFEED_HEADER(player->astream_info.audio_format) && player->astream_info.has_audio)) {
-            pre_header_feeding(player, pkt);
+            pre_header_feeding(player);
         }
         do {
             ret = check_flag(player);
@@ -667,13 +772,13 @@ void *player_thread(play_para_t *player)
                 }
             }
             if (!pkt->avpkt_isvalid) {
-                ret = read_av_packet(player, pkt);
+                ret = read_av_packet(player);
                 if (ret != PLAYER_SUCCESS && ret != PLAYER_RD_AGAIN) {
                     log_error("pid[%d]::read_av_packet failed!\n", player->player_id);
                     set_player_state(player, PLAYER_ERROR);
                     goto release;
                 }
-                ret = set_header_info(player, pkt);
+                ret = set_header_info(player);
                 if (ret != PLAYER_SUCCESS) {
                     log_error("pid[%d]::set_header_info failed! ret=%x\n", player->player_id, -ret);
                     set_player_state(player, PLAYER_ERROR);
@@ -715,7 +820,7 @@ write_packet:
 #endif
                 }
             } else {
-                ret = write_av_packet(player, pkt);
+                ret = write_av_packet(player);
                 if (ret == PLAYER_WR_FINISH) {
                     if (player->playctrl_info.f_step == 0) {
 						log_print("[player_thread]write end!\n");						
@@ -734,6 +839,9 @@ write_packet:
                 set_player_state(player, PLAYER_ERROR);
                 goto release;
             }
+
+			check_subtitle_info(player);
+			
             if ((player->vstream_info.video_format == VFORMAT_SW) && (pkt->type == CODEC_VIDEO)) {
                 player->state.current_time = (int)(pkt->avpkt->dts / 1000);
                 if (player->state.current_time > player->state.full_time) {
@@ -750,7 +858,7 @@ write_packet:
                 && (player->playctrl_info.fast_forward
                     || player->playctrl_info.fast_backward)) {
                 if (player->vstream_info.video_format != VFORMAT_SW) {
-                    ret = get_cntl_state(pkt);
+                    ret = get_cntl_state(pkt) | player->playctrl_info.seek_offset_same;
                     if (ret == 0) {
                         //log_print("more data needed, data size %d\n", pkt->data_size);
                         continue;
@@ -772,7 +880,9 @@ write_packet:
         while (!player->playctrl_info.end_flag) {
             //player_thread_wait(player, 50 * 1000);
 
-			check_decoder_worksta(player);
+			if (!(player->vstream_info.has_video && player->playctrl_info.video_low_buffer)) {
+				check_decoder_worksta(player);
+			}
 				
             ret = check_flag(player);
             if (ret == BREAK_FLAG) {
@@ -809,7 +919,7 @@ write_packet:
                 update_player_states(player, 1);
             }
 			
-            ret = player_reset(player, pkt);
+            ret = player_reset(player);
             if (ret != PLAYER_SUCCESS) {
                 log_error("pid[%d]::player reset failed(-0x%x)!", player->player_id, -ret);
                 set_player_state(player, PLAYER_ERROR);
@@ -862,10 +972,17 @@ release:
     set_cntl_mode(player, TRICKMODE_NONE);
 
 release0:
+	player_mate_release(player);
 	set_black_policy(player->playctrl_info.black_out);
     log_print("\npid[%d]player_thread release0 begin...(sta:0x%x)\n", player->player_id, get_player_state(player));
     if (get_player_state(player) == PLAYER_ERROR) {
-        set_player_error_no(player, ret);
+		if(check_stop_cmd(player)==1){
+			/*we have a player end msg,ignore the error*/
+			set_player_state(player,PLAYER_STOPED);
+			set_player_error_no(player, 0);
+		}else{
+        	set_player_error_no(player, ret);
+		}
     }
     update_playing_info(player);
     update_player_states(player, 1);

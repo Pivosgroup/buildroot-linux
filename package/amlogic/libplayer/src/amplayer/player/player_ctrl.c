@@ -25,6 +25,8 @@
 #include "player_update.h"
 #include "thread_mgt.h"
 #include "player_ffmpeg_ctrl.h"
+#include "player_cache_mgt.h"
+
 
 #ifndef FBIOPUT_OSD_SRCCOLORKEY
 #define  FBIOPUT_OSD_SRCCOLORKEY    0x46fb
@@ -44,9 +46,13 @@
  *               setup amlogic player every time
  */
 /* --------------------------------------------------------------------------*/
+extern void print_version_info();
+
 int player_init(void)
 {
     /*register all formats and codecs*/
+	print_version_info();
+	
     ffmpeg_init();
 
     player_id_pool_init();
@@ -61,10 +67,9 @@ int player_init(void)
     video_register_stream_decoder();
 
     /*set output black policy to black out--default*/
-    set_black_policy(1);
+    set_black_policy(0);
     set_stb_source_hiu();
     set_stb_demux_source_hiu();
-
     return PLAYER_SUCCESS;
 }
 
@@ -93,7 +98,13 @@ int player_start(play_control_t *ctrl_p, unsigned long  priv)
     if (ctrl_p == NULL) {
         return PLAYER_EMPTY_P;
     }
-
+	    
+	if (!ctrl_p->displast_frame) {
+		set_black_policy(1);            
+	} else if (!check_file_same(ctrl_p->file_name)) {
+		set_black_policy(1);                    
+	}
+	
     pid = player_request_pid();
     if (pid < 0) {
         return PLAYER_NOT_VALID_PID;
@@ -200,11 +211,11 @@ int player_stop(int pid)
     if ((get_player_state(player_para) & 0x30000) == 1) {
         return PLAYER_SUCCESS;
     }
-/*
-    if (player_para->pFormatCtx) {
+
+    /*if (player_para->pFormatCtx) {
         av_ioctrl(player_para->pFormatCtx, AVIOCTL_STOP, 0, 0);
-    }
-*/
+    }*/
+
     cmd = message_alloc();
     if (cmd) {
         cmd->ctrl_cmd = CMD_STOP;
@@ -247,11 +258,11 @@ int player_stop_async(int pid)
     if (player_para == NULL) {
         return PLAYER_NOT_VALID_PID;
     }
-/*
+
     if (player_para->pFormatCtx) {
-        av_ioctrl(player_para->pFormatCtx, AVIOCTL_STOP, 0, 0);
+        ///av_ioctrl(player_para->pFormatCtx, AVIOCTL_STOP, 0, 0);
     }
-*/
+
     cmd = message_alloc();
     if (cmd) {
         cmd->ctrl_cmd = CMD_STOP;
@@ -699,7 +710,8 @@ int player_send_message(int pid, player_cmd_t *cmd)
         return PLAYER_NOT_VALID_PID;
     }
 
-    if (player_get_state(pid) == PLAYER_STOPED) {
+    if (player_get_state(pid) == PLAYER_EXIT) {
+		player_close_pid_data(pid);
         return PLAYER_SUCCESS;
     }
 
@@ -713,7 +725,7 @@ int player_send_message(int pid, player_cmd_t *cmd)
     } else {
         r = PLAYER_NOMEM;
     }
-
+	player_close_pid_data(pid);
     return r;
 }
 
@@ -847,12 +859,18 @@ int player_get_play_info(int pid, player_info_t *info)
 int player_get_media_info(int pid, media_info_t *minfo)
 {
     play_para_t *player_para;
-
+	player_status sta;
+	
     player_para = player_open_pid_data(pid);
     if (player_para == NULL) {
         return PLAYER_NOT_VALID_PID;    /*this data is 0 for default!*/
     }
-
+	
+	sta = get_player_state(player_para);
+	if (sta >= PLAYER_ERROR && sta <= PLAYER_EXIT) {
+		return PLAYER_INVALID_CMD;
+	}
+	
     MEMSET(minfo, 0, sizeof(media_info_t));
     MEMCPY(minfo, &player_para->media_info, sizeof(media_info_t));
 
@@ -982,11 +1000,11 @@ int audio_set_volume(int pid, float val)
  * @details get volume
  */
 /* --------------------------------------------------------------------------*/
-int audio_get_volume(int pid)
+int audio_get_volume(int pid, float *vol)
 {
     int r;
 
-    r = codec_get_volume(NULL);
+    r = codec_get_volume(NULL, vol);
     log_print("[audio_get_volume:%d]r=%d\n", __LINE__, r);
 
     return r;//codec_get_volume(NULL);
@@ -1198,6 +1216,22 @@ int player_list_allpid(pid_info_t *pid)
 
 /* --------------------------------------------------------------------------*/
 /**
+ * @brief   player_cache_system_init
+ *
+ * @param[in]   enable dir max_size block_size
+ *
+ * @return  0;
+ */
+/* --------------------------------------------------------------------------*/
+
+
+int player_cache_system_init(int enable,const char*dir,int max_size,int block_size)
+{
+	return cache_system_init(enable,dir,max_size,block_size);
+}
+
+/* --------------------------------------------------------------------------*/
+/**
  * @brief   player_status2str
  *
  * @param[in]   status  player status
@@ -1211,6 +1245,9 @@ char *player_status2str(player_status status)
     case PLAYER_INITING:
         return "BEGIN_INIT";
 
+	case PLAYER_TYPE_REDY:
+		return "TYPE_READY";
+		
     case PLAYER_INITOK:
         return "INIT_OK";
 
@@ -1255,6 +1292,16 @@ char *player_status2str(player_status status)
 
     case PLAYER_PLAY_NEXT:
         return "PLAY_NEXT";
+		
+	case PLAYER_FOUND_SUB:
+		return "NEW_SUB";
+		
+    case PLAYER_DIVX_AUTHORERR:
+        return "DIVX_AUTHORERR";
+    case PLAYER_DIVX_RENTAL_VIEW:
+        return "DIVX_RENTAL";
+    case PLAYER_DIVX_RENTAL_EXPIRED:
+        return "DIVX_EXPIRED";
 
     default:
         return "UNKNOW_STATE";

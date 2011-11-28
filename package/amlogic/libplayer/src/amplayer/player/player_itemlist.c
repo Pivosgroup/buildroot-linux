@@ -128,6 +128,7 @@ int  itemlist_del_item(struct itemlist *itemlist, struct item *item)
 {
     ITEM_LOCK(itemlist);
     list_del(&item->list);
+    itemlist->item_count--;
     ITEM_UNLOCK(itemlist);
     return 0;
 }
@@ -164,6 +165,7 @@ struct item *  itemlist_get_match_item(struct itemlist *itemlist, unsigned long 
     }
     if (finditem != NULL) {
         list_del(&finditem->list);
+        itemlist->item_count--;
     }
     ITEM_UNLOCK(itemlist);
     return finditem;

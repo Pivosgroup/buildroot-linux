@@ -41,7 +41,7 @@ struct am_packet;
 #define RESERVE_AUDIO_SIZE  (64)
 #define MAX_PACKET_SIZE     (2*1024*1024)
 #define FILE_BUFFER_SIZE    (1024*32)//(1024*512)   
-#define CHECK_END_COUNT     (20)
+#define CHECK_END_COUNT     (40)
 #define CHECK_AUDIO_HALT_CNT (50)
 #define CHECK_VIDEO_HALT_CNT (20)
 #define CHECK_END_INTERVAL  (100)   //ms
@@ -63,7 +63,7 @@ struct am_packet;
 #define UNIT_FREQ   96000
 #define PTS_FREQ    90000
 #define PTS_FREQ_MS 90
-#define AV_SYNC_THRESH    PTS_FREQ*30
+#define AV_SYNC_THRESH    PTS_FREQ*15
 #define INT64_0     INT64_C(0x8000000000000000)
 
 #define EXTERNAL_PTS        (1)
@@ -104,6 +104,7 @@ typedef struct{
 	int 	check_rp_change_cnt;
 	unsigned int	buffer_rp;
 	unsigned int	rp_is_changed;
+	unsigned int	buf_empty;
 } decbuf_status_t;
 
 typedef struct {
@@ -171,6 +172,8 @@ typedef struct play_para {
     float buffering_threshhold_max;
 
     struct am_packet *p_pkt;
+
+	void *player_mate;/*player's mate thread handle*/
 } play_para_t;
 
 typedef struct media_type_t {
@@ -190,11 +193,22 @@ codec_para_t *get_audio_codec(play_para_t *para);
 int send_message(play_para_t *para, player_cmd_t *cmd);
 int send_message_by_pid(int pid, player_cmd_t *cmd);
 void clear_all_message(play_para_t *para);
+int unlock_message_pool(play_para_t *para);
+int lock_message_pool(play_para_t *para);
+player_cmd_t * peek_message_locked(play_para_t *para);
+player_cmd_t * get_message_locked(play_para_t *para);
+
 
 player_cmd_t * get_message(play_para_t *para);
 int update_player_states(play_para_t *para, int force);
 void set_player_error_no(play_para_t *player, int error_no);
 int send_event(play_para_t *para, int msg, unsigned long ext1, unsigned long ext2);
 int register_update_callback(callback_t *cb, update_state_fun_t up_fn, int interval_s);
+
+void *player_mate_init(play_para_t *player,int intervals);
+int player_mate_wake(play_para_t *player,int delay);
+int player_mate_sleep(play_para_t *player);
+int player_mate_release(play_para_t *player);
+
 
 #endif

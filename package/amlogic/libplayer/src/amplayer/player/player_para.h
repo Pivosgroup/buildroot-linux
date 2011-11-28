@@ -26,10 +26,12 @@ typedef struct {
     unsigned short  video_pid;
     unsigned int    video_width;
     unsigned int    video_height;
-    float		    video_ratio;
+    unsigned int    video_ratio;
+	uint64_t        video_ratio64;
     int             check_first_pts;
     int             flv_flag;
     int             h263_decodable;
+	int				discard_pkt;
     int64_t         start_time;
     float           video_duration;
     float           video_pts;
@@ -67,6 +69,7 @@ typedef struct {
     float           sub_pts;
     int             check_first_pts;
     int             cur_subindex; //for change subtitle
+    int             sub_has_found;
 } s_stream_info_t;
 
 typedef  struct {
@@ -106,6 +109,10 @@ typedef  struct {
     int read_max_retry_cnt;
 	int audio_ready;		
     int check_lowlevel_eagain_cnt;
+    int check_audio_ready_ms;
+    int last_seek_time_point;
+    int64_t last_seek_offset;
+    int seek_offset_same;
 } p_ctrl_info_t;
 
 int player_dec_init(struct play_para *p_para);

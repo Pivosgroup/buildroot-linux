@@ -287,11 +287,12 @@ static int parse_command(global_ctrl_para_t *p, player_cmd_t *cmd)
         if(cmd->info_cmd & CMD_GET_VOLUME)
         {
             int r = -1;
-            r = audio_get_volume(pid);
+	    float volume;
+            r = audio_get_volume(pid, &volume);
             log_print("pid:[%d] get audio_volume=%d\n",cmd->pid,r);
             if(r >= 0)
             {
-                log_print("pid:[%d]get audio_volume=%d\n", cmd->pid,r);
+                log_print("pid:[%d]get audio_volume=%f\n", cmd->pid,volume);
                 if(p->controler->ret_info)
                     p->controler->ret_info(pid, cmd->cid, CMD_GET_VOLUME, &r);         
             }

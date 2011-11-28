@@ -37,11 +37,13 @@ static void vcodec_info_init(play_para_t *p_para, codec_para_t *v_codec)
     v_codec->am_sysinfo.width   = vinfo->video_width;
     v_codec->am_sysinfo.rate    = vinfo->video_rate;
     v_codec->am_sysinfo.ratio   = vinfo->video_ratio;
+	v_codec->am_sysinfo.ratio64 = vinfo->video_ratio64;
     v_codec->noblock = !!p_para->buffering_enable;
     if ((vinfo->video_format == VFORMAT_MPEG4)
-        || (vinfo->video_format == VFORMAT_H264)) {
+        || (vinfo->video_format == VFORMAT_H264)
+        || (vinfo->video_format == VFORMAT_H264MVC)) {
         v_codec->am_sysinfo.param = (void *)EXTERNAL_PTS;
-        if ((vinfo->video_format == VFORMAT_H264) && (p_para->file_type == AVI_FILE)) {
+        if (((vinfo->video_format == VFORMAT_H264) || (vinfo->video_format == VFORMAT_H264MVC)) && (p_para->file_type == AVI_FILE)) {
             v_codec->am_sysinfo.param     = (void *)(EXTERNAL_PTS | SYNC_OUTSIDE);
         }
     } else if ((vinfo->video_format == VFORMAT_VC1) && (p_para->file_type == AVI_FILE)) {
@@ -85,11 +87,19 @@ static void acodec_info_init(play_para_t *p_para, codec_para_t *a_codec)
         a_codec->audio_info.block_align = pCodecCtx->block_align;
         a_codec->audio_info.extradata_size = pCodecCtx->extradata_size;
         if (a_codec->audio_info.extradata_size > 0) {
+	     if(a_codec->audio_info.extradata_size > 	AUDIO_EXTRA_DATA_SIZE)
+	     {
+      			log_print("[%s:%d],extra data size exceed max  extra data buffer,cut it to max buffer size ", __FUNCTION__, __LINE__);
+			a_codec->audio_info.extradata_size = 	AUDIO_EXTRA_DATA_SIZE;
+  	     }
             memcpy((char*)a_codec->audio_info.extradata, pCodecCtx->extradata, a_codec->audio_info.extradata_size);
         }
         a_codec->audio_info.valid = 1;
+   	log_print("[%s]fmt=%d srate=%d chanels=%d extrasize=%d,block align %d,codec id 0x%x\n", __FUNCTION__, a_codec->audio_type,\
+			a_codec->audio_info.sample_rate, a_codec->audio_info.channels,a_codec->audio_info.extradata_size,a_codec->audio_info.block_align,a_codec->audio_info.codec_id);
+
     }
-}
+ }
 
 static void scodec_info_init(play_para_t *p_para, codec_para_t *s_codec)
 {

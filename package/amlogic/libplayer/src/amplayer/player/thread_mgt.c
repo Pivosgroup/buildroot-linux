@@ -58,7 +58,7 @@ int player_thread_create(play_para_t *player)
     player_thread_mgt_t *mgt = &player->thread_mgt;
 
     pthread_attr_init(&pthread_attr);
-    pthread_attr_setstacksize(&pthread_attr, 409600);   //default joinable
+    pthread_attr_setstacksize(&pthread_attr, 0);   //default stack size maybe better
     pthread_mutex_init(&mgt->pthread_mutex, NULL);
     pthread_cond_init(&mgt->pthread_cond, NULL);
     log_print("***player_para=%p,start_param=%p\n", player, player->start_param);

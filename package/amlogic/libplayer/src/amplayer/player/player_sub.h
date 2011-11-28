@@ -83,7 +83,8 @@ typedef struct _DivXSubPictColor {
     unsigned char blue;
 } DivXSubPictColor;
 
-typedef struct _DivXSubPictHdr {
+typedef struct _DivXSubPictHdr
+{
     char duration[27];
     unsigned short width;
     unsigned short height;
@@ -93,11 +94,32 @@ typedef struct _DivXSubPictHdr {
     unsigned short bottom;
     unsigned short field_offset;
     DivXSubPictColor background;
-    DivXSubPictColor pattern;
-    DivXSubPictColor emphasis1;
-    DivXSubPictColor emphasis2;
+    DivXSubPictColor pattern1;
+    DivXSubPictColor pattern2;
+    DivXSubPictColor pattern3;
     unsigned char *rleData;
 } DivXSubPictHdr;
+
+typedef struct _DivXSubPictHdr_HD
+{
+    char duration[27];
+    unsigned short width;
+    unsigned short height;
+    unsigned short left;
+    unsigned short top;
+    unsigned short right;
+    unsigned short bottom;
+    unsigned short field_offset;
+    DivXSubPictColor background;
+    DivXSubPictColor pattern1;
+    DivXSubPictColor pattern2;
+    DivXSubPictColor pattern3;
+	unsigned char background_transparency;	//HD profile only
+	unsigned char pattern1_transparency;	//HD profile only
+	unsigned char pattern2_transparency;	//HD profile only
+	unsigned char pattern3_transparency;	//HD profile only
+    unsigned char *rleData;
+} DivXSubPictHdr_HD;
 
 #define ERR ((void *) -1)
 #define sub_ms2pts(x) ((x) * 900)

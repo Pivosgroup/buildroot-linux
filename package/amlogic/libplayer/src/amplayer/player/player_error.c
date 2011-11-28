@@ -75,6 +75,8 @@ char * player_error_msg(int error)
         return "warning:user set playback without video";
     case PLAYER_SET_NOAUDIO:
         return "warning:user set playback without audio";
+	case PLAYER_UNSUPPORT_VCODEC:
+		return "error:unsupport video codec";
 
     case FFMPEG_OPEN_FAILED:
         return "error:can't open input file";

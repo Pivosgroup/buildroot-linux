@@ -33,7 +33,7 @@ TARGET_IS_LIB=$(TARGET:%so=yes)
 
 
 
-LDFLAGS+= -L$(PREFIX)/lib -lavutil -lavformat -lavcodec -lm  -lpthread -lamcodec 
+LDFLAGS+= -L$(PREFIX)/lib -lavutil -lavformat -lswscale -lavcodec -lavutil -lm  -lpthread -lamcodec 
 
 INSTALL_DIR?=$(PREFIX)/lib
 LDFLAGS+=-shared 
@@ -42,6 +42,7 @@ CFLAGS=$(DIRS:%/=-I$(SRC)/%/include)
 
 ifeq ($(TARGET),libamplayer.so)
 	DIRS=player/
+	DIRS+=player/system/
 else
 	DIRS=control/
 	CFLAGS+=-I$(SRC)/player/include

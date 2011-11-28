@@ -44,6 +44,7 @@ typedef enum
 
 	PLAYER_PLAY_NEXT	= 0x20009,	
 	PLAYER_BUFFER_OK	= 0x2000a,	
+	PLAYER_FOUND_SUB	= 0x2000b,
 
 	/******************************
 	* 0x3000x: 
@@ -53,12 +54,24 @@ typedef enum
 	PLAYER_PLAYEND  	= 0x30002,	
 	PLAYER_STOPED   	= 0x30003,  
 	PLAYER_EXIT   		= 0x30004, 
+
+    /******************************
+     * 0x4000x:
+     * divx drm
+     * decoder will exit or give
+     * a message dialog
+     * ****************************/
+    PLAYER_DIVX_AUTHORERR   =   0x40001,
+    PLAYER_DIVX_RENTAL_EXPIRED  =   0x40002,
+    PLAYER_DIVX_RENTAL_VIEW =   0x40003,
+
 	
 }player_status;
 
 
 typedef struct
 {   
+	int index;
     int id;    
     int width;
     int height;
@@ -132,6 +145,7 @@ typedef struct
     int total_sub_num;      
     int cur_sub_index;	
     int seekable;
+    int drm_check;
 }mstream_info_t;
 
 typedef struct
@@ -153,6 +167,7 @@ typedef struct player_info
 	int last_time;		
 	int error_no;  
 	int start_time;
+	int first_time;
 	int pts_video;
 	//int pts_pcrscr;
 	int current_pts;
@@ -163,6 +178,7 @@ typedef struct player_info
 	float video_bufferlevel; // relative value
 	int64_t	bufed_pos;
 	int	bufed_time;/* Second*/
+    unsigned int drm_rental;
 }player_info_t;
 
 typedef struct pid_info
@@ -226,6 +242,7 @@ typedef struct
 			#ifdef DEBUG_VARIABLE_DUR
 			unsigned int is_variable:1;
 			#endif
+			unsigned int displast_frame : 1;
 		};
 		int mode;
 	};  

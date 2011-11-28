@@ -40,7 +40,7 @@ unsigned int 	player_get_extern_priv(int pid);
 int 	audio_set_mute(int pid,int mute);
 int 	audio_get_volume_range(int pid,int *min,int *max);
 int 	audio_set_volume(int pid,float val);
-int 	audio_get_volume(int pid);
+int 	audio_get_volume(int pid, float *val);
 int 	audio_set_volume_balance(int pid,int balance);
 int 	audio_swap_left_right(int pid);
 int 	audio_left_mono(int pid);
@@ -49,6 +49,7 @@ int 	audio_stereo(int pid);
 int 	audio_set_spectrum_switch(int pid,int isStart,int interval);
 int 	player_register_update_callback(callback_t *cb,update_state_fun_t up_fn,int interval_s);
 char 	*player_status2str(player_status status);
+int 	player_cache_system_init(int enable,const char*dir,int max_size,int block_size);
 
 //control interface
 int     player_loop(int pid);

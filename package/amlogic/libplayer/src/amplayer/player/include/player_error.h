@@ -3,6 +3,7 @@
 
 #define P_PRE       (0x02000000)
 #define F_PRE       (0x03000000)
+#define X_PRE       (0x04000000)
 
 #define PLAYER_SUCCESS          (0)
 #define PLAYER_FAILED           (-(P_PRE|0x01))
@@ -20,6 +21,7 @@
 
 #define PLAYER_WR_FAILED        (-(P_PRE|0x21))
 #define PLAYER_WR_EMPTYP        (-(P_PRE|0x22))
+#define PLAYER_WR_AGAIN			(-(P_PRE|0x23))
 #define PLAYER_WR_FINISH        (P_PRE|0x1)
 
 #define PLAYER_PTS_ERROR        (-(P_PRE|0x31))
@@ -39,12 +41,19 @@
 #define PLAYER_NO_AUDIO         (-(P_PRE|0x45))
 #define PLAYER_SET_NOVIDEO      (-(P_PRE|0x46))
 #define PLAYER_SET_NOAUDIO      (-(P_PRE|0x47))
+#define PLAYER_FFFB_UNSUPPORT   (-(P_PRE|0x48))
+#define PLAYER_UNSUPPORT_VCODEC (-(P_PRE|0x49))
 
 #define FFMPEG_SUCCESS          (0)
 #define FFMPEG_OPEN_FAILED      (-(F_PRE|0x1))
 #define FFMPEG_PARSE_FAILED     (-(F_PRE|0x2))
 #define FFMPEG_EMP_POINTER      (-(F_PRE|0x3))
 #define FFMPEG_NO_FILE          (-(F_PRE|0x4))
+
+#define DIVX_SUCCESS            (0)
+#define DIVX_AUTHOR_ERR         (-(X_PRE|0x1))
+#define DIVX_EXPIRED            (-(X_PRE|0x2))
+
 
 char * player_error_msg(int error);
 #endif
