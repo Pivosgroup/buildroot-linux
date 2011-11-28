@@ -3,7 +3,7 @@ include $(SUBDIR)../config.mak
 NAME = avformat
 FFLIBS = avcodec avutil
 
-HEADERS = avformat.h avio.h version.h
+HEADERS = avformat.h avio.h version.h aviolpcache.h
 
 OBJS = allformats.o         \
        cutils.o             \

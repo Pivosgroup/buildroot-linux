@@ -53,7 +53,7 @@ typedef struct _ProgConfigElement {
     unsigned char cce[MAX_NUM_BCE];               /* channel coupling elements: bit 4 = switching flag, bits 3-0 = inst tag */
 } ProgConfigElement;
 
-extern  int adif_header_parse(AVStream *st,ByteIOContext *pb);
+extern  int adif_header_parse(AVStream *st, AVIOContext *pb);
 
 
 #endif
