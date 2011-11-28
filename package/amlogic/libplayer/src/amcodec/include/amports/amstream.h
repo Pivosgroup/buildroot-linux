@@ -89,7 +89,8 @@
 #define AMSTREAM_IOC_SYNCENABLE      _IOW(AMSTREAM_IOC_MAGIC, 0x43, unsigned long)
 #define AMSTREAM_IOC_GET_SYNCDISCON  _IOR(AMSTREAM_IOC_MAGIC, 0x44, unsigned long)
 #define AMSTREAM_IOC_SET_SYNCDISCON  _IOW(AMSTREAM_IOC_MAGIC, 0x45, unsigned long)
-
+#define AMSTREAM_IOC_SUB_NUM	_IOR(AMSTREAM_IOC_MAGIC, 0x50, unsigned long)
+#define AMSTREAM_IOC_SUB_INFO	_IOR(AMSTREAM_IOC_MAGIC, 0x51, unsigned long)
 
 struct buf_status {
     int size;

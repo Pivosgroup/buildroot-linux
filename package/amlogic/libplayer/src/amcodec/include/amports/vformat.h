@@ -62,6 +62,8 @@ typedef enum {
     VFORMAT_VC1,
     VFORMAT_AVS,
     VFORMAT_SW,
+    VFORMAT_H264MVC,
+    VFORMAT_UNSUPPORT,
     VFORMAT_MAX
 } vformat_t;
 

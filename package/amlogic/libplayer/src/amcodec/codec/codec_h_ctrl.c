@@ -73,7 +73,7 @@ CODEC_HANDLE codec_h_open_rd(const char *port_addr)
 /* --------------------------------------------------------------------------*/
 int codec_h_close(CODEC_HANDLE h)
 {
-    if (h >= 0) {
+    if (h > 0) {
         close(h);
     }
     return 0;

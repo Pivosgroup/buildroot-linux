@@ -35,8 +35,9 @@ typedef struct {
     unsigned int    rate;    ///< video source frame duration
     unsigned int    extra;   ///< extra data information of video stream
     unsigned int    status;  ///< status of video stream
-    float		    ratio;   ///< aspect ratio of video source
+    unsigned int    ratio;   ///< aspect ratio of video source
     void *          param;   ///< other parameters for video decoder
+    unsigned long long    ratio64;   ///< aspect ratio of video source
 } dec_sysinfo_t;
 
 typedef struct {
@@ -47,7 +48,7 @@ typedef struct {
     int codec_id;            ///< codec format id
     int block_align;         ///< audio block align from ffmpeg
     int extradata_size;      ///< extra data size
-    char extradata[2048];;   ///< extra data information for decoder
+    char extradata[AUDIO_EXTRA_DATA_SIZE];;   ///< extra data information for decoder
 } audio_info_t;
 
 typedef struct {
@@ -79,6 +80,14 @@ unsigned int noblock:
     void * adec_priv;          ///<for adec>
 } codec_para_t;
 
+typedef struct 
+{
+    signed char id;      
+    unsigned char width;
+    unsigned char height;
+	unsigned char type;    
+}subtitle_info_t;
+#define MAX_SUB_NUM			(32)
 
 #define IS_VALID_PID(t)     (t>=0 && t<=0x1fff)
 #define IS_VALID_STREAM(t)  (t>0 && t<=0x1fff)

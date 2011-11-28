@@ -147,10 +147,10 @@ int codec_set_volume(codec_para_t *p, float val)
 * @return     command result
 */
 /* --------------------------------------------------------------------------*/
-int codec_get_volume(codec_para_t *p)
+int codec_get_volume(codec_para_t *p, float *val)
 {
     int ret;
-    //ret=amadec_cmd("volget");
+    ret = audio_decode_get_volume(p->adec_priv, val);
     return ret;
 }
 

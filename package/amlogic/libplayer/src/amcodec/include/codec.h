@@ -44,6 +44,7 @@ int codec_set_cntl_syncthresh(codec_para_t *pcodec, unsigned int syncthresh);
 int codec_reset_audio(codec_para_t *pcodec);
 int codec_set_audio_pid(codec_para_t *pcodec);
 int codec_set_sub_id(codec_para_t *pcodec);
+int codec_set_sub_type(codec_para_t *pcodec);
 int codec_audio_reinit(codec_para_t *pcodec);
 int codec_set_dec_reset(codec_para_t *pcodec);
 
@@ -60,7 +61,7 @@ int codec_audio_search(codec_para_t *p);
 int codec_set_mute(codec_para_t *p, int mute);
 int codec_get_volume_range(codec_para_t *, int *min, int *max);
 int codec_set_volume(codec_para_t *, float val);
-int codec_get_volume(codec_para_t *);
+int codec_get_volume(codec_para_t *, float *val);
 int codec_get_mutesta(codec_para_t *);
 int codec_set_volume_balance(codec_para_t *, int); /*left£¨0-100)right*/
 int codec_swap_left_right(codec_para_t *);
@@ -79,4 +80,8 @@ int codec_get_pcrscr(codec_para_t *pcodec);
 int codec_set_syncenable(codec_para_t *pcodec, int enable);
 int codec_set_syncdiscont(codec_para_t *pcodec, int discontinue);
 int codec_get_syncdiscont(codec_para_t *pcodec);
+
+int codec_get_sub_num(codec_para_t *pcodec);
+int codec_get_sub_info(codec_para_t *pcodec, subtitle_info_t *sub_info);
+
 #endif

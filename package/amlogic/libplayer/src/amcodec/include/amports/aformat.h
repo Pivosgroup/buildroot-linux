@@ -55,10 +55,12 @@ typedef enum {
     AFORMAT_PCM_BLURAY  = 16,
     AFORMAT_ALAC  = 17,
     AFORMAT_VORBIS    = 18,
-    AFORMAT_MAX    = 19
+    AFORMAT_UNSUPPORT ,
+    AFORMAT_MAX    
 
 } aformat_t;
 
+#define AUDIO_EXTRA_DATA_SIZE   (4096)
 #define IS_AFMT_VALID(afmt)	((afmt > AFORMAT_UNKNOWN) && (afmt < AFORMAT_MAX))
     
 #define IS_AUIDO_NEED_EXT_INFO(afmt) ((afmt == AFORMAT_ADPCM) \
@@ -70,14 +72,15 @@ typedef enum {
 								 ||(afmt == AFORMAT_PCM_BLURAY) \
 								 ||(afmt == AFORMAT_AMR)\
 								 ||(afmt == AFORMAT_ALAC)\
-								 ||(afmt == AFORMAT_AC3))
+								 ||(afmt == AFORMAT_AC3) \
+								 ||(afmt == AFORMAT_FLAC) )
 
 
 #define IS_AUDIO_NOT_SUPPORT_EXCEED_2CH(afmt) ((afmt == AFORMAT_RAAC) \
 										||(afmt == AFORMAT_COOK) \
 										||(afmt == AFORMAT_FLAC))
 
-#define IS_AUIDO_NEED_PREFEED_HEADER(afmt) ((afmt == AFORMAT_FLAC) \
-										||(afmt == AFORMAT_VORBIS) )
+#define IS_AUIDO_NEED_PREFEED_HEADER(afmt) ((afmt == AFORMAT_VORBIS) )
+
 #endif /* AFORMAT_H */
 
