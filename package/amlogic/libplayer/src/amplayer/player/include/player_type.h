@@ -5,6 +5,7 @@
 #include <stream_format.h>
 
 #define MSG_SIZE                    64
+#define MAX_CHAPTERS                64
 #define MAX_VIDEO_STREAMS           8
 #define MAX_AUDIO_STREAMS           8
 #define MAX_SUB_INTERNAL            8
@@ -113,6 +114,7 @@ typedef struct
     aformat_t aformat;
     int duration;
 	audio_tag_info *audio_tag;    
+    char audio_language[4];
 }maudio_info_t;
 
 typedef struct
@@ -137,10 +139,12 @@ typedef struct
     int has_video;
     int has_audio;
     int has_sub;
+    int has_chapter;
     int nb_streams;
     int total_video_num;
     int cur_video_index;
     int total_audio_num;
+    int total_chapter_num;
     int cur_audio_index;
     int total_sub_num;      
     int cur_sub_index;	
@@ -149,11 +153,18 @@ typedef struct
 }mstream_info_t;
 
 typedef struct
+{
+    char    *name;
+    int64_t seekto_ms;
+} mchapter_info_t;
+
+typedef struct
 {	
 	mstream_info_t stream_info;
 	mvideo_info_t *video_info[MAX_VIDEO_STREAMS];
 	maudio_info_t *audio_info[MAX_AUDIO_STREAMS];
     msub_info_t *sub_info[MAX_SUB_STREAMS];
+  mchapter_info_t *chapter_info[MAX_CHAPTERS];
 }media_info_t;
 
 typedef struct player_info

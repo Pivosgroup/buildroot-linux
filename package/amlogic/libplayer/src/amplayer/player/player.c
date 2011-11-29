@@ -81,6 +81,13 @@ static int player_para_release(play_para_t *para)
             }
         }
     }
+
+    for(i = 0; i < MAX_CHAPTERS; i++) {
+      if(para->media_info.chapter_info[i] != NULL) {
+        FREE(para->media_info.chapter_info[i]);
+        para->media_info.chapter_info[i] = NULL;
+      }
+    }
     ffmpeg_close_file(para);
     if (para->decoder && para->decoder->release) {
         para->decoder->release(para);

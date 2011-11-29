@@ -226,6 +226,10 @@ static int set_astream_info(play_para_t *p_para)
                 ainfo->duration     = (int)(pStream->duration * pStream->time_base.num / pStream->time_base.den);
                 ainfo->bit_rate     = pStream->codec->bit_rate;
                 ainfo->aformat      = audio_type_convert(pStream->codec->codec_id, p_para->file_type);
+                AVMetadataTag *lang = av_metadata_get(pStream->metadata, "language", NULL, 0);
+                if (lang) {
+                  strncpy(ainfo->audio_language, lang->value, 3);
+                }
                 if (p_para->stream_type == STREAM_AUDIO) {
                     if (ainfo->bit_rate == 0) {
                         ainfo->bit_rate = info->bitrate;
@@ -285,6 +289,42 @@ static int set_sstream_info(play_para_t *p_para)
     return 0;
 }
 
+static int set_chapter_info(play_para_t *p_para)
+{
+    mstream_info_t *info = &p_para->media_info.stream_info;
+    mchapter_info_t *cinfo;
+    AVFormatContext *pCtx = p_para->pFormatCtx;
+    if (!info || !pCtx) {
+        return -1;
+    }
+
+    unsigned int i;
+    int snum = 0;
+    info->total_chapter_num   = (pCtx->nb_chapters > MAX_CHAPTERS) ? MAX_CHAPTERS : pCtx->nb_chapters;
+
+    for (i = 0; i < info->total_chapter_num; i ++) {
+
+      AVChapter *chapter = pCtx->chapters[i];
+      if(!chapter)
+        continue;
+
+      cinfo = MALLOC(sizeof(mchapter_info_t));
+      MEMSET(cinfo, 0, sizeof(mchapter_info_t));
+
+      cinfo->seekto_ms = chapter->start / AV_TIME_BASE;
+
+      AVMetadataTag *tag = av_metadata_get(pCtx->chapters[i]->metadata,"title", NULL, 0);
+      if(tag) {
+        cinfo->name = tag->value;
+      }
+      p_para->media_info.chapter_info[snum] = cinfo;
+      snum++;
+    }
+    info->total_chapter_num = snum;
+
+    return 0;
+}
+
 int set_media_info(play_para_t *p_para)
 {
     int ret = -1;
@@ -309,6 +349,11 @@ int set_media_info(play_para_t *p_para)
     ret = set_sstream_info(p_para);
     if (ret < 0) {
         log_error("[set_media_info]set_sstream_info failed ret=%d!\n", ret);
+    }
+	
+    ret = set_chapter_info(p_para);
+    if (ret < 0) {
+        log_error("[set_media_info]set_chapter_info failed ret=%d!\n", ret);
     }
 	
     return 0;
