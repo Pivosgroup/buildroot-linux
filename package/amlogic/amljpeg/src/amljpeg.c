@@ -123,7 +123,7 @@ int amljpeg_init()
     ioctl(fd_amport, AMSTREAM_IOC_PORT_INIT);
     while(access(FILE_NAME_JPEGDEC, R_OK|W_OK)){	 //waitting for device created.
       	i ++;
-//		usleep(1000);
+		usleep(1000);
       	if(i>1000)
       	{
 #ifdef JPEG_DBG       	    
