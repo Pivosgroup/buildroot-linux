@@ -2,6 +2,7 @@
 #define _PLAYER_PRIV_H_
 //header file
 #include <unistd.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <getopt.h>

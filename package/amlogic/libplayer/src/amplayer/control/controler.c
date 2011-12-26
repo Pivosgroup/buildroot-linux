@@ -173,7 +173,7 @@ static int parse_command(global_ctrl_para_t *p, player_cmd_t *cmd)
     if(ret == VALID_CMD)
     {
         if(cmd->set_mode != 0)
-            log_print("[parse_command:%d]pid=%d set_mode=%x param=%d %x\n",__LINE__,pid,cmd->set_mode, cmd->param,cmd->param1);
+            log_print("[parse_command:%d]pid=%d set_mode=%x param=%lld %llx\n",__LINE__,pid,cmd->set_mode, cmd->param,cmd->param1);
         //set play mode
         if(cmd->set_mode & CMD_LOOP)
         {    
@@ -378,7 +378,7 @@ static int parse_command(global_ctrl_para_t *p, player_cmd_t *cmd)
         
         //control command
         if(cmd->ctrl_cmd > 0)
-            log_print("[parse_command:%d]pid[%d]:cmd=%x param=%d\n",__LINE__,cmd->pid,cmd->ctrl_cmd,cmd->param);
+            log_print("[parse_command:%d]pid[%d]:cmd=%x param=%lld\n",__LINE__,cmd->pid,cmd->ctrl_cmd,cmd->param);
         
         if(cmd->ctrl_cmd & CMD_EXIT)
     	{
@@ -571,7 +571,7 @@ void * controler_run(void * para_in)
                 if((cmd.ctrl_cmd & CMD_PLAY) || (cmd.ctrl_cmd & CMD_PLAY_START))
                     log_print("filename=%s ",cmd.filename);
                 else
-                    log_print("param=%d %d ", cmd.param,cmd.param1);
+                    log_print("param=%lld %lld ", cmd.param,cmd.param1);
             }
             if(cmd.info_cmd!=0) log_print("info_cmd=0x%x ",cmd.info_cmd);
             if(cmd.set_mode!=0) log_print("set_mode=0x%x ",cmd.set_mode);            

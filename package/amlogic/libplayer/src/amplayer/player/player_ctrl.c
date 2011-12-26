@@ -118,7 +118,7 @@ int player_start(play_control_t *ctrl_p, unsigned long  priv)
     MEMSET(p_para, 0, sizeof(play_para_t));
 
     /* init time_point to a invalid value */
-    p_para->playctrl_info.time_point = -1;
+    p_para->playctrl_info.time_point_ms = -1;
 
     player_init_pid_data(pid, p_para);
 
@@ -447,6 +447,7 @@ int player_noloop(int pid)
  *
  * @param[in]   pid player tag which get from player_start return value
  * @param[in]   s_time target time, unit is second
+ * @param[in]   ms_time target time, unit is millisecond
  *
  * @return  PLAYER_NOT_VALID_PID    playet tag invalid
  *          PLAYER_NOMEM            alloc memory failed
@@ -466,7 +467,40 @@ int player_timesearch(int pid, int s_time)
     MEMSET(&cmd, 0, sizeof(player_cmd_t));
 
     cmd.ctrl_cmd = CMD_SEARCH;
-    cmd.param = s_time;
+    cmd.param = s_time * 1000;
+
+    ret = player_send_message(pid, &cmd);
+    log_print("[player_timesearch:exit]pid=%d ret=%d\n", pid, ret);
+
+    return ret;
+}
+
+/* --------------------------------------------------------------------------*/
+/**
+ * @brief   player_timesearch_ms
+ *
+ * @param[in]   pid player tag which get from player_start return value
+ * @param[in]   ms_time target time, unit is millisecond
+ *
+ * @return  PLAYER_NOT_VALID_PID    playet tag invalid
+ *          PLAYER_NOMEM            alloc memory failed
+ *          PLAYER_SUCCESS          success
+ *
+ * @details seek to designated time point to play.
+ *          After time search, player playback from a key frame
+ */
+/* --------------------------------------------------------------------------*/
+int player_timesearch_ms(int pid, int64_t ms_time)
+{
+    player_cmd_t cmd;
+    int ret;
+
+    log_print("[player_timesearch:enter]pid=%d ms_time=%lld\n", pid, ms_time);
+
+    MEMSET(&cmd, 0, sizeof(player_cmd_t));
+
+    cmd.ctrl_cmd = CMD_SEARCH;
+    cmd.param = ms_time;
 
     ret = player_send_message(pid, &cmd);
     log_print("[player_timesearch:exit]pid=%d ret=%d\n", pid, ret);
@@ -535,7 +569,7 @@ int player_backward(int pid, int speed)
     cmd.param = speed;
 
     ret = player_send_message(pid, &cmd);
-    log_print("[player_backward]cmd=%x param=%d ret=%d\n", cmd.ctrl_cmd, cmd.param, ret);
+    log_print("[player_backward]cmd=%x param=%lld ret=%d\n", cmd.ctrl_cmd, cmd.param, ret);
 
     return ret;
 }

@@ -69,16 +69,16 @@ typedef struct {
     union {
         char *filename;
         char *file_list;
-        int param;
-        float f_param;
+        int64_t param;
+        double f_param;
     };
     union {
-        int param1;
-        float f_param1;
+        int64_t param1;
+        double f_param1;
     };
     union {
-        int param2;
-        float f_param2;
+        int64_t param2;
+        double f_param2;
     };
 } player_cmd_t;
 

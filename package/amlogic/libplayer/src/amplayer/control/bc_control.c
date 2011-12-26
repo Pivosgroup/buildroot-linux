@@ -5,6 +5,7 @@
  *
  */
 #include <stdio.h>
+#include <stdint.h>
 #include <codec.h>
 #include <player_ctrl.h>
 #include <log_print.h>
@@ -217,7 +218,7 @@ static int bc_control_get_command(player_cmd_t *playercmd)
                 p++;
                 sscanf(p,"%d",&r);
                 playercmd->ctrl_cmd = CMD_SEARCH;
-                playercmd->param = r;
+                playercmd->param = r * 1000;
             }
             else
             {
@@ -365,7 +366,7 @@ static int bc_control_get_command(player_cmd_t *playercmd)
         num = player_list_pid(pid, MAX_PLAYER_THREADS);
         if(num == 1)
             playercmd->pid = pid[0];
-        log_print("[bc_get_command:%d]num=%d pid=%d param=%d\n",__LINE__,num,playercmd->pid, playercmd->param);
+        log_print("[bc_get_command:%d]num=%d pid=%d param=%lld\n",__LINE__,num,playercmd->pid, playercmd->param);
 		log_print("[bc_get_command:%d]cmd str=%s ctrl_cmd=0x%x info_cmd=0x%x set_mode=0x%x\n",
               __LINE__, str, playercmd->ctrl_cmd, playercmd->info_cmd, playercmd->set_mode);
         return 0;

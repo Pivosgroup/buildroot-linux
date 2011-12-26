@@ -246,23 +246,23 @@ int cmd2str(player_cmd_t *cmd, char *buf)
             break;
 
         case CMD_SEARCH:
-            len = sprintf(buf, "%s:%d", "PLAYER_SEEK", cmd->param);
+            len = sprintf(buf, "%s:%lld", "PLAYER_SEEK", cmd->param);
             break;
 
         case CMD_FF:
-            len = sprintf(buf, "%s:%d", "PLAYER_FF", cmd->param);
+            len = sprintf(buf, "%s:%lld", "PLAYER_FF", cmd->param);
             break;
 
         case CMD_FB:
-            len = sprintf(buf, "%s:%d", "PLAYER_FR", cmd->param);
+            len = sprintf(buf, "%s:%lld", "PLAYER_FR", cmd->param);
             break;
 
         case CMD_SWITCH_AID:
-            len = sprintf(buf, "%s:%d", "SWITCH_AUDIO", cmd->param);
+            len = sprintf(buf, "%s:%lld", "SWITCH_AUDIO", cmd->param);
             break;
 
         case CMD_SWITCH_SID:
-            len = sprintf(buf, "%s:%d", "SWITCH_SUBTITLE", cmd->param);
+            len = sprintf(buf, "%s:%lld", "SWITCH_SUBTITLE", cmd->param);
             break;
 
         default:
@@ -306,7 +306,7 @@ int cmd2str(player_cmd_t *cmd, char *buf)
             break;
 
         case CMD_SET_VOLUME:
-            len = sprintf(buf, "%s:%d", "SET_VOLUME", cmd->param);
+            len = sprintf(buf, "%s:%lld", "SET_VOLUME", cmd->param);
             break;
 
         case CMD_SPECTRUM_SWITCH:
@@ -390,4 +390,4 @@ int send_event(play_para_t *para, int msg, unsigned long ext1, unsigned long ext
         cb->notify_fn(para->player_id, msg, ext1, ext2);
     }
     return 0;
-}            
+}

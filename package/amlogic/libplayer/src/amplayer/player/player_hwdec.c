@@ -925,7 +925,7 @@ int pre_header_feeding(play_para_t *para)
             pkt->hdr = NULL;
         }
 
-    } else if (para->stream_type == STREAM_PS && para->vstream_info.has_video && para->playctrl_info.time_point > 0) {
+    } else if (para->stream_type == STREAM_PS && para->vstream_info.has_video && para->playctrl_info.time_point_ms > 0) {
         if (pkt->hdr == NULL) {
             pkt->hdr = MALLOC(sizeof(hdr_buf_t));
             pkt->hdr->data = (char *)MALLOC(HDR_BUF_SIZE);

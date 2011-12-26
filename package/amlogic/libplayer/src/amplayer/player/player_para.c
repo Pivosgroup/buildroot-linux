@@ -690,7 +690,7 @@ static int set_decode_para(play_para_t*am_p)
 
 static int fb_reach_head(play_para_t *para)
 {
-    para->playctrl_info.time_point = 0;
+    para->playctrl_info.time_point_ms = 0;
     set_player_state(para, PLAYER_FB_END);
     update_playing_info(para);
     update_player_states(para, 1);
@@ -702,11 +702,11 @@ static int ff_reach_end(play_para_t *para)
     //set_black_policy(para->playctrl_info.black_out);
     para->playctrl_info.f_step = 0;
     if (para->playctrl_info.loop_flag) {
-        para->playctrl_info.time_point = 0;
+        para->playctrl_info.time_point_ms = 0;
         para->playctrl_info.init_ff_fr = 0;
         log_print("ff reach end,loop play\n");
     } else {
-        para->playctrl_info.time_point = para->state.full_time;
+        para->playctrl_info.time_point_ms = para->state.full_time*1000;
         log_print("ff reach end,stop play\n");
     }
     set_player_state(para, PLAYER_FF_END);
@@ -757,11 +757,11 @@ int player_dec_reset(play_para_t *p_para)
     const stream_decoder_t *decoder;
     int ret = PLAYER_SUCCESS;
     AVFormatContext *pFormatCtx = p_para->pFormatCtx;;
-    unsigned int time_point = p_para->playctrl_info.time_point;
+    int64_t time_point_ms = p_para->playctrl_info.time_point_ms;
     int64_t timestamp = 0;
     int mute_flag = 0;
 
-    timestamp = (int64_t)time_point * AV_TIME_BASE;
+    timestamp = time_point_ms * (AV_TIME_BASE/1000);
     if (p_para->vstream_info.has_video
         && (timestamp != pFormatCtx->start_time)
         && (p_para->stream_type == STREAM_ES)) {
@@ -810,36 +810,36 @@ int player_dec_reset(play_para_t *p_para)
     }
 
     if (p_para->playctrl_info.fast_forward) {
-        if (p_para->playctrl_info.time_point >= p_para->state.full_time && 
+        if (p_para->playctrl_info.time_point_ms >= (p_para->state.full_time*1000) && 
 			p_para->state.full_time > 0) {			
             p_para->playctrl_info.end_flag = 1;
 			set_black_policy(p_para->playctrl_info.black_out);
-			log_print("[%s]ff end: tpos=%d black=%d\n", __FUNCTION__, p_para->playctrl_info.time_point, p_para->playctrl_info.black_out);
+			log_print("[%s]ff end: tpos(ms)=%lld black=%d\n", __FUNCTION__, p_para->playctrl_info.time_point_ms, p_para->playctrl_info.black_out);
             return ret;
         }
 
-        log_print("[player_dec_reset]time_point=%d step=%d\n", p_para->playctrl_info.time_point, p_para->playctrl_info.f_step);
-        p_para->playctrl_info.time_point += p_para->playctrl_info.f_step;
-        if (p_para->playctrl_info.time_point >= p_para->state.full_time &&
+        log_print("[player_dec_reset]time_point(ms)=%lld step=%d\n", p_para->playctrl_info.time_point_ms, p_para->playctrl_info.f_step);
+        p_para->playctrl_info.time_point_ms += p_para->playctrl_info.f_step*1000;
+        if (p_para->playctrl_info.time_point_ms >= (p_para->state.full_time*1000) &&
 			p_para->state.full_time > 0) {
             ff_reach_end(p_para);
             log_print("reach stream end,play end!\n");
         }
     } else if (p_para->playctrl_info.fast_backward) {
-        if (p_para->playctrl_info.time_point == 0) {
+        if (p_para->playctrl_info.time_point_ms == 0) {
             p_para->playctrl_info.init_ff_fr = 0;
             p_para->playctrl_info.f_step = 0;
         }
-        if ((p_para->playctrl_info.time_point >= p_para->playctrl_info.f_step) && 
-			(p_para->playctrl_info.time_point > 0)) {
-            	p_para->playctrl_info.time_point -= p_para->playctrl_info.f_step;        	
+        if ((p_para->playctrl_info.time_point_ms >= (p_para->playctrl_info.f_step*1000)) && 
+			(p_para->playctrl_info.time_point_ms > 0)) {
+            	p_para->playctrl_info.time_point_ms -= p_para->playctrl_info.f_step*1000;        	
         } else {
             fb_reach_head(p_para);
             log_print("reach stream head,fast backward stop,play from start!\n");
         }
     } else {
         if (!p_para->playctrl_info.search_flag && p_para->playctrl_info.loop_flag) {
-            p_para->playctrl_info.time_point = 0;
+            p_para->playctrl_info.time_point_ms = 0;
         }
     }
     if (p_para->stream_type == STREAM_AUDIO) {
@@ -862,7 +862,7 @@ int player_dec_reset(play_para_t *p_para)
         log_print("[%s:%d]audio_mute=%d\n", __FUNCTION__, __LINE__, p_para->playctrl_info.audio_mute);
         codec_audio_automute(p_para->acodec->adec_priv, p_para->playctrl_info.audio_mute);
     }
-    p_para->state.last_time = p_para->playctrl_info.time_point;
+    p_para->state.last_time = p_para->playctrl_info.time_point_ms/1000;
     return ret;
 }
 static int check_ctx_bitrate(play_para_t *p_para)
@@ -1063,18 +1063,18 @@ int player_dec_init(play_para_t *p_para)
         }
         log_print("====bitrate=%d max_raw_size=%d\n", p_para->pFormatCtx->bit_rate, p_para->max_raw_size);
     }
-    if (p_para->playctrl_info.time_point >= 0) {
+    if (p_para->playctrl_info.time_point_ms >= 0) {
         ret = time_search(p_para);
         if (ret != PLAYER_SUCCESS) {
 			set_player_state(p_para, PLAYER_ERROR);
 		    ret = PLAYER_SEEK_FAILED;
-            log_error("[%s:%d]time_search to pos:%ds failed!", __FUNCTION__, __LINE__, p_para->playctrl_info.time_point);
+            log_error("[%s:%d]time_search(ms) to pos:%ds failed!", __FUNCTION__, __LINE__, p_para->playctrl_info.time_point_ms);
             goto init_fail;
         }
 		
-		if(p_para->playctrl_info.time_point < p_para->state.full_time){
-			p_para->state.current_time = p_para->playctrl_info.time_point;
-			p_para->state.current_ms=p_para->playctrl_info.time_point*1000;
+		if(p_para->playctrl_info.time_point_ms < p_para->state.full_time*1000){
+			p_para->state.current_time = p_para->playctrl_info.time_point_ms/1000;
+			p_para->state.current_ms=p_para->playctrl_info.time_point_ms;
 		}
     } else if (p_para->playctrl_info.raw_mode) {
         //log_print("*****data offset 0x%x\n", p_para->data_offset);

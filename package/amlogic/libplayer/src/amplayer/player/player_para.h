@@ -104,13 +104,13 @@ typedef  struct {
     unsigned int switch_audio_id;
     unsigned int switch_sub_id;
     unsigned int is_playlist;	
-    int time_point;
+    int64_t time_point_ms;
     int f_step;
     int read_max_retry_cnt;
 	int audio_ready;		
     int check_lowlevel_eagain_cnt;
     int check_audio_ready_ms;
-    int last_seek_time_point;
+    int64_t last_seek_time_point_ms;
     int64_t last_seek_offset;
     int seek_offset_same;
 } p_ctrl_info_t;

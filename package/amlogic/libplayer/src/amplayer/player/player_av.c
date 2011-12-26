@@ -802,9 +802,9 @@ static int check_write_finish(play_para_t *para)
     return PLAYER_WR_FAILED;
 }
 
-static int64_t rm_offset_search_pts(AVStream *pStream, unsigned int timepoint)
+static int64_t rm_offset_search_pts(AVStream *pStream, int64_t timepoint_ms)
 {
-    int64_t wanted_pts = timepoint * 1000;
+    int64_t wanted_pts = timepoint_ms;
     int index_entry, index_entry_f, index_entry_b;
     int64_t pts_f, pts_b;
 
@@ -816,7 +816,7 @@ static int64_t rm_offset_search_pts(AVStream *pStream, unsigned int timepoint)
             log_error("[%s]not found valid backward index entry\n", __FUNCTION__);
             return 0;
         } else {
-            log_print("[%s:%d]time_point=%d pos=0x%llx\n", __FUNCTION__, __LINE__, timepoint, pStream->index_entries[index_entry_b].pos);
+            log_print("[%s:%d]time_point(ms)=%lld pos=0x%llx\n", __FUNCTION__, __LINE__, timepoint_ms, pStream->index_entries[index_entry_b].pos);
             return pStream->index_entries[index_entry_b].pos;
         }
     }
@@ -843,7 +843,7 @@ static int64_t rm_offset_search_pts(AVStream *pStream, unsigned int timepoint)
     return pStream->index_entries[index_entry].pos;
 }
 
-static int64_t rm_offset_search(play_para_t *am_p, int64_t offset, unsigned int time_point)
+static int64_t rm_offset_search(play_para_t *am_p, int64_t offset, int64_t time_point_ms)
 {
     int read_length = 0;
     unsigned char *data;
@@ -870,8 +870,8 @@ static int64_t rm_offset_search(play_para_t *am_p, int64_t offset, unsigned int 
 
     if (i < s->nb_streams) {
         if (s->index_builded && (pStream->nb_index_entries > 1)) {
-			cur_offset = rm_offset_search_pts(pStream, time_point);
-			log_info("rm time search by index:pos=%d offset=%lld\n", time_point, cur_offset);
+			cur_offset = rm_offset_search_pts(pStream, time_point_ms);
+			log_info("rm time search(ms) by index:pos=%lld offset=%lld\n", time_point_ms, cur_offset);
             return cur_offset;
         }
     }
@@ -1017,7 +1017,7 @@ int update_variable_info(play_para_t *para)
 int time_search(play_para_t *am_p)
 {
     AVFormatContext *s = am_p->pFormatCtx;
-    unsigned int time_point = am_p->playctrl_info.time_point;
+    int64_t time_point_ms = am_p->playctrl_info.time_point_ms;
     int64_t timestamp = 0;
     int64_t offset = 0;
     unsigned int temp = 0;
@@ -1032,11 +1032,11 @@ int time_search(play_para_t *am_p)
     }
     
     temp = (unsigned int)(s->duration / AV_TIME_BASE);
-    log_info("[time_search:%d]time_point =%d temp=%d duration= %lld\n", __LINE__, time_point, temp, s->duration);
+    log_info("[time_search:%d]time_point(ms) =%lld temp=%d duration= %lld\n", __LINE__, time_point_ms, temp, s->duration);
     /* if seeking requested, we execute it */
-    if (url_support_time_seek(s->pb) && time_point > 0) {
-        log_info("[time_search:%d] direct seek to time_point =%d\n", __LINE__, time_point);
-        ret = url_fseektotime(s->pb, time_point,seek_flags);
+    if (url_support_time_seek(s->pb) && time_point_ms > 0) {
+        log_info("[time_search:%d] direct seek to time_point(ms) =%lld\n", __LINE__, time_point_ms);
+        ret = url_fseektotime(s->pb, time_point_ms/1000, seek_flags);
         if (ret >= 0) {
             av_read_frame_flush(s);
             am_p->discontinue_point = ret;
@@ -1045,7 +1045,7 @@ int time_search(play_para_t *am_p)
         }
         /*failed*/
         return PLAYER_SEEK_FAILED;
-    } else if (time_point <= temp) {
+    } else if (time_point_ms <= (temp*1000)) {
         if (am_p->file_type == AVI_FILE ||
             am_p->file_type == MP4_FILE ||
             am_p->file_type == MKV_FILE ||
@@ -1054,10 +1054,10 @@ int time_search(play_para_t *am_p)
             am_p->file_type == P2P_FILE ||
             am_p->file_type == ASF_FILE) {
             if (am_p->file_type == AVI_FILE && !s->seekable) {
-                time_point = am_p->state.current_time;
+                time_point_ms = am_p->state.current_ms;
             }
 
-            timestamp = (int64_t)time_point * AV_TIME_BASE;
+            timestamp = time_point_ms * (AV_TIME_BASE/1000);
             /* add the stream start time */
             if (s->start_time != (int64_t)AV_NOPTS_VALUE) {
                 timestamp += s->start_time;
@@ -1074,12 +1074,12 @@ int time_search(play_para_t *am_p)
 				seek_flags |= AVSEEK_FLAG_ANY;
 			}
 
-			log_info("[time_search:%d] stream_index %d, time_point=%d timestamp=%lld start_time=%lld\n",
-                     __LINE__, stream_index, time_point, timestamp, s->start_time);
+			log_info("[time_search:%d] stream_index %d, time_point(ms)=%lld timestamp=%lld start_time=%lld\n",
+                     __LINE__, stream_index, time_point_ms, timestamp, s->start_time);
 
             if ((am_p->vstream_info.video_index == -1 || !am_p->vstream_info.has_video)
                 && am_p->stream_type != STREAM_ES) {
-                offset = ((int64_t)time_point * (s->bit_rate >> 3));
+                offset = ( time_point_ms/1000 * (s->bit_rate >> 3));
                 ret = url_fseek(s->pb, offset, SEEK_SET);
                 if (ret < 0) {
                     log_info("%s: could not seek to position 0x%llx  ret=0x%llx\n", s->filename, offset, ret);
@@ -1092,22 +1092,22 @@ int time_search(play_para_t *am_p)
                     return PLAYER_SEEK_FAILED;
                 }
                 offset = url_ftell(s->pb);
-                if ((am_p->playctrl_info.last_seek_time_point != time_point)
+                if ((am_p->playctrl_info.last_seek_time_point_ms != time_point_ms)
                     && (am_p->playctrl_info.last_seek_offset == offset)) {
                     am_p->playctrl_info.seek_offset_same = 1;
                 } else {
                     am_p->playctrl_info.seek_offset_same = 0;
                     am_p->playctrl_info.last_seek_offset = offset;
                 }
-                am_p->playctrl_info.last_seek_time_point = time_point;
+                am_p->playctrl_info.last_seek_time_point_ms = time_point_ms;
             }
         } else {
-            offset = ((int64_t)time_point * (s->bit_rate >> 3));
-            log_info("time_point = %d  bit_rate=%x offset=0x%llx\n", time_point, s->bit_rate, offset);
+            offset = (time_point_ms/1000 * (s->bit_rate >> 3));
+            log_info("time_point(ms) = %lld  bit_rate=%x offset=0x%llx\n", time_point_ms, s->bit_rate, offset);
 
             if (am_p->file_type == RM_FILE) {
                 if (offset > 0) {
-                    offset = rm_offset_search(am_p, am_p->data_offset + offset, time_point);
+                    offset = rm_offset_search(am_p, am_p->data_offset + offset, time_point_ms);
                 } else {
                     offset = am_p->data_offset;
                 }
@@ -1120,12 +1120,12 @@ int time_search(play_para_t *am_p)
 				sample_size = 4;
 			else
 				sample_size = 2;
-			offset = /*am_p->data_offset + */((int64_t)time_point * (s->bit_rate >> 3));
+			offset = /*am_p->data_offset + */(time_point_ms/1000 * (s->bit_rate >> 3));
 			offset -= offset%codec->block_align;
 			offset -= (offset % (codec->channels* sample_size) );
 			offset += am_p->data_offset;
             }
-            log_info("time_point = %d  offset=%llx \n", time_point, offset);
+            log_info("time_point(ms) = %lld  offset=%llx \n", time_point_ms, offset);
             if (offset > s->valid_offset) {
                 offset = url_ftell(s->pb);
                 log_info("seek offset exceed, use current 0x%llx\n", offset);
@@ -1138,7 +1138,7 @@ int time_search(play_para_t *am_p)
         }
 
         /* reset seek info */
-        //time_point = 0;
+        //time_point_ms = 0;
     }
     return PLAYER_SUCCESS;
 }
@@ -1227,9 +1227,9 @@ int write_av_packet(play_para_t *para)
                     para->playctrl_info.reset_flag = 1;
                     para->playctrl_info.end_flag = 1;
                     if (para->state.start_time != -1) {
-                        para->playctrl_info.time_point = (para->state.pts_video - para->state.start_time)/ PTS_FREQ;
+                        para->playctrl_info.time_point_ms = (para->state.pts_video - para->state.start_time)/ PTS_FREQ_MS;
                     } else {
-                        para->playctrl_info.time_point = para->state.pts_video/ PTS_FREQ;
+                        para->playctrl_info.time_point_ms = para->state.pts_video/ PTS_FREQ_MS;
                     }
                     
                     log_print("$$$$$$[type:%d] write blocked, need reset decoder!$$$$$$\n", pkt->type);
@@ -1361,11 +1361,11 @@ int check_in_pts(play_para_t *para)
     } else if (para->stream_type == STREAM_AUDIO) {
         if (!para->astream_info.check_first_pts) {
             if (!url_support_time_seek(para->pFormatCtx->pb) &&
-                (para->playctrl_info.time_point == -1)) {
+                (para->playctrl_info.time_point_ms == -1)) {
 
-                para->playctrl_info.time_point = 0;
+                para->playctrl_info.time_point_ms = 0;
             }
-            pts = para->playctrl_info.time_point * PTS_FREQ;
+            pts = para->playctrl_info.time_point_ms * PTS_FREQ_MS;
             if (codec_checkin_pts(pkt->codec, pts) != 0) {
                 log_print("ERROR pid[%d]: check in 0 to audio pts error!\n", para->player_id);
                 return PLAYER_PTS_ERROR;
@@ -1815,8 +1815,8 @@ int process_es_subtitle(play_para_t *para)
     sub_header[19] = last_duration & 0xff;
 
 
-    log_print("[ sub_type:0x%x,   data_size:%d,  sub_pts:%lld last_duration %d]\n", sub_type , data_size, sub_pts, last_duration);
-    log_print("[ sizeof:%d ]\n", sizeof(sub_header));
+    //log_print("[ sub_type:0x%x,   data_size:%d,  sub_pts:%lld last_duration %d]\n", sub_type , data_size, sub_pts, last_duration);
+    //log_print("[ sizeof:%d ]\n", sizeof(sub_header));
 
     if (write_sub_data(pkt, (char *)&sub_header, sizeof(sub_header))) {
         log_print("[%s:%d]write sub header failed\n", __FUNCTION__, __LINE__);
@@ -1960,7 +1960,7 @@ void player_switch_audio(play_para_t *para)
         && para->astream_info.audio_format == AFORMAT_PCM_BLURAY) {
     	para->playctrl_info.reset_flag = 1;
 	    para->playctrl_info.end_flag = 1;
-	    para->playctrl_info.time_point = para->state.current_time;
+	    para->playctrl_info.time_point_ms = para->state.current_ms;
         return;
     }
 */	
@@ -2114,10 +2114,10 @@ void player_switch_audio(play_para_t *para)
 		log_print("[%s:%d]finish bakup packet,do seek\n", __FUNCTION__, __LINE__);
 
         /* time search based on audio */
-        para->playctrl_info.time_point = para->state.current_time;
+        para->playctrl_info.time_point_ms = para->state.current_ms;
         ret = time_search(para);
         if (ret != PLAYER_SUCCESS) {
-            log_error("[%s:%d]time_search to pos:%ds failed!", __FUNCTION__, __LINE__, para->playctrl_info.time_point);
+            log_error("[%s:%d]time_search(ms) to pos:%lldms failed!", __FUNCTION__, __LINE__, para->playctrl_info.time_point_ms);
         } 
 
         para->playctrl_info.read_end_flag = end_flag;
