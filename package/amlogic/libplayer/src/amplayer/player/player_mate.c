@@ -16,8 +16,8 @@
 #include "thread_mgt.h"
 #include <semaphore.h>
 
-//#define mate_print(fmt,args...) 	log_print(fmt,##args)
-#define mate_print(fmt...)
+#define mate_print(fmt,args...) 	log_print(fmt,##args)
+//#define mate_print(fmt...)
 
 struct player_mate{
     pthread_mutex_t  pthread_mutex;
