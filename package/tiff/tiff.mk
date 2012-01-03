@@ -15,9 +15,10 @@ TIFF_CONF_OPT = \
 	--without-x \
 
 TIFF_DEPENDENCIES = host-pkg-config zlib jpeg
-
+HOST_TIFF_DEPENDENCIES = host-zlib host-jpeg
 define TIFF_INSTALL_TARGET_CMDS
 	-cp -a $(@D)/libtiff/.libs/libtiff.so* $(TARGET_DIR)/usr/lib/
 endef
 
 $(eval $(call AUTOTARGETS,package,tiff))
+$(eval $(call AUTOTARGETS,package,tiff,host))

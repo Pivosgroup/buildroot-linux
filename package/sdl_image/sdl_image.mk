@@ -34,4 +34,7 @@ SDL_IMAGE_DEPENDENCIES:=sdl \
 	$(if $(BR2_PACKAGE_SDL_IMAGE_PNG),libpng) \
 	$(if $(BR2_PACKAGE_SDL_IMAGE_TIFF),tiff)
 
+HOST_SDL_IMAGE_DEPENDENCIES:=host-jpeg host-libpng host-tiff host-sdl
+
 $(eval $(call AUTOTARGETS,package,sdl_image))
+$(eval $(call AUTOTARGETS,package,sdl_image,host))
