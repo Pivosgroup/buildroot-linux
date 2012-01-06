@@ -1,0 +1,8 @@
+config BR2_PACKAGE_UBOOTAML
+	bool "ubootaml"
+	help
+	  uBoot from AMLogic's Android repo
+
+	  http://openlinux.amlogic.com
+
+

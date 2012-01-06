@@ -16,5 +16,6 @@ source "package/amlogic/kplayer/Config.in"
 source "package/amlogic/libimecore/Config.in"
 source "package/amlogic/libxfer/Config.in"
 source "package/amlogic/opengl/Config.in"
+source "package/amlogic/ubootaml/Config.in"
 source "package/amlogic/xbmc/Config.in"
 endmenu
