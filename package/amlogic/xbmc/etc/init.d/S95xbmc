@@ -10,7 +10,7 @@ case "$1" in
         export PATH=/opt/xbmc-aml/bin:$PATH
         export XBMC_HOME=/opt/xbmc-aml/share/xbmc
         /usr/bin/amremote_config /etc/xbmc/remote.conf
-	fbset -g 1280 720 1280 1440 32
+        fbset -g 1280 720 1280 1440 32
         /opt/xbmc-aml/lib/xbmc/xbmc.bin --settings=/etc/xbmc/xbmc-settings.xml
         ;;
   stop)
