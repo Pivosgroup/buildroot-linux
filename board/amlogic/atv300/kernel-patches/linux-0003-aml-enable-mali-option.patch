@@ -1,0 +1,25 @@
+From 6582be358d65b88cb38929f8e62c4f346f7718c8 Mon Sep 17 00:00:00 2001
+From: theuni <theuni-nospam-@xbmc.org>
+Date: Mon, 16 Jan 2012 23:40:21 -0500
+Subject: [PATCH 3/3] [aml] enable mali option
+
+---
+ drivers/amlogic/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/amlogic/Kconfig b/drivers/amlogic/Kconfig
+index 6d62193..f170ccd 100644
+--- a/drivers/amlogic/Kconfig
++++ b/drivers/amlogic/Kconfig
+@@ -45,7 +45,7 @@ source "drivers/amlogic/audiodsp/Kconfig"
+ source "drivers/amlogic/cmem/Kconfig"
+ source "drivers/amlogic/jpeglogo/Kconfig"
+ source "drivers/amlogic/audiodsplog/Kconfig"
+-
++source "drivers/amlogic/mali/Kconfig"
+ source "drivers/amlogic/dvb/Kconfig"
+ 
+ endmenu
+-- 
+1.7.4.1
+
