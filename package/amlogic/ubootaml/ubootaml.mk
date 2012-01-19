@@ -14,7 +14,7 @@ endef
 
 define UBOOTAML_INSTALL_STAGING_CMDS
 	cp -f $(@D)/build/u-boot-aml-ucl.bin $(BINARIES_DIR)/spi_M3_512.bin
-	install $(@D)/build/tools/mkimage $(HOST_DIR)/usr/bin
+	install $(@D)/build/tools/mkimage $(HOST_DIR)/usr/bin/mkimage
 endef
 
 $(eval $(call GENTARGETS,package/amlogic,ubootaml))
