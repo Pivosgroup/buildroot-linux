@@ -74,9 +74,9 @@ typedef unsigned int   VGbitfield;
 
 #ifndef VG_VGEXT_PROTOTYPES
 #define VG_VGEXT_PROTOTYPES
-#endif 
+#endif
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 } /* extern "C" */
 #endif
 
