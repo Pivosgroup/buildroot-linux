@@ -1,0 +1,7 @@
+config BR2_PACKAGE_LIBNFS
+        bool "libnfs"
+        help
+          LIBNFS is a client library for accessing NFS shares over a network.
+
+          https://github.com/sahlberg/libnfs
+

@@ -1,0 +1,13 @@
+menu "XBMC Dependencies"
+source "package/thirdparty/boost/Config.in"
+source "package/thirdparty/fribidi/Config.in"
+source "package/thirdparty/jasper/Config.in"
+source "package/thirdparty/libass/Config.in"
+source "package/thirdparty/libcdio/Config.in"
+source "package/thirdparty/libenca/Config.in"
+source "package/thirdparty/libmodplug/Config.in"
+source "package/thirdparty/libnfs/Config.in"
+source "package/thirdparty/librtmp/Config.in"
+source "package/thirdparty/libssh2/Config.in"
+source "package/thirdparty/yajl/Config.in"
+endmenu

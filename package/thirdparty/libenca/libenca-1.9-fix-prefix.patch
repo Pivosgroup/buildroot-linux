@@ -1,0 +1,19 @@
+--- libenca-1.9.orig/configure
++++ libenca-1.9/configure
+
+@@ -20808,15 +20808,6 @@ _ACEOF
+ fi
+ 
+ 
+-if test "$prefix" = "NONE"; then
+-  LDFLAGS="$LDFLAGS -L$ac_default_prefix/lib"
+-  CPPFLAGS="$CPPFLAGS -I$ac_default_prefix/include"
+-else
+-  LDFLAGS="$LDFLAGS -L$prefix/lib"
+-  CPPFLAGS="$CPPFLAGS -I$prefix/include"
+-fi
+-
+-
+ case "$target" in
+ NONE) yeti_libm_target="$host" ;;
+ *) yeti_libm_target="$target" ;;

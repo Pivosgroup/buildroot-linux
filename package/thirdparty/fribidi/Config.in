@@ -1,0 +1,6 @@
+config BR2_PACKAGE_FRIBIDI
+       bool "fribidi"
+       help
+         Free Implementation of the Unicode BiDi algorithm for Hebrew and/or Arabic languages.
+
+         http://fribidi.org/download

@@ -1,0 +1,81 @@
+config BR2_PACKAGE_BOOST
+	bool "boost"
+	depends on BR2_INSTALL_LIBSTDCPP
+	help
+	  A well-knownd C++ library
+	  http://www.boost.org
+
+menu "Boost library selection"
+        depends on BR2_PACKAGE_BOOST
+
+config BR2_PACKAGE_BOOST_DATETIME
+	bool "enable date_time library"
+	default n
+
+config BR2_PACKAGE_BOOST_FILESYSTEM
+	bool "enable filesystem library"
+	default n
+
+config BR2_PACKAGE_BOOST_GRAPH
+	bool "enable graph library"
+	default n
+
+config BR2_PACKAGE_BOOST_GRAPH_PARALLEL
+	bool "enable graph_parallel library"
+	default n
+
+config BR2_PACKAGE_BOOST_IOSTREAMS
+	bool "enable iostreams library"
+	select BR2_PACKAGE_ZLIB
+	select BR2_PACKAGE_BZIP2
+	default n
+
+config BR2_PACKAGE_BOOST_MATH
+	bool "enable math library"
+	default n
+
+config BR2_PACKAGE_BOOST_MPI
+	bool "enable mpi library"
+	default n
+
+config BR2_PACKAGE_BOOST_PROGRAM_OPTIONS
+	bool "enable program_options library"
+	default n
+
+config BR2_PACKAGE_BOOST_PYTHON
+	bool "enable python library"
+	select BR2_PACKAGE_PYTHON
+	default n
+
+config BR2_PACKAGE_BOOST_RANDOM
+	bool "enable random library"
+	default n
+
+config BR2_PACKAGE_BOOST_REGEX
+	bool "enable regex library"
+	default n
+
+config BR2_PACKAGE_BOOST_SERIALIZATION
+	bool "enable serialization library"
+	default n
+
+config BR2_PACKAGE_BOOST_SIGNALS
+	bool "enable signals library"
+	default n
+
+config BR2_PACKAGE_BOOST_SYSTEM
+	bool "enable system library"
+	default n
+
+config BR2_PACKAGE_BOOST_TEST
+	bool "enable test library"
+	default n
+
+config BR2_PACKAGE_BOOST_THREAD
+	bool "enable thread library"
+	default n
+
+config BR2_PACKAGE_BOOST_WAVE
+	bool "enable wave library"
+	default n
+endmenu

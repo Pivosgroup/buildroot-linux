@@ -1,0 +1,22 @@
+--- libenca-1.9.orig/src/Makefile.in	2011-07-23 20:19:28.744327998 -0400
++++ libenca-1.9/src/Makefile.in	2011-07-23 20:22:47.894327936 -0400
+@@ -694,7 +694,7 @@
+ 	cd $(DESTDIR)$(bindir); \
+ 	inst1=`echo enca | sed '$(transform)'`; \
+ 	inst2=`echo enconv | sed '$(transform)'`; \
+-	$(LN_S) $$inst1$(EXEEXT) $$inst2$(EXEEXT)
++	ln -sf $$inst1$(EXEEXT) $$inst2$(EXEEXT)
+ 
+ uninstall-hook:
+ 	inst=`echo enconv | sed '$(transform)'`; \
+--- libenca-1.9.orig/Makefile.in	2011-07-23 20:19:28.746327999 -0400
++++ libenca-1.9/Makefile.in	2011-07-23 20:36:48.742327668 -0400
+@@ -768,7 +768,7 @@
+ 	cd $(DESTDIR)$(man1dir); \
+ 	inst1=`echo enca | sed '$(transform)'`.1; \
+ 	inst2=`echo enconv | sed '$(transform)'`.1; \
+-	$(LN_S) $$inst1 $$inst2
++	$(LN_S)f $$inst1 $$inst2
+ 
+ uninstall-hook:
+ 	inst=`echo enconv | sed '$(transform)'`.1; \

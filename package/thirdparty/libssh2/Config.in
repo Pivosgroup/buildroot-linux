@@ -1,0 +1,6 @@
+config BR2_PACKAGE_LIBSSH2
+	bool "libssh2"
+	help
+	  A client-side C library implementing the SSH2 protocol.
+
+	  http://www.libssh2.org/

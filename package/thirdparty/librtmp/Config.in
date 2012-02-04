@@ -1,0 +1,5 @@
+config BR2_PACKAGE_LIBRTMP
+        bool "librtmp"
+	help
+	  librtmp - RTMPDump Real-Time Messaging Protocol API
+
