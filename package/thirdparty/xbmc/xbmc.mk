@@ -13,7 +13,7 @@ XBMC_INSTALL_TARGET = YES
 XBMC_DEPENDENCIES = host-lzo host-sdl_image
 
 XBMC_CONF_OPT+=--enable-gles --disable-dvdcss \
-  --disable-x11 --disable-libbluray --disable-sdl --enable-directfb \
+  --disable-x11 --disable-libbluray --disable-sdl \
   --disable-rsxs --disable-projectm --disable-non-free --enable-neon --disable-optical-drive \
   --enable-external-ffmpeg --disable-joystick --with-platform=amlogic-m1
 
