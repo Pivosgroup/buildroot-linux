@@ -1,5 +1,5 @@
 config BR2_PACKAGE_XBMC
-	bool "xbmc (deps only)"
+	bool "xbmc"
 	select BR2_PACKAGE_AMREMOTE_CONFIG
 	select BR2_PACKAGE_KPLAYER
 	select BR2_PACKAGE_ALSA_UTILS
@@ -55,6 +55,7 @@ config BR2_PACKAGE_XBMC
 	select BR2_PACKAGE_EXPAT
 	select BR2_PACKAGE_LIBXML2
 	select BR2_PACKAGE_YAJL
+	select BR2_PACKAGE_SAMBA
 	select BR2_PACKAGE_SAMBA_LIBSMBCLIENT
 	select BR2_PACKAGE_LIBNFS
 	select BR2_PACKAGE_LIBRTMP
@@ -63,7 +64,6 @@ config BR2_PACKAGE_XBMC
 	select BR2_PACKAGE_NCURSES_TARGET_MENU
 	select BR2_PACKAGE_OPENGL
 
-	bool "xbmc"
 	help
 	xbmc
 
