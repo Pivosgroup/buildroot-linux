@@ -17,14 +17,12 @@ XBMC_CONF_OPT+=--enable-gles --disable-dvdcss \
   --disable-rsxs --disable-projectm --disable-non-free --enable-neon --disable-optical-drive \
   --enable-external-ffmpeg --disable-joystick --with-platform=amlogic-m1
 
-#--with-platform=amlogic
-
 XBMC_DEPENDENCIES += libogg flac libmad libmpeg2 libogg \
   libsamplerate libtheora libvorbis wavpack bzip2 dbus libcdio \
   python lzo zlib libgcrypt openssl mysql_client sqlite fontconfig \
   freetype jasper jpeg libmodplug libpng libungif tiff libcurl \
   libmicrohttpd libssh2 boost fribidi ncurses pcre libnfs \
-  readline expat libxml2 yajl samba libass
+  readline expat libxml2 yajl samba libass opengl
 
 XBMC_CONF_ENV += PYTHON_VERSION="$(PYTHON_VERSION_MAJOR)"
 XBMC_CONF_ENV += PYTHON_LDFLAGS="-L$(STAGING_DIR)/usr/lib/ -lpython$(PYTHON_VERSION_MAJOR) -lpthread -ldl -lutil -lm"
@@ -41,10 +39,10 @@ define XBMC_BOOTSTRAP
 endef
 
 define XBMC_INSTALL_ETC
-  cp -rf package/amlogic/xbmc/etc $(TARGET_DIR)
+  cp -rf package/thirdparty/xbmc/etc $(TARGET_DIR)
 endef
 
 XBMC_PRE_CONFIGURE_HOOKS += XBMC_BOOTSTRAP
 XBMC_POST_INSTALL_TARGET_HOOKS += XBMC_INSTALL_ETC
 
-$(eval $(call AUTOTARGETS,package/amlogic,xbmc))
+$(eval $(call AUTOTARGETS,package/thirdparty,xbmc))

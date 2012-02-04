@@ -1,4 +1,4 @@
-menu "XBMC Dependencies"
+menu "XBMC and its Dependencies"
 source "package/thirdparty/boost/Config.in"
 source "package/thirdparty/fribidi/Config.in"
 source "package/thirdparty/jasper/Config.in"
@@ -10,4 +10,5 @@ source "package/thirdparty/libnfs/Config.in"
 source "package/thirdparty/librtmp/Config.in"
 source "package/thirdparty/libssh2/Config.in"
 source "package/thirdparty/yajl/Config.in"
+source "package/thirdparty/xbmc/Config.in"
 endmenu
