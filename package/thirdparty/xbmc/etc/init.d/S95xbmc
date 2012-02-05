@@ -6,12 +6,11 @@
 case "$1" in
   start)
         echo "Starting XBMC..."
-        export LD_LIBRARY_PATH=/opt/xbmc-aml/lib:/usr/lib/mysql:$LD_LIBRARY_PATH
-        export PATH=/opt/xbmc-aml/bin:$PATH
-        export XBMC_HOME=/opt/xbmc-aml/share/xbmc
+        export LD_LIBRARY_PATH=/usr/lib/mysql:$LD_LIBRARY_PATH
+        export XBMC_HOME=/usr/share/xbmc
         /usr/bin/amremote_config /etc/xbmc/remote.conf
         fbset -g 1280 720 1280 1440 32
-        /opt/xbmc-aml/lib/xbmc/xbmc.bin --settings=/etc/xbmc/xbmc-settings.xml
+        /usr/lib/xbmc/xbmc.bin --settings=/etc/xbmc/xbmc-settings.xml
         ;;
   stop)
         echo -n "Stopping XBMC..."
