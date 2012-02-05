@@ -30,6 +30,7 @@ define AMFFMPEG_CONFIGURE_CMDS
 		--host-cc="$(HOSTCC)" \
 		--arch=$(BR2_ARCH) \
 		--prefix=/usr \
+		--extra-cflags="-mfloat-abi=softfp -mfpu=neon -march=armv7-a" \
 		$(AMFFMPEG_CONF_OPT) \
         )
 endef
