@@ -16,7 +16,7 @@ AMFFMPEG_CONF_OPT= --disable-static --enable-shared \
                 --disable-amd3dnow --disable-amd3dnowext --disable-mmx --disable-mmx2 --disable-sse --disable-ssse3 \
                 --disable-armv5te --disable-armv6t2 --disable-iwmmxt --disable-mmi --disable-vis --disable-yasm \
                 --enable-cross-compile --arch=arm --cpu=cortex-a9 --enable-neon --target-os=linux \
-                --enable-pic --enable-avfilter --enable-postproc --enable-gpl
+                --enable-pthreads --enable-runtime-cpudetect --enable-pic --enable-avfilter --enable-postproc --enable-gpl
 
 define AMFFMPEG_CONFIGURE_CMDS
 	(cd $(AMFFMPEG_SRCDIR) && rm -rf config.cache && \
