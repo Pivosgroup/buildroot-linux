@@ -1,7 +1,11 @@
-./src/3rdparty/javascriptcore/JavaScriptCore/runtime/Collector.cpp.PATCH
---- ./src/3rdparty/javascriptcore/JavaScriptCore/runtime/Collector.cpp.PATCH	2011-02-21 23:08:16.000000000 +0800
-+++ ./src/3rdparty/javascriptcore/JavaScriptCore/runtime/Collector.cpp	2011-03-31 11:28:07.041270654 +0800
-@@ -70,6 +70,22 @@
+Add pthred_getattr_np / phread_attr_getstrack alternatives for uClibc
+
+Based on https://dev.openwrt.org/log/packages/Xorg/lib/qt4/patches/100-fix-webkit-for-uclibc.patch?rev=20371
+
+Signed-off-by: Johan Sagaert <sagaert.johan@skynet.be>
+--- qt-everywhere-opensource-src-4.6.2/src/3rdparty/javascriptcore/JavaScriptCore/runtime/Collector.cpp	2010-02-11 16:55:20.000000000 +0100
++++ qt-everywhere-opensource-src-4.6.2JS/src/3rdparty/javascriptcore/JavaScriptCore/runtime/Collector.cpp	2010-05-23 10:49:29.000000000 +0200
+@@ -75,6 +75,23 @@
  #endif
  #include <unistd.h>
  
@@ -10,11 +14,12 @@
 +#endif
 +
 +#if defined(__UCLIBC__)
-+// versions of uClibc 0.9.31 and below do not have
++// versions of uClibc 0.9.32 and below with linuxthreads.old do not have
 +// pthread_getattr_np or pthread_attr_getstack.
 +#if __UCLIBC_MAJOR__ == 0 && \
 +    (__UCLIBC_MINOR__ < 9 || \
-+    (__UCLIBC_MINOR__ == 9 && __UCLIBC_SUBLEVEL__ <= 31))
++    (__UCLIBC_MINOR__ == 9 && __UCLIBC_SUBLEVEL__ <= 32)) && \
++    defined(__LINUXTHREADS_OLD__)
 +#define UCLIBC_USE_PROC_SELF_MAPS 1
 +#include <stdio_ext.h>
 +extern int *__libc_stack_end;
@@ -24,7 +29,7 @@
  #if OS(SOLARIS)
  #include <thread.h>
  #else
-@@ -639,6 +655,37 @@
+@@ -667,18 +683,61 @@ static inline void* currentThreadStackBa
      get_thread_info(find_thread(NULL), &threadInfo);
      return threadInfo.stack_end;
  #elif OS(UNIX)
@@ -62,7 +67,7 @@
      AtomicallyInitializedStatic(Mutex&, mutex = *new Mutex);
      MutexLocker locker(mutex);
      static void* stackBase = 0;
-@@ -646,11 +693,23 @@
+     static size_t stackSize = 0;
      static pthread_t stackThread;
      pthread_t thread = pthread_self();
      if (stackBase == 0 || thread != stackThread) {
@@ -86,7 +91,7 @@
  #else
          // FIXME: this function is non-portable; other POSIX systems may have different np alternatives
          pthread_getattr_np(thread, &sattr);
-@@ -662,6 +721,7 @@
+@@ -690,6 +749,7 @@ static inline void* currentThreadStackBa
          stackThread = thread;
      }
      return static_cast<char*>(stackBase) + stackSize;

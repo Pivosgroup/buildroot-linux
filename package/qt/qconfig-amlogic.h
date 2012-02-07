@@ -65,7 +65,7 @@
 //#define QT_NO_CSSPARSER
 
 // QCursor
-#define QT_NO_CURSOR
+//#define QT_NO_CURSOR
 
 // QDesktopServices
 //#define QT_NO_DESKTOPSERVICES
@@ -182,13 +182,13 @@
 //#define QT_NO_QWS_KEYBOARD
 
 // Mouse
-#define QT_NO_QWS_MOUSE
+//#define QT_NO_QWS_MOUSE
 
 // Mouse (Auto)
-#define QT_NO_QWS_MOUSE_AUTO
+//#define QT_NO_QWS_MOUSE_AUTO
 
 // Mouse (Non-Auto)
-#define QT_NO_QWS_MOUSE_MANUAL
+//#define QT_NO_QWS_MOUSE_MANUAL
 
 // Multi-Process
 //#define QT_NO_QWS_MULTIPROCESS
