@@ -415,6 +415,12 @@ else
 QT_CONFIGURE_OPTS += -no-declarative
 endif
 
+# opengl-es2 for amlogic w/mali gpu
+ifeq ($(BR2_PACKAGE_OPENGL),y)
+QT_CONFIGURE_OPTS += -egl -opengl es2 -plugin-gfx-simplegl
+QT_CONFIGURE_LIBS_EGL = -ldbus-1 -lEGL -lMali
+endif
+
 # ccache and precompiled headers don't play well together
 ifeq ($(BR2_CCACHE),y)
 QT_CONFIGURE_OPTS += -no-pch
@@ -480,6 +486,7 @@ define QT_CONFIGURE_CMDS
 	$(call QT_QMAKE_SET,QMAKE_CXXFLAGS,$(QT_CXXFLAGS),$(@D))
 	$(call QT_QMAKE_SET,QMAKE_LFLAGS,$(TARGET_LDFLAGS),$(@D))
 	$(call QT_QMAKE_SET,PKG_CONFIG,$(HOST_DIR)/usr/bin/pkg-config,$(@D))
+	$(call QT_QMAKE_SET,QMAKE_LIBS_EGL,$(QT_CONFIGURE_LIBS_EGL),$(@D))
 # Don't use TARGET_CONFIGURE_OPTS here, qmake would be compiled for the target
 # instead of the host then. So set PKG_CONFIG* manually.
 	(cd $(@D); \
