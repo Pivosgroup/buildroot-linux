@@ -9,6 +9,7 @@ source "package/thirdparty/libmodplug/Config.in"
 source "package/thirdparty/libnfs/Config.in"
 source "package/thirdparty/librtmp/Config.in"
 source "package/thirdparty/libssh2/Config.in"
+source "package/thirdparty/samba30/Config.in"
 source "package/thirdparty/yajl/Config.in"
 source "package/thirdparty/xbmc/Config.in"
 endmenu
