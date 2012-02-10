@@ -417,8 +417,8 @@ endif
 
 # opengl-es2 for amlogic w/mali gpu
 ifeq ($(BR2_PACKAGE_OPENGL),y)
-QT_CONFIGURE_OPTS += -egl -opengl es2 -plugin-gfx-simplegl
-QT_CONFIGURE_LIBS_EGL = -ldbus-1 -lEGL -lMali
+//QT_CONFIGURE_OPTS += -egl -opengl es2 -plugin-gfx-simplegl -no-openvg
+//QT_CONFIGURE_LIBS_EGL = -ldbus-1 -lEGL -lMali
 endif
 
 # ccache and precompiled headers don't play well together
@@ -565,6 +565,10 @@ QT_INSTALL_LIBS    += QtDeclarative
 endif
 ifeq ($(BR2_PACKAGE_QT_QT3SUPPORT),y)
 QT_INSTALL_LIBS    += Qt3Support
+endif
+ifeq ($(BR2_PACKAGE_OPENGL),y)
+QT_INSTALL_LIBS    += QtOpenVG
+QT_INSTALL_LIBS    += QtOpenGL
 endif
 
 QT_CONF_FILE=$(HOST_DIR)/usr/bin/qt.conf

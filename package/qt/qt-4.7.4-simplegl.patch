@@ -1,0 +1,1947 @@
+--- qt-4.7.4-org/src/plugins/gfxdrivers/gfxdrivers.pro	2011-09-12 02:49:28.000000000 -0400
++++ qt-4.7.4-mod/src/plugins/gfxdrivers/gfxdrivers.pro	2012-02-07 17:37:13.963125281 -0500
+@@ -7,3 +7,5 @@ contains(gfx-plugins, vnc)	    :SUBDIRS
+ contains(gfx-plugins, transformed)  :SUBDIRS += transformed
+ contains(gfx-plugins, svgalib)      :SUBDIRS += svgalib
+ contains(gfx-plugins, powervr)      :SUBDIRS += powervr
++contains(gfx-plugins, simplegl)     :SUBDIRS += simplegl
++
+--- qt-4.7.4-org/src/plugins/gfxdrivers/simplegl/LICENSE.LGPL	1969-12-31 19:00:00.000000000 -0500
++++ qt-4.7.4-mod/src/plugins/gfxdrivers/simplegl/LICENSE.LGPL	2012-02-07 17:35:38.773125270 -0500
+@@ -0,0 +1,514 @@
++		  GNU LESSER GENERAL PUBLIC LICENSE
++
++ The Qt GUI Toolkit is Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
++ Contact: Nokia Corporation (qt-info@nokia.com)
++
++ You may use, distribute and copy the Qt GUI Toolkit under the terms of
++ GNU Lesser General Public License version 2.1, which is displayed below.
++
++-------------------------------------------------------------------------
++
++		  GNU LESSER GENERAL PUBLIC LICENSE
++		       Version 2.1, February 1999
++
++ Copyright (C) 1991, 1999 Free Software Foundation, Inc.
++ 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
++ Everyone is permitted to copy and distribute verbatim copies
++ of this license document, but changing it is not allowed.
++
++[This is the first released version of the Lesser GPL.  It also counts
++ as the successor of the GNU Library Public License, version 2, hence
++ the version number 2.1.]
++
++			    Preamble
++
++  The licenses for most software are designed to take away your
++freedom to share and change it.  By contrast, the GNU General Public
++Licenses are intended to guarantee your freedom to share and change
++free software--to make sure the software is free for all its users.
++
++  This license, the Lesser General Public License, applies to some
++specially designated software packages--typically libraries--of the
++Free Software Foundation and other authors who decide to use it.  You
++can use it too, but we suggest you first think carefully about whether
++this license or the ordinary General Public License is the better
++strategy to use in any particular case, based on the explanations below.
++
++  When we speak of free software, we are referring to freedom of use,
++not price.  Our General Public Licenses are designed to make sure that
++you have the freedom to distribute copies of free software (and charge
++for this service if you wish); that you receive source code or can get
++it if you want it; that you can change the software and use pieces of
++it in new free programs; and that you are informed that you can do
++these things.
++
++  To protect your rights, we need to make restrictions that forbid
++distributors to deny you these rights or to ask you to surrender these
++rights.  These restrictions translate to certain responsibilities for
++you if you distribute copies of the library or if you modify it.
++
++  For example, if you distribute copies of the library, whether gratis
++or for a fee, you must give the recipients all the rights that we gave
++you.  You must make sure that they, too, receive or can get the source
++code.  If you link other code with the library, you must provide
++complete object files to the recipients, so that they can relink them
++with the library after making changes to the library and recompiling
++it.  And you must show them these terms so they know their rights.
++
++  We protect your rights with a two-step method: (1) we copyright the
++library, and (2) we offer you this license, which gives you legal
++permission to copy, distribute and/or modify the library.
++
++  To protect each distributor, we want to make it very clear that
++there is no warranty for the free library.  Also, if the library is
++modified by someone else and passed on, the recipients should know
++that what they have is not the original version, so that the original
++author's reputation will not be affected by problems that might be
++introduced by others.
++
++  Finally, software patents pose a constant threat to the existence of
++any free program.  We wish to make sure that a company cannot
++effectively restrict the users of a free program by obtaining a
++restrictive license from a patent holder.  Therefore, we insist that
++any patent license obtained for a version of the library must be
++consistent with the full freedom of use specified in this license.
++
++  Most GNU software, including some libraries, is covered by the
++ordinary GNU General Public License.  This license, the GNU Lesser
++General Public License, applies to certain designated libraries, and
++is quite different from the ordinary General Public License.  We use
++this license for certain libraries in order to permit linking those
++libraries into non-free programs.
++
++  When a program is linked with a library, whether statically or using
++a shared library, the combination of the two is legally speaking a
++combined work, a derivative of the original library.  The ordinary
++General Public License therefore permits such linking only if the
++entire combination fits its criteria of freedom.  The Lesser General
++Public License permits more lax criteria for linking other code with
++the library.
++
++  We call this license the "Lesser" General Public License because it
++does Less to protect the user's freedom than the ordinary General
++Public License.  It also provides other free software developers Less
++of an advantage over competing non-free programs.  These disadvantages
++are the reason we use the ordinary General Public License for many
++libraries.  However, the Lesser license provides advantages in certain
++special circumstances.
++
++  For example, on rare occasions, there may be a special need to
++encourage the widest possible use of a certain library, so that it becomes
++a de-facto standard.  To achieve this, non-free programs must be
++allowed to use the library.  A more frequent case is that a free
++library does the same job as widely used non-free libraries.  In this
++case, there is little to gain by limiting the free library to free
++software only, so we use the Lesser General Public License.
++
++  In other cases, permission to use a particular library in non-free
++programs enables a greater number of people to use a large body of
++free software.  For example, permission to use the GNU C Library in
++non-free programs enables many more people to use the whole GNU
++operating system, as well as its variant, the GNU/Linux operating
++system.
++
++  Although the Lesser General Public License is Less protective of the
++users' freedom, it does ensure that the user of a program that is
++linked with the Library has the freedom and the wherewithal to run
++that program using a modified version of the Library.
++
++  The precise terms and conditions for copying, distribution and
++modification follow.  Pay close attention to the difference between a
++"work based on the library" and a "work that uses the library".  The
++former contains code derived from the library, whereas the latter must
++be combined with the library in order to run.
++
++		  GNU LESSER GENERAL PUBLIC LICENSE
++   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
++
++  0. This License Agreement applies to any software library or other
++program which contains a notice placed by the copyright holder or
++other authorized party saying it may be distributed under the terms of
++this Lesser General Public License (also called "this License").
++Each licensee is addressed as "you".
++
++  A "library" means a collection of software functions and/or data
++prepared so as to be conveniently linked with application programs
++(which use some of those functions and data) to form executables.
++
++  The "Library", below, refers to any such software library or work
++which has been distributed under these terms.  A "work based on the
++Library" means either the Library or any derivative work under
++copyright law: that is to say, a work containing the Library or a
++portion of it, either verbatim or with modifications and/or translated
++straightforwardly into another language.  (Hereinafter, translation is
++included without limitation in the term "modification".)
++
++  "Source code" for a work means the preferred form of the work for
++making modifications to it.  For a library, complete source code means
++all the source code for all modules it contains, plus any associated
++interface definition files, plus the scripts used to control compilation
++and installation of the library.
++
++  Activities other than copying, distribution and modification are not
++covered by this License; they are outside its scope.  The act of
++running a program using the Library is not restricted, and output from
++such a program is covered only if its contents constitute a work based
++on the Library (independent of the use of the Library in a tool for
++writing it).  Whether that is true depends on what the Library does
++and what the program that uses the Library does.
++  
++  1. You may copy and distribute verbatim copies of the Library's
++complete source code as you receive it, in any medium, provided that
++you conspicuously and appropriately publish on each copy an
++appropriate copyright notice and disclaimer of warranty; keep intact
++all the notices that refer to this License and to the absence of any
++warranty; and distribute a copy of this License along with the
++Library.
++
++  You may charge a fee for the physical act of transferring a copy,
++and you may at your option offer warranty protection in exchange for a
++fee.
++
++  2. You may modify your copy or copies of the Library or any portion
++of it, thus forming a work based on the Library, and copy and
++distribute such modifications or work under the terms of Section 1
++above, provided that you also meet all of these conditions:
++
++    a) The modified work must itself be a software library.
++
++    b) You must cause the files modified to carry prominent notices
++    stating that you changed the files and the date of any change.
++
++    c) You must cause the whole of the work to be licensed at no
++    charge to all third parties under the terms of this License.
++
++    d) If a facility in the modified Library refers to a function or a
++    table of data to be supplied by an application program that uses
++    the facility, other than as an argument passed when the facility
++    is invoked, then you must make a good faith effort to ensure that,
++    in the event an application does not supply such function or
++    table, the facility still operates, and performs whatever part of
++    its purpose remains meaningful.
++
++    (For example, a function in a library to compute square roots has
++    a purpose that is entirely well-defined independent of the
++    application.  Therefore, Subsection 2d requires that any
++    application-supplied function or table used by this function must
++    be optional: if the application does not supply it, the square
++    root function must still compute square roots.)
++
++These requirements apply to the modified work as a whole.  If
++identifiable sections of that work are not derived from the Library,
++and can be reasonably considered independent and separate works in
++themselves, then this License, and its terms, do not apply to those
++sections when you distribute them as separate works.  But when you
++distribute the same sections as part of a whole which is a work based
++on the Library, the distribution of the whole must be on the terms of
++this License, whose permissions for other licensees extend to the
++entire whole, and thus to each and every part regardless of who wrote
++it.
++
++Thus, it is not the intent of this section to claim rights or contest
++your rights to work written entirely by you; rather, the intent is to
++exercise the right to control the distribution of derivative or
++collective works based on the Library.
++
++In addition, mere aggregation of another work not based on the Library
++with the Library (or with a work based on the Library) on a volume of
++a storage or distribution medium does not bring the other work under
++the scope of this License.
++
++  3. You may opt to apply the terms of the ordinary GNU General Public
++License instead of this License to a given copy of the Library.  To do
++this, you must alter all the notices that refer to this License, so
++that they refer to the ordinary GNU General Public License, version 2,
++instead of to this License.  (If a newer version than version 2 of the
++ordinary GNU General Public License has appeared, then you can specify
++that version instead if you wish.)  Do not make any other change in
++these notices.
++
++  Once this change is made in a given copy, it is irreversible for
++that copy, so the ordinary GNU General Public License applies to all
++subsequent copies and derivative works made from that copy.
++
++  This option is useful when you wish to copy part of the code of
++the Library into a program that is not a library.
++
++  4. You may copy and distribute the Library (or a portion or
++derivative of it, under Section 2) in object code or executable form
++under the terms of Sections 1 and 2 above provided that you accompany
++it with the complete corresponding machine-readable source code, which
++must be distributed under the terms of Sections 1 and 2 above on a
++medium customarily used for software interchange.
++
++  If distribution of object code is made by offering access to copy
++from a designated place, then offering equivalent access to copy the
++source code from the same place satisfies the requirement to
++distribute the source code, even though third parties are not
++compelled to copy the source along with the object code.
++
++  5. A program that contains no derivative of any portion of the
++Library, but is designed to work with the Library by being compiled or
++linked with it, is called a "work that uses the Library".  Such a
++work, in isolation, is not a derivative work of the Library, and
++therefore falls outside the scope of this License.
++
++  However, linking a "work that uses the Library" with the Library
++creates an executable that is a derivative of the Library (because it
++contains portions of the Library), rather than a "work that uses the
++library".  The executable is therefore covered by this License.
++Section 6 states terms for distribution of such executables.
++
++  When a "work that uses the Library" uses material from a header file
++that is part of the Library, the object code for the work may be a
++derivative work of the Library even though the source code is not.
++Whether this is true is especially significant if the work can be
++linked without the Library, or if the work is itself a library.  The
++threshold for this to be true is not precisely defined by law.
++
++  If such an object file uses only numerical parameters, data
++structure layouts and accessors, and small macros and small inline
++functions (ten lines or less in length), then the use of the object
++file is unrestricted, regardless of whether it is legally a derivative
++work.  (Executables containing this object code plus portions of the
++Library will still fall under Section 6.)
++
++  Otherwise, if the work is a derivative of the Library, you may
++distribute the object code for the work under the terms of Section 6.
++Any executables containing that work also fall under Section 6,
++whether or not they are linked directly with the Library itself.
++
++  6. As an exception to the Sections above, you may also combine or
++link a "work that uses the Library" with the Library to produce a
++work containing portions of the Library, and distribute that work
++under terms of your choice, provided that the terms permit
++modification of the work for the customer's own use and reverse
++engineering for debugging such modifications.
++
++  You must give prominent notice with each copy of the work that the
++Library is used in it and that the Library and its use are covered by
++this License.  You must supply a copy of this License.  If the work
++during execution displays copyright notices, you must include the
++copyright notice for the Library among them, as well as a reference
++directing the user to the copy of this License.  Also, you must do one
++of these things:
++
++    a) Accompany the work with the complete corresponding
++    machine-readable source code for the Library including whatever
++    changes were used in the work (which must be distributed under
++    Sections 1 and 2 above); and, if the work is an executable linked
++    with the Library, with the complete machine-readable "work that
++    uses the Library", as object code and/or source code, so that the
++    user can modify the Library and then relink to produce a modified
++    executable containing the modified Library.  (It is understood
++    that the user who changes the contents of definitions files in the
++    Library will not necessarily be able to recompile the application
++    to use the modified definitions.)
++
++    b) Use a suitable shared library mechanism for linking with the
++    Library.  A suitable mechanism is one that (1) uses at run time a
++    copy of the library already present on the user's computer system,
++    rather than copying library functions into the executable, and (2)
++    will operate properly with a modified version of the library, if
++    the user installs one, as long as the modified version is
++    interface-compatible with the version that the work was made with.
++
++    c) Accompany the work with a written offer, valid for at
++    least three years, to give the same user the materials
++    specified in Subsection 6a, above, for a charge no more
++    than the cost of performing this distribution.
++
++    d) If distribution of the work is made by offering access to copy
++    from a designated place, offer equivalent access to copy the above
++    specified materials from the same place.
++
++    e) Verify that the user has already received a copy of these
++    materials or that you have already sent this user a copy.
++
++  For an executable, the required form of the "work that uses the
++Library" must include any data and utility programs needed for
++reproducing the executable from it.  However, as a special exception,
++the materials to be distributed need not include anything that is
++normally distributed (in either source or binary form) with the major
++components (compiler, kernel, and so on) of the operating system on
++which the executable runs, unless that component itself accompanies
++the executable.
++
++  It may happen that this requirement contradicts the license
++restrictions of other proprietary libraries that do not normally
++accompany the operating system.  Such a contradiction means you cannot
++use both them and the Library together in an executable that you
++distribute.
++
++  7. You may place library facilities that are a work based on the
++Library side-by-side in a single library together with other library
++facilities not covered by this License, and distribute such a combined
++library, provided that the separate distribution of the work based on
++the Library and of the other library facilities is otherwise
++permitted, and provided that you do these two things:
++
++    a) Accompany the combined library with a copy of the same work
++    based on the Library, uncombined with any other library
++    facilities.  This must be distributed under the terms of the
++    Sections above.
++
++    b) Give prominent notice with the combined library of the fact
++    that part of it is a work based on the Library, and explaining
++    where to find the accompanying uncombined form of the same work.
++
++  8. You may not copy, modify, sublicense, link with, or distribute
++the Library except as expressly provided under this License.  Any
++attempt otherwise to copy, modify, sublicense, link with, or
++distribute the Library is void, and will automatically terminate your
++rights under this License.  However, parties who have received copies,
++or rights, from you under this License will not have their licenses
++terminated so long as such parties remain in full compliance.
++
++  9. You are not required to accept this License, since you have not
++signed it.  However, nothing else grants you permission to modify or
++distribute the Library or its derivative works.  These actions are
++prohibited by law if you do not accept this License.  Therefore, by
++modifying or distributing the Library (or any work based on the
++Library), you indicate your acceptance of this License to do so, and
++all its terms and conditions for copying, distributing or modifying
++the Library or works based on it.
++
++  10. Each time you redistribute the Library (or any work based on the
++Library), the recipient automatically receives a license from the
++original licensor to copy, distribute, link with or modify the Library
++subject to these terms and conditions.  You may not impose any further
++restrictions on the recipients' exercise of the rights granted herein.
++You are not responsible for enforcing compliance by third parties with
++this License.
++
++  11. If, as a consequence of a court judgment or allegation of patent
++infringement or for any other reason (not limited to patent issues),
++conditions are imposed on you (whether by court order, agreement or
++otherwise) that contradict the conditions of this License, they do not
++excuse you from the conditions of this License.  If you cannot
++distribute so as to satisfy simultaneously your obligations under this
++License and any other pertinent obligations, then as a consequence you
++may not distribute the Library at all.  For example, if a patent
++license would not permit royalty-free redistribution of the Library by
++all those who receive copies directly or indirectly through you, then
++the only way you could satisfy both it and this License would be to
++refrain entirely from distribution of the Library.
++
++If any portion of this section is held invalid or unenforceable under any
++particular circumstance, the balance of the section is intended to apply,
++and the section as a whole is intended to apply in other circumstances.
++
++It is not the purpose of this section to induce you to infringe any
++patents or other property right claims or to contest validity of any
++such claims; this section has the sole purpose of protecting the
++integrity of the free software distribution system which is
++implemented by public license practices.  Many people have made
++generous contributions to the wide range of software distributed
++through that system in reliance on consistent application of that
++system; it is up to the author/donor to decide if he or she is willing
++to distribute software through any other system and a licensee cannot
++impose that choice.
++
++This section is intended to make thoroughly clear what is believed to
++be a consequence of the rest of this License.
++
++  12. If the distribution and/or use of the Library is restricted in
++certain countries either by patents or by copyrighted interfaces, the
++original copyright holder who places the Library under this License may add
++an explicit geographical distribution limitation excluding those countries,
++so that distribution is permitted only in or among countries not thus
++excluded.  In such case, this License incorporates the limitation as if
++written in the body of this License.
++
++  13. The Free Software Foundation may publish revised and/or new
++versions of the Lesser General Public License from time to time.
++Such new versions will be similar in spirit to the present version,
++but may differ in detail to address new problems or concerns.
++
++Each version is given a distinguishing version number.  If the Library
++specifies a version number of this License which applies to it and
++"any later version", you have the option of following the terms and
++conditions either of that version or of any later version published by
++the Free Software Foundation.  If the Library does not specify a
++license version number, you may choose any version ever published by
++the Free Software Foundation.
++
++  14. If you wish to incorporate parts of the Library into other free
++programs whose distribution conditions are incompatible with these,
++write to the author to ask for permission.  For software which is
++copyrighted by the Free Software Foundation, write to the Free
++Software Foundation; we sometimes make exceptions for this.  Our
++decision will be guided by the two goals of preserving the free status
++of all derivatives of our free software and of promoting the sharing
++and reuse of software generally.
++
++			    NO WARRANTY
++
++  15. BECAUSE THE LIBRARY IS LICENSED FREE OF CHARGE, THERE IS NO
++WARRANTY FOR THE LIBRARY, TO THE EXTENT PERMITTED BY APPLICABLE LAW.
++EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR
++OTHER PARTIES PROVIDE THE LIBRARY "AS IS" WITHOUT WARRANTY OF ANY
++KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE
++IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
++PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE
++LIBRARY IS WITH YOU.  SHOULD THE LIBRARY PROVE DEFECTIVE, YOU ASSUME
++THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
++
++  16. IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN
++WRITING WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY
++AND/OR REDISTRIBUTE THE LIBRARY AS PERMITTED ABOVE, BE LIABLE TO YOU
++FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR
++CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THE
++LIBRARY (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
++RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
++FAILURE OF THE LIBRARY TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
++SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
++DAMAGES.
++
++		     END OF TERMS AND CONDITIONS
++
++           How to Apply These Terms to Your New Libraries
++
++  If you develop a new library, and you want it to be of the greatest
++possible use to the public, we recommend making it free software that
++everyone can redistribute and change.  You can do so by permitting
++redistribution under these terms (or, alternatively, under the terms of the
++ordinary General Public License).
++
++  To apply these terms, attach the following notices to the library.  It is
++safest to attach them to the start of each source file to most effectively
++convey the exclusion of warranty; and each file should have at least the
++"copyright" line and a pointer to where the full notice is found.
++
++    <one line to give the library's name and a brief idea of what it does.>
++    Copyright (C) <year>  <name of author>
++
++    This library is free software; you can redistribute it and/or
++    modify it under the terms of the GNU Lesser General Public
++    License as published by the Free Software Foundation; either
++    version 2.1 of the License, or (at your option) any later version.
++
++    This library is distributed in the hope that it will be useful,
++    but WITHOUT ANY WARRANTY; without even the implied warranty of
++    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++    Lesser General Public License for more details.
++
++    You should have received a copy of the GNU Lesser General Public
++    License along with this library; if not, write to the Free Software
++    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
++
++Also add information on how to contact you by electronic and paper mail.
++
++You should also get your employer (if you work as a programmer) or your
++school, if any, to sign a "copyright disclaimer" for the library, if
++necessary.  Here is a sample; alter the names:
++
++  Yoyodyne, Inc., hereby disclaims all copyright interest in the
++  library `Frob' (a library for tweaking knobs) written by James Random Hacker.
++
++  <signature of Ty Coon>, 1 April 1990
++  Ty Coon, President of Vice
++
++That's all there is to it!
++
++
+--- qt-4.7.4-org/src/plugins/gfxdrivers/simplegl/LICENSE.PREVIEW.COMMERCIAL	1969-12-31 19:00:00.000000000 -0500
++++ qt-4.7.4-mod/src/plugins/gfxdrivers/simplegl/LICENSE.PREVIEW.COMMERCIAL	2012-02-07 17:35:38.773125270 -0500
+@@ -0,0 +1,629 @@
++TECHNOLOGY PREVIEW LICENSE AGREEMENT
++
++For individuals and/or legal entities resident in the Americas (North
++America, Central America and South America), the applicable licensing
++terms are specified under the heading "Technology Preview License 
++Agreement: The Americas".
++
++For individuals and/or legal entities not resident in The Americas, the
++applicable licensing terms are specified under the heading "Technology 
++Preview License Agreement: Rest of the World". 
++
++
++TECHNOLOGY PREVIEW LICENSE AGREEMENT: The Americas
++Agreement version 2.4
++
++This Technology Preview License Agreement ("Agreement") is a legal
++agreement between Nokia Inc. ("Nokia"), with its registered office at
++102 Corporate Park Drive, White Plains, N.Y., U.S.A. 10604 and you (either an
++individual or a legal entity) ("Licensee") for the Licensed Software (as
++defined below). 
++
++1. DEFINITIONS
++
++"Affiliate" of a Party shall mean an entity (i) which is directly or
++indirectly controlling such Party; (ii) which is under the same direct
++or indirect ownership or control as such Party; or (iii) which is
++directly or indirectly owned or controlled by such Party. For these
++purposes, an entity shall be treated as being controlled by another if
++that other entity has fifty percent (50 %) or more of the votes in such
++entity, is able to direct its affairs and/or to control the composition
++of its board of directors or equivalent body. 
++
++"Applications" shall mean Licensee's software products created using the
++Licensed Software which may include portions of the Licensed Software.
++
++"Term" shall mean the period of time six (6) months from the later of
++(a) the Effective Date; or (b) the date the Licensed Software was
++initially delivered to Licensee by Nokia. If no specific Effective Date
++is set forth in the Agreement, the Effective Date shall be deemed to be
++the date the Licensed Software was initially delivered to Licensee. 
++
++"Licensed Software" shall mean the computer software, "online" or
++electronic documentation, associated media and printed materials,
++including the source code, example programs and the documentation
++delivered by Nokia to Licensee in conjunction with this Agreement. 
++
++"Party" or "Parties" shall mean Licensee and/or Nokia.
++
++
++2. OWNERSHIP
++
++The Licensed Software is protected by copyright laws and international
++copyright treaties, as well as other intellectual property laws and
++treaties. The Licensed Software is licensed, not sold. 
++
++If Licensee provides any findings, proposals, suggestions or other
++feedback ("Feedback") to Nokia regarding the Licensed Software, Nokia
++shall own all right, title and interest including the intellectual
++property rights in and to such Feedback, excluding however any existing
++patent rights of Licensee. To the extent Licensee owns or controls any
++patents for such Feedback Licensee hereby grants to Nokia and its
++Affiliates, a worldwide, perpetual, non-transferable, sublicensable,
++royalty-free license to (i) use, copy and modify Feedback and to create
++derivative works thereof, (ii) to make (and have made), use, import,
++sell, offer for sale, lease, dispose, offer for disposal or otherwise
++exploit any products or services of Nokia containing Feedback,, and
++(iii) sublicense all the foregoing rights to third party licensees and
++customers of Nokia and/or its Affiliates. 
++
++
++3. VALIDITY OF THE AGREEMENT
++
++By installing, copying, or otherwise using the Licensed Software,
++Licensee agrees to be bound by the terms of this Agreement. If Licensee
++does not agree to the terms of this Agreement, Licensee may not install,
++copy, or otherwise use the Licensed Software. Upon Licensee's acceptance
++of the terms and conditions of this Agreement, Nokia grants Licensee the
++right to use the Licensed Software in the manner provided below. 
++
++
++4. LICENSES
++
++4.1. Using and Copying
++
++Nokia grants to Licensee a non-exclusive, non-transferable, time-limited
++license to use and copy the Licensed Software for sole purpose of
++designing, developing and testing Applications, and evaluating and the 
++Licensed Software during the Term. 
++
++Licensee may install copies of the Licensed Software on an unlimited
++number of computers provided that (a) if an individual, only such
++individual; or (b) if a legal entity only its employees; use the
++Licensed Software for the authorized purposes. 
++
++4.2	No Distribution or Modifications
++
++Licensee may not disclose, modify, sell, market, commercialise,
++distribute, loan, rent, lease, or license the Licensed Software or any
++copy of it or use the Licensed Software for any purpose that is not
++expressly granted in this Section 4. Licensee may not alter or remove
++any details of ownership, copyright, trademark or other property right
++connected with the Licensed Software. Licensee may not distribute any
++software statically or dynamically linked with the Licensed Software. 
++
++4.3 No Technical Support
++
++Nokia has no obligation to furnish Licensee with any technical support
++whatsoever. Any such support is subject to separate agreement between
++the Parties. 
++
++
++5. PRE-RELEASE CODE
++The Licensed Software contains pre-release code that is not at the level
++of performance and compatibility of a final, generally available,
++product offering. The Licensed Software may not operate correctly and
++may be substantially modified prior to the first commercial product
++release, if any. Nokia is not obligated to make this or any later
++version of the Licensed Software commercially available. The License
++Software is "Not for Commercial Use" and may only be used for the
++purposes described in Section 4. The Licensed Software may not be used
++in a live operating environment where it may be relied upon to perform
++in the same manner as a commercially released product or with data that
++has not been sufficiently backed up. 
++
++6. THIRD PARTY SOFTWARE
++
++The Licensed Software may provide links to third party libraries or code
++(collectively "Third Party Software") to implement various functions.
++Third Party Software does not comprise part of the Licensed Software. In
++some cases, access to Third Party Software may be included along with
++the Licensed Software delivery as a convenience for development and
++testing only. Such source code and libraries may be listed in the
++".../src/3rdparty" source tree delivered with the Licensed Software or
++documented in the Licensed Software where the Third Party Software is
++used, as may be amended from time to time, do not comprise the Licensed
++Software. Licensee acknowledges (1) that some part of Third Party
++Software may require additional licensing of copyright and patents from
++the owners of such, and (2) that distribution of any of the Licensed
++Software referencing any portion of a Third Party Software may require
++appropriate licensing from such third parties. 
++
++
++7. LIMITED WARRANTY AND WARRANTY DISCLAIMER
++
++The Licensed Software is licensed to Licensee "as is". To the maximum
++extent permitted by applicable law, Nokia on behalf of itself and its
++suppliers, disclaims all warranties and conditions, either express or
++implied, including, but not limited to, implied warranties of
++merchantability, fitness for a particular purpose, title and
++non-infringement with regard to the Licensed Software. 
++
++
++8. LIMITATION OF LIABILITY 
++
++If, Nokia's warranty disclaimer notwithstanding, Nokia is held liable to
++Licensee, whether in contract, tort or any other legal theory, based on
++the Licensed Software, Nokia's entire liability to Licensee and
++Licensee's exclusive remedy shall be, at Nokia's option, either (A)
++return of the price Licensee paid for the Licensed Software, or (B)
++repair or replacement of the Licensed Software, provided Licensee
++returns to Nokia all copies of the Licensed Software as originally
++delivered to Licensee. Nokia shall not under any circumstances be liable
++to Licensee based on failure of the Licensed Software if the failure
++resulted from accident, abuse or misapplication, nor shall Nokia under
++any circumstances be liable for special damages, punitive or exemplary
++damages, damages for loss of profits or interruption of business or for
++loss or corruption of data. Any award of damages from Nokia to Licensee
++shall not exceed the total amount Licensee has paid to Nokia in
++connection with this Agreement. 
++
++
++9.	CONFIDENTIALITY
++
++Each party acknowledges that during the Term of this Agreement it shall
++have access to information about the other party's business, business
++methods, business plans, customers, business relations, technology, and
++other information, including the terms of this Agreement, that is
++confidential and of great value to the other party, and the value of
++which would be significantly reduced if disclosed to third parties (the
++"Confidential Information"). Accordingly, when a party (the "Receiving
++Party") receives Confidential Information from another party (the
++"Disclosing Party"), the Receiving Party shall, and shall obligate its
++employees and agents and employees and agents of its Affiliates to: (i)
++maintain the Confidential Information in strict confidence; (ii) not
++disclose the Confidential Information to a third party without the
++Disclosing Party's prior written approval; and (iii) not, directly or
++indirectly, use the Confidential Information for any purpose other than
++for exercising its rights and fulfilling its responsibilities pursuant
++to this Agreement. Each party shall take reasonable measures to protect
++the Confidential Information of the other party, which measures shall
++not be less than the measures taken by such party to protect its own
++confidential and proprietary information. 
++
++"Confidential Information" shall not include information that (a) is or
++becomes generally known to the public through no act or omission of the
++Receiving Party; (b) was in the Receiving Party's lawful possession
++prior to the disclosure hereunder and was not subject to limitations on
++disclosure or use; (c) is developed by the Receiving Party without
++access to the Confidential Information of the Disclosing Party or by
++persons who have not had access to the Confidential Information of the
++Disclosing Party as proven by the written records of the Receiving
++Party; (d) is lawfully disclosed to the Receiving Party without
++restrictions, by a third party not under an obligation of
++confidentiality; or (e) the Receiving Party is legally compelled to
++disclose the information, in which case the Receiving Party shall assert
++the privileged and confidential nature of the information and cooperate
++fully with the Disclosing Party to protect against and prevent
++disclosure of any Confidential Information and to limit the scope of
++disclosure and the dissemination of disclosed Confidential Information
++by all legally available means. 
++
++The obligations of the Receiving Party under this Section shall continue
++during the Initial Term and for a period of five (5) years after
++expiration or termination of this Agreement. To the extent that the
++terms of the Non-Disclosure Agreement between Nokia and Licensee
++conflict with the terms of this Section 9, this Section 9 shall be
++controlling over the terms of the Non-Disclosure Agreement. 
++
++
++10. GENERAL PROVISIONS
++
++10.1	No Assignment
++
++Licensee shall not be entitled to assign or transfer all or any of its
++rights, benefits and obligations under this Agreement without the prior
++written consent of Nokia, which shall not be unreasonably withheld. 
++
++10.2 	Termination
++
++Nokia may terminate the Agreement at any time immediately upon written
++notice by Nokia to Licensee if Licensee breaches this Agreement. 
++
++Upon termination of this Agreement, Licensee shall return to Nokia all
++copies of Licensed Software that were supplied by Nokia. All other
++copies of Licensed Software in the possession or control of Licensee
++must be erased or destroyed. An officer of Licensee must promptly
++deliver to Nokia a written confirmation that this has occurred. 
++
++10.3	Surviving Sections 
++
++Any terms and conditions that by their nature or otherwise reasonably
++should survive a cancellation or termination of this Agreement shall
++also be deemed to survive. Such terms and conditions include, but are
++not limited to the following Sections: 2, 5, 6, 7, 8, 9, 10.2, 10.3, 10.4,
++10.5, 10.6, 10.7, and 10.8 of this Agreement. 
++
++10.4	Entire Agreement 
++
++This Agreement constitutes the complete agreement between the parties
++and supersedes all prior or contemporaneous discussions,
++representations, and proposals, written or oral, with respect to the
++subject matters discussed herein, with the exception of the
++non-disclosure agreement executed by the parties in connection with this
++Agreement ("Non-Disclosure Agreement"), if any, shall be subject to
++Section 9. No modification of this Agreement shall be effective unless
++contained in a writing executed by an authorized representative of each
++party. No term or condition contained in Licensee's purchase order shall
++apply unless expressly accepted by Nokia in writing. If any provision of
++the Agreement is found void or unenforceable, the remainder shall remain
++valid and enforceable according to its terms. If any remedy provided is
++determined to have failed for its essential purpose, all limitations of
++liability and exclusions of damages set forth in this Agreement shall
++remain in effect. 
++
++10.5	Export Control
++
++Licensee acknowledges that the Licensed Software may be subject to
++export control restrictions of various countries. Licensee shall fully
++comply with all applicable export license restrictions and requirements
++as well as with all laws and regulations relating to the importation of
++the Licensed Software and shall procure all necessary governmental
++authorizations, including without limitation, all necessary licenses,
++approvals, permissions or consents, where necessary for the
++re-exportation of the Licensed Software., 
++
++10.6	Governing Law and Legal Venue
++
++This Agreement shall be governed by and construed in accordance with the
++federal laws of the United States of America and the internal laws of
++the State of New York without given effect to any choice of law rule
++that would result in the application of the laws of any other
++jurisdiction. The United Nations Convention on Contracts for the
++International Sale of Goods (CISG) shall not apply. Each Party (a)
++hereby irrevocably submits itself to and consents to the jurisdiction of
++the United States District Court for the Southern District of New York
++(or if such court lacks jurisdiction, the state courts of the State of
++New York) for the purposes of any action, claim, suit or proceeding
++between the Parties in connection with any controversy, claim, or
++dispute arising out of or relating to this Agreement; and (b) hereby
++waives, and agrees not to assert by way of motion, as a defense or
++otherwise, in any such action, claim, suit or proceeding, any claim that
++is not personally subject to the jurisdiction of such court(s), that the
++action, claim, suit or proceeding is brought in an inconvenient forum or
++that the venue of the action, claim, suit or proceeding is improper.
++Notwithstanding the foregoing, nothing in this Section 9.6 is intended
++to, or shall be deemed to, constitute a submission or consent to, or
++selection of, jurisdiction, forum or venue for any action for patent
++infringement, whether or not such action relates to this Agreement. 
++
++10.7	No Implied License
++
++There are no implied licenses or other implied rights granted under this
++Agreement, and all rights, save for those expressly granted hereunder,
++shall remain with Nokia and its licensors. In addition, no licenses or
++immunities are granted to the combination of the Licensed Software with
++any other software or hardware not delivered by Nokia under this
++Agreement. 
++
++10.8	Government End Users 
++ 
++A "U.S. Government End User" shall mean any agency or entity of the
++government of the United States. The following shall apply if Licensee
++is a U.S. Government End User. The Licensed Software is a "commercial
++item," as that term is defined in 48 C.F.R. 2.101 (Oct. 1995),
++consisting of "commercial computer software" and "commercial computer
++software documentation," as such terms are used in 48 C.F.R. 12.212
++(Sept. 1995). Consistent with 48 C.F.R. 12.212 and 48 C.F.R. 227.7202-1
++through 227.7202-4 (June 1995), all U.S. Government End Users acquire
++the Licensed Software with only those rights set forth herein. The
++Licensed Software (including related documentation) is provided to U.S.
++Government End Users: (a) only as a commercial end item; and (b) only
++pursuant to this Agreement. 
++
++
++
++
++
++TECHNOLOGY PREVIEW LICENSE AGREEMENT: Rest of the World
++Agreement version 2.4
++
++This Technology Preview License Agreement ("Agreement") is a legal
++agreement between Nokia Corporation ("Nokia"), with its registered
++office at Keilalahdentie 4, 02150 Espoo, Finland and you (either an
++individual or a legal entity) ("Licensee") for the Licensed Software (as
++defined below). 
++
++1. DEFINITIONS
++
++"Affiliate" of a Party shall mean an entity (i) which is directly or
++indirectly controlling such Party; (ii) which is under the same direct
++or indirect ownership or control as such Party; or (iii) which is
++directly or indirectly owned or controlled by such Party. For these
++purposes, an entity shall be treated as being controlled by another if
++that other entity has fifty percent (50 %) or more of the votes in such
++entity, is able to direct its affairs and/or to control the composition
++of its board of directors or equivalent body. 
++
++"Applications" shall mean Licensee's software products created using the
++Licensed Software which may include portions of the Licensed Software.
++
++"Term" shall mean the period of time six (6) months from the later of
++(a) the Effective Date; or (b) the date the Licensed Software was
++initially delivered to Licensee by Nokia. If no specific Effective Date
++is set forth in the Agreement, the Effective Date shall be deemed to be
++the date the Licensed Software was initially delivered to Licensee. 
++
++"Licensed Software" shall mean the computer software, "online" or
++electronic documentation, associated media and printed materials,
++including the source code, example programs and the documentation
++delivered by Nokia to Licensee in conjunction with this Agreement. 
++
++"Party" or "Parties" shall mean Licensee and/or Nokia. 
++
++
++2. OWNERSHIP
++
++The Licensed Software is protected by copyright laws and international
++copyright treaties, as well as other intellectual property laws and
++treaties. The Licensed Software is licensed, not sold. 
++
++If Licensee provides any findings, proposals, suggestions or other
++feedback ("Feedback") to Nokia regarding the Licensed Software, Nokia
++shall own all right, title and interest including the intellectual
++property rights in and to such Feedback, excluding however any existing
++patent rights of Licensee. To the extent Licensee owns or controls any
++patents for such Feedback Licensee hereby grants to Nokia and its
++Affiliates, a worldwide, perpetual, non-transferable, sublicensable,
++royalty-free license to (i) use, copy and modify Feedback and to create
++derivative works thereof, (ii) to make (and have made), use, import,
++sell, offer for sale, lease, dispose, offer for disposal or otherwise
++exploit any products or services of Nokia containing Feedback,, and
++(iii) sublicense all the foregoing rights to third party licensees and
++customers of Nokia and/or its Affiliates. 
++
++3. VALIDITY OF THE AGREEMENT
++
++By installing, copying, or otherwise using the Licensed Software,
++Licensee agrees to be bound by the terms of this Agreement. If Licensee
++does not agree to the terms of this Agreement, Licensee may not install,
++copy, or otherwise use the Licensed Software. Upon Licensee's acceptance
++of the terms and conditions of this Agreement, Nokia grants Licensee the
++right to use the Licensed Software in the manner provided below. 
++
++
++4. LICENSES
++
++4.1. Using and Copying
++
++Nokia grants to Licensee a non-exclusive, non-transferable, time-limited
++license to use and copy the Licensed Software for sole purpose of
++designing, developing and testing Applications, and evaluating and the 
++Licensed Software during the Term. 
++
++Licensee may install copies of the Licensed Software on an unlimited
++number of computers provided that (a) if an individual, only such
++individual; or (b) if a legal entity only its employees; use the
++Licensed Software for the authorized purposes. 
++
++4.2	No Distribution or Modifications
++
++Licensee may not disclose, modify, sell, market, commercialise,
++distribute, loan, rent, lease, or license the Licensed Software or any
++copy of it or use the Licensed Software for any purpose that is not
++expressly granted in this Section 4. Licensee may not alter or remove
++any details of ownership, copyright, trademark or other property right
++connected with the Licensed Software. Licensee may not distribute any
++software statically or dynamically linked with the Licensed Software. 
++
++4.3 No Technical Support
++
++Nokia has no obligation to furnish Licensee with any technical support
++whatsoever. Any such support is subject to separate agreement between
++the Parties. 
++
++
++5. PRE-RELEASE CODE
++
++The Licensed Software contains pre-release code that is not at the level
++of performance and compatibility of a final, generally available,
++product offering. The Licensed Software may not operate correctly and
++may be substantially modified prior to the first commercial product
++release, if any. Nokia is not obligated to make this or any later
++version of the Licensed Software commercially available. The License
++Software is "Not for Commercial Use" and may only be used for the
++purposes described in Section 4. The Licensed Software may not be used
++in a live operating environment where it may be relied upon to perform
++in the same manner as a commercially released product or with data that
++has not been sufficiently backed up. 
++
++6. THIRD PARTY SOFTWARE
++
++The Licensed Software may provide links to third party libraries or code
++(collectively "Third Party Software") to implement various functions.
++Third Party Software does not comprise part of the Licensed Software. In
++some cases, access to Third Party Software may be included along with
++the Licensed Software delivery as a convenience for development and
++testing only. Such source code and libraries may be listed in the
++".../src/3rdparty" source tree delivered with the Licensed Software or
++documented in the Licensed Software where the Third Party Software is
++used, as may be amended from time to time, do not comprise the Licensed
++Software. Licensee acknowledges (1) that some part of Third Party
++Software may require additional licensing of copyright and patents from
++the owners of such, and (2) that distribution of any of the Licensed
++Software referencing any portion of a Third Party Software may require
++appropriate licensing from such third parties. 
++
++
++7. LIMITED WARRANTY AND WARRANTY DISCLAIMER
++
++The Licensed Software is licensed to Licensee "as is". To the maximum
++extent permitted by applicable law, Nokia on behalf of itself and its
++suppliers, disclaims all warranties and conditions, either express or
++implied, including, but not limited to, implied warranties of
++merchantability, fitness for a particular purpose, title and
++non-infringement with regard to the Licensed Software. 
++
++
++8. LIMITATION OF LIABILITY 
++
++If, Nokia's warranty disclaimer notwithstanding, Nokia is held liable to
++Licensee, whether in contract, tort or any other legal theory, based on
++the Licensed Software, Nokia's entire liability to Licensee and
++Licensee's exclusive remedy shall be, at Nokia's option, either (A)
++return of the price Licensee paid for the Licensed Software, or (B)
++repair or replacement of the Licensed Software, provided Licensee
++returns to Nokia all copies of the Licensed Software as originally
++delivered to Licensee. Nokia shall not under any circumstances be liable
++to Licensee based on failure of the Licensed Software if the failure
++resulted from accident, abuse or misapplication, nor shall Nokia under
++any circumstances be liable for special damages, punitive or exemplary
++damages, damages for loss of profits or interruption of business or for
++loss or corruption of data. Any award of damages from Nokia to Licensee
++shall not exceed the total amount Licensee has paid to Nokia in
++connection with this Agreement. 
++
++
++9.	CONFIDENTIALITY
++
++Each party acknowledges that during the Term of this Agreement it shall
++have access to information about the other party's business, business
++methods, business plans, customers, business relations, technology, and
++other information, including the terms of this Agreement, that is
++confidential and of great value to the other party, and the value of
++which would be significantly reduced if disclosed to third parties (the
++"Confidential Information"). Accordingly, when a party (the "Receiving
++Party") receives Confidential Information from another party (the
++"Disclosing Party"), the Receiving Party shall, and shall obligate its
++employees and agents and employees and agents of its Affiliates to: (i)
++maintain the Confidential Information in strict confidence; (ii) not
++disclose the Confidential Information to a third party without the
++Disclosing Party's prior written approval; and (iii) not, directly or
++indirectly, use the Confidential Information for any purpose other than
++for exercising its rights and fulfilling its responsibilities pursuant
++to this Agreement. Each party shall take reasonable measures to protect
++the Confidential Information of the other party, which measures shall
++not be less than the measures taken by such party to protect its own
++confidential and proprietary information. 
++
++"Confidential Information" shall not include information that (a) is or
++becomes generally known to the public through no act or omission of the
++Receiving Party; (b) was in the Receiving Party's lawful possession
++prior to the disclosure hereunder and was not subject to limitations on
++disclosure or use; (c) is developed by the Receiving Party without
++access to the Confidential Information of the Disclosing Party or by
++persons who have not had access to the Confidential Information of the
++Disclosing Party as proven by the written records of the Receiving
++Party; (d) is lawfully disclosed to the Receiving Party without
++restrictions, by a third party not under an obligation of
++confidentiality; or (e) the Receiving Party is legally compelled to
++disclose the information, in which case the Receiving Party shall assert
++the privileged and confidential nature of the information and cooperate
++fully with the Disclosing Party to protect against and prevent
++disclosure of any Confidential Information and to limit the scope of
++disclosure and the dissemination of disclosed Confidential Information
++by all legally available means. 
++
++The obligations of the Receiving Party under this Section shall continue
++during the Initial Term and for a period of five (5) years after
++expiration or termination of this Agreement. To the extent that the
++terms of the Non-Disclosure Agreement between Nokia and Licensee
++conflict with the terms of this Section 9, this Section 9 shall be
++controlling over the terms of the Non-Disclosure Agreement. 
++
++
++10. GENERAL PROVISIONS
++
++10.1	No Assignment
++
++Licensee shall not be entitled to assign or transfer all or any of its
++rights, benefits and obligations under this Agreement without the prior
++written consent of Nokia, which shall not be unreasonably withheld. 
++
++10.2 	Termination
++
++Nokia may terminate the Agreement at any time immediately upon written
++notice by Nokia to Licensee if Licensee breaches this Agreement. 
++
++Upon termination of this Agreement, Licensee shall return to Nokia all
++copies of Licensed Software that were supplied by Nokia. All other
++copies of Licensed Software in the possession or control of Licensee
++must be erased or destroyed. An officer of Licensee must promptly
++deliver to Nokia a written confirmation that this has occurred. 
++
++10.3	Surviving Sections 
++
++Any terms and conditions that by their nature or otherwise reasonably
++should survive a cancellation or termination of this Agreement shall
++also be deemed to survive. Such terms and conditions include, but are
++not limited to the following Sections: 2, 5, 6, 7, 8, 9, 10.2, 10.3, 10.4,
++10.5, 10.6, 10.7, and 10.8 of this Agreement. 
++
++10.4	Entire Agreement 
++
++This Agreement constitutes the complete agreement between the parties
++and supersedes all prior or contemporaneous discussions,
++representations, and proposals, written or oral, with respect to the
++subject matters discussed herein, with the exception of the
++non-disclosure agreement executed by the parties in connection with this
++Agreement ("Non-Disclosure Agreement"), if any, shall be subject to
++Section 9. No modification of this Agreement shall be effective unless
++contained in a writing executed by an authorized representative of each
++party. No term or condition contained in Licensee's purchase order shall
++apply unless expressly accepted by Nokia in writing. If any provision of
++the Agreement is found void or unenforceable, the remainder shall remain
++valid and enforceable according to its terms. If any remedy provided is
++determined to have failed for its essential purpose, all limitations of
++liability and exclusions of damages set forth in this Agreement shall
++remain in effect. 
++
++10.5	Export Control
++
++Licensee acknowledges that the Licensed Software may be subject to
++export control restrictions of various countries. Licensee shall fully
++comply with all applicable export license restrictions and requirements
++as well as with all laws and regulations relating to the importation of
++the Licensed Software and shall procure all necessary governmental
++authorizations, including without limitation, all necessary licenses,
++approvals, permissions or consents, where necessary for the
++re-exportation of the Licensed Software., 
++
++10.6	Governing Law and Legal Venue
++
++This Agreement shall be construed and interpreted in accordance with the
++laws of Finland, excluding its choice of law provisions. Any disputes
++arising out of or relating to this Agreement shall be resolved in
++arbitration under the Rules of Arbitration of the Chamber of Commerce of
++Helsinki, Finland. The arbitration tribunal shall consist of one (1), or
++if either Party so requires, of three (3), arbitrators. The award shall
++be final and binding and enforceable in any court of competent
++jurisdiction. The arbitration shall be held in Helsinki, Finland and the
++process shall be conducted in the English language. 
++
++10.7	No Implied License
++
++There are no implied licenses or other implied rights granted under this
++Agreement, and all rights, save for those expressly granted hereunder,
++shall remain with Nokia and its licensors. In addition, no licenses or
++immunities are granted to the combination of the Licensed Software with
++any other software or hardware not delivered by Nokia under this
++Agreement. 
++
++10.8	Government End Users 
++ 
++A "U.S. Government End User" shall mean any agency or entity of the
++government of the United States. The following shall apply if Licensee
++is a U.S. Government End User. The Licensed Software is a "commercial
++item," as that term is defined in 48 C.F.R. 2.101 (Oct. 1995),
++consisting of "commercial computer software" and "commercial computer
++software documentation," as such terms are used in 48 C.F.R. 12.212
++(Sept. 1995). Consistent with 48 C.F.R. 12.212 and 48 C.F.R. 227.7202-1
++through 227.7202-4 (June 1995), all U.S. Government End Users acquire
++the Licensed Software with only those rights set forth herein. The
++Licensed Software (including related documentation) is provided to U.S.
++Government End Users: (a) only as a commercial end item; and (b) only
++pursuant to this Agreement. 
++
++
++
++
+--- qt-4.7.4-org/src/plugins/gfxdrivers/simplegl/main.cpp	1969-12-31 19:00:00.000000000 -0500
++++ qt-4.7.4-mod/src/plugins/gfxdrivers/simplegl/main.cpp	2012-02-07 17:35:38.773125270 -0500
+@@ -0,0 +1,80 @@
++/****************************************************************************
++**
++** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
++** All rights reserved.
++** Contact: Nokia Corporation (qt-info@nokia.com)
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** No Commercial Usage
++** This file contains pre-release code and may not be distributed.
++** You may use this file in accordance with the terms and conditions
++** contained in the Technology Preview License Agreement accompanying
++** this package.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU Lesser General Public License version 2.1 requirements
++** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Nokia gives you certain additional
++** rights.  These rights are described in the Nokia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** If you have questions regarding the use of this file, please contact
++** Nokia at qt-info@nokia.com.
++**
++**
++**
++**
++**
++**
++**
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#include <qscreendriverplugin_qws.h>
++#include "simpleglscreen.h"
++#include <qstringlist.h>
++
++QT_BEGIN_NAMESPACE
++
++class SimpleGLDriver : public QScreenDriverPlugin
++{
++public:
++    SimpleGLDriver();
++
++    QStringList keys() const;
++    QScreen *create(const QString&, int displayId);
++};
++
++SimpleGLDriver::SimpleGLDriver()
++    : QScreenDriverPlugin()
++{
++}
++
++QStringList SimpleGLDriver::keys() const
++{
++    QStringList list;
++    list << "simplegl";
++    return list;
++}
++
++QScreen* SimpleGLDriver::create(const QString& driver, int displayId)
++{
++    if (driver.toLower() == "simplegl")
++        return new SimpleGLScreen(displayId);
++
++    return 0;
++}
++
++Q_EXPORT_STATIC_PLUGIN(SimpleGLDriver)
++Q_EXPORT_PLUGIN2(qscreensimplegl, SimpleGLDriver)
++
++QT_END_NAMESPACE
+--- qt-4.7.4-org/src/plugins/gfxdrivers/simplegl/README	1969-12-31 19:00:00.000000000 -0500
++++ qt-4.7.4-mod/src/plugins/gfxdrivers/simplegl/README	2012-02-07 17:35:38.773125270 -0500
+@@ -0,0 +1,57 @@
++This directory contains an (unsupported) reference EGL-based screen driver
++implementation that supports a single full-screen QGLWidget with OpenGL/ES.
++
++This driver uses standard EGL features. The EGL standard does not specify a
++cross-platform method to create native non-fullscreen windows, or to share
++window surfaces cross-process.  Therefore, we cannot support anything other
++than a single window in a single process with this approach.
++
++To create the full-screen window, the driver needs to know the native
++window id to pass to eglCreateWindowSurface() to create a window surface
++for the whole screen.
++
++The current implementation assumes that the native window id is zero, which
++is used by a number of EGL implementations (all tested devices), but not
++all. If the EGL implementation uses a different identifier, then it will be
++necessary to modify the defaultRootWindowHandle() function to provide a
++different value.
++
++Run an application with this screen driver on a 16-bit display as follows:
++
++    app -display simplegl:rgb16 -qws
++
++The tags "argb32" and "rgb16" can be used to select the display's bit
++depth.
++
++When using QGraphicsView, be sure to set a QGLWidget viewport and show
++full-screen.  The following code demonstrates the recommended options:
++
++    QGraphicsView view(&scene);
++    view.setViewport(new QGLWidget());
++    view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
++    view.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
++    view.setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
++    view.setFrameStyle(0);
++    view.showFullScreen();
++
++This will result in all paint operations utilized to display the contents
++of the graphics view resolving through to Arthur's OpenGL ES 2 backend.
++(Arthur is documented here: http://doc.qt.nokia.com/4.6/qt4-arthur.html)
++
++This driver has been verified on the following hardware platforms:
++
++TI Beagleboard (c3)
++BCM911107VP
++Freescale i.MX51
++
++and several sensitive targets we cannot disclose
++
++using Qt 4.6/4.7
++
++None of these targets has required reimplementing eglCreateWindowSurface()
++
++Caveats
++
++1) We query the geometry of the fullscreen surface directly from EGL. This
++is broken in some EGL implementations (eg i.MX51) and defining
++DONT_QUERY_EGL_DIMENSIONS allows us to explicitly override these values
+--- qt-4.7.4-org/src/plugins/gfxdrivers/simplegl/simplegl.pro	1969-12-31 19:00:00.000000000 -0500
++++ qt-4.7.4-mod/src/plugins/gfxdrivers/simplegl/simplegl.pro	2012-02-07 17:35:38.773125270 -0500
+@@ -0,0 +1,21 @@
++#many of the qmake variables here are defined in .qmake.cache and hence
++#this plugin must be built from within the Qt build tree or this profile
++#file must be adjusted accordingly
++
++TARGET = qscreensimplegl
++include($$QT_SOURCE_TREE/src/plugins/qpluginbase.pri)
++
++QTDIR_build:DESTDIR = $$QT_BUILD_TREE/plugins/gfxdrivers
++
++target.path = $$[QT_INSTALL_PLUGINS]/gfxdrivers
++INSTALLS += target
++
++HEADERS = simpleglscreen.h simpleglwindowsurface.h
++SOURCES = main.cpp simpleglscreen.cpp simpleglwindowsurface.cpp
++
++QT += opengl
++
++rasp-pi {
++    message(using rasp-pi specific init)
++    DEFINES += RASP_PI
++}
+--- qt-4.7.4-org/src/plugins/gfxdrivers/simplegl/simpleglscreen.cpp	1969-12-31 19:00:00.000000000 -0500
++++ qt-4.7.4-mod/src/plugins/gfxdrivers/simplegl/simpleglscreen.cpp	2012-02-07 17:35:38.773125270 -0500
+@@ -0,0 +1,336 @@
++/****************************************************************************
++**
++** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
++** All rights reserved.
++** Contact: Nokia Corporation (qt-info@nokia.com)
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** No Commercial Usage
++** This file contains pre-release code and may not be distributed.
++** You may use this file in accordance with the terms and conditions
++** contained in the Technology Preview License Agreement accompanying
++** this package.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU Lesser General Public License version 2.1 requirements
++** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Nokia gives you certain additional
++** rights.  These rights are described in the Nokia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** If you have questions regarding the use of this file, please contact
++** Nokia at qt-info@nokia.com.
++**
++**
++**
++**
++**
++**
++**
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#include "simpleglscreen.h"
++#include "simpleglwindowsurface.h"
++#include <QApplication>
++#include <QRegExp>
++#include <QDebug>
++#include <QtGui/qwindowsystem_qws.h>
++#include <QtGui/private/qeglcontext_p.h>
++#ifdef OPENGL_USBHP_INIT
++extern "C" {
++#include <linuxusbhp.h>
++};
++#endif
++
++#ifdef RASP_PI
++#include "interface/vchiq_arm/vchiq_if.h"
++#endif
++
++#define DONT_QUERY_EGL_DIMENSIONS 1
++
++QT_BEGIN_NAMESPACE
++
++static inline bool setIntOption(const QStringList &arguments, const QString &variable, int *value)
++{
++    Q_ASSERT(value);
++    QRegExp rx(QString::fromLatin1("%1=?(\\d+)").arg(variable));
++    rx.setCaseSensitivity(Qt::CaseInsensitive);
++    if (arguments.indexOf(rx) != -1) {
++        *value = rx.cap(1).toInt();
++        return true;
++    }
++    return false;
++}
++
++SimpleGLScreen::SimpleGLScreen(int display_id)
++    : QGLScreen(display_id)
++{
++#ifdef QT_QWS_CLIENTBLIT
++    setSupportsBlitInClients(false);
++#endif
++    setOptions(NativeWindows);
++    setSurfaceFunctions(new SimpleGLScreenSurfaceFunctions(this));
++
++#ifdef OPENGL_USBHP_INIT
++    // Initialize the USB connection to the OpenGL display device.
++    // Some Broadcom USB-based development devices need this.
++    initLibrary();
++#endif
++}
++
++SimpleGLScreen::~SimpleGLScreen()
++{
++}
++
++bool SimpleGLScreen::hasOpenGL()
++{
++    return true;
++}
++
++bool SimpleGLScreen::initDevice()
++{
++    return true;
++}
++
++// Edit this function to create a different default root window handle than 0.
++EGLNativeWindowType SimpleGLScreen::defaultRootWindowHandle()
++{
++   fbdev_window* window = (fbdev_window*)calloc(1, sizeof(fbdev_window));
++   window->width  = 1280;
++   window->height = 720;
++   return (EGLNativeWindowType)window;
++}
++
++static QImage::Format egl_config_to_image_format(QEglContext *context)
++{
++    EGLint red = context->configAttrib(EGL_RED_SIZE);
++    EGLint green = context->configAttrib(EGL_GREEN_SIZE);
++    EGLint blue = context->configAttrib(EGL_BLUE_SIZE);
++    EGLint alpha = context->configAttrib(EGL_ALPHA_SIZE);
++
++    if (red == 8 && green == 8 && blue == 8 && alpha == 8)
++        return QImage::Format_ARGB32;
++    else if (red == 8 && green == 8 && blue == 8 && alpha == 0)
++        return QImage::Format_RGB32;
++    else if (red == 5 && green == 6 && blue == 5 && alpha == 0)
++        return QImage::Format_RGB16;
++    else if (red == 4 && green == 4 && blue == 4 && alpha == 4)
++        return QImage::Format_ARGB4444_Premultiplied;
++    else
++        return QImage::Format_ARGB32;
++}
++
++bool SimpleGLScreen::connect(const QString &displaySpec)
++{
++    printf("SimpleGLScreen::connect\n");
++#ifdef RASP_PI
++    VCHI_INSTANCE_T vchiq_instance;
++    VCHI_CONNECTION_T *vchi_connection;
++
++    vcos_init();
++    if (vchi_initialise(&vchiq_instance) != VCHIQ_SUCCESS) {
++        printf("* failed to open vchiq instance\n");
++        return -1;
++    }
++    //create a vchi connection
++    if ( vchi_connect( NULL, 0, vchiq_instance ) != 0) {
++        printf( "VCHI connection failed\n" );
++        return -1;
++    }
++    vc_vchi_dispmanx_init( vchiq_instance, &vchi_connection, 1 );
++#endif
++
++    const QStringList displayArgs = displaySpec.split(QLatin1Char(':'), QString::SkipEmptyParts);
++
++    // Initialize EGL and choose a default EGLConfig.
++    QEglContext *context = new QEglContext();
++    context->setApi(QEgl::OpenGL);
++
++    QEglProperties configProps;
++    if (displayArgs.contains(QLatin1String("argb32"))) {
++        configProps.setPixelFormat(QImage::Format_ARGB32);
++    } else if (displayArgs.contains(QLatin1String("rgb16"))) {
++        configProps.setPixelFormat(QImage::Format_RGB16);
++    } else {
++        qWarning("SimpleGLScreen: pixel format unspecified, trying argb32");
++        configProps.setPixelFormat(QImage::Format_ARGB32);
++    }
++
++#if defined(QT_OPENGL_ES_2)
++    configProps.setValue(EGL_SURFACE_TYPE, EGL_WINDOW_BIT);
++#elif defined(QT_OPENGL_ES_1)
++    configProps.setValue(EGL_SURFACE_TYPE, EGL_WINDOW_BIT | EGL_PBUFFER_BIT);
++#elif defined(QT_OPENGL_ES)
++    configProps.setValue(EGL_SURFACE_TYPE, EGL_WINDOW_BIT | EGL_PBUFFER_BIT);
++#endif
++
++    configProps.setRenderableType(QEgl::OpenGL);
++    if (!context->chooseConfig(configProps)) {
++        delete context;
++        return 0;
++    }
++
++    // Create a full-screen window based on the native handle so that
++    // we can query its width and height.
++    QEglProperties props;
++    EGLSurface rootWindow = eglCreateWindowSurface
++                            (context->display(), context->config(),
++                             defaultRootWindowHandle(), props.properties());
++    if (rootWindow == EGL_NO_SURFACE) {
++        qWarning("SimpleGLScreen: could not create the full-screen window");
++        qWarning("SimpleGLScreen: may need to modify defaultRootWindowHandle()");
++        delete context;
++        context = 0;
++        return false;
++    }
++
++#ifdef DONT_QUERY_EGL_DIMENSIONS
++    //Default to 720p, unless overridden
++    w = 1280;
++    h = 720;
++    setIntOption(displayArgs, QLatin1String("width"), &w);
++    setIntOption(displayArgs, QLatin1String("height"), &h);
++#else
++    // Fetch the root window properties.
++    eglQuerySurface(context->display(), rootWindow, EGL_WIDTH, &w);
++    eglQuerySurface(context->display(), rootWindow, EGL_HEIGHT, &h);
++#endif
++
++    QImage::Format format = egl_config_to_image_format(context);
++    switch (format) {
++    case QImage::Format_ARGB32_Premultiplied:
++    case QImage::Format_ARGB32:
++    case QImage::Format_RGB32:
++    default:
++        d = 32;
++        lstep = w * 4;
++        break;
++    case QImage::Format_RGB16:
++    case QImage::Format_ARGB4444_Premultiplied:
++        d = 16;
++        lstep = w * 2;
++        break;
++    }
++    pixeltype = NormalPixel;
++    dw = w;
++    dh = h;
++    size = h * lstep;
++    mapsize = size;
++    setPixelFormat(format);
++    qDebug("screen size: %dx%dx%d", w, h, d);
++
++    // We don't need the temporary surface or QEglContext any more.
++    eglDestroySurface(context->display(), rootWindow);
++    delete context;
++
++    // Handle display physical size spec.  From qscreenlinuxfb_qws.cpp.
++    QRegExp mmWidthRx(QLatin1String("mmWidth=?(\\d+)"));
++    int dimIdxW = displayArgs.indexOf(mmWidthRx);
++    QRegExp mmHeightRx(QLatin1String("mmHeight=?(\\d+)"));
++    int dimIdxH = displayArgs.indexOf(mmHeightRx);
++    if (dimIdxW >= 0) {
++        mmWidthRx.exactMatch(displayArgs.at(dimIdxW));
++        physWidth = mmWidthRx.cap(1).toInt();
++        if (dimIdxH < 0)
++            physHeight = dh*physWidth/dw;
++    }
++    if (dimIdxH >= 0) {
++        mmHeightRx.exactMatch(displayArgs.at(dimIdxH));
++        physHeight = mmHeightRx.cap(1).toInt();
++        if (dimIdxW < 0)
++            physWidth = dw*physHeight/dh;
++    }
++    if (dimIdxW < 0 && dimIdxH < 0) {
++        const int dpi = 72;
++        physWidth = qRound(dw * 25.4 / dpi);
++        physHeight = qRound(dh * 25.4 / dpi);
++    }
++
++    return true;
++}
++
++void SimpleGLScreen::disconnect()
++{
++    // Nothing to do here.
++    printf("SimpleGLScreen::disconnect\n");
++}
++
++void SimpleGLScreen::shutdownDevice()
++{
++    printf("SimpleGLScreen::shutdownDevice\n");
++    QScreen::shutdownDevice();
++}
++
++void SimpleGLScreen::setMode(int,int,int)
++{
++    // Mode setting is not supported.
++}
++
++void SimpleGLScreen::exposeRegion(QRegion, int)
++{
++    // We don't support raster composition of the screen.
++}
++
++void SimpleGLScreen::blit
++        (const QImage &img, const QPoint &topLeft, const QRegion &region)
++{
++    // Not used in this implementation.
++    Q_UNUSED(img);
++    Q_UNUSED(topLeft);
++    Q_UNUSED(region);
++}
++
++void SimpleGLScreen::solidFill(const QColor &color, const QRegion &region)
++{
++    // Not used in this implementation.
++    Q_UNUSED(color);
++    Q_UNUSED(region);
++}
++
++// Create the client-side surface implementation.
++QWSWindowSurface* SimpleGLScreen::createSurface(QWidget *widget) const
++{
++    printf("SimpleGLScreen::createSurface\n");
++    if (QApplication::type() == QApplication::GuiServer) {
++        if (qobject_cast<QGLWidget*>(widget))
++            return new SimpleGLWindowSurface(widget, const_cast<SimpleGLScreen *>(this));
++        else
++            return QGLScreen::createSurface(widget);
++    }
++
++#ifndef QT_NO_QWS_MULTIPROCESS
++    qFatal("SimpleGLScreen: multiprocess is not supported by this screen driver");
++#endif
++    return 0;
++}
++
++// Create the server-side surface implementation.
++QWSWindowSurface* SimpleGLScreen::createSurface(const QString &key) const
++{
++    if (key == QLatin1String("simplegl"))
++        return new SimpleGLWindowSurface();
++    else
++        return QGLScreen::createSurface(key);
++}
++
++bool SimpleGLScreenSurfaceFunctions::createNativeWindow
++        (QWidget *widget, EGLNativeWindowType *native)
++{
++    printf("SimpleGLScreen::createNativeWindow\n");
++    // Every widget gets the root window handle.
++    Q_UNUSED(widget);
++    *native = screen->defaultRootWindowHandle();
++    return true;
++}
++
++QT_END_NAMESPACE
+--- qt-4.7.4-org/src/plugins/gfxdrivers/simplegl/simpleglscreen.h	1969-12-31 19:00:00.000000000 -0500
++++ qt-4.7.4-mod/src/plugins/gfxdrivers/simplegl/simpleglscreen.h	2012-02-07 17:35:38.773125270 -0500
+@@ -0,0 +1,95 @@
++/****************************************************************************
++**
++** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
++** All rights reserved.
++** Contact: Nokia Corporation (qt-info@nokia.com)
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** No Commercial Usage
++** This file contains pre-release code and may not be distributed.
++** You may use this file in accordance with the terms and conditions
++** contained in the Technology Preview License Agreement accompanying
++** this package.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU Lesser General Public License version 2.1 requirements
++** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Nokia gives you certain additional
++** rights.  These rights are described in the Nokia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** If you have questions regarding the use of this file, please contact
++** Nokia at qt-info@nokia.com.
++**
++**
++**
++**
++**
++**
++**
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#ifndef SIMPLEGLSCREEN_H
++#define SIMPLEGLSCREEN_H
++
++#include <QtGui/qscreen_qws.h>
++#include <QtGui/qpixmap.h>
++#include <QtGui/private/qgraphicssystem_qws_p.h>
++#include <QtOpenGL/qglscreen_qws.h>
++
++QT_BEGIN_HEADER
++
++QT_BEGIN_NAMESPACE
++
++class SimpleGLScreen;
++
++class SimpleGLScreenSurfaceFunctions : public QGLScreenSurfaceFunctions
++{
++public:
++    SimpleGLScreenSurfaceFunctions(SimpleGLScreen *s) : screen(s) {}
++
++    bool createNativeWindow(QWidget *widget, EGLNativeWindowType *native);
++
++private:
++    SimpleGLScreen *screen;
++};
++
++class SimpleGLScreen : public QGLScreen
++{
++public:
++    SimpleGLScreen(int display_id);
++    virtual ~SimpleGLScreen();
++
++    bool hasOpenGL();
++
++    bool initDevice();
++    bool connect(const QString &displaySpec);
++    void disconnect();
++    void shutdownDevice();
++    void setMode(int,int,int);
++
++    void exposeRegion(QRegion r, int changing);
++    void blit(const QImage &img, const QPoint &topLeft, const QRegion &region);
++    void solidFill(const QColor &color, const QRegion &region);
++
++    QWSWindowSurface* createSurface(QWidget *widget) const;
++    QWSWindowSurface* createSurface(const QString &key) const;
++
++    EGLNativeWindowType defaultRootWindowHandle();
++};
++
++QT_END_NAMESPACE
++
++QT_END_HEADER
++
++#endif // SIMPLEGLSCREEN_H
+--- qt-4.7.4-org/src/plugins/gfxdrivers/simplegl/simpleglwindowsurface.cpp	1969-12-31 19:00:00.000000000 -0500
++++ qt-4.7.4-mod/src/plugins/gfxdrivers/simplegl/simpleglwindowsurface.cpp	2012-02-07 17:35:38.773125270 -0500
+@@ -0,0 +1,99 @@
++/****************************************************************************
++**
++** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
++** All rights reserved.
++** Contact: Nokia Corporation (qt-info@nokia.com)
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** No Commercial Usage
++** This file contains pre-release code and may not be distributed.
++** You may use this file in accordance with the terms and conditions
++** contained in the Technology Preview License Agreement accompanying
++** this package.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU Lesser General Public License version 2.1 requirements
++** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Nokia gives you certain additional
++** rights.  These rights are described in the Nokia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** If you have questions regarding the use of this file, please contact
++** Nokia at qt-info@nokia.com.
++**
++**
++**
++**
++**
++**
++**
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#include "simpleglwindowsurface.h"
++#include "simpleglscreen.h"
++#include <QDebug>
++
++SimpleGLWindowSurface::SimpleGLWindowSurface(QWidget *w, SimpleGLScreen *s)
++    : QWSGLWindowSurface(w), widget(w), screen(s)
++{
++    setSurfaceFlags(QWSWindowSurface::Opaque);
++}
++
++SimpleGLWindowSurface::SimpleGLWindowSurface()
++    : QWSGLWindowSurface(), widget(NULL), screen(NULL)
++{
++    setSurfaceFlags(QWSWindowSurface::Opaque);
++}
++
++SimpleGLWindowSurface::~SimpleGLWindowSurface()
++{
++}
++
++bool SimpleGLWindowSurface::isValid() const
++{
++    return (widget != 0);
++}
++
++QByteArray SimpleGLWindowSurface::permanentState() const
++{
++    // Nothing interesting to pass to the server just yet.
++    return QByteArray();
++}
++
++void SimpleGLWindowSurface::setPermanentState(const QByteArray &state)
++{
++    Q_UNUSED(state);
++}
++
++void SimpleGLWindowSurface::flush
++        (QWidget *widget, const QRegion &region, const QPoint &offset)
++{
++    // The GL paint engine is responsible for the swapBuffers() call.
++    // If we were to call the base class's implementation of flush()
++    // then it would fetch the image() and try manually blit it to
++    // the screeen.
++    Q_UNUSED(widget);
++    Q_UNUSED(region);
++    Q_UNUSED(offset);
++}
++
++QImage SimpleGLWindowSurface::image() const
++{
++    // No cross-platform way to fetch the window contents.
++    return QImage(16, 16, screen->pixelFormat());
++}
++
++QPaintDevice *SimpleGLWindowSurface::paintDevice()
++{
++    return widget;
++}
+--- qt-4.7.4-org/src/plugins/gfxdrivers/simplegl/simpleglwindowsurface.h	1969-12-31 19:00:00.000000000 -0500
++++ qt-4.7.4-mod/src/plugins/gfxdrivers/simplegl/simpleglwindowsurface.h	2012-02-07 17:35:38.773125270 -0500
+@@ -0,0 +1,81 @@
++/****************************************************************************
++**
++** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
++** All rights reserved.
++** Contact: Nokia Corporation (qt-info@nokia.com)
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** No Commercial Usage
++** This file contains pre-release code and may not be distributed.
++** You may use this file in accordance with the terms and conditions
++** contained in the Technology Preview License Agreement accompanying
++** this package.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL included in the
++** packaging of this file.  Please review the following information to
++** ensure the GNU Lesser General Public License version 2.1 requirements
++** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Nokia gives you certain additional
++** rights.  These rights are described in the Nokia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** If you have questions regarding the use of this file, please contact
++** Nokia at qt-info@nokia.com.
++**
++**
++**
++**
++**
++**
++**
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#ifndef SIMPLEGLWINDOWSURFACE_H
++#define SIMPLEGLWINDOWSURFACE_H
++
++#include <private/qglwindowsurface_qws_p.h>
++
++QT_BEGIN_HEADER
++
++QT_BEGIN_NAMESPACE
++
++class SimpleGLScreen;
++
++class SimpleGLWindowSurface : public QWSGLWindowSurface
++{
++public:
++    SimpleGLWindowSurface(QWidget *widget, SimpleGLScreen *screen);
++    SimpleGLWindowSurface();
++    ~SimpleGLWindowSurface();
++
++    QString key() const { return QLatin1String("simplegl"); }
++
++    bool isValid() const;
++
++    QByteArray permanentState() const;
++    void setPermanentState(const QByteArray &state);
++
++    void flush(QWidget *widget, const QRegion &region, const QPoint &offset);
++
++    QImage image() const;
++    QPaintDevice *paintDevice();
++
++private:
++    QWidget *widget;
++    SimpleGLScreen *screen;
++};
++
++QT_END_NAMESPACE
++
++QT_END_HEADER
++
++#endif
