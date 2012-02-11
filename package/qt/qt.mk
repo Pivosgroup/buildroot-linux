@@ -567,8 +567,8 @@ ifeq ($(BR2_PACKAGE_QT_QT3SUPPORT),y)
 QT_INSTALL_LIBS    += Qt3Support
 endif
 ifeq ($(BR2_PACKAGE_OPENGL),y)
-QT_INSTALL_LIBS    += QtOpenVG
-QT_INSTALL_LIBS    += QtOpenGL
+//QT_INSTALL_LIBS    += QtOpenVG
+//QT_INSTALL_LIBS    += QtOpenGL
 endif
 
 QT_CONF_FILE=$(HOST_DIR)/usr/bin/qt.conf
