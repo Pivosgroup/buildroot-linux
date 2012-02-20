@@ -70,7 +70,7 @@ LINUX26_IMAGE_PATH=$(KERNEL_ARCH_PATH)/boot/$(LINUX26_IMAGE_NAME)
 endif
 endif # BR2_LINUX_KERNEL_VMLINUX
 
-define DOWNLOAD_GIT
+define DOWNLOAD_GIT_KERNEL
        ( mkdir -p $(DL_DIR)/git; export GIT_DIR=$(DL_DIR)/git/linux/.git; \
        (test -d $(DL_DIR)/git/linux/.git && $(GIT) cat-file -e $(LINUX26_VERSION) || \
        (test -d $(DL_DIR)/git/linux/.git && $(GIT) fetch --all && \
@@ -80,7 +80,7 @@ define DOWNLOAD_GIT
        (echo "Error extracting revision: $($(PKG)_DL_VERSION)" ; false)
 endef
 
-define EXTRACT_GIT
+define EXTRACT_GIT_KERNEL
        $(Q)( \
        if  test -d $(DL_DIR)/git/linux/.git -a ! -s $(DL_DIR)/$(LINUX26_SOURCE) ; then \
                $(call MESSAGE,"Checking out cached revision"); \
@@ -97,7 +97,7 @@ endef
 # Download
 $(LINUX26_DIR)/.stamp_downloaded:
 	@$(call MESSAGE,"Downloading kernel")
-	$(Q)$(DOWNLOAD_GIT)
+	$(Q)$(DOWNLOAD_GIT_KERNEL)
 	mkdir -p $(@D)
 	touch $@
 
@@ -105,7 +105,7 @@ $(LINUX26_DIR)/.stamp_downloaded:
 $(LINUX26_DIR)/.stamp_extracted: $(LINUX26_DIR)/.stamp_downloaded
 	@$(call MESSAGE,"Extracting kernel")
 	mkdir -p $(@D)
-	$(EXTRACT_GIT)
+	$(EXTRACT_GIT_KERNEL)
 
 # Patch
 $(LINUX26_DIR)/.stamp_patched: $(LINUX26_DIR)/.stamp_extracted
