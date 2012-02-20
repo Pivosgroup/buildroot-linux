@@ -107,8 +107,20 @@ $(LINUX26_DIR)/.stamp_extracted: $(LINUX26_DIR)/.stamp_downloaded
 	mkdir -p $(@D)
 	$(EXTRACT_GIT)
 
+# Patch
 $(LINUX26_DIR)/.stamp_patched: $(LINUX26_DIR)/.stamp_extracted
-	touch $@
+	@$(call MESSAGE,"Patching kernel")
+	for p in $(LINUX26_PATCH) ; do \
+		if echo $$p | grep -q -E "^ftp://|^http://" ; then \
+			toolchain/patch-kernel.sh $(@D) $(DL_DIR) `basename $$p` ; \
+		elif test -d $$p ; then \
+			toolchain/patch-kernel.sh $(@D) $$p linux-\*.patch ; \
+		else \
+			toolchain/patch-kernel.sh $(@D) `dirname $$p` `basename $$p` ; \
+		fi \
+	done
+	$(Q)touch $@
+
 
 # Configuration
 $(LINUX26_DIR)/.stamp_configured: $(LINUX26_DIR)/.stamp_patched
