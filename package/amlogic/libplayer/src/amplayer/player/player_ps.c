@@ -32,6 +32,14 @@ static int stream_ps_init(play_para_t *p_para)
         if ((codec->video_type == VFORMAT_H264) || (codec->video_type == VFORMAT_H264MVC)){
             codec->am_sysinfo.format = vinfo->video_codec_type;
         }
+        if (codec->video_type == VFORMAT_VC1) {
+            codec->video_pid = codec->video_pid >> 8; // vc1 is extension id, from 0xfd55 to 0xfd5f according to ffmpeg
+            codec->am_sysinfo.format = vinfo->video_codec_type;
+            codec->am_sysinfo.width = vinfo->video_width;
+            codec->am_sysinfo.height = vinfo->video_height;
+            codec->am_sysinfo.rate = vinfo->video_rate;
+            codec->am_sysinfo.ratio = vinfo->video_ratio;
+        }
     }
     codec->noblock = !!p_para->buffering_enable;
     if (ainfo->has_audio) {
@@ -82,7 +90,7 @@ static int stream_ps_init(play_para_t *p_para)
     codec->stream_type = stream_type_convert(p_para->stream_type, codec->has_video, codec->has_audio);
     ret = codec_init(codec);
     if (ret != CODEC_ERROR_NONE) {
-        log_print("codec_init failedi\n");
+        log_print("codec_init failed 0x%x\n", ret);
         if (ret != CODEC_OPEN_HANDLE_FAILED) {
             codec_close(codec);
         }

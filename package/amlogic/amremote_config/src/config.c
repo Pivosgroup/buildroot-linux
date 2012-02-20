@@ -1,11 +1,12 @@
 #include <stdio.h>
+#include <fcntl.h>
 #include "remote_config.h"
 
 #define PRINT_CONFIG
 
 int set_config(remote_config_t *remote, int device_fd)
 {
-    int i;
+    unsigned int i;
     unsigned int *para=(unsigned int*)remote + 2;
 
     for(i = 0; i < ARRAY_SIZE(config_item); i++){
@@ -33,4 +34,5 @@ int set_config(remote_config_t *remote, int device_fd)
             ioctl(device_fd, remote_ioc_table[i], &para[i]);
             }
         }
+    return 0;
 }

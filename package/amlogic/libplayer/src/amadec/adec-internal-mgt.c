@@ -142,6 +142,7 @@ static void stop_adec(aml_audio_dec_t *audec)
 
     if (audec->state > INITING) {
         audec->state = STOPPED;
+	aout_ops->mute(audec, 1); //mute output, some repeat sound in audioflinger after stop
         aout_ops->stop(audec);
         feeder_release(audec);
     }
@@ -187,6 +188,21 @@ static void adec_set_volume(aml_audio_dec_t *audec, float vol)
     }
 }
 
+/**
+ * \brief set volume to audio dec when receive SET_LRVOL command.
+ * \param audec pointer to audec
+ * \param lvol left channel volume value
+ * \param rvol right channel volume value
+ */
+static void adec_set_lrvolume(aml_audio_dec_t *audec, float lvol,float rvol)
+{
+    audio_out_operations_t *aout_ops = &audec->aout_ops;
+
+    if (aout_ops->set_lrvolume) {
+        adec_print("set audio volume! left vol = %f,right vol:%f\n", lvol,rvol);
+        aout_ops->set_lrvolume(audec, lvol,rvol);
+    }
+}
 static void adec_flag_check(aml_audio_dec_t *audec)
 {
     audio_out_operations_t *aout_ops = &audec->aout_ops;
@@ -291,7 +307,14 @@ static void *adec_message_loop(void *args)
                 adec_set_volume(audec, msg->value.volume);
             }
             break;
+	 case CMD_SET_LRVOL:
 
+            adec_print("Receive Set LRVol Command!");
+            if (msg->has_arg) {
+                adec_set_lrvolume(audec, msg->value.volume,msg->value_ext.volume);
+            }
+            break;	 	
+		
         case CMD_CHANL_SWAP:
 
             adec_print("Receive Channels Swap Command!");

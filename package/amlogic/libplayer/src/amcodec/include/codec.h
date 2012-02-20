@@ -62,12 +62,15 @@ int codec_set_mute(codec_para_t *p, int mute);
 int codec_get_volume_range(codec_para_t *, int *min, int *max);
 int codec_set_volume(codec_para_t *, float val);
 int codec_get_volume(codec_para_t *, float *val);
+int codec_set_lrvolume(codec_para_t *, float lvol,float rvol);
+int codec_get_lrvolume(codec_para_t *, float *lvol,float* rvol);
 int codec_get_mutesta(codec_para_t *);
 int codec_set_volume_balance(codec_para_t *, int); /*left£¨0-100)right*/
 int codec_swap_left_right(codec_para_t *);
 int codec_left_mono(codec_para_t *p);
 int codec_right_mono(codec_para_t *p);
 int codec_stereo(codec_para_t *p);
+int codec_get_soundtrack(codec_para_t *p,int* strack);
 int codec_audio_automute(void *priv, int auto_mute);
 int codec_audio_spectrum_switch(codec_para_t *p, int isStart, int interval);
 int codec_audio_isready(codec_para_t *p);
@@ -78,10 +81,14 @@ int codec_get_apts(codec_para_t *pcodec);
 int codec_get_vpts(codec_para_t *pcodec);
 int codec_get_pcrscr(codec_para_t *pcodec);
 int codec_set_syncenable(codec_para_t *pcodec, int enable);
-int codec_set_syncdiscont(codec_para_t *pcodec, int discontinue);
-int codec_get_syncdiscont(codec_para_t *pcodec);
+int codec_set_sync_audio_discont(codec_para_t *pcodec, int discontinue);
+int codec_get_sync_audio_discont(codec_para_t *pcodec);
+int codec_set_sync_video_discont(codec_para_t *pcodec, int discontinue);
+int codec_get_sync_video_discont(codec_para_t *pcodec);
 
 int codec_get_sub_num(codec_para_t *pcodec);
 int codec_get_sub_info(codec_para_t *pcodec, subtitle_info_t *sub_info);
+
+int codec_get_vfstates(codec_para_t *p, vframe_states_t *vfsta);
 
 #endif

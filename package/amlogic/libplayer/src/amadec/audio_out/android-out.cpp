@@ -82,6 +82,19 @@ extern "C" int android_init(struct aml_audio_dec* audec)
         return -1;
     }
 
+#ifdef _VERSION_ICS
+    status = track->set(AUDIO_STREAM_MUSIC,
+                        audec->samplerate,
+                        AUDIO_FORMAT_PCM_16_BIT,
+                        (audec->channels == 1) ? AUDIO_CHANNEL_OUT_MONO : AUDIO_CHANNEL_OUT_STEREO,
+                        0,       // frameCount
+                        0,       // flags
+                        audioCallback,
+                        audec,    // user when callback
+                        0,       // notificationFrames
+                        0,       // shared buffer
+                        0);
+#else
     status = track->set(AudioSystem::MUSIC,
                         audec->samplerate,
                         AudioSystem::PCM_16_BIT,
@@ -93,6 +106,7 @@ extern "C" int android_init(struct aml_audio_dec* audec)
                         0,       // notificationFrames
                         0,       // shared buffer
                         0);
+#endif
 
     if (status != NO_ERROR) {
         adec_print("track->set returns %d", status);
@@ -203,6 +217,7 @@ extern "C" int android_stop(struct aml_audio_dec* audec)
     audio_out_operations_t *out_ops = &audec->aout_ops;
     AudioTrack *track = (AudioTrack *)out_ops->private_data;
 
+    usleep(500000); //sleep 500ms
     Mutex::Autolock _l(mLock);
 
     if (!track) {
@@ -288,6 +303,32 @@ extern "C" int android_set_volume(struct aml_audio_dec* audec, float vol)
     return 0;
 }
 
+/**
+ * \brief set left/right output volume
+ * \param audec pointer to audec
+ * \param lvol refer to left volume value
+ * \param rvol refer to right volume value
+ * \return 0 on success otherwise negative error code
+ */
+extern "C" int android_set_lrvolume(struct aml_audio_dec* audec, float lvol,float rvol)
+{
+    adec_print("android set left and right volume separately");
+
+    audio_out_operations_t *out_ops = &audec->aout_ops;
+    AudioTrack *track = (AudioTrack *)out_ops->private_data;
+
+    Mutex::Autolock _l(mLock);
+
+    if (!track) {
+        adec_print("No track instance!\n");
+        return -1;
+    }
+
+    track->setVolume(lvol, rvol);
+
+    return 0;
+}
+
 extern "C" void android_basic_init()
 {
     adec_print("android basic init!");
@@ -313,6 +354,7 @@ extern "C" void get_output_func(struct aml_audio_dec* audec)
     out_ops->latency = android_latency;
     out_ops->mute = android_mute;
     out_ops->set_volume = android_set_volume;
+    out_ops->set_lrvolume = android_set_lrvolume;
 }
 
 }

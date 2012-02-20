@@ -759,6 +759,40 @@ unsigned long alsa_latency(struct aml_audio_dec* audec)
 }
 
 /**
+ * \brief mute output
+ * \param audec pointer to audec
+ * \param en  1 = mute, 0 = unmute
+ * \return 0 on success otherwise negative error code
+ */
+int alsa_mute(struct aml_audio_dec* audec, adec_bool_t en)
+{
+    return 0;
+}
+
+/**
+ * \brief set output volume
+ * \param audec pointer to audec
+ * \param vol volume value
+ * \return 0 on success otherwise negative error code
+ */
+int alsa_set_volume(struct aml_audio_dec* audec, float vol)
+{
+    return 0;
+}
+
+/**
+ * \brief set left/right output volume
+ * \param audec pointer to audec
+ * \param lvol refer to left volume value
+ * \param rvol refer to right volume value
+ * \return 0 on success otherwise negative error code
+ */
+int alsa_set_lrvolume(struct aml_audio_dec* audec, float lvol, float rvol)
+{
+    return 0;
+}
+
+/**
  * \brief get output handle
  * \param audec pointer to audec
  */
@@ -772,4 +806,7 @@ void get_output_func(struct aml_audio_dec* audec)
     out_ops->resume = alsa_resume;
     out_ops->stop = alsa_stop;
     out_ops->latency = alsa_latency;
+    out_ops->mute = alsa_mute;
+    out_ops->set_volume = alsa_set_volume;
+    out_ops->set_lrvolume = alsa_set_lrvolume;
 }

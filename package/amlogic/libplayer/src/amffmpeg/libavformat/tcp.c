@@ -66,6 +66,7 @@ static int tcp_open(URLContext *h, const char *uri, int flags)
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     snprintf(portstr, sizeof(portstr), "%d", port);
+	av_log(h, AV_LOG_INFO,"TCP connect to %s port %d \n",hostname,port);
     ret = getaddrinfo(hostname, portstr, &hints, &ai);
     if (ret) {
         av_log(h, AV_LOG_ERROR,
@@ -175,6 +176,10 @@ static int tcp_read(URLContext *h, uint8_t *buf, int size)
             return ret;
     }
     ret = recv(s->fd, buf, size, 0);
+	if(ret<=0){
+		av_log(h, AV_LOG_INFO,"tcp_read return error %d \n",ret);
+	}
+
     return ret < 0 ? ff_neterrno() : ret;
 }
 

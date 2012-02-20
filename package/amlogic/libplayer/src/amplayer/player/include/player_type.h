@@ -164,7 +164,7 @@ typedef struct
 	mvideo_info_t *video_info[MAX_VIDEO_STREAMS];
 	maudio_info_t *audio_info[MAX_AUDIO_STREAMS];
     msub_info_t *sub_info[MAX_SUB_STREAMS];
-  mchapter_info_t *chapter_info[MAX_CHAPTERS];
+    mchapter_info_t *chapter_info[MAX_CHAPTERS];
 }media_info_t;
 
 typedef struct player_info
@@ -270,6 +270,7 @@ typedef struct
 	float buffing_middle;
 	float buffing_max;
 	int is_playlist;
+	int is_type_parser;/*is try to get file type */
  }play_control_t; 
 
 #endif

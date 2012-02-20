@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 	int retval ;
 	int exit_enable=0;
 	int lace=0x1000;
-	int i,readlen;
+	unsigned int i,readlen;
 	
        struct input_event levt[64];
 	if(argc > 1)
@@ -48,9 +48,9 @@ int main(int argc, char* argv[])
 	else
            intput_fd=open("/dev/input/event0",O_RDWR);
 	if(intput_fd < 0)
-		printf("can not open ir device....\n");
+		printf("can not open event device....\n");
 	else
-		printf("open ir success\n");
+		printf("open event success\n");
 
 	while(!exit_enable)
 	{
@@ -70,7 +70,6 @@ int main(int argc, char* argv[])
 				readlen =read(intput_fd,levt, sizeof(levt));
 				 for (i=0; i<readlen / sizeof(levt[0]); i++) {
 				 	printf("----type = %d, code = 0x%x, value = %d-------------\n", levt[i].type, levt[i].code, levt[i].value);
-					//printf("----key 0x%x %s @@@\r\n",translate_event(&levt[i]),levt[i].value==2?"repeat":levt[i].value==1?"press":"release");	
 				 }
 			}
 		}

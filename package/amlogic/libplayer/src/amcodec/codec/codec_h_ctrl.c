@@ -17,6 +17,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <errno.h>
 #include <codec_error.h>
 #include <codec.h>
 #include "codec_h_ctrl.h"
@@ -36,7 +37,7 @@ CODEC_HANDLE codec_h_open(const char *port_addr, int flags)
     int r;
     r = open(port_addr, flags);
     if (r < 0) {
-        CODEC_PRINT("Init [%s] failed,ret = %d\n", port_addr, r);
+        CODEC_PRINT("Init [%s] failed,ret = %d error=%d\n", port_addr, r, errno);
         return r;
     }
     return (CODEC_HANDLE)r;
@@ -56,7 +57,7 @@ CODEC_HANDLE codec_h_open_rd(const char *port_addr)
     int r;
     r = open(port_addr, O_RDONLY);
     if (r < 0) {
-        CODEC_PRINT("Init [%s] failed,ret = %d\n", port_addr, r);
+        CODEC_PRINT("Init [%s] failed,ret = %d errno=%d\n", port_addr, r, errno);
         return r;
     }
     return (CODEC_HANDLE)r;
@@ -73,8 +74,12 @@ CODEC_HANDLE codec_h_open_rd(const char *port_addr)
 /* --------------------------------------------------------------------------*/
 int codec_h_close(CODEC_HANDLE h)
 {
-    if (h > 0) {
-        close(h);
+	int r;
+    if (h >= 0) {
+        r = close(h);
+		if (r < 0) {
+        	CODEC_PRINT("close failed,handle=%d,ret=%d errno=%d\n", h, r, errno);  
+    	}
     }
     return 0;
 }
@@ -99,7 +104,7 @@ int codec_h_control(CODEC_HANDLE h, int cmd, unsigned long paramter)
     }
     r = ioctl(h, cmd, paramter);
     if (r < 0) {
-        CODEC_PRINT("send control failed,handle=%d,cmd=%x,paramter=%x, t=%x\n", h, cmd, paramter, r);
+        CODEC_PRINT("send control failed,handle=%d,cmd=%x,paramter=%x, t=%x errno=%d\n", h, cmd, paramter, r, errno);
         return r;
     }
     return 0;
@@ -120,6 +125,9 @@ int codec_h_read(CODEC_HANDLE handle, void *buffer, int size)
 {
     int r;
     r = read(handle, buffer, size);
+	if (r < 0) {
+        CODEC_PRINT("read failed,handle=%d,ret=%d errno=%d\n", handle, r, errno);  
+    }
     return r;
 }
 
@@ -138,6 +146,9 @@ int codec_h_write(CODEC_HANDLE handle, void *buffer, int size)
 {
     int r;
     r = write(handle, buffer, size);
+	if (r < 0 && errno != EAGAIN) {
+        CODEC_PRINT("write failed,handle=%d,ret=%d errno=%d\n", handle, r, errno);  
+    }
     return r;
 }
 

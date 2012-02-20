@@ -203,6 +203,7 @@ int64_t avio_seek(AVIOContext *s, int64_t offset, int whence)
             return offset1;
         offset += offset1;
     }
+	
     offset1 = offset - pos;
     if (!s->must_flush &&
         offset1 >= 0 && offset1 <= (s->buf_end - s->buffer)) {
@@ -212,10 +213,20 @@ int64_t avio_seek(AVIOContext *s, int64_t offset, int whence)
                offset1 <= s->buf_end + SHORT_SEEK_THRESHOLD - s->buffer) &&
                !s->write_flag && offset1 >= 0 &&
               (whence != SEEK_END || force)) {
-        while(s->pos < offset && !s->eof_reached)
+        while(s->pos < offset && !s->eof_reached && !s->error) {
             fill_buffer(s);
+        }
         if (s->eof_reached)
             return AVERROR_EOF;
+
+        if (s->error) {
+            av_log(NULL, AV_LOG_ERROR, "[%s]fill buffer error %d\n", __FUNCTION__, s->error);
+            if (s->error == AVERROR_EXIT) {
+                av_log(NULL, AV_LOG_ERROR, "[%s] error exit set eof_reached\n", __FUNCTION__);
+                s->eof_reached = 1;
+            }
+            return s->error;
+        }
         s->buf_ptr = s->buf_end + offset - s->pos;
     } else {
         int64_t res;
@@ -228,8 +239,11 @@ int64_t avio_seek(AVIOContext *s, int64_t offset, int whence)
 #endif /* CONFIG_MUXERS || CONFIG_NETWORK */
         if (!s->seek)
             return AVERROR(EPIPE);
-        if ((res = s->seek(s->opaque, offset, SEEK_SET)) < 0)
+		
+	    if ((res = s->seek(s->opaque, offset, SEEK_SET)) < 0){
+			av_log(NULL, AV_LOG_ERROR, "[%s]low level seek failed %d\n", __FUNCTION__, res);
             return res;
+        }
         if (!s->write_flag)
             s->buf_end = s->buffer;
         s->buf_ptr = s->buffer;
@@ -284,6 +298,16 @@ int url_feof(AVIOContext *s)
         s->eof_reached=0;
         fill_buffer(s);
     }
+
+    if (s->error == AVERROR_EXIT) {
+        return 1;
+    }
+
+    if (url_interrupt_cb()) {
+        s->error = AVERROR_EXIT;
+        s->eof_reached = 1;
+    }
+
     return s->eof_reached;
 }
 
@@ -630,8 +654,9 @@ static void fill_buffer(AVIOContext *s)
     if (len <= 0) {
         /* do not modify buffer if EOF reached so that a seek back can
            be done without rereading data */
-        s->eof_reached = 1;
-        if(len<0)
+        if(len==0)
+        	s->eof_reached = 1;
+        if(len<0 && len !=AVERROR(EAGAIN))
             s->error= len;
     } else {
         s->pos += len;
@@ -701,9 +726,10 @@ int avio_read(AVIOContext *s, unsigned char *buf, int size)
                 if (len <= 0) {
                     /* do not modify buffer if EOF reached so that a seek back can
                     be done without rereading data */
-                    s->eof_reached = 1;
-                    if(len<0)
-                        s->error= len;
+                    if(len==0)
+			        	s->eof_reached = 1;
+			        if(len<0 && len !=AVERROR(EAGAIN))
+			            s->error= len;
                     break;
                 } else {
                     s->pos += len;
@@ -728,6 +754,7 @@ int avio_read(AVIOContext *s, unsigned char *buf, int size)
     if (size1 == size) {
         if (s->error)      return s->error;
         if (url_feof(s))   return AVERROR_EOF;
+		return AVERROR(EAGAIN);/*no error, not eof,RETRY again*/
     }
     return size1 - size;
 }

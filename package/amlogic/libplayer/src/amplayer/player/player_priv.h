@@ -2,7 +2,6 @@
 #define _PLAYER_PRIV_H_
 //header file
 #include <unistd.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <getopt.h>
@@ -20,6 +19,7 @@
 
 #include "player_id.h"
 #include "player_para.h"
+#include "player_set_sys.h"
 
 
 struct stream_decoder;
@@ -45,6 +45,8 @@ struct am_packet;
 #define CHECK_END_COUNT     (40)
 #define CHECK_AUDIO_HALT_CNT (50)
 #define CHECK_VIDEO_HALT_CNT (20)
+#define CHECK_AVDEC_HALT_CNT (10)
+#define CHECK_AVDEC_HALT_INTERVAL  (50) //ms
 #define CHECK_END_INTERVAL  (100)   //ms
 #define MAX_TRY_READ_COUNT  (50)
 
@@ -103,6 +105,8 @@ typedef struct{
 	int		data_level;   // real audio data length	    
 	int		buffer_size;	
 	int 	check_rp_change_cnt;
+	int     check_rp_change_interval;
+	long	check_rp_old_timems;
 	unsigned int	buffer_rp;
 	unsigned int	rp_is_changed;
 	unsigned int	buf_empty;
@@ -128,6 +132,7 @@ typedef struct play_para {
     int             first_index;
     int             max_raw_size;
     unsigned int    discontinue_point;
+	unsigned int    discontinue_last_point;
     unsigned int    discontinue_flag;
     check_end_info_t check_end;
 
@@ -175,6 +180,7 @@ typedef struct play_para {
     struct am_packet *p_pkt;
 
 	void *player_mate;/*player's mate thread handle*/
+	vdec_profile_t vdec_profile;
 } play_para_t;
 
 typedef struct media_type_t {

@@ -32,6 +32,12 @@ ADEC_BEGIN_DECLS
 /*******************************************************************************************/
 
 typedef struct aml_audio_dec    aml_audio_dec_t;
+typedef enum {
+    HW_STEREO_MODE = 0,
+    HW_LEFT_CHANNEL_MONO,
+    HW_RIGHT_CHANNEL_MONO,
+    HW_CHANNELS_SWAP,
+} hw_command_t;
 
 struct aml_audio_dec {
     adec_state_t  state;
@@ -45,18 +51,14 @@ struct aml_audio_dec {
     int muted;
     int decoded_nb_frames;
     int avsync_threshold;
-    float volume;
+    float volume; //left or main volume
+    float volume_ext; //right	
+    hw_command_t soundtrack;
     audio_out_operations_t aout_ops;
     dsp_operations_t adsp_ops;
     message_pool_t message_pool;
 };
 
-typedef enum {
-    HW_CHANNELS_SWAP,
-    HW_LEFT_CHANNEL_MONO,
-    HW_RIGHT_CHANNEL_MONO,
-    HW_STEREO_MODE,
-} hw_command_t;
 
 /***********************************************************************************************/
 extern void android_basic_init(void);

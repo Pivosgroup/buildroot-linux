@@ -23,12 +23,13 @@ fi
 
 
 #Generate the patch
+DATE_TIME=$(date '+%H.%M.%S.%N')
 suffix=.orig
 list=`find ${DIR} -name "*"${suffix}`
 echo $list
 for i in $list;
 do
 	filename=`echo $i | sed 's/'${suffix}'$//'`;
-	diff -Nura $filename${suffix} $filename >> ${PWD}/linux_style-$(date '+%H.%M.%S.%N').patch;
+	diff -Nura $filename${suffix} $filename >> ${PWD}/linux_style-${DATE_TIME}.patch;
 	rm -rf $filename${suffix}
 done

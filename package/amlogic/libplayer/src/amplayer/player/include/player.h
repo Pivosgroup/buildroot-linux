@@ -20,7 +20,6 @@ int     player_exit(int pid);
 int 	player_pause(int pid);
 int	 	player_resume(int pid);
 int 	player_timesearch(int pid,int s_time);
-int 	player_timesearch_ms(int pid, int64_t ms_time);
 int     player_forward(int pid,int speed);
 int     player_backward(int pid,int speed);
 int     player_aid(int pid,int audio_id);
@@ -42,6 +41,10 @@ int 	audio_set_mute(int pid,int mute);
 int 	audio_get_volume_range(int pid,int *min,int *max);
 int 	audio_set_volume(int pid,float val);
 int 	audio_get_volume(int pid, float *val);
+
+int 	audio_set_lrvolume(int pid,float lvol,float rvol);
+int 	audio_get_lrvolume(int pid, float* lvol,float* rvol);
+
 int 	audio_set_volume_balance(int pid,int balance);
 int 	audio_swap_left_right(int pid);
 int 	audio_left_mono(int pid);

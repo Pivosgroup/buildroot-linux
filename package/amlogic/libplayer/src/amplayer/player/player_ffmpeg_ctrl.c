@@ -12,8 +12,8 @@
 #include "player_itemlist.h"
 
 static struct itemlist kill_item_list;
-
-
+static char format_string[128] = {0};
+static char vpx_string[8] = {0};
 
 int ffmpeg_lock(void **pmutex, enum AVLockOp op)
 {
@@ -140,16 +140,53 @@ int ffmpeg_parse_file_type(play_para_t *am_p, player_file_type_t *type)
     memset(type, 0, sizeof(*type));
     if (pFCtx->iformat != NULL) {
         unsigned int i;
+        int matroska_flag = 0;
+        int vpx_flag = 0;
+
         type->fmt_string = pFCtx->iformat->name;
+        if (!strcmp(type->fmt_string, "matroska,webm")) {
+            matroska_flag = 1;
+        }
+
         for (i = 0; i < pFCtx->nb_streams; i++) {
             AVStream *st = pFCtx->streams[i];
             if (st->codec->codec_type == CODEC_TYPE_VIDEO) {
+                // special process for vp8 vp6 vp6f vp6a video
+                if ((st->codec->codec_id == CODEC_ID_VP8) ||\
+                    (st->codec->codec_id == CODEC_ID_VP6) ||\
+                    (st->codec->codec_id == CODEC_ID_VP6F) ||\
+                    (st->codec->codec_id == CODEC_ID_VP6A)) {
+                    if (vpx_flag == 0) {
+                        sprintf(vpx_string, "%s", (st->codec->codec_id == CODEC_ID_VP8) ? "vp8" : "vp6");
+                        vpx_flag = 1;
+                    }
+                }
                 type->video_tracks++;
             } else if (st->codec->codec_type == CODEC_TYPE_AUDIO) {
                 type->audio_tracks++;
             } else if (st->codec->codec_type == CODEC_TYPE_SUBTITLE) {
                 type->subtitle_tracks++;
             }
+        }
+
+        // special process for webm and vpx
+        if (matroska_flag || vpx_flag) {
+            int length = 0;
+
+            memset(format_string, 0, sizeof(format_string));
+
+            if (matroska_flag == 1) {
+                length = sprintf(format_string, "%s", (vpx_flag == 1) ? "webm" : "matroska");
+            } else {
+                length = sprintf(format_string, "%s", type->fmt_string);
+            }
+
+            if (vpx_flag == 1) {
+                sprintf(&format_string[length], ",%s", vpx_string);
+                memset(vpx_string, 0, sizeof(vpx_string));
+            }
+
+            type->fmt_string = format_string;
         }
     }
     return 0;

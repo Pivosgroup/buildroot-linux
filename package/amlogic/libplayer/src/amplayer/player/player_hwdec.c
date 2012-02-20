@@ -157,6 +157,12 @@ void adts_add_header(play_para_t *para)
     int size = ADTS_HEADER_SIZE + pkt->data_size;   // 13bit valid
     size &= 0x1fff;
     buf = para->astream_info.extradata;
+
+	if(pkt->avpkt && (pkt->avpkt->flags & AV_PKT_FLAG_AAC_WITH_ADTS_HEADER)){
+		//log_info("have add adts header in low level,don't add again\n");
+		pkt->hdr->size = 0;
+		return ; /*have added before */
+	}	
     if (para->astream_info.extradata) {
         buf[3] = (buf[3] & 0xfc) | (size >> 11);
         buf[4] = (size >> 3) & 0xff;
@@ -909,7 +915,8 @@ int pre_header_feeding(play_para_t *para)
             if (ret != PLAYER_SUCCESS) {
                 return ret;
             }
-        } else if ((MKV_FILE == para->file_type) && (VFORMAT_MPEG4 == para->vstream_info.video_format)) {
+        } else if ((MKV_FILE == para->file_type) 
+        && ((VFORMAT_MPEG4 == para->vstream_info.video_format) || (VFORMAT_MPEG12 == para->vstream_info.video_format))) {
             ret = mkv_write_header(para);
             if (ret != PLAYER_SUCCESS) {
                 return ret;
@@ -925,7 +932,7 @@ int pre_header_feeding(play_para_t *para)
             pkt->hdr = NULL;
         }
 
-    } else if (para->stream_type == STREAM_PS && para->vstream_info.has_video && para->playctrl_info.time_point_ms > 0) {
+    } else if (para->stream_type == STREAM_PS && para->vstream_info.has_video && para->playctrl_info.time_point > 0) {
         if (pkt->hdr == NULL) {
             pkt->hdr = MALLOC(sizeof(hdr_buf_t));
             pkt->hdr->data = (char *)MALLOC(HDR_BUF_SIZE);

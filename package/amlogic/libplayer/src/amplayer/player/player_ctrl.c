@@ -92,7 +92,7 @@ int player_start(play_control_t *ctrl_p, unsigned long  priv)
     int ret;
     int pid = -1;
     play_para_t *p_para;
-
+	print_version_info();
     log_print("[player_start:enter]p= %p \n", ctrl_p);
 
     if (ctrl_p == NULL) {
@@ -118,7 +118,7 @@ int player_start(play_control_t *ctrl_p, unsigned long  priv)
     MEMSET(p_para, 0, sizeof(play_para_t));
 
     /* init time_point to a invalid value */
-    p_para->playctrl_info.time_point_ms = -1;
+    p_para->playctrl_info.time_point = -1;
 
     player_init_pid_data(pid, p_para);
 
@@ -447,7 +447,6 @@ int player_noloop(int pid)
  *
  * @param[in]   pid player tag which get from player_start return value
  * @param[in]   s_time target time, unit is second
- * @param[in]   ms_time target time, unit is millisecond
  *
  * @return  PLAYER_NOT_VALID_PID    playet tag invalid
  *          PLAYER_NOMEM            alloc memory failed
@@ -467,40 +466,7 @@ int player_timesearch(int pid, int s_time)
     MEMSET(&cmd, 0, sizeof(player_cmd_t));
 
     cmd.ctrl_cmd = CMD_SEARCH;
-    cmd.param = s_time * 1000;
-
-    ret = player_send_message(pid, &cmd);
-    log_print("[player_timesearch:exit]pid=%d ret=%d\n", pid, ret);
-
-    return ret;
-}
-
-/* --------------------------------------------------------------------------*/
-/**
- * @brief   player_timesearch_ms
- *
- * @param[in]   pid player tag which get from player_start return value
- * @param[in]   ms_time target time, unit is millisecond
- *
- * @return  PLAYER_NOT_VALID_PID    playet tag invalid
- *          PLAYER_NOMEM            alloc memory failed
- *          PLAYER_SUCCESS          success
- *
- * @details seek to designated time point to play.
- *          After time search, player playback from a key frame
- */
-/* --------------------------------------------------------------------------*/
-int player_timesearch_ms(int pid, int64_t ms_time)
-{
-    player_cmd_t cmd;
-    int ret;
-
-    log_print("[player_timesearch:enter]pid=%d ms_time=%lld\n", pid, ms_time);
-
-    MEMSET(&cmd, 0, sizeof(player_cmd_t));
-
-    cmd.ctrl_cmd = CMD_SEARCH;
-    cmd.param = ms_time;
+    cmd.param = s_time;
 
     ret = player_send_message(pid, &cmd);
     log_print("[player_timesearch:exit]pid=%d ret=%d\n", pid, ret);
@@ -569,7 +535,7 @@ int player_backward(int pid, int speed)
     cmd.param = speed;
 
     ret = player_send_message(pid, &cmd);
-    log_print("[player_backward]cmd=%x param=%lld ret=%d\n", cmd.ctrl_cmd, cmd.param, ret);
+    log_print("[player_backward]cmd=%x param=%d ret=%d\n", cmd.ctrl_cmd, cmd.param, ret);
 
     return ret;
 }
@@ -1043,6 +1009,48 @@ int audio_get_volume(int pid, float *vol)
 
     return r;//codec_get_volume(NULL);
 }
+
+/* --------------------------------------------------------------------------*/
+/**
+ * @brief   audio_set_lrvolume
+ *
+ * @param[in]   pid player tag which get from player_start return value
+ * @param[in]   lval: left volume value
+ * @param[in]   rval: right volume value
+ *
+ * @return  PLAYER_SUCCESS  success
+ *          PLAYER_FAILED   failed
+ *
+ * @details set volume to val
+ */
+/* --------------------------------------------------------------------------*/
+int audio_set_lrvolume(int pid, float lvol,float rvol)
+{
+    return codec_set_lrvolume(NULL, lvol,rvol );
+}
+
+/* --------------------------------------------------------------------------*/
+/**
+ * @brief   audio_get_volume
+ *
+ * @param[in]   pid player tag which get from player_start return value
+ *
+ * @return  r   current volume
+ *
+ * @details get volume
+ */
+/* --------------------------------------------------------------------------*/
+int audio_get_lrvolume(int pid, float *lvol,float* rvol)
+{
+    int r;
+
+    r = codec_get_lrvolume(NULL, lvol,rvol);
+    log_print("[audio_get_volume:%d]r=%d\n", __LINE__, r);
+
+    return r;//codec_get_volume(NULL);
+}
+
+
 
 /* --------------------------------------------------------------------------*/
 /**

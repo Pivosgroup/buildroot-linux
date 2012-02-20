@@ -711,7 +711,7 @@ int EnableFreeScale(display_mode mode) {
 			ioctl(fd1,FBIOPUT_OSD_FREE_SCALE_HEIGHT,osd_height);	
 			ioctl(fd0,FBIOPUT_OSD_FREE_SCALE_ENABLE,1);
 			ioctl(fd1,FBIOPUT_OSD_FREE_SCALE_ENABLE,1);
-			if ((fd_video >= 0)&&(fd_ppmgr >= 0)) 	write(fd_video, "2", strlen("2"));			
+			if ((fd_video >= 0)&&(fd_ppmgr >= 0)) 	write(fd_video, "1", strlen("1"));			
 			ret = 0;
 			break;
 		case DISP_MODE_720P: //720p
@@ -732,7 +732,7 @@ int EnableFreeScale(display_mode mode) {
 			ioctl(fd1,FBIOPUT_OSD_FREE_SCALE_HEIGHT,osd_height);	
 			ioctl(fd0,FBIOPUT_OSD_FREE_SCALE_ENABLE,1);
 			ioctl(fd1,FBIOPUT_OSD_FREE_SCALE_ENABLE,1);
-			if ((fd_video >= 0)&&(fd_ppmgr >= 0)) 	write(fd_video, "2", strlen("2"));
+			if ((fd_video >= 0)&&(fd_ppmgr >= 0)) 	write(fd_video, "1", strlen("1"));
 			ret = 0;
 			break;
 		case DISP_MODE_1080I: //1080i			
@@ -754,7 +754,7 @@ int EnableFreeScale(display_mode mode) {
 			ioctl(fd1,FBIOPUT_OSD_FREE_SCALE_HEIGHT,osd_height);	
 			ioctl(fd0,FBIOPUT_OSD_FREE_SCALE_ENABLE,1);
 			ioctl(fd1,FBIOPUT_OSD_FREE_SCALE_ENABLE,1);
-			if ((fd_video >= 0)&&(fd_ppmgr >= 0)) 	write(fd_video, "2", strlen("2"));		
+			if ((fd_video >= 0)&&(fd_ppmgr >= 0)) 	write(fd_video, "1", strlen("1"));		
 			ret = 0;
 			break;	
 		default:			
@@ -781,7 +781,7 @@ int disable_freescale(int cfg)
 #endif
 	char mode[16];
 	display_mode disp_mode;
-	
+
 	get_display_mode(mode);
 	if (strncmp(mode, "fail", 4)) { //mode !=fail
 		disp_mode = display_mode_convert(mode);
@@ -949,4 +949,190 @@ int set_stb_demux_source_hiu()
         return 0;
     }
     return -1;
+}
+
+int set_amutils_enable(int isOn){
+    int fd;
+    char *path = "/sys/class/amstream/amutils_enable" ;
+    char  bcmd[16];
+    fd = open(path,O_RDWR);
+    if (fd >= 0) {
+        sprintf(bcmd, "%d", isOn);
+        write(fd, bcmd, strlen(bcmd));
+        close(fd);
+        return 0;
+    }
+    return -1;	
+}
+
+int set_amutils_cmd(const char* cmd){
+	return 0;
+}
+int get_amutils_cmd(char* cmd){
+    int fd;
+    char *path = "/sys/class/amstream/amutils_cmd";
+    if (!cmd) {
+        log_error("[get_amutils_cmd]Invalide parameter!");
+        return -1;
+    }
+    fd = open(path, O_RDWR);
+    if (fd >= 0) {
+        int ret = -1;
+		ret = read(fd, cmd, 32);
+		if(ret>0){
+			//log_print("[get_amutils_cmd]cmd=%s strlen=%d\n", cmd, strlen(cmd));
+			cmd[strlen(cmd)] = '\0';
+			//write(fd,"clear",strlen("clear"));
+		}
+        close(fd);
+    } else {
+        sprintf(cmd, "%s", "fail");
+		return -1;
+    }
+    //log_print("[get_amutils_cmd]cmd=%s\n", cmd);
+    return 0;
+}
+
+/************************************************
+ * get settings from system
+ ***********************************************/
+
+static vdec_profile_t default_vdec_profiles = 
+{
+	.h264_para = {0},
+	.vc1_para = {1, 0, 0, 0, 1},
+	.real_para = {0},
+	.mpeg12_para = {0},
+	.mpeg4_para = {0},
+	.mjpeg_para = {0}
+};
+
+static int parse_vc1_param(char *str, sys_vc1_profile_t *para, int size)
+{
+	char *p;
+	p = strstr(str, "progressive");
+	if (p != NULL && ((p - str) < size))
+		para->progressive_enable = 1;
+	p = strstr(str, "interlace");
+	if (p != NULL && ((p - str) < size))
+		para->interlace_enable = 1;
+	p = strstr(str, "wmv1");
+	if (p != NULL && ((p - str) < size))
+		para->wmv1_enable = 1;
+	p = strstr(str, "wmv2");
+	if (p != NULL && ((p - str) < size))
+		para->wmv2_enable = 1;
+	p = strstr(str, "wmv3");
+	if (p != NULL && ((p - str) < size))
+		para->wmv3_enable = 1;
+	log_info("[vc1 profile] progress:%d; interlace:%d; wmv1:%d; wmv2:%d; wmv3:%d\n", 
+		para->progressive_enable, para->interlace_enable,para->wmv1_enable,para->wmv2_enable,para->wmv3_enable);
+	return 0;
+}
+	
+static int parse_h264_param(char *str, sys_h264_profile_t *para, int size)
+{
+	return 0;
+}
+
+static int parse_real_param(char *str, sys_real_profile_t *para, int size)
+{
+	return 0;
+}
+
+static int parse_mpeg12_param(char *str, sys_mpeg12_profile_t *para, int size)
+{
+	return 0;
+}
+
+static int parse_mpeg4_param(char *str, sys_mpeg4_profile_t *para, int size)
+{
+	return 0;
+}
+
+static int parse_mjpeg_param(char *str, sys_mjpeg_profile_t *para, int size)
+{
+	return 0;
+}
+
+
+static int parse_param(char *str, char **substr, int size, vdec_profile_t *para)
+{
+	if(!strcmp(*substr, "vc1:")){	
+		parse_vc1_param(str, &para->vc1_para, size);
+	}
+	else if (!strcmp(*substr, "h264:")){
+		parse_h264_param(str, &para->h264_para, size);	
+	}
+	else if (!strcmp(*substr, "real:")){
+		parse_real_param(str, &para->real_para, size);
+	}
+	else if (!strcmp(*substr, "mpeg12:")){
+		parse_mpeg12_param(str, &para->mpeg12_para, size);
+	}
+	else if (!strcmp(*substr, "mpeg4:")){
+		parse_mpeg4_param(str, &para->mpeg4_para, size);			
+	}
+	else if (!strcmp(*substr, "mjpeg:")){
+		parse_mjpeg_param(str, &para->mjpeg_para, size);	
+	}
+	return 0;
+}
+
+static int parse_sysparam_str(vdec_profile_t *m_vdec_profiles, char *str)
+{
+	int i, j;	
+	int pos_start,pos_end;
+	char *p;	
+	char *substr[]={"vc1:", "h264:", "real:", "mpeg12:", "mpeg4:", "mjpeg:"};
+	
+	for(j = 0; j < sizeof(substr)/sizeof(char *); j ++)
+	{
+		p = strstr(str, substr[j]);	
+		if ( p!= NULL) 
+		{
+			pos_start = p - str;
+			i = pos_start;
+			while(str[i] != '\n')					
+				i ++;			
+			pos_end = i;
+			log_print("[%s]j=%d %s start:%d end:%d\n", __FUNCTION__,j, substr[j],pos_start, pos_end);
+			parse_param(str+pos_start, &substr[j], pos_end-pos_start, m_vdec_profiles);
+		}	
+	}
+	return 0;
+}
+
+int get_vdec_profile(vdec_profile_t *vdec_profiles)
+{
+	#define READ_LINE_SIZE (1024)
+	int fd = 0;
+	int ret = 0;
+	char valstr[READ_LINE_SIZE];	
+	char *path = "/sys/class/amstream/vcodec_profile";
+	vdec_profile_t m_vdec_profiles;
+	
+	memset(&m_vdec_profiles, 0, sizeof(vdec_profile_t));
+	
+	fd = open(path, O_RDONLY);
+	if (fd < 0){
+		log_error("[%s]open failed\n", __FUNCTION__);
+		memcpy(vdec_profiles, &default_vdec_profiles, sizeof(vdec_profile_t));
+		return 0;
+	}
+	
+	ret = read(fd, valstr, READ_LINE_SIZE);
+	if (ret < 0)
+	{
+		log_error("[%s]read failed\n", __FUNCTION__);
+		close(fd);
+		memcpy(vdec_profiles, &default_vdec_profiles, sizeof(vdec_profile_t));
+		return 0;
+	}
+
+	log_print("[%s]str=%s\n", __FUNCTION__,valstr);
+	parse_sysparam_str(&m_vdec_profiles, valstr);
+	memcpy(vdec_profiles, &m_vdec_profiles, sizeof(vdec_profile_t));
+	close(fd);
+	return 0;	
 }

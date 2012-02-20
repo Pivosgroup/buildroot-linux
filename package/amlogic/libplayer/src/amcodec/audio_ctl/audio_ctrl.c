@@ -156,6 +156,41 @@ int codec_get_volume(codec_para_t *p, float *val)
 
 /* --------------------------------------------------------------------------*/
 /**
+* @brief  codec_set_volume  Set audio volume seperately
+*
+* @param[in]  p    Pointer of codec parameter structure
+* @param[in]  lvol  left Volume to be set
+* @param[in]  rvol  right Volume to be set
+*
+* @return     command result
+*/
+/* --------------------------------------------------------------------------*/
+int codec_set_lrvolume(codec_para_t *p, float lvol,float rvol)
+{
+    int ret;
+
+    ret = audio_decode_set_lrvolume(p->adec_priv, lvol,rvol);
+    return ret;
+}
+
+/* --------------------------------------------------------------------------*/
+/**
+* @brief  codec_get_volume  Get audio left and right volume seperately
+*
+* @param[in]  p  Pointer of codec parameter structure
+*
+* @return     command result
+*/
+/* --------------------------------------------------------------------------*/
+int codec_get_lrvolume(codec_para_t *p, float *lvol,float* rvol)
+{
+    int ret;
+    ret = audio_decode_get_lrvolume(p->adec_priv, lvol,rvol);
+    return ret;
+}
+
+/* --------------------------------------------------------------------------*/
+/**
 * @brief  codec_set_volume_balance  Set volume balance
 *
 * @param[in]  p        Pointer of codec parameter structure
@@ -265,7 +300,7 @@ int codec_audio_automute(void *priv, int auto_mute)
 /* --------------------------------------------------------------------------*/
 int codec_audio_spectrum_switch(codec_para_t *p, int isStart, int interval)
 {
-    int  ret;
+    int  ret = -1;
     char cmd[32];
 
     if (isStart == 1) {
@@ -276,6 +311,11 @@ int codec_audio_spectrum_switch(codec_para_t *p, int isStart, int interval)
     }
 
     return ret;
+}
+int codec_get_soundtrack(codec_para_t *p,int* strack)
+{
+    return audio_get_soundtrack(p->adec_priv, strack);
+
 }
 
 

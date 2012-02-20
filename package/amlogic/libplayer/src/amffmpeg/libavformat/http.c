@@ -30,6 +30,7 @@
 #include "httpauth.h"
 #include "url.h"
 #include "libavutil/opt.h"
+#include <sys/time.h>
 
 /* XXX: POST protocol is not completely implemented because ffmpeg uses
    only a subset of it. */
@@ -40,6 +41,12 @@
 /* used for protocol handling */
 #define BUFFER_SIZE (1024*4)
 #define MAX_REDIRECTS 8
+#define OPEN_RETRY_MAX 3
+#define READ_RETRY_MAX 10
+#define MAX_CONNECT_LINKS 1
+
+#define READ_RETRY_MAX_TIME_MS (120*1000) 
+/*60 seconds no data get,we will reset it*/
 
 typedef struct {
     const AVClass *class;
@@ -54,6 +61,9 @@ typedef struct {
     unsigned char headers[BUFFER_SIZE];
     int willclose;          /**< Set if the server correctly handles Connection: close and will close the connection after feeding us the content. */
 	int is_seek;
+	int canseek;
+	int max_connects;
+	int latest_get_time_ms;
 } HTTPContext;
 
 #define OFFSET(x) offsetof(HTTPContext, x)
@@ -117,6 +127,7 @@ static int http_open_cnx(URLContext *h)
     use_proxy = (proxy_path != NULL) && !getenv("no_proxy") &&
         av_strstart(proxy_path, "http://", NULL);
 
+	s->latest_get_time_ms=0;
     /* fill the dest addr */
  redo:
     /* needed in any case to build the host string */
@@ -176,42 +187,92 @@ static int http_open_cnx(URLContext *h)
     return AVERROR(EIO);
 }
 
+static int http_reopen_cnx(URLContext *h,int64_t off)
+{
+    HTTPContext *s = h->priv_data;
+    URLContext *old_hd = s->hd;
+    int64_t old_off = s->off;
+    int64_t old_chunksize=s->chunksize ;	
+	int old_buf_size=0;
+	char old_buf[BUFFER_SIZE];
+	
+    if(off>=0)
+		s->off = off;
+    /* if it fails, continue on old connection */
+	/*reget it*/
+	if(s->max_connects>1 && old_hd){
+		old_buf_size = s->buf_end - s->buf_ptr;
+    	memcpy(old_buf, s->buf_ptr, old_buf_size);
+	}else{
+		if(old_hd)
+			ffurl_close(old_hd);
+		old_hd=NULL;
+	}
+    s->chunksize = -1;
+    if (http_open_cnx(h) < 0) {
+		if(s->max_connects>1 && old_hd){
+		 	s->chunksize=old_chunksize;
+	        s->hd = old_hd;
+	        s->off = old_off;
+			memcpy(s->buffer, old_buf, old_buf_size);
+			s->buf_end = s->buffer + old_buf_size;
+			s->max_connects=1;/*do two open seek failed,
+							we think the server have link limited*/
+	        return -1;
+		}else{	
+			s->chunksize=-1;
+	        s->hd = 0;
+	        s->off = 0;
+	        return -1;
+		}
+    }
+	if(s->max_connects>1){
+		if(old_hd)
+    		ffurl_close(old_hd);
+	}
+    return off;
+}
+
 static int http_open(URLContext *h, const char *uri, int flags)
 {
     HTTPContext *s = h->priv_data;
 	int ret;
-
+	int open_retry=0;
    // h->is_streamed = 1;
 	
     s->filesize = -1;
 	s->is_seek=1;
+	s->canseek=1;
     av_strlcpy(s->location, uri, sizeof(s->location));
-open_retry:
+	s->max_connects=MAX_CONNECT_LINKS;	
 	ret = http_open_cnx(h);
-	if(ret < 0 && s->is_seek){
-		s->is_seek = 0;
-		av_log(h, AV_LOG_ERROR, "seek, HTTP open Failed, retry\n");
-		goto open_retry;
-	}
-	s->is_seek = 0;
+	while(ret<0 && open_retry++<OPEN_RETRY_MAX && !url_interrupt_cb()){
+		s->is_seek=0;
+		s->canseek=0;
+    	ret = http_open_cnx(h);
+    }
+	s->is_seek=0;
     return ret;
 }
 static int shttp_open(URLContext *h, const char *uri, int flags)
 {
     HTTPContext *s = h->priv_data;
 	int ret;
+	int open_retry=0;
    // h->is_streamed = 1;
 
     s->filesize = -1;
 	s->is_seek=1;
-    av_strlcpy(s->location, uri+1, sizeof(s->location));
-open_retry:	
-    ret= http_open_cnx(h);
-	if(ret < 0 && s->is_seek){
-		s->is_seek = 0;
-		av_log(h, AV_LOG_ERROR, "seek, HTTP open Failed, retry\n");
-		goto open_retry;
-	}
+	s->canseek=1;
+    av_strlcpy(s->location, uri+1, sizeof(s->location));	
+	s->max_connects=MAX_CONNECT_LINKS;	
+	ret = http_open_cnx(h);
+	while(ret<0 && open_retry++<OPEN_RETRY_MAX && !url_interrupt_cb()){
+		s->is_seek=0;
+		s->canseek=0;
+    	ret = http_open_cnx(h);
+    }
+
 	s->is_seek = 0;
 	h->is_slowmedia=1;	
 	return ret;
@@ -441,6 +502,8 @@ static int http_read(URLContext *h, uint8_t *buf, int size)
 {
     HTTPContext *s = h->priv_data;
     int len;
+	int err_retry=READ_RETRY_MAX;
+retry:	
     if (s->chunksize >= 0) {
         if (!s->chunksize) {
             char line[32];
@@ -455,7 +518,7 @@ static int http_read(URLContext *h, uint8_t *buf, int size)
 
                 s->chunksize = strtoll(line, NULL, 16);
 
-                av_dlog(NULL, "Chunked encoding data size: %"PRId64"'\n", s->chunksize);
+                av_dlog(h, "Chunked encoding data size: %"PRId64"'\n", s->chunksize);
 
                 if (!s->chunksize){
 					av_log(h, AV_LOG_ERROR, "http_read s->chunksize failed\n");
@@ -478,7 +541,13 @@ static int http_read(URLContext *h, uint8_t *buf, int size)
 			av_log(h, AV_LOG_ERROR, "http_read error %d\n",AVERROR_EOF);
             return AVERROR_EOF;
         }
-        len = ffurl_read(s->hd, buf, size);
+		if(s->hd){
+        	len = ffurl_read(s->hd, buf, size);
+		}else{
+			av_log(h, AV_LOG_INFO, "http read hd not opened,force to retry open\n");
+			len=-1;/*hd not opened,force to retry open*/
+			goto errors;
+		}
 		//av_log(h, AV_LOG_ERROR, "ffurl_read %d\n",len);
     }
     if (len > 0) {
@@ -486,8 +555,36 @@ static int http_read(URLContext *h, uint8_t *buf, int size)
         if (s->chunksize > 0)
             s->chunksize -= len;
     }
-	//av_log(h, AV_LOG_ERROR, "http_read %d\n",len);
-    return len;
+	if(s->canseek && len==AVERROR(EAGAIN)){
+		struct timeval  new_time;
+		long new_time_mseconds;
+    	gettimeofday(&new_time, NULL);
+		new_time_mseconds = (new_time.tv_usec / 1000 + new_time.tv_sec * 1000);
+		av_log(h, AV_LOG_INFO, "new_time_mseconds=%d,latest_get_time_ms=%d\n", new_time_mseconds,s->latest_get_time_ms);
+		if(s->latest_get_time_ms<=0)
+			s->latest_get_time_ms=new_time_mseconds;
+		if(new_time_mseconds-s->latest_get_time_ms>READ_RETRY_MAX_TIME_MS){
+			av_log(h, AV_LOG_INFO, "new_time_mseconds=%d,latest_get_time_ms=%d  TIMEOUT\n", new_time_mseconds,s->latest_get_time_ms);
+			len=-1;/*force it goto reopen */
+		}
+	}else{
+		s->latest_get_time_ms=0;/*0 means have  just get data*/
+	}
+	if(len==0 && (s->off < s->filesize-10)){
+		av_log(h, AV_LOG_INFO, "http_read return 0,but off not reach filesize,maybe close by server try again\n");
+		len=-1;/*force to retry,if else data <10,don't do it*/
+	}
+errors:
+	
+	if(len<0 && len!=AVERROR(EAGAIN)&& err_retry-->0 && !url_interrupt_cb())
+	{
+		av_log(h, AV_LOG_INFO, "http_read failed err try=%d\n", err_retry);
+		http_reopen_cnx(h,-1);
+		goto retry;
+	}
+	
+		return len;
+
 }
 
 /* used only when posting data */
@@ -537,41 +634,38 @@ static int http_close(URLContext *h)
 static int64_t http_seek(URLContext *h, int64_t off, int whence)
 {
     HTTPContext *s = h->priv_data;
-    URLContext *old_hd = s->hd;
-    int64_t old_off = s->off;
-    uint8_t old_buf[BUFFER_SIZE];
-    int old_buf_size;
-
+	int open_retry=0;
+	int ret;
+	
     if (whence == AVSEEK_SIZE)
         return s->filesize;
     else if ((s->filesize == -1 && whence == SEEK_END) || h->is_streamed)
         return -1;
-               
-       if (whence == SEEK_CUR && off==0){/*get cur pos only*/
-               return s->off;
-       }
-
-    /* we save the old context in case the seek fails */
-    old_buf_size = s->buf_end - s->buf_ptr;
-    memcpy(old_buf, s->buf_ptr, old_buf_size);
-    s->hd = NULL;
-    if (whence == SEEK_CUR)
-        off += s->off;
+	if (whence == SEEK_CUR && off==0)/*get cur pos only*/
+		return s->off;
+       
+	if (whence == SEEK_CUR)
+        off += s->off;		
     else if (whence == SEEK_END)
         off += s->filesize;
-    s->off = off;
+	
+    if (off >= s->filesize && s->filesize > 0){
+			av_log(h, AV_LOG_ERROR, "http_seek %lld exceed filesize %lld, return -2\n",off, s->filesize);
+			return -2;
+		}  
 	s->is_seek=1;
     /* if it fails, continue on old connection */
-    if (http_open_cnx(h) < 0) {
-        memcpy(s->buffer, old_buf, old_buf_size);
-        s->buf_ptr = s->buffer;
-        s->buf_end = s->buffer + old_buf_size;
-        s->hd = old_hd;
-        s->off = old_off;
-        return -1;
+   	ret=http_reopen_cnx(h,off);
+	while(ret<0 && open_retry++<READ_RETRY_MAX&& !url_interrupt_cb())
+    {
+     	if(off<0 || (s->filesize >0 && off>=s->filesize))
+     	{
+     		/*try once,if,out of range,we return now;*/
+			break;
+     	}
+		ret=http_reopen_cnx(h,off);
     }
-	s->is_seek=0;
-    ffurl_close(old_hd);
+	s->is_seek=0; 
     return off;
 }
 

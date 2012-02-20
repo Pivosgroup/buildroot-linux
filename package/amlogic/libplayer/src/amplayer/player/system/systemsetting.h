@@ -3,8 +3,8 @@
 
 int GetSystemSettingString(const char *path, char *value, char *defaultv);
 float PlayerGetSettingfloat(const char* path);
-int PlayerSettingIsEnable(const char* path);
-int PlayerGetVFilterFormat(const char* path);
+int PlayerSettingIsEnable();
+int PlayerGetVFilterFormat();
 
 #endif
 

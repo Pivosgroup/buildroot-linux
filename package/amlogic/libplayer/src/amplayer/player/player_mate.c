@@ -16,7 +16,13 @@
 #include "thread_mgt.h"
 #include <semaphore.h>
 
+//#define DEBUG
+
+#ifdef DEBUG
 #define mate_print(fmt,args...) 	log_print(fmt,##args)
+#else
+#define mate_print(fmt,args...) 	do { if (0) log_print(fmt,##args); } while (0)
+#endif
 //#define mate_print(fmt...)
 
 struct player_mate{
@@ -82,7 +88,10 @@ int player_mate_sleep(play_para_t *player)
 		mate->mate_should_sleep=1;
 		ret = pthread_cond_signal(&mate->pthread_cond);
 		pthread_mutex_unlock(&mate->pthread_mutex);
-		player_thread_wait(player,1000);
+		if(mate->mate_isrunng)
+		{
+			player_thread_wait(player,1000);
+		}
 	}
 	return ret;
 }
@@ -171,7 +180,7 @@ static int player_mate_thread_cmd_proxy(play_para_t *player,struct player_mate *
             update_player_states(player, 1);
         }
 	}else if (cmd->ctrl_cmd & CMD_SWITCH_AID) {
-        player->playctrl_info.audio_switch_flag = 1;
+        player->playctrl_info.seek_base_audio = 1;
         player->playctrl_info.switch_audio_id = cmd->param;
 		set_black_policy(0);
     } else if (cmd->set_mode & CMD_LOOP) {
@@ -227,9 +236,9 @@ static int player_mate_thread_run(play_para_t *player)
 			player_mate_thread_wait(mate,mate->wake_delay);/*do wait,if main thread may wake fast*/
 		mate->wake_delay=0;
 		if(!mate->mate_should_sleep)	
-			player_mate_thread_run_l(player,mate);
-		mate->mate_isrunng=0;
+			player_mate_thread_run_l(player,mate);		
 		wakeup_player_thread(player);
+		mate->mate_isrunng=0;
 	}
 	return 0;
 }

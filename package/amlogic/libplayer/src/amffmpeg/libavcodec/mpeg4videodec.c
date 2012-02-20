@@ -1624,6 +1624,8 @@ static int decode_vol_header(MpegEncContext *s, GetBitContext *gb){
         } else {
             s->vol_sprite_usage = get_bits(gb, 2); /* vol_sprite_usage */
         }
+        s->avctx->mpeg4_vol_sprite = s->vol_sprite_usage;
+
         if(s->vol_sprite_usage==STATIC_SPRITE) av_log(s->avctx, AV_LOG_ERROR, "Static Sprites not supported\n");
         if(s->vol_sprite_usage==STATIC_SPRITE || s->vol_sprite_usage==GMC_SPRITE){
             if(s->vol_sprite_usage==STATIC_SPRITE){
@@ -1637,6 +1639,7 @@ static int decode_vol_header(MpegEncContext *s, GetBitContext *gb){
                 skip_bits1(gb); /* marker */
             }
             s->num_sprite_warping_points= get_bits(gb, 6);
+            s->avctx->mpeg4_vol_sprite |= s->num_sprite_warping_points << 16;
             if(s->num_sprite_warping_points > 3){
                 av_log(s->avctx, AV_LOG_ERROR, "%d sprite_warping_points\n", s->num_sprite_warping_points);
                 s->num_sprite_warping_points= 0;

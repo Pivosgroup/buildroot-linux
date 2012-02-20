@@ -1140,6 +1140,10 @@ typedef struct AVPacket {
 } AVPacket;
 #define AV_PKT_FLAG_KEY   0x0001
 
+
+#define AV_PKT_FLAG_AAC_WITH_ADTS_HEADER   0x010000
+
+
 /**
  * Audio Video Frame.
  * New fields can be added to the end of FF_COMMON_FRAME with minor version
@@ -1220,7 +1224,8 @@ typedef struct AVCodecContext {
      */
     uint8_t *extradata;
     int extradata_size;
-
+	uint8_t *extradata1;
+	int extradata1_size;
     /**
      * This is the fundamental unit of time (in seconds) in terms
      * of which frame timestamps are represented. For fixed-fps content,
@@ -2910,6 +2915,14 @@ typedef struct AVCodecContext {
     /* added by Z.C
      * to record interlace or progressive */
      int frame_interlace;
+
+    /* added by Z.C
+     * to record mpeg4 vol_sprite_usage */
+     int mpeg4_vol_sprite;
+
+    /* added by Z.C
+     * to record vc1_profile */
+     int vc1_profile;
 } AVCodecContext;
 
 /**

@@ -126,14 +126,14 @@ static  int set_audio_format(codec_para_t *pcodec)
     r = codec_h_control(pcodec->handle, AMSTREAM_IOC_AFORMAT, format);
     if (r < 0) {
         codec_r = system_error_to_codec_error(r);
-        print_error_msg(codec_r, __FUNCTION__, __LINE__);
+        print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
         return codec_r;
     }
     if (pcodec->audio_pid >= 0) {
         r = codec_h_control(pcodec->handle, AMSTREAM_IOC_AID, pcodec->audio_pid);
         if (r < 0) {
             codec_r = system_error_to_codec_error(r);
-            print_error_msg(codec_r, __FUNCTION__, __LINE__);
+            print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
             return codec_r;
         }
     }
@@ -141,7 +141,7 @@ static  int set_audio_format(codec_para_t *pcodec)
         r = codec_h_control(pcodec->handle, AMSTREAM_IOC_SAMPLERATE, pcodec->audio_samplerate);
         if (r < 0) {
             codec_r = system_error_to_codec_error(r);
-            print_error_msg(codec_r, __FUNCTION__, __LINE__);
+            print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
             return codec_r;
         }
     }
@@ -149,7 +149,7 @@ static  int set_audio_format(codec_para_t *pcodec)
         r = codec_h_control(pcodec->handle, AMSTREAM_IOC_ACHANNEL, pcodec->audio_channels);
         if (r < 0) {
             codec_r = system_error_to_codec_error(r);
-            print_error_msg(codec_r, __FUNCTION__, __LINE__);
+            print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
             return codec_r;
         }
     }
@@ -174,7 +174,7 @@ static int set_audio_info(codec_para_t *pcodec)
     r = codec_h_control(pcodec->handle, AMSTREAM_IOC_AUDIO_INFO, (unsigned long)audio_info);
     if (r < 0) {
         codec_r = system_error_to_codec_error(r);
-        print_error_msg(codec_r, __FUNCTION__, __LINE__);
+        print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
         return codec_r;
     }
     return 0;
@@ -258,7 +258,7 @@ static inline int codec_video_es_init(codec_para_t *pcodec)
     handle = codec_h_open(CODEC_VIDEO_ES_DEVICE, flags);
     if (handle < 0) {
         codec_r = system_error_to_codec_error(handle);
-        print_error_msg(codec_r, __FUNCTION__, __LINE__);
+        print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
         return CODEC_OPEN_HANDLE_FAILED;
     }
     pcodec->handle = handle;
@@ -266,14 +266,14 @@ static inline int codec_video_es_init(codec_para_t *pcodec)
     if (r < 0) {
         codec_h_close(handle);
         codec_r = system_error_to_codec_error(r);
-        print_error_msg(codec_r, __FUNCTION__, __LINE__);
+        print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
         return codec_r;
     }
     r = set_video_codec_info(pcodec);
     if (r < 0) {
         codec_h_close(handle);
         codec_r = system_error_to_codec_error(r);
-        print_error_msg(codec_r, __FUNCTION__, __LINE__);
+        print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
         return codec_r;
     }
     return CODEC_ERROR_NONE;
@@ -303,7 +303,7 @@ static inline int codec_audio_es_init(codec_para_t *pcodec)
     handle = codec_h_open(CODEC_AUDIO_ES_DEVICE, flags);
     if (handle < 0) {
         codec_r = system_error_to_codec_error(handle);
-        print_error_msg(codec_r, __FUNCTION__, __LINE__);
+        print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
         return CODEC_OPEN_HANDLE_FAILED;
     }
     pcodec->handle = handle;
@@ -311,7 +311,7 @@ static inline int codec_audio_es_init(codec_para_t *pcodec)
     if (r < 0) {
         codec_h_close(handle);
         codec_r = system_error_to_codec_error(r);
-        print_error_msg(codec_r, __FUNCTION__, __LINE__);
+        print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
         return codec_r;
     }
 
@@ -322,7 +322,7 @@ static inline int codec_audio_es_init(codec_para_t *pcodec)
         if (r < 0) {
             codec_h_close(handle);
             codec_r = system_error_to_codec_error(r);
-            print_error_msg(codec_r, __FUNCTION__, __LINE__);
+            print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
             return codec_r;
         }
     }
@@ -348,7 +348,7 @@ static inline int codec_sub_es_init(codec_para_t *pcodec)
         r = codec_init_sub(pcodec);
         if (r < 0) {
             codec_r = system_error_to_codec_error(r);
-            print_error_msg(codec_r, __FUNCTION__, __LINE__);
+            print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
             return CODEC_OPEN_HANDLE_FAILED;
         }
         pcodec->handle = pcodec->sub_handle;
@@ -357,7 +357,7 @@ static inline int codec_sub_es_init(codec_para_t *pcodec)
         r = set_sub_format(pcodec);
         if (r < 0) {
             codec_r = system_error_to_codec_error(r);
-            print_error_msg(codec_r, __FUNCTION__, __LINE__);
+            print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
             return codec_r;
         }
 
@@ -392,7 +392,7 @@ static inline int codec_ps_init(codec_para_t *pcodec)
     handle = codec_h_open(CODEC_PS_DEVICE, flags);
     if (handle < 0) {
         codec_r = system_error_to_codec_error(handle);
-        print_error_msg(codec_r, __FUNCTION__, __LINE__);
+        print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
         return CODEC_OPEN_HANDLE_FAILED;
     }
     pcodec->handle = handle;
@@ -401,12 +401,13 @@ static inline int codec_ps_init(codec_para_t *pcodec)
         if (r < 0) {
             goto error1;
         }
-        if (pcodec->video_type == VFORMAT_H264) {
+        if ((pcodec->video_type == VFORMAT_H264)
+            || (pcodec->video_type == VFORMAT_VC1)){
             r = set_video_codec_info(pcodec);
             if (r < 0) {
                 /*codec_h_close(handle);
                 codec_r = system_error_to_codec_error(r);
-                print_error_msg(codec_r, __FUNCTION__, __LINE__);
+                print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
                 return codec_r; */
                 goto error1;
             }
@@ -446,7 +447,7 @@ static inline int codec_ps_init(codec_para_t *pcodec)
 error1:
     codec_h_close(handle);
     codec_r = system_error_to_codec_error(r);
-    print_error_msg(codec_r, __FUNCTION__, __LINE__);
+    print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
     return codec_r;
 
 }
@@ -476,7 +477,7 @@ static inline int codec_ts_init(codec_para_t *pcodec)
     handle = codec_h_open(CODEC_TS_DEVICE, flags);
     if (handle < 0) {
         codec_r = system_error_to_codec_error(handle);
-        print_error_msg(codec_r, __FUNCTION__, __LINE__);
+        print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
         return CODEC_OPEN_HANDLE_FAILED;
     }
     pcodec->handle = handle;
@@ -490,7 +491,7 @@ static inline int codec_ts_init(codec_para_t *pcodec)
             if (r < 0) {
                 codec_h_close(handle);
                 codec_r = system_error_to_codec_error(r);
-                print_error_msg(codec_r, __FUNCTION__, __LINE__);
+                print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
                 return codec_r;
             }
         }
@@ -534,7 +535,7 @@ static inline int codec_ts_init(codec_para_t *pcodec)
 error1:
     codec_h_close(handle);
     codec_r = system_error_to_codec_error(r);
-    print_error_msg(codec_r, __FUNCTION__, __LINE__);
+    print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
     return codec_r;
 
 }
@@ -563,7 +564,7 @@ static inline int codec_rm_init(codec_para_t *pcodec)
     handle = codec_h_open(CODEC_RM_DEVICE, flags);
     if (handle < 0) {
         codec_r = system_error_to_codec_error(handle);
-        print_error_msg(codec_r, __FUNCTION__, __LINE__);
+        print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
         return CODEC_OPEN_HANDLE_FAILED;
     }
 
@@ -594,7 +595,7 @@ static inline int codec_rm_init(codec_para_t *pcodec)
 error1:
     codec_h_close(handle);
     codec_r = system_error_to_codec_error(r);
-    print_error_msg(codec_r, __FUNCTION__, __LINE__);
+    print_error_msg(codec_r, errno, __FUNCTION__, __LINE__);
     return codec_r;
 }
 
@@ -1612,7 +1613,7 @@ int codec_set_syncenable(codec_para_t *pcodec, int enable)
 
 /* --------------------------------------------------------------------------*/
 /**
-* @brief  codec_set_syncdiscont  set sync discontinue state
+* @brief  codec_set_sync_audio_discont  set sync discontinue state
 *
 * @param[in]  pcodec       Pointer of codec parameter structure
 * @param[in]  discontinue  Discontinue state to be set
@@ -1620,31 +1621,71 @@ int codec_set_syncenable(codec_para_t *pcodec, int enable)
 * @return     0 for success, or fail type if < 0
 */
 /* --------------------------------------------------------------------------*/
-int codec_set_syncdiscont(codec_para_t *pcodec, int discontinue)
+int codec_set_sync_audio_discont(codec_para_t *pcodec, int discontinue)
 {
-    return codec_h_control(pcodec->cntl_handle, AMSTREAM_IOC_SET_SYNCDISCON, (unsigned long)discontinue);
+    return codec_h_control(pcodec->cntl_handle, AMSTREAM_IOC_SET_SYNC_ADISCON, (unsigned long)discontinue);
 }
 
 /* --------------------------------------------------------------------------*/
 /**
-* @brief  codec_get_syncdiscont  get sync discontinue state
+* @brief  codec_set_sync_video_discont  set sync discontinue state
+*
+* @param[in]  pcodec       Pointer of codec parameter structure
+* @param[in]  discontinue  Discontinue state to be set
+*
+* @return     0 for success, or fail type if < 0
+*/
+/* --------------------------------------------------------------------------*/
+int codec_set_sync_video_discont(codec_para_t *pcodec, int discontinue)
+{
+    return codec_h_control(pcodec->cntl_handle, AMSTREAM_IOC_SET_SYNC_VDISCON, (unsigned long)discontinue);
+}
+
+/* --------------------------------------------------------------------------*/
+/**
+* @brief  codec_get_sync_audio_discont  get audio sync discontinue state
 *
 * @param[in]  pcodec       Pointer of codec parameter structure
 *
 * @return     discontiue state, or fail if < 0
 */
 /* --------------------------------------------------------------------------*/
-int codec_get_syncdiscont(codec_para_t *pcodec)
+int codec_get_sync_audio_discont(codec_para_t *pcodec)
 {
     int discontinue = 0;
     int ret;
 
-    ret = codec_h_control(pcodec->cntl_handle, AMSTREAM_IOC_GET_SYNCDISCON, (unsigned long)&discontinue);
+    ret = codec_h_control(pcodec->cntl_handle, AMSTREAM_IOC_GET_SYNC_ADISCON, (unsigned long)&discontinue);
     if (ret < 0) {
         return ret;
-    } else {
-        return discontinue;
-    }
+    }	
+    return discontinue;   
+}
+
+/* --------------------------------------------------------------------------*/
+/**
+* @brief  codec_get_sync_video_discont  get video sync discontinue state
+*
+* @param[in]  pcodec       Pointer of codec parameter structure
+*
+* @return     discontiue state, or fail if < 0
+*/
+/* --------------------------------------------------------------------------*/
+int codec_get_sync_video_discont(codec_para_t *pcodec)
+{
+    int discontinue = 0;
+    int ret;
+
+    ret = codec_h_control(pcodec->cntl_handle, AMSTREAM_IOC_GET_SYNC_VDISCON, (unsigned long)&discontinue);
+    if (ret < 0) {
+        return ret;
+    }	
+    return discontinue;   
+}
+
+int codec_get_vfstates(codec_para_t *p, vframe_states_t *vfsta)
+{
+	return codec_h_control(p->cntl_handle, AMSTREAM_IOC_VF_STATUS, (unsigned long)vfsta);    
 }
 
 int codec_get_sub_num(codec_para_t *pcodec)

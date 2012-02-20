@@ -143,14 +143,26 @@ static void get_av_codec_type(play_para_t *p_para)
         	if(p_para->vstream_info.video_codec_type == VIDEO_DEC_FORMAT_WMV3) {
                 if (pFormatCtx->video_avg_frame_time != 0) {
                     p_para->vstream_info.video_rate = pFormatCtx->video_avg_frame_time * 96 / 10000;
-                }
-
+                }	
+				// WMV3 the last byte of the extradata is a version number, 
+				// 1 for the samples we can decode
                 if (pCodecCtx->extradata && !(pCodecCtx->extradata[3] & 1)) { // this format is not supported
+                	log_error("[%s]can only support wmv3 version number 1\n", __FUNCTION__);
                     p_para->vstream_info.has_video = 0;                    
                 }
         	}				
         }else if (p_para->vstream_info.video_format == VFORMAT_SW){
         	p_para->vstream_info.has_video = 0;     
+        }else if (p_para->vstream_info.video_format == VFORMAT_MPEG4) {
+            int wrap_points = (pCodecCtx->mpeg4_vol_sprite >> 16) & 0xffff;
+            int vol_sprite = pCodecCtx->mpeg4_vol_sprite & 0xffff;
+            if (vol_sprite == 2) { // not support totally
+                log_print("[%s:%d]mpeg4 vol sprite usage %d, GMC wrappoint %d\n",
+                    __FUNCTION__, __LINE__, vol_sprite, wrap_points);
+                if (wrap_points > 2) {
+                    p_para->vstream_info.has_video = 0;
+                }
+            }
         }
 		
         if (p_para->vstream_info.has_video) {
@@ -163,6 +175,7 @@ static void get_av_codec_type(play_para_t *p_para)
             p_para->vstream_info.video_height   = pCodecCtx->height;
             p_para->vstream_info.video_ratio    = (pStream->sample_aspect_ratio.num << 16) | pStream->sample_aspect_ratio.den;
             p_para->vstream_info.video_ratio64  = (pStream->sample_aspect_ratio.num << 32) | pStream->sample_aspect_ratio.den;
+            p_para->vstream_info.video_rotation_degree = pStream->rotation_degree;
 
 			log_print("[%s:%d]time_base=%d/%d,r_frame_rate=%d/%d ratio=%d/%d video_pts=%.3f\n", __FUNCTION__, __LINE__, \
 						pCodecCtx->time_base.num, pCodecCtx->time_base.den, \
@@ -182,10 +195,11 @@ static void get_av_codec_type(play_para_t *p_para)
                 p_para->vstream_info.extradata_size = pCodecCtx->extradata_size;
                 p_para->vstream_info.extradata      = pCodecCtx->extradata;
             }
+
             p_para->vstream_info.start_time = pStream->start_time * pStream->time_base.num * PTS_FREQ / pStream->time_base.den;
           
             /* added by Z.C for mov file frame duration */
-            if ((p_para->file_type == MOV_FILE) || (p_para->file_type == MP4_FILE)) {
+            if ((p_para->file_type == MOV_MP4_M4A_3GP_3G2_MJ2_FILE) || (p_para->file_type == MP4_FILE)) {
                 if (pStream->nb_frames && pStream->duration && pStream->time_base.den && pStream->time_base.num) {
                     unsigned int fix_rate;
                     if ((0 != pStream->time_base.den) && (0 != pStream->nb_frames)) {
@@ -224,7 +238,7 @@ static void get_av_codec_type(play_para_t *p_para)
             p_para->astream_info.has_audio = 0;           
         }
 
-        if (p_para->astream_info.audio_format == AFORMAT_AAC) {
+        if (p_para->astream_info.audio_format == AFORMAT_AAC||p_para->astream_info.audio_format == AFORMAT_AAC_LATM) {
             pCodecCtx->profile = FF_PROFILE_UNKNOWN;
             AVCodecContext  *pCodecCtx = p_para->pFormatCtx->streams[audio_index]->codec;
             uint8_t *ppp = pCodecCtx->extradata;
@@ -241,7 +255,11 @@ static void get_av_codec_type(play_para_t *p_para)
                 //  p_para->astream_info.has_audio = 0;
             } else {
 
-                AVCodec * aac_codec = avcodec_find_decoder_by_name("aac");
+                AVCodec * aac_codec;
+                if (pCodecCtx->codec_id==CODEC_ID_AAC_LATM) 
+           		aac_codec = avcodec_find_decoder_by_name("aac_latm");
+		else
+                	aac_codec = avcodec_find_decoder_by_name("aac");
 
                 if (aac_codec) {
                     int len;
@@ -311,6 +329,7 @@ static void get_stream_info(play_para_t *p_para)
     int bitrate = 0;
     int read_packets = 0;
     int ret = 0;
+	aformat_t audio_format;
 
     p_para->first_index = pFormat->first_index;
     
@@ -347,15 +366,14 @@ static void get_stream_info(play_para_t *p_para)
             }
         } else if (pCodec->codec_type == CODEC_TYPE_AUDIO) {
             p_para->astream_num ++;
+			audio_format = audio_type_convert(pCodec->codec_id, p_para->file_type);
             if (p_para->file_type == RM_FILE) {
                 if ((temp_aidx == -1)
                     && (CODEC_ID_SIPR != pCodec->codec_id)) { // SIPR not supported now
                     temp_aidx = i;
                 }
-            } else {
-                if (temp_aidx == -1) {
-                    temp_aidx = i;
-                }
+            } else if (temp_aidx == -1 && audio_format != AFORMAT_UNSUPPORT) {
+	        	temp_aidx = i;	               
             }
         } else if (pCodec->codec_type == CODEC_TYPE_SUBTITLE) {
             p_para->sstream_num ++;
@@ -451,51 +469,22 @@ static void get_stream_info(play_para_t *p_para)
 			p_para->vstream_info.video_width > 1920){
 			log_error("[%s]can't support wvc1 exceed 1920\n", __FUNCTION__);
 			p_para->vstream_info.has_video = 0; 
-		}else{
-		#if 0
-			/* process vc1 packet to detect interlace or progressive */
-	        int64_t cur_pos;
-	        AVPacket avpkt;
-	        int ret;
-
-	        cur_pos = url_ftell(p_para->pFormatCtx->pb);
-	        av_init_packet(&avpkt);
-
-	        /* get the first video frame */
-	        do {
-	            ret = av_read_frame(p_para->pFormatCtx, &avpkt);
-	            if (ret < 0) {
-	                if (AVERROR(EAGAIN) != ret) {
-	                    /*if the return is EAGAIN,we need to try more times*/
-	                    log_error("[%s:%d]av_read_frame return (%d)\n", __FUNCTION__, __LINE__, ret);
-	                    url_fseek(p_para->pFormatCtx->pb, cur_pos, SEEK_SET);
-	                    av_free_packet(&avpkt);
-	                    return;
-	                } else {
-	                    av_free_packet(&avpkt);
-	                    continue;
-	                }
-	            }
-	        } while (avpkt.stream_index != video_index);
-
-	        ret = get_vc1_di(avpkt.data, avpkt.size);
-	        if (ret == 1) {// interlace, not support
-	            log_print("[%s:%d]vc1 interlace video, not support!\n", __FUNCTION__, __LINE__);
-	            set_player_error_no(p_para, PLAYER_UNSUPPORT_VIDEO);
-	            p_para->vstream_info.has_video = 0;
-	            p_para->vstream_info.video_index = -1;
-	        }
-	        av_free_packet(&avpkt);
-
-	        url_fseek(p_para->pFormatCtx->pb, cur_pos, SEEK_SET);
-        #else
+		}else if (!p_para->vdec_profile.vc1_para.interlace_enable){		
             if (p_para->pFormatCtx->streams[video_index]->codec->frame_interlace) {
                 log_print("[%s:%d]vc1 interlace video, not support!\n", __FUNCTION__, __LINE__);
 	            set_player_error_no(p_para, PLAYER_UNSUPPORT_VIDEO);
 	            p_para->vstream_info.has_video = 0;
 	            p_para->vstream_info.video_index = -1;
             }
-        #endif
+      
+		}
+        
+		if (p_para->pFormatCtx->streams[video_index]->codec->vc1_profile == 2) {
+		    // complex profile, we don't support now
+		    log_print("[%s:%d]vc1 complex profile video, not support!\n", __FUNCTION__, __LINE__);
+            set_player_error_no(p_para, PLAYER_UNSUPPORT_VIDEO);
+            p_para->vstream_info.has_video = 0;
+            p_para->vstream_info.video_index = -1;
 		}
     }
 
@@ -506,7 +495,6 @@ static void get_stream_info(play_para_t *p_para)
 			p_para->vstream_info.has_video = 0; 
 		}
 	}
-
     return;
 }
 
@@ -517,7 +505,8 @@ static int set_decode_para(play_para_t*am_p)
     int rev_byte = 0;
     int total_rev_bytes = 0;
 	vformat_t vfmt;
-	int filter_vfmt = 0;
+	aformat_t afmt;
+	int filter_vfmt = 0, filter_afmt = 0;
     unsigned char* buf;
     AVIOContext *pb = am_p->pFormatCtx->pb;
 
@@ -526,11 +515,21 @@ static int set_decode_para(play_para_t*am_p)
               am_p->vstream_info.has_video, am_p->vstream_info.video_format, \
               am_p->astream_info.has_audio, am_p->astream_info.audio_format);
 	
-	filter_vfmt = PlayerGetVFilterFormat("media.amplayer.disable-vcodecs");		
+	filter_vfmt = PlayerGetVFilterFormat();		
 	if (((1 << am_p->vstream_info.video_format) & filter_vfmt) != 0) {
 		log_error("Can't support video codec! filter_vfmt=%x vfmt=%x  (1<<vfmt)=%x\n", \
 			filter_vfmt, am_p->vstream_info.video_format, (1 << am_p->vstream_info.video_format));
-		return PLAYER_UNSUPPORT_VCODEC;
+		am_p->vstream_info.has_video = 0;
+		set_player_error_no(am_p, PLAYER_UNSUPPORT_VCODEC);
+	    update_player_states(am_p, 1);
+	}
+	filter_afmt = PlayerGetAFilterFormat();		
+	if (((1 << am_p->astream_info.audio_format) & filter_afmt) != 0) {
+		log_error("Can't support audio codec! filter_afmt=%x afmt=%x  (1<<afmt)=%x\n", \
+			filter_afmt, am_p->astream_info.audio_format, (1 << am_p->astream_info.audio_format));
+		am_p->astream_info.has_audio = 0;
+		set_player_error_no(am_p, PLAYER_UNSUPPORT_ACODEC);
+	    update_player_states(am_p, 1);
 	}
 	
 	if (am_p->playctrl_info.no_video_flag) {
@@ -611,7 +610,8 @@ static int set_decode_para(play_para_t*am_p)
 
     if (am_p->vstream_info.has_video == 0) {
         am_p->playctrl_info.video_end_flag = 1;
-    } else {
+    } 
+    if (am_p->astream_info.has_audio == 0) {
         am_p->playctrl_info.audio_end_flag = 1;
     }
 
@@ -690,7 +690,7 @@ static int set_decode_para(play_para_t*am_p)
 
 static int fb_reach_head(play_para_t *para)
 {
-    para->playctrl_info.time_point_ms = 0;
+    para->playctrl_info.time_point = 0;
     set_player_state(para, PLAYER_FB_END);
     update_playing_info(para);
     update_player_states(para, 1);
@@ -702,11 +702,11 @@ static int ff_reach_end(play_para_t *para)
     //set_black_policy(para->playctrl_info.black_out);
     para->playctrl_info.f_step = 0;
     if (para->playctrl_info.loop_flag) {
-        para->playctrl_info.time_point_ms = 0;
+        para->playctrl_info.time_point = 0;
         para->playctrl_info.init_ff_fr = 0;
         log_print("ff reach end,loop play\n");
     } else {
-        para->playctrl_info.time_point_ms = para->state.full_time*1000;
+        para->playctrl_info.time_point = para->state.full_time;
         log_print("ff reach end,stop play\n");
     }
     set_player_state(para, PLAYER_FF_END);
@@ -745,6 +745,8 @@ void player_para_reset(play_para_t *para)
         para->discontinue_point = 0;
     }
     para->discontinue_flag = 0;
+	para->discontinue_point = 0;
+	para->discontinue_last_point = 0;
     //para->playctrl_info.pts_valid = 0;
     para->playctrl_info.check_audio_ready_ms = 0;
 	
@@ -757,11 +759,11 @@ int player_dec_reset(play_para_t *p_para)
     const stream_decoder_t *decoder;
     int ret = PLAYER_SUCCESS;
     AVFormatContext *pFormatCtx = p_para->pFormatCtx;;
-    int64_t time_point_ms = p_para->playctrl_info.time_point_ms;
+    unsigned int time_point = p_para->playctrl_info.time_point;
     int64_t timestamp = 0;
     int mute_flag = 0;
 
-    timestamp = time_point_ms * (AV_TIME_BASE/1000);
+    timestamp = (int64_t)time_point * AV_TIME_BASE;
     if (p_para->vstream_info.has_video
         && (timestamp != pFormatCtx->start_time)
         && (p_para->stream_type == STREAM_ES)) {
@@ -810,36 +812,36 @@ int player_dec_reset(play_para_t *p_para)
     }
 
     if (p_para->playctrl_info.fast_forward) {
-        if (p_para->playctrl_info.time_point_ms >= (p_para->state.full_time*1000) && 
+        if (p_para->playctrl_info.time_point >= p_para->state.full_time && 
 			p_para->state.full_time > 0) {			
             p_para->playctrl_info.end_flag = 1;
 			set_black_policy(p_para->playctrl_info.black_out);
-			log_print("[%s]ff end: tpos(ms)=%lld black=%d\n", __FUNCTION__, p_para->playctrl_info.time_point_ms, p_para->playctrl_info.black_out);
+			log_print("[%s]ff end: tpos=%d black=%d\n", __FUNCTION__, p_para->playctrl_info.time_point, p_para->playctrl_info.black_out);
             return ret;
         }
 
-        log_print("[player_dec_reset]time_point(ms)=%lld step=%d\n", p_para->playctrl_info.time_point_ms, p_para->playctrl_info.f_step);
-        p_para->playctrl_info.time_point_ms += p_para->playctrl_info.f_step*1000;
-        if (p_para->playctrl_info.time_point_ms >= (p_para->state.full_time*1000) &&
+        log_print("[player_dec_reset]time_point=%d step=%d\n", p_para->playctrl_info.time_point, p_para->playctrl_info.f_step);
+        p_para->playctrl_info.time_point += p_para->playctrl_info.f_step;
+        if (p_para->playctrl_info.time_point >= p_para->state.full_time &&
 			p_para->state.full_time > 0) {
             ff_reach_end(p_para);
             log_print("reach stream end,play end!\n");
         }
     } else if (p_para->playctrl_info.fast_backward) {
-        if (p_para->playctrl_info.time_point_ms == 0) {
+        if (p_para->playctrl_info.time_point == 0) {
             p_para->playctrl_info.init_ff_fr = 0;
             p_para->playctrl_info.f_step = 0;
         }
-        if ((p_para->playctrl_info.time_point_ms >= (p_para->playctrl_info.f_step*1000)) && 
-			(p_para->playctrl_info.time_point_ms > 0)) {
-            	p_para->playctrl_info.time_point_ms -= p_para->playctrl_info.f_step*1000;        	
+        if ((p_para->playctrl_info.time_point >= p_para->playctrl_info.f_step) && 
+			(p_para->playctrl_info.time_point > 0)) {
+            	p_para->playctrl_info.time_point -= p_para->playctrl_info.f_step;        	
         } else {
             fb_reach_head(p_para);
             log_print("reach stream head,fast backward stop,play from start!\n");
         }
     } else {
         if (!p_para->playctrl_info.search_flag && p_para->playctrl_info.loop_flag) {
-            p_para->playctrl_info.time_point_ms = 0;
+            p_para->playctrl_info.time_point = 0;
         }
     }
     if (p_para->stream_type == STREAM_AUDIO) {
@@ -862,7 +864,7 @@ int player_dec_reset(play_para_t *p_para)
         log_print("[%s:%d]audio_mute=%d\n", __FUNCTION__, __LINE__, p_para->playctrl_info.audio_mute);
         codec_audio_automute(p_para->acodec->adec_priv, p_para->playctrl_info.audio_mute);
     }
-    p_para->state.last_time = p_para->playctrl_info.time_point_ms/1000;
+    p_para->state.last_time = p_para->playctrl_info.time_point;
     return ret;
 }
 static int check_ctx_bitrate(play_para_t *p_para)
@@ -1009,6 +1011,18 @@ int player_dec_init(play_para_t *p_para)
         log_error("set_decode_para failed, ret = -0x%x\n", -ret);
         goto init_fail;
     }
+	#ifdef DUMP_INDEX
+	int i,j;
+	AVStream *pStream;
+	log_print("*********************************************\n");
+	for(i = 0; i<p_para->pFormatCtx->nb_streams; i ++) {
+		pStream = p_para->pFormatCtx->streams[2];		
+		for(j = 0; j<pStream->nb_index_entries; j++){
+			log_print("stream[%d]:idx[%d] pos:%llx time:%llx\n",2, j, pStream->index_entries[j].pos, pStream->index_entries[j].timestamp);
+		}
+	}
+	log_print("*********************************************\n");
+	#endif
 
     if (p_para->stream_type != STREAM_TS && p_para->stream_type != STREAM_PS) {
         if (check_ctx_bitrate(p_para) == 0) {
@@ -1063,18 +1077,18 @@ int player_dec_init(play_para_t *p_para)
         }
         log_print("====bitrate=%d max_raw_size=%d\n", p_para->pFormatCtx->bit_rate, p_para->max_raw_size);
     }
-    if (p_para->playctrl_info.time_point_ms >= 0) {
+    if (p_para->playctrl_info.time_point >= 0) {
         ret = time_search(p_para);
         if (ret != PLAYER_SUCCESS) {
 			set_player_state(p_para, PLAYER_ERROR);
 		    ret = PLAYER_SEEK_FAILED;
-            log_error("[%s:%d]time_search(ms) to pos:%ds failed!", __FUNCTION__, __LINE__, p_para->playctrl_info.time_point_ms);
+            log_error("[%s:%d]time_search to pos:%ds failed!", __FUNCTION__, __LINE__, p_para->playctrl_info.time_point);
             goto init_fail;
         }
 		
-		if(p_para->playctrl_info.time_point_ms < p_para->state.full_time*1000){
-			p_para->state.current_time = p_para->playctrl_info.time_point_ms/1000;
-			p_para->state.current_ms=p_para->playctrl_info.time_point_ms;
+		if(p_para->playctrl_info.time_point < p_para->state.full_time){
+			p_para->state.current_time = p_para->playctrl_info.time_point;
+			p_para->state.current_ms=p_para->playctrl_info.time_point*1000;
 		}
     } else if (p_para->playctrl_info.raw_mode) {
         //log_print("*****data offset 0x%x\n", p_para->data_offset);

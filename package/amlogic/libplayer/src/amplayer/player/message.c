@@ -98,7 +98,6 @@ player_cmd_t * get_message_locked(play_para_t *para)
     }
     return cmd;
 }
-
 player_cmd_t * get_message(play_para_t *para)
 {
     player_cmd_t *cmd = NULL;
@@ -136,6 +135,7 @@ player_cmd_t * peek_message_locked(play_para_t *para)
     return cmd;
 }
 
+
 int lock_message_pool(play_para_t *para)
 {
 	message_pool_t *pool = &para->message_pool;
@@ -147,6 +147,19 @@ int unlock_message_pool(play_para_t *para)
 	message_pool_t *pool = &para->message_pool;
 	pthread_mutex_unlock(&pool->msg_mutex);
 	return 0;
+}
+player_cmd_t * peek_message(play_para_t *para)
+{
+	player_cmd_t *cmd;
+	message_pool_t *pool = &para->message_pool;
+	if (pool == NULL) {
+        log_error("[peek_message]pool is null!\n");
+        return NULL;
+    }
+	pthread_mutex_lock(&pool->msg_mutex);
+	cmd=peek_message_locked(para);
+	pthread_mutex_unlock(&pool->msg_mutex);
+	return cmd;
 }
 
 void clear_all_message(play_para_t *para)
@@ -189,6 +202,12 @@ int update_player_states(play_para_t *para, int force)
                   state.current_ms,
                   state.full_time,
                   state.last_time);
+		log_print("**[update_state]abuflevel=%.03f vbublevel=%.03f abufrp=%x vbufrp=%x read_end=%d\n",                                 
+                  state.audio_bufferlevel,
+                  state.video_bufferlevel,
+                  para->abuffer.buffer_rp,
+                  para->vbuffer.buffer_rp,
+                  para->playctrl_info.read_end_flag);
         fn = cb->update_statue_callback;
         if (fn) {
             fn(para->player_id, &state);
@@ -246,23 +265,23 @@ int cmd2str(player_cmd_t *cmd, char *buf)
             break;
 
         case CMD_SEARCH:
-            len = sprintf(buf, "%s:%lld", "PLAYER_SEEK", cmd->param);
+            len = sprintf(buf, "%s:%d", "PLAYER_SEEK", cmd->param);
             break;
 
         case CMD_FF:
-            len = sprintf(buf, "%s:%lld", "PLAYER_FF", cmd->param);
+            len = sprintf(buf, "%s:%d", "PLAYER_FF", cmd->param);
             break;
 
         case CMD_FB:
-            len = sprintf(buf, "%s:%lld", "PLAYER_FR", cmd->param);
+            len = sprintf(buf, "%s:%d", "PLAYER_FR", cmd->param);
             break;
 
         case CMD_SWITCH_AID:
-            len = sprintf(buf, "%s:%lld", "SWITCH_AUDIO", cmd->param);
+            len = sprintf(buf, "%s:%d", "SWITCH_AUDIO", cmd->param);
             break;
 
         case CMD_SWITCH_SID:
-            len = sprintf(buf, "%s:%lld", "SWITCH_SUBTITLE", cmd->param);
+            len = sprintf(buf, "%s:%d", "SWITCH_SUBTITLE", cmd->param);
             break;
 
         default:
@@ -306,7 +325,7 @@ int cmd2str(player_cmd_t *cmd, char *buf)
             break;
 
         case CMD_SET_VOLUME:
-            len = sprintf(buf, "%s:%lld", "SET_VOLUME", cmd->param);
+            len = sprintf(buf, "%s:%d", "SET_VOLUME", cmd->param);
             break;
 
         case CMD_SPECTRUM_SWITCH:
@@ -390,4 +409,4 @@ int send_event(play_para_t *para, int msg, unsigned long ext1, unsigned long ext
         cb->notify_fn(para->player_id, msg, ext1, ext2);
     }
     return 0;
-}
+}            

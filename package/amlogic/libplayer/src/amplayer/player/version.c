@@ -57,7 +57,6 @@ const char *player_get_version_info(void)
 	player_version_info_init();
 	return versioninfo;
 }
-
 int64_t player_get_version_serail(void)
 {
 	player_version_info_init();

@@ -1,5 +1,6 @@
 	obj-y += player.o \
 	player_ctrl.o \
+	amutils_msg.o \
 	player_av.o \
 	player_es.o \
 	player_ts.o \

@@ -9,41 +9,41 @@
 #define   REMOTE_IOC_SET_REPEAT_DELAY		    _IOW_BAD('I',6,sizeof(short))
 #define   REMOTE_IOC_SET_REPEAT_PERIOD	    _IOW_BAD('I',7,sizeof(short))
 
-#define   REMOTE_IOC_SET_REPEAT_ENABLE		_IOW('I',8,sizeof(short))
-#define	REMOTE_IOC_SET_DEBUG_ENABLE			_IOW('I',9,sizeof(short)) 
-#define	REMOTE_IOC_SET_MODE					_IOW('I',10,sizeof(short)) 
+#define   REMOTE_IOC_SET_REPEAT_ENABLE		_IOW_BAD('I',8,sizeof(short))
+#define	REMOTE_IOC_SET_DEBUG_ENABLE			_IOW_BAD('I',9,sizeof(short)) 
+#define	REMOTE_IOC_SET_MODE					_IOW_BAD('I',10,sizeof(short)) 
 
-#define   REMOTE_IOC_SET_RELEASE_DELAY		_IOW('I',99,sizeof(short))
-#define   REMOTE_IOC_SET_CUSTOMCODE   			_IOW('I',100,sizeof(short))
+#define   REMOTE_IOC_SET_RELEASE_DELAY		_IOW_BAD('I',99,sizeof(short))
+#define   REMOTE_IOC_SET_CUSTOMCODE   			_IOW_BAD('I',100,sizeof(short))
 //reg
-#define   REMOTE_IOC_SET_REG_BASE_GEN			_IOW('I',101,sizeof(short))
-#define   REMOTE_IOC_SET_REG_CONTROL			_IOW('I',102,sizeof(short))
-#define   REMOTE_IOC_SET_REG_LEADER_ACT 		_IOW('I',103,sizeof(short))
-#define   REMOTE_IOC_SET_REG_LEADER_IDLE 		_IOW('I',104,sizeof(short))
-#define   REMOTE_IOC_SET_REG_REPEAT_LEADER 	_IOW('I',105,sizeof(short))
-#define   REMOTE_IOC_SET_REG_BIT0_TIME		 	_IOW('I',106,sizeof(short))
+#define   REMOTE_IOC_SET_REG_BASE_GEN			_IOW_BAD('I',101,sizeof(short))
+#define   REMOTE_IOC_SET_REG_CONTROL			_IOW_BAD('I',102,sizeof(short))
+#define   REMOTE_IOC_SET_REG_LEADER_ACT 		_IOW_BAD('I',103,sizeof(short))
+#define   REMOTE_IOC_SET_REG_LEADER_IDLE 		_IOW_BAD('I',104,sizeof(short))
+#define   REMOTE_IOC_SET_REG_REPEAT_LEADER 	_IOW_BAD('I',105,sizeof(short))
+#define   REMOTE_IOC_SET_REG_BIT0_TIME		 _IOW_BAD('I',106,sizeof(short))
 
 //sw
-#define   REMOTE_IOC_SET_BIT_COUNT			 	_IOW('I',107,sizeof(short))
-#define   REMOTE_IOC_SET_TW_LEADER_ACT		_IOW('I',108,sizeof(short))
-#define   REMOTE_IOC_SET_TW_BIT0_TIME			_IOW('I',109,sizeof(short))
-#define   REMOTE_IOC_SET_TW_BIT1_TIME			_IOW('I',110,sizeof(short))
-#define   REMOTE_IOC_SET_TW_REPEATE_LEADER	_IOW('I',111,sizeof(short))
+#define   REMOTE_IOC_SET_BIT_COUNT			 	_IOW_BAD('I',107,sizeof(short))
+#define   REMOTE_IOC_SET_TW_LEADER_ACT		_IOW_BAD('I',108,sizeof(short))
+#define   REMOTE_IOC_SET_TW_BIT0_TIME			_IOW_BAD('I',109,sizeof(short))
+#define   REMOTE_IOC_SET_TW_BIT1_TIME			_IOW_BAD('I',110,sizeof(short))
+#define   REMOTE_IOC_SET_TW_REPEATE_LEADER	_IOW_BAD('I',111,sizeof(short))
 
-#define   REMOTE_IOC_GET_TW_LEADER_ACT		_IOR('I',112,sizeof(short))
-#define   REMOTE_IOC_GET_TW_BIT0_TIME			_IOR('I',113,sizeof(short))
-#define   REMOTE_IOC_GET_TW_BIT1_TIME			_IOR('I',114,sizeof(short))
-#define   REMOTE_IOC_GET_TW_REPEATE_LEADER	_IOR('I',115,sizeof(short))
+#define   REMOTE_IOC_GET_TW_LEADER_ACT		_IOR_BAD('I',112,sizeof(short))
+#define   REMOTE_IOC_GET_TW_BIT0_TIME			_IOR_BAD('I',113,sizeof(short))
+#define   REMOTE_IOC_GET_TW_BIT1_TIME			_IOR_BAD('I',114,sizeof(short))
+#define   REMOTE_IOC_GET_TW_REPEATE_LEADER	_IOR_BAD('I',115,sizeof(short))
 
 
-#define   REMOTE_IOC_GET_REG_BASE_GEN			_IOR('I',121,sizeof(short))
-#define   REMOTE_IOC_GET_REG_CONTROL			_IOR('I',122,sizeof(short))
-#define   REMOTE_IOC_GET_REG_LEADER_ACT 		_IOR('I',123,sizeof(short))
-#define   REMOTE_IOC_GET_REG_LEADER_IDLE 		_IOR('I',124,sizeof(short))
-#define   REMOTE_IOC_GET_REG_REPEAT_LEADER 	_IOR('I',125,sizeof(short))
-#define   REMOTE_IOC_GET_REG_BIT0_TIME		 _IOR('I',126,sizeof(short))
-#define   REMOTE_IOC_GET_REG_FRAME_DATA		_IOR('I',127,sizeof(short))
-#define   REMOTE_IOC_GET_REG_FRAME_STATUS	_IOR('I',128,sizeof(short))
+#define   REMOTE_IOC_GET_REG_BASE_GEN			_IOR_BAD('I',121,sizeof(short))
+#define   REMOTE_IOC_GET_REG_CONTROL			_IOR_BAD('I',122,sizeof(short))
+#define   REMOTE_IOC_GET_REG_LEADER_ACT 		_IOR_BAD('I',123,sizeof(short))
+#define   REMOTE_IOC_GET_REG_LEADER_IDLE 		_IOR_BAD('I',124,sizeof(short))
+#define   REMOTE_IOC_GET_REG_REPEAT_LEADER 	_IOR_BAD('I',125,sizeof(short))
+#define   REMOTE_IOC_GET_REG_BIT0_TIME		 	_IOR_BAD('I',126,sizeof(short))
+#define   REMOTE_IOC_GET_REG_FRAME_DATA		_IOR_BAD('I',127,sizeof(short))
+#define   REMOTE_IOC_GET_REG_FRAME_STATUS	_IOR_BAD('I',128,sizeof(short))
 
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -119,5 +119,8 @@ static int remote_ioc_table[18]={
     REMOTE_IOC_SET_REG_REPEAT_LEADER,
     REMOTE_IOC_SET_REG_BIT0_TIME
 };
+
+extern int set_config(remote_config_t *remote, int device_fd);
+ extern int get_config_from_file(FILE *fp, remote_config_t *remote);
 
 #endif

@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdint.h>
 #include <codec.h>
 #include <player_ctrl.h>
 #include <log_print.h>
@@ -137,7 +136,7 @@ static int shell_get_command(player_cmd_t *playercmd)
     			p++;
     			sscanf(p,"%d",&r);                
                 playercmd->ctrl_cmd = CMD_SEARCH;
-                playercmd->param = r * 1000;                
+                playercmd->param = r;                
 			}
     		else
 			{

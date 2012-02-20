@@ -26,10 +26,7 @@ ADEC_BEGIN_DECLS
 #define AUDIODSP_DECODE_STOP                    _IOW('a',5,long)
 #define AUDIODSP_REGISTER_FIRMWARE          _IOW('a',6,long)
 #define AUDIODSP_UNREGISTER_ALLFIRMWARE     _IOW('a',7,long)
-
-#ifdef ENABLE_WAIT_FORMAT
 #define AUDIODSP_WAIT_FORMAT                 _IOW('a',11,long)
-#endif
 
 #define AUDIODSP_GET_CHANNELS_NUM           _IOR('r',1,long)
 #define AUDIODSP_GET_SAMPLERATE             _IOR('r',2,long)
@@ -46,10 +43,8 @@ ADEC_BEGIN_DECLS
 #define AUDIODSP_DECODE_STOP                    _IOW('a',5,sizeof(long))
 #define AUDIODSP_REGISTER_FIRMWARE          _IOW('a',6,sizeof(long))
 #define AUDIODSP_UNREGISTER_ALLFIRMWARE     _IOW('a',7,sizeof(long))
+#define AUDIODSP_WAIT_FORMAT                 _IOW('a',11,long)
 
-#ifdef ENABLE_WAIT_FORMAT
-#define AUDIODSP_WAIT_FORMAT                 _IOW('a',11,sizeof(long))
-#endif
 
 #define AUDIODSP_GET_CHANNELS_NUM           _IOR('r',1,sizeof(long))
 #define AUDIODSP_GET_SAMPLERATE             _IOR('r',2,sizeof(long))
@@ -74,6 +69,8 @@ ADEC_BEGIN_DECLS
 #define MCODEC_FMT_WMAPRO       (1<<11)
 #define MCODEC_FMT_ALAC             (1<<12)
 #define MCODEC_FMT_VORBIS               (1<<13)
+#define MCODEC_FMT_AAC_LATM          (1<<14)
+#define MCODEC_FMT_APE          (1<<15)
 
 /*********************************************************************************************/
 typedef struct dsp_operations dsp_operations_t;

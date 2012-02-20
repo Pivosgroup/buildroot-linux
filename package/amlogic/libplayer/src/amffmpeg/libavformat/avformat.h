@@ -640,7 +640,8 @@ typedef struct AVStream {
      */
      unsigned int stream_offset;
      int no_extra_offset;
-     float special_fps;  // for some special stream	
+     float special_fps;  // for some special stream
+     int rotation_degree;
 } AVStream;
 
 #define AV_PROGRAM_RUNNING 1
@@ -887,6 +888,14 @@ typedef struct AVFormatContext {
 
     uint64_t video_avg_frame_time, audio_avg_frame_time;
 
+    /* added by GP for storing music's embedded picture */
+    int cover_data_len;
+    uint8_t *cover_data;
+
+	/* 
+	 *added by XH for avoid repeat seek binary failed
+	 */
+	int seek_binary_failed;
 } AVFormatContext;
 
 typedef struct AVPacketList {

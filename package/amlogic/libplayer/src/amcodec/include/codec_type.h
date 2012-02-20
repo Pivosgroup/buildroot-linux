@@ -89,6 +89,13 @@ typedef struct
 }subtitle_info_t;
 #define MAX_SUB_NUM			(32)
 
+typedef struct {
+	int vf_pool_size;
+	int buf_free_num;
+	int buf_recycle_num;
+    int buf_avail_num;
+} vframe_states_t;
+
 #define IS_VALID_PID(t)     (t>=0 && t<=0x1fff)
 #define IS_VALID_STREAM(t)  (t>0 && t<=0x1fff)
 #define IS_VALID_ATYPE(t)   (t>=0 && t<AFORMAT_MAX)

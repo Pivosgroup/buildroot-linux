@@ -192,6 +192,7 @@ static int amf_parse_object(AVFormatContext *s, AVStream *astream, AVStream *vst
     AMFDataType amf_type;
     char str_val[256];
     double num_val;
+    unsigned int temp32;
 
     num_val = 0;
     ioc = s->pb;
@@ -206,6 +207,11 @@ static int amf_parse_object(AVFormatContext *s, AVStream *astream, AVStream *vst
         case AMF_DATA_TYPE_STRING:
             if(amf_get_string(ioc, str_val, sizeof(str_val)) < 0)
                 return -1;
+            break;
+        case AMF_DATA_TYPE_LONG_STRING:
+            temp32 = avio_rb32(ioc);
+            av_log(NULL, AV_LOG_ERROR, "long string length %d\n", temp32);
+            avio_skip(ioc, temp32);
             break;
         case AMF_DATA_TYPE_OBJECT: {
             unsigned int keylen;

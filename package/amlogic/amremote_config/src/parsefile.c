@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "remote_config.h"
 
@@ -22,8 +23,8 @@ static void str_trim( char **s )
 
 static int  remote_config_set(char *name,char *value,remote_config_t  *config)
 {
-    int i;
-    unsigned  int *config_para=(unsigned int*)config + 2;
+    unsigned int i;
+    unsigned int *config_para=(unsigned int*)config + 2;
 
     for(i=0;i<ARRAY_SIZE(config_item);i++)
         if(strcmp(config_item[i], name)==0){

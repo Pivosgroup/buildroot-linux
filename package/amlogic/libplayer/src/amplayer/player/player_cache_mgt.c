@@ -91,7 +91,7 @@ static unsigned long cache_client_open(const char *url, int64_t filesize)
         int max_retry = 0;
 		struct cache_file *cache;
         if (filesize >= cache_setting.max_cache_size || filesize < cache_setting.file_block_size) {
-            log_print("filesize is out of support range=%lld\n", filesize);
+            log_print("filesize is out of support range=%d\n", filesize);
             return 0;/*don't cache too big and too small file now.*/
         }
 		if(!cachefile_has_cached_currentfile(cache_setting.cache_dir,url,filesize)){

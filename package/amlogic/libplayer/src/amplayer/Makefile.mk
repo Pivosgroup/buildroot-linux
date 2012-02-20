@@ -49,7 +49,7 @@ else
 endif
 
 CFLAGS+=-I${SRCTREE}/../amffmpeg -I${SRCTREE}/../amcodec/include -I${SRCTREE}/../amadec/include
-CFLAGS+= -fPIC
+CFLAGS+= -fPIC -DENABLE_FREE_SCALE
 target_all=  $(TARGET)
 
 

@@ -18,8 +18,17 @@
 #include "thread_mgt.h"
 #include "player_update.h"
 
-#define DUMP_WRITE   (0)
-#define DUMP_READ    (0)
+#define DUMP_WRITE_VIDEO  (0)
+#define DUMP_WRITE_AUDIO  (0)
+#define DUMP_WRITE_AVDATA (0)
+
+#define DUMP_READ_VIDEO    (0)
+#define DUMP_READ_AUDIO	   (0)
+#define DUMP_READ_AVDATA   (0)
+
+#define DUMP_WRITE (DUMP_WRITE_VIDEO||DUMP_WRITE_AUDIO||DUMP_WRITE_AVDATA)
+#define DUMP_READ  (DUMP_READ_VIDEO||DUMP_READ_AUDIO||DUMP_READ_AVDATA)
+
 #if (DUMP_WRITE || DUMP_READ)
 #include <fcntl.h>
 int fdw = -1, fdr = -1;
@@ -31,9 +40,7 @@ static const media_type media_array[] = {
     {"rm", RM_FILE, STREAM_RM},
     {"avi", AVI_FILE, STREAM_ES},
     {"mkv", MKV_FILE, STREAM_ES},
-    {"matroska", MKV_FILE, STREAM_ES},
-    {"mov", MOV_FILE, STREAM_ES},
-    {"mp4", MP4_FILE, STREAM_ES},
+    {"matroska", MKV_FILE, STREAM_ES},     
     {"flv", FLV_FILE, STREAM_ES},
     {"aac", AAC_FILE, STREAM_AUDIO},
     {"ac3", AC3_FILE, STREAM_AUDIO},
@@ -44,10 +51,11 @@ static const media_type media_array[] = {
     {"h264", H264_FILE, STREAM_VIDEO},
     {"mpegvideo", M2V_FILE, STREAM_VIDEO},
     {"p2p", P2P_FILE, STREAM_ES},
-    {"asf", ASF_FILE, STREAM_ES},
-    {"m4a", MP4_FILE, STREAM_ES},
+    {"asf", ASF_FILE, STREAM_ES},   
     {"m4v", MP4_FILE, STREAM_ES},
     {"rtsp", STREAM_FILE, STREAM_ES},
+    {"ape", APE_FILE, STREAM_ES},  
+    {"mov,mp4,m4a,3gp,3g2,mj2", MOV_MP4_M4A_3GP_3G2_MJ2_FILE, STREAM_ES},
 };
 
 aformat_t audio_type_convert(enum CodecID id, pfile_type File_type)
@@ -70,6 +78,11 @@ aformat_t audio_type_convert(enum CodecID id, pfile_type File_type)
     case CODEC_ID_MP3:
         format = AFORMAT_MPEG;
         break;
+
+    case CODEC_ID_AAC_LATM:
+            format = AFORMAT_AAC_LATM;
+        break;
+
 
     case CODEC_ID_AAC:
         if (File_type == RM_FILE) {
@@ -132,6 +145,10 @@ aformat_t audio_type_convert(enum CodecID id, pfile_type File_type)
     case CODEC_ID_VORBIS:
 	format = 	AFORMAT_VORBIS;
 	break;
+    case CODEC_ID_APE:
+	format = 	AFORMAT_APE;
+	break;
+
     default:
         format = AFORMAT_UNSUPPORT;
         log_print("audio codec_id=0x%x\n", id);
@@ -262,6 +279,7 @@ vdec_type_t video_codec_type_convert(unsigned int id)
         break;
 
         // h263
+    case CODEC_ID_H263:
     case CODEC_TAG_H263:
     case CODEC_TAG_h263:
     case CODEC_TAG_s263:
@@ -367,6 +385,7 @@ int set_file_type(const char *name, pfile_type *ftype, pstream_type *stype)
     for (i = 0; i < j; i++) {
         //log_print("[set_file_type:0]name = %s  mname=%s\n",name ,media_array[i].file_ext);
         if (strcmp(name, media_array[i].file_ext) == 0) {
+	        log_print("[set_file_type:find0]name = %s  mname=%s\n",name ,media_array[i].file_ext);
             break;
         }
     }
@@ -374,6 +393,7 @@ int set_file_type(const char *name, pfile_type *ftype, pstream_type *stype)
         for (i = 0; i < j; i++) {
             //log_print("[set_file_type:1]name = %s  mname=%s\n",name ,media_array[i].file_ext);
             if (strstr(name, media_array[i].file_ext) != NULL) {
+	            log_print("[set_file_type:find1]name = %s  mname=%s\n",name ,media_array[i].file_ext);
                 break;
             }
             if (i == j) {
@@ -452,14 +472,13 @@ static int raw_read(play_para_t *para)
     static int try_count = 0;
     int64_t cur_offset = 0;
 	
-#if DUMP_READ
+#if DUMP_READ_AVDATA
     if (fdr == -1) {
         fdr = open("./dump/dump_read.dat", O_CREAT | O_RDWR);
         if (fdr < 0) {
             log_print("creat dump file failed!fd=%d\n", fdr);
         }
     }
-    log_print("=============================open dump_read.data ok!\n");
 #endif
 
     if (pkt->data_size > 0) {
@@ -496,7 +515,7 @@ static int raw_read(play_para_t *para)
             pkt->avpkt_newflag = 1;
             pkt->avpkt_isvalid = 1;
 	     pkt->pts_checkin_ok = 0;
-#if DUMP_READ
+#if DUMP_READ_AVDATA
             if (fdr > 0) {
                 int dsize;
                 dsize = write(fdr,  pkt->data, pkt->data_size);
@@ -511,7 +530,7 @@ static int raw_read(play_para_t *para)
             /*if the return is EAGAIN,we need to try more times*/
             para->playctrl_info.read_end_flag = 1;
             log_print("raw read: read end!,%d,%lld,%lld\n",rev_byte ,cur_offset,para->pFormatCtx->valid_offset);
-#if DUMP_READ
+#if DUMP_READ_AVDATA
             if (fdr > 0) {
                 close(fdr);
             }
@@ -595,13 +614,34 @@ static int non_raw_read(play_para_t *para)
                 if (AVERROR_EOF != ret) {
                     return PLAYER_RD_FAILED;
                 } else {
-                    para->playctrl_info.read_end_flag = 1;
-                    log_print("non_raw_read: read end!\n");
+			/*reach end add 6k audio data*/
+			static int reach_end=0;
+			AVStream *st;
+			if(reach_end<3)
+			{
+				reach_end++;
+				if(audio_idx>=0) 
+				{
+                    			st = para->pFormatCtx->streams[audio_idx];
+                    			if (st->codec->codec_type==CODEC_TYPE_AUDIO&&st->codec->codec_id==CODEC_ID_AAC) {
+						pkt->avpkt->data=av_mallocz(2048);
+						pkt->avpkt->size=2048;	
+                    				pkt->avpkt->stream_index = st->index;
+						ret=0;
+                    			}
+                		}
+			}
+			else
+			{//audio data add end	
+		    		reach_end=0;
+                    		para->playctrl_info.read_end_flag = 1;
+                    		log_print("non_raw_read: read end!\n");
 #if DUMP_READ
-                    if (fdr > 0) {
-                        close(fdr);
-                    }
+                    		if (fdr > 0) {
+                        		close(fdr);
+                    		}
 #endif
+			}
                 }
             } else {
                 try_count ++;
@@ -617,12 +657,15 @@ static int non_raw_read(play_para_t *para)
             try_count = 0;
 #if DUMP_READ
             if (fdr == -1) {
-                fdr = open("./dump/dump_read.dat", O_CREAT | O_RDWR);
+#if DUMP_READ_VIDEO
+                fdr = open("./dump/dump_video.dat", O_CREAT | O_RDWR);
+#elif DUMP_READ_AUDIO
+				fdr = open("./dump/dump_audio.dat", O_CREAT | O_RDWR);
+#endif
                 if (fdr < 0) {
                     log_print("creat dump file failed!fd=%d\n", fdr);
                 }
             }
-            log_print("=============================open dump_read.data ok!\n");
 #endif
 
             //log_print("av_read_frame return (%d) pkt->avpkt=%p pkt->avpkt->data=%p\r",ret,pkt->avpkt,pkt->avpkt->data);
@@ -694,7 +737,14 @@ static int non_raw_read(play_para_t *para)
             pkt->data = pkt->avpkt->data;
             pkt->data_size = pkt->avpkt->size;
 #if DUMP_READ
-            if (fdr > 0) {
+#if DUMP_READ_VIDEO
+            if (fdr > 0 && pkt->type == CODEC_VIDEO) 
+#elif DUMP_READ_AUDIO
+			if (fdr > 0 && pkt->type == CODEC_AUDIO) 
+#else
+			if (fdr > 0)
+#endif
+			{
                 int dsize;
                 dsize = write(fdr,  pkt->data, pkt->data_size);
                 if (dsize != pkt->data_size) {
@@ -766,8 +816,14 @@ static int write_header(play_para_t *para)
             } else {
 #if DUMP_WRITE
                 int size;
-                //if(fd > 0 && pkt->type == CODEC_VIDEO)
-                if (fdw > 0) {
+#if DUMP_WRITE_VIDEO
+                if(fd > 0 && pkt->type == CODEC_VIDEO)
+#elif DUMP_WRITE_AUDIO	
+				if(fd > 0 && pkt->type == CODEC_AUDIO)
+#else					
+                if (fdw > 0)
+#endif					
+				{
                     size = write(fdw, pkt->hdr->data + len, write_bytes);
                     if (size != write_bytes) {
                         log_print("dump data write failed!size=%d bytes=%d\n", size, write_bytes);
@@ -802,9 +858,9 @@ static int check_write_finish(play_para_t *para)
     return PLAYER_WR_FAILED;
 }
 
-static int64_t rm_offset_search_pts(AVStream *pStream, int64_t timepoint_ms)
+static int64_t rm_offset_search_pts(AVStream *pStream, unsigned int timepoint)
 {
-    int64_t wanted_pts = timepoint_ms;
+    int64_t wanted_pts = timepoint * 1000;
     int index_entry, index_entry_f, index_entry_b;
     int64_t pts_f, pts_b;
 
@@ -816,7 +872,7 @@ static int64_t rm_offset_search_pts(AVStream *pStream, int64_t timepoint_ms)
             log_error("[%s]not found valid backward index entry\n", __FUNCTION__);
             return 0;
         } else {
-            log_print("[%s:%d]time_point(ms)=%lld pos=0x%llx\n", __FUNCTION__, __LINE__, timepoint_ms, pStream->index_entries[index_entry_b].pos);
+            log_print("[%s:%d]time_point=%d pos=0x%llx\n", __FUNCTION__, __LINE__, timepoint, pStream->index_entries[index_entry_b].pos);
             return pStream->index_entries[index_entry_b].pos;
         }
     }
@@ -843,7 +899,7 @@ static int64_t rm_offset_search_pts(AVStream *pStream, int64_t timepoint_ms)
     return pStream->index_entries[index_entry].pos;
 }
 
-static int64_t rm_offset_search(play_para_t *am_p, int64_t offset, int64_t time_point_ms)
+static int64_t rm_offset_search(play_para_t *am_p, int64_t offset, unsigned int time_point)
 {
     int read_length = 0;
     unsigned char *data;
@@ -870,8 +926,8 @@ static int64_t rm_offset_search(play_para_t *am_p, int64_t offset, int64_t time_
 
     if (i < s->nb_streams) {
         if (s->index_builded && (pStream->nb_index_entries > 1)) {
-			cur_offset = rm_offset_search_pts(pStream, time_point_ms);
-			log_info("rm time search(ms) by index:pos=%lld offset=%lld\n", time_point_ms, cur_offset);
+			cur_offset = rm_offset_search_pts(pStream, time_point);
+			log_info("rm time search by index:pos=%d offset=%lld\n", time_point, cur_offset);
             return cur_offset;
         }
     }
@@ -1017,7 +1073,7 @@ int update_variable_info(play_para_t *para)
 int time_search(play_para_t *am_p)
 {
     AVFormatContext *s = am_p->pFormatCtx;
-    int64_t time_point_ms = am_p->playctrl_info.time_point_ms;
+    unsigned int time_point = am_p->playctrl_info.time_point;
     int64_t timestamp = 0;
     int64_t offset = 0;
     unsigned int temp = 0;
@@ -1027,16 +1083,20 @@ int time_search(play_para_t *am_p)
 	int sample_size;
 
     /* If swith audio, then use audio stream index */
-    if (am_p->playctrl_info.audio_switch_flag) {
-        seek_flags = 0;
+    if (am_p->playctrl_info.seek_base_audio) {       
+        seek_flags |= AVSEEK_FLAG_ANY;
+		stream_index = am_p->astream_info.audio_index;
+		am_p->playctrl_info.seek_base_audio = 0;
+	    log_info("[time_search]switch audio, audio_idx=%d time=%d\n", stream_index, time_point);
     }
-    
-    temp = (unsigned int)(s->duration / AV_TIME_BASE);
-    log_info("[time_search:%d]time_point(ms) =%lld temp=%d duration= %lld\n", __LINE__, time_point_ms, temp, s->duration);
+    if(s->duration > 0){
+	    temp = (unsigned int)(s->duration / AV_TIME_BASE);
+	    log_info("[time_search:%d]time_point =%d temp=%d duration= %lld\n", __LINE__, time_point, temp, s->duration);
+    }
     /* if seeking requested, we execute it */
-    if (url_support_time_seek(s->pb) && time_point_ms > 0) {
-        log_info("[time_search:%d] direct seek to time_point(ms) =%lld\n", __LINE__, time_point_ms);
-        ret = url_fseektotime(s->pb, time_point_ms/1000, seek_flags);
+    if (url_support_time_seek(s->pb) && time_point > 0) {
+        log_info("[time_search:%d] direct seek to time_point =%d\n", __LINE__, time_point);
+        ret = url_fseektotime(s->pb, time_point,seek_flags);
         if (ret >= 0) {
             av_read_frame_flush(s);
             am_p->discontinue_point = ret;
@@ -1045,41 +1105,42 @@ int time_search(play_para_t *am_p)
         }
         /*failed*/
         return PLAYER_SEEK_FAILED;
-    } else if (time_point_ms <= (temp*1000)) {
-        if (am_p->file_type == AVI_FILE ||
+    } else if (time_point <= temp || temp <= 0) {
+        if (am_p->file_type == AVI_FILE || 
             am_p->file_type == MP4_FILE ||
             am_p->file_type == MKV_FILE ||
             am_p->file_type == FLV_FILE ||
-            am_p->file_type == MOV_FILE ||
+            am_p->file_type == MOV_MP4_M4A_3GP_3G2_MJ2_FILE ||
             am_p->file_type == P2P_FILE ||
             am_p->file_type == ASF_FILE) {
             if (am_p->file_type == AVI_FILE && !s->seekable) {
-                time_point_ms = am_p->state.current_ms;
+                time_point = am_p->state.current_time;
             }
 
-            timestamp = time_point_ms * (AV_TIME_BASE/1000);
+            timestamp = (int64_t)time_point * AV_TIME_BASE;
             /* add the stream start time */
             if (s->start_time != (int64_t)AV_NOPTS_VALUE) {
                 timestamp += s->start_time;
             }
+			
             if (timestamp == s->start_time) {
                 if (am_p->file_type == AVI_FILE) {
-                    stream_index = am_p->first_index;
+                    //stream_index = am_p->first_index;
                     seek_flags |= AVSEEK_FLAG_ANY;
                 }
-            }
+            }			
 
 			if (am_p->vstream_info.video_format == VFORMAT_MJPEG ||
 				am_p->file_type == MKV_FILE) {
 				seek_flags |= AVSEEK_FLAG_ANY;
 			}
 
-			log_info("[time_search:%d] stream_index %d, time_point(ms)=%lld timestamp=%lld start_time=%lld\n",
-                     __LINE__, stream_index, time_point_ms, timestamp, s->start_time);
+			log_info("[time_search:%d] stream_index %d, time_point=%d timestamp=%lld start_time=%lld\n",
+                     __LINE__, stream_index, time_point, timestamp, s->start_time);
 
             if ((am_p->vstream_info.video_index == -1 || !am_p->vstream_info.has_video)
                 && am_p->stream_type != STREAM_ES) {
-                offset = ( time_point_ms/1000 * (s->bit_rate >> 3));
+                offset = ((int64_t)time_point * (s->bit_rate >> 3));
                 ret = url_fseek(s->pb, offset, SEEK_SET);
                 if (ret < 0) {
                     log_info("%s: could not seek to position 0x%llx  ret=0x%llx\n", s->filename, offset, ret);
@@ -1092,27 +1153,43 @@ int time_search(play_para_t *am_p)
                     return PLAYER_SEEK_FAILED;
                 }
                 offset = url_ftell(s->pb);
-                if ((am_p->playctrl_info.last_seek_time_point_ms != time_point_ms)
+                if ((am_p->playctrl_info.last_seek_time_point != time_point)
                     && (am_p->playctrl_info.last_seek_offset == offset)) {
                     am_p->playctrl_info.seek_offset_same = 1;
                 } else {
                     am_p->playctrl_info.seek_offset_same = 0;
                     am_p->playctrl_info.last_seek_offset = offset;
                 }
-                am_p->playctrl_info.last_seek_time_point_ms = time_point_ms;
+                am_p->playctrl_info.last_seek_time_point = time_point;
             }
-        } else {
-            offset = (time_point_ms/1000 * (s->bit_rate >> 3));
-            log_info("time_point(ms) = %lld  bit_rate=%x offset=0x%llx\n", time_point_ms, s->bit_rate, offset);
+        } else {  
+        	if (am_p->file_type == MPEG_FILE && time_point > 0 
+				&& !am_p->playctrl_info.seek_frame_fail) {
+				timestamp = (int64_t)time_point * AV_TIME_BASE;	           
+	            if (s->start_time != (int64_t)AV_NOPTS_VALUE) {
+	                timestamp += s->start_time;
+	            }
+				ret = (int64_t)av_seek_frame(s, stream_index, timestamp, seek_flags);
+                if (ret >= 0) 
+					return PLAYER_SUCCESS;    
+				else
+					am_p->playctrl_info.seek_frame_fail = 1;
+			}
+				
+            offset = ((int64_t)time_point * (s->bit_rate >> 3));
+            log_info("time_point = %d  bit_rate=%x offset=0x%llx\n", time_point, s->bit_rate, offset);
 
             if (am_p->file_type == RM_FILE) {
                 if (offset > 0) {
-                    offset = rm_offset_search(am_p, am_p->data_offset + offset, time_point_ms);
+                    offset = rm_offset_search(am_p, am_p->data_offset + offset, time_point);
                 } else {
                     offset = am_p->data_offset;
                 }
             }
-            if (am_p->file_type == WAV_FILE&&am_p->astream_info.audio_format == AFORMAT_ADPCM) {
+            /**
+             * all of PCM format need align to sample size
+             * **/            
+            if (am_p->file_type == WAV_FILE){//&&am_p->astream_info.audio_format == AFORMAT_ADPCM) {
 			AVCodecContext *codec = 	s->streams[am_p->astream_info.audio_index]->codec;
 			if(codec->sample_fmt == 0)//AV_SAMPLE_FMT_U8
 				sample_size = 1;
@@ -1120,12 +1197,12 @@ int time_search(play_para_t *am_p)
 				sample_size = 4;
 			else
 				sample_size = 2;
-			offset = /*am_p->data_offset + */(time_point_ms/1000 * (s->bit_rate >> 3));
+			offset = /*am_p->data_offset + */((int64_t)time_point * (s->bit_rate >> 3));
 			offset -= offset%codec->block_align;
 			offset -= (offset % (codec->channels* sample_size) );
 			offset += am_p->data_offset;
             }
-            log_info("time_point(ms) = %lld  offset=%llx \n", time_point_ms, offset);
+            log_info("time_point = %d  offset=%llx \n", time_point, offset);
             if (offset > s->valid_offset) {
                 offset = url_ftell(s->pb);
                 log_info("seek offset exceed, use current 0x%llx\n", offset);
@@ -1138,7 +1215,7 @@ int time_search(play_para_t *am_p)
         }
 
         /* reset seek info */
-        //time_point_ms = 0;
+        //time_point = 0;
     }
     return PLAYER_SUCCESS;
 }
@@ -1151,7 +1228,13 @@ int write_av_packet(play_para_t *para)
     int size ;
 #if DUMP_WRITE
     if (fdw == -1) {
+		#if DUMP_WRITE_VIDEO
+		fdw = open("./dump/dump_video.dat", O_CREAT | O_RDWR);
+		#elif DUMP_WRITE_AUDIO
+		fdw = open("./dump/dump_audio.dat", O_CREAT | O_RDWR);
+		#else
         fdw = open("./dump/dump_write.dat", O_CREAT | O_RDWR);
+		#endif
         if (fdw < 0) {
             log_print("creat dump file failed!fd=%d\n", fdw);
         }
@@ -1205,83 +1288,188 @@ int write_av_packet(play_para_t *para)
         pkt->avpkt_isvalid = 0;
     }
 
-
-    while (size > 0 && pkt->avpkt_isvalid) {
-        write_bytes = codec_write(pkt->codec, (char *)buf, size);
-        if (write_bytes < 0 || write_bytes > size) {
-            if (-errno != AVERROR(EAGAIN)) {
-                para->playctrl_info.check_lowlevel_eagain_cnt = 0;
-                log_print("write codec data failed!\n");
-                return PLAYER_WR_FAILED;
-            } else {
-                /* EAGAIN to see if buffer full or write time out too much */				
-				if(check_avbuffer_enough(para)){
-					++ para->playctrl_info.check_lowlevel_eagain_cnt;
-				}else{
-					para->playctrl_info.check_lowlevel_eagain_cnt = 0;
-				}
-				
-				if (para->playctrl_info.check_lowlevel_eagain_cnt > 50) {
-                    /* reset decoder */
-                    para->playctrl_info.check_lowlevel_eagain_cnt = 0;
-                    para->playctrl_info.reset_flag = 1;
-                    para->playctrl_info.end_flag = 1;
-                    if (para->state.start_time != -1) {
-                        para->playctrl_info.time_point_ms = (para->state.pts_video - para->state.start_time)/ PTS_FREQ_MS;
-                    } else {
-                        para->playctrl_info.time_point_ms = para->state.pts_video/ PTS_FREQ_MS;
-                    }
-                    
-                    log_print("$$$$$$[type:%d] write blocked, need reset decoder!$$$$$$\n", pkt->type);
-                }				
-                pkt->data += len;
-                pkt->data_size -= len;
-                player_thread_wait(para, RW_WAIT_TIME);
-				if(para->playctrl_info.check_lowlevel_eagain_cnt > 0){
-                	log_print("[%s]eagain:data_size=%d type=%d rsize=%lld wsize=%lld cnt=%d\n", \
-								__FUNCTION__, pkt->data_size, pkt->type, para->read_size.total_bytes, \
-								para->write_size.total_bytes, para->playctrl_info.check_lowlevel_eagain_cnt);
-				}
-                return PLAYER_SUCCESS;
-            }
-        } else {
+   if(pkt->type==CODEC_AUDIO&&para->astream_info.audio_format==AFORMAT_APE)
+   {
+	    while (size > 0 && pkt->avpkt_isvalid) 
+	    {
+			//if ape frame write 10k every time
+			int nCurrentWriteCount=(size>AUDIO_WRITE_SIZE_PER_TIME)?AUDIO_WRITE_SIZE_PER_TIME:size;
+		        write_bytes = codec_write(pkt->codec, (char *)buf, nCurrentWriteCount);
+		        if (write_bytes < 0 || write_bytes > nCurrentWriteCount) 
+		       {
+		        	if (-errno != AVERROR(EAGAIN)) 
+				{
+			                para->playctrl_info.check_lowlevel_eagain_cnt = 0;
+			                log_print("write codec data failed!\n");
+			                return PLAYER_WR_FAILED;
+		         	} else 
+		         	{
+			                /* EAGAIN to see if buffer full or write time out too much */				
+					if(check_avbuffer_enough_for_ape(para)){
+						++ para->playctrl_info.check_lowlevel_eagain_cnt;
+					}else{
+						para->playctrl_info.check_lowlevel_eagain_cnt = 0;
+					}
+					
+					if (para->playctrl_info.check_lowlevel_eagain_cnt > 50) 
+					{
+			                    	/* reset decoder */
+			                    	para->playctrl_info.check_lowlevel_eagain_cnt = 0;
+			                    	para->playctrl_info.reset_flag = 1;
+			                    	para->playctrl_info.end_flag = 1;
+			                    	if (para->state.start_time != -1) {
+			                        	para->playctrl_info.time_point = (para->state.pts_video - para->state.start_time)/ PTS_FREQ;
+			                    	} else {
+			                        	para->playctrl_info.time_point = para->state.pts_video/ PTS_FREQ;
+			                    	}
+			                    
+			                   	 log_print("$$$$$$[type:%d] write blocked, need reset decoder!$$$$$$\n", pkt->type);
+			                }				
+			                pkt->data += len;
+			                pkt->data_size -= len;
+			                player_thread_wait(para, RW_WAIT_TIME);
+					if(para->playctrl_info.check_lowlevel_eagain_cnt > 0){
+			                		log_print("[%s]eagain:data_size=%d type=%d rsize=%lld wsize=%lld cnt=%d\n", \
+											__FUNCTION__, nCurrentWriteCount, pkt->type, para->read_size.total_bytes, \
+											para->write_size.total_bytes, para->playctrl_info.check_lowlevel_eagain_cnt);
+							}
+			                return PLAYER_SUCCESS;
+		             	}
+	        	} 
+			else 
+			{		
 #if DUMP_WRITE
-            int dsize;
-            //if(fd > 0 && debug && pkt->type == CODEC_VIDEO)
-            if (fdw > 0) {
-                dsize = write(fdw, buf, write_bytes);
-                if (dsize != write_bytes) {
-                    log_print("dump data write failed!size=%d len=%d\n", size, len);
-                }
-            }
+			            int dsize;
+#if DUMP_WRITE_VIDEO
+				    if(fd > 0 && debug && pkt->type == CODEC_VIDEO)
+#elif DUMP_WRITE_AUDIO
+			            if(fd > 0 && debug && pkt->type == CODEC_AUDIO)
+#else        
+			            if (fdw > 0) 
 #endif
-            para->playctrl_info.check_lowlevel_eagain_cnt = 0;
-            len += write_bytes;
-            if (len == pkt->data_size) {
-                if ((pkt->type == CODEC_VIDEO) && (!para->playctrl_info.raw_mode)) {
-                    para->write_size.vpkt_num ++;
-                } else if ((pkt->type == CODEC_AUDIO) && (!para->playctrl_info.raw_mode)) {
-                    para->write_size.apkt_num ++;
-                }
-                if (para->playctrl_info.raw_mode) {
-                    para->write_size.total_bytes += len;
-                }
-                if (pkt->avpkt) {
-                    av_free_packet(pkt->avpkt);
-                }
-                pkt->avpkt_isvalid = 0;
-                pkt->data_size = 0;
-                //log_print("[%s:%d]write finish pkt->data_size=%d\r",__FUNCTION__, __LINE__,pkt->data_size);               
-                break;
-            } else if (len < pkt->data_size) {
-                buf += write_bytes;
-                size -= write_bytes;
-            } else {
-                return PLAYER_WR_FAILED;
-            }
+				    {
+			                dsize = write(fdw, buf, write_bytes);
+			                if (dsize != write_bytes) {
+			                    log_print("dump data write failed!size=%d len=%d\n", size, len);
+			                }
+			            }
+#endif
 
-        }
-    }
+			            para->playctrl_info.check_lowlevel_eagain_cnt = 0;
+			            len += write_bytes;
+			            if (len == pkt->data_size) 
+				   {
+				               if ((pkt->type == CODEC_AUDIO) && (!para->playctrl_info.raw_mode)) 
+				                    	para->write_size.apkt_num ++;
+				                if (para->playctrl_info.raw_mode) 
+				                    	para->write_size.total_bytes += len;
+				                if (pkt->avpkt) 
+				                    	av_free_packet(pkt->avpkt);
+				                pkt->avpkt_isvalid = 0;
+				                pkt->data_size = 0;
+				                //log_print("[%s:%d]write finish pkt->data_size=%d\r",__FUNCTION__, __LINE__,pkt->data_size);               
+				                break;
+			            } 
+				   else if (len < pkt->data_size) 
+			            {
+			                	buf += write_bytes;
+			               		size -= write_bytes;
+			            } 
+				   else 
+			                return PLAYER_WR_FAILED;
+			            
+
+	        	}
+	    }
+   	}
+   	else
+   	{
+   		while (size > 0 && pkt->avpkt_isvalid) 
+		{
+		        write_bytes = codec_write(pkt->codec, (char *)buf, size);
+		        if (write_bytes < 0 || write_bytes > size) {
+		            if (-errno != AVERROR(EAGAIN)) {
+		                para->playctrl_info.check_lowlevel_eagain_cnt = 0;
+		                log_print("write codec data failed!\n");
+		                return PLAYER_WR_FAILED;
+		            } else {
+		                /* EAGAIN to see if buffer full or write time out too much */				
+						if(check_avbuffer_enough(para)){
+							++ para->playctrl_info.check_lowlevel_eagain_cnt;
+						}else{
+							para->playctrl_info.check_lowlevel_eagain_cnt = 0;
+						}
+						
+						if (para->playctrl_info.check_lowlevel_eagain_cnt > 50) {
+		                    /* reset decoder */
+		                    para->playctrl_info.check_lowlevel_eagain_cnt = 0;
+		                    para->playctrl_info.reset_flag = 1;
+		                    para->playctrl_info.end_flag = 1;
+		                    if (para->state.start_time != -1) {
+		                        para->playctrl_info.time_point = (para->state.pts_video - para->state.start_time)/ PTS_FREQ;
+		                    } else {
+		                        para->playctrl_info.time_point = para->state.pts_video/ PTS_FREQ;
+		                    }
+		                    
+		                    log_print("$$$$$$[type:%d] write blocked, need reset decoder!$$$$$$\n", pkt->type);
+		                }				
+		                pkt->data += len;
+		                pkt->data_size -= len;
+		                player_thread_wait(para, RW_WAIT_TIME);
+						if(para->playctrl_info.check_lowlevel_eagain_cnt > 0){
+		                	log_print("[%s]eagain:data_size=%d type=%d rsize=%lld wsize=%lld cnt=%d\n", \
+										__FUNCTION__, pkt->data_size, pkt->type, para->read_size.total_bytes, \
+										para->write_size.total_bytes, para->playctrl_info.check_lowlevel_eagain_cnt);
+						}
+		                return PLAYER_SUCCESS;
+		            }
+		        } else 
+		        {
+#if DUMP_WRITE
+		            int dsize;
+#if DUMP_WRITE_VIDEO
+					if(fd > 0 && debug && pkt->type == CODEC_VIDEO)
+#elif DUMP_WRITE_AUDIO
+		            if(fd > 0 && debug && pkt->type == CODEC_AUDIO)
+#else        
+		            if (fdw > 0) 
+#endif
+					{
+		                dsize = write(fdw, buf, write_bytes);
+		                if (dsize != write_bytes) {
+		                    log_print("dump data write failed!size=%d len=%d\n", size, len);
+		                }
+		            }
+#endif
+		            para->playctrl_info.check_lowlevel_eagain_cnt = 0;
+		            len += write_bytes;
+		            if (len == pkt->data_size) {
+		                if ((pkt->type == CODEC_VIDEO) && (!para->playctrl_info.raw_mode)) {
+		                    para->write_size.vpkt_num ++;
+		                } else if ((pkt->type == CODEC_AUDIO) && (!para->playctrl_info.raw_mode)) {
+		                    para->write_size.apkt_num ++;
+		                }
+		                if (para->playctrl_info.raw_mode) {
+		                    para->write_size.total_bytes += len;
+		                }
+		                if (pkt->avpkt) {
+		                    av_free_packet(pkt->avpkt);
+		                }
+		                pkt->avpkt_isvalid = 0;
+		                pkt->data_size = 0;
+		                //log_print("[%s:%d]write finish pkt->data_size=%d\r",__FUNCTION__, __LINE__,pkt->data_size);               
+		                break;
+		            } else if (len < pkt->data_size) {
+		                buf += write_bytes;
+		                size -= write_bytes;
+		            } else {
+		                return PLAYER_WR_FAILED;
+		            }
+		        }
+	    }
+   	}
+
+	
     if (check_write_finish(para) == PLAYER_WR_FINISH) {
 #if DUMP_WRITE
         if (fdw > 0) {
@@ -1361,11 +1549,11 @@ int check_in_pts(play_para_t *para)
     } else if (para->stream_type == STREAM_AUDIO) {
         if (!para->astream_info.check_first_pts) {
             if (!url_support_time_seek(para->pFormatCtx->pb) &&
-                (para->playctrl_info.time_point_ms == -1)) {
+                (para->playctrl_info.time_point == -1)) {
 
-                para->playctrl_info.time_point_ms = 0;
+                para->playctrl_info.time_point = 0;
             }
-            pts = para->playctrl_info.time_point_ms * PTS_FREQ_MS;
+            pts = para->playctrl_info.time_point * PTS_FREQ;
             if (codec_checkin_pts(pkt->codec, pts) != 0) {
                 log_print("ERROR pid[%d]: check in 0 to audio pts error!\n", para->player_id);
                 return PLAYER_PTS_ERROR;
@@ -1588,7 +1776,7 @@ int set_header_info(play_para_t *para)
                     pkt->avpkt_newflag = 1;
                 }
             } else if (para->vstream_info.video_format == VFORMAT_MJPEG) {
-                if ((para->file_type != MP4_FILE) && (para->file_type != MOV_FILE)) {
+                if ((para->file_type != MP4_FILE) && (para->file_type != MOV_MP4_M4A_3GP_3G2_MJ2_FILE)) {
                     return PLAYER_SUCCESS;
                 }
 
@@ -1627,7 +1815,7 @@ int set_header_info(play_para_t *para)
             }
         } else if (pkt->type == CODEC_AUDIO) {
             if ((!para->playctrl_info.raw_mode) &&
-                (para->astream_info.audio_format == AFORMAT_AAC)) {
+                para->astream_info.audio_format == AFORMAT_AAC) {
                 if (pkt->hdr == NULL) {
                     pkt->hdr = MALLOC(sizeof(hdr_buf_t));
                     if (!pkt->hdr) {
@@ -1674,6 +1862,40 @@ int set_header_info(play_para_t *para)
 			pkt->hdr->data[5] = 	(pkt->data_size)& 0xff;
 			pkt->hdr->size = 6;
             }
+
+		// add the frame head
+                if((!para->playctrl_info.raw_mode) &&(para->astream_info.audio_format == AFORMAT_APE))
+                {
+                if ((pkt->hdr != NULL) && (pkt->hdr->data != NULL)) {
+                    FREE(pkt->hdr->data);
+                    pkt->hdr->data = NULL;
+                }
+                if (pkt->hdr == NULL) {
+                        pkt->hdr = MALLOC(sizeof(hdr_buf_t));
+                            if (!pkt->hdr) {
+                                return PLAYER_NOMEM;
+                            }
+                                pkt->hdr->data = NULL;
+                                pkt->hdr->size = 0;
+                        }
+                        if(!pkt->hdr->data){
+                            pkt->hdr->data = (char *)MALLOC(8);
+                            if (!pkt->hdr->data) {
+                                return PLAYER_NOMEM;
+                            }
+                        }
+                        int extra_data = 8;
+                        pkt->hdr->data[0] =     'A';
+                        pkt->hdr->data[1] =     'P';
+                        pkt->hdr->data[2] =     'T';
+                        pkt->hdr->data[3] =     'S';
+                        pkt->hdr->data[4] =     (pkt->data_size -extra_data)& 0xff;
+                        pkt->hdr->data[5] =     (pkt->data_size -extra_data>>8)& 0xff;
+                        pkt->hdr->data[6] =     (pkt->data_size -extra_data>>16)& 0xff;
+                        pkt->hdr->data[7] =     (pkt->data_size -extra_data>>24)& 0xff;
+                        pkt->hdr->size = 8;
+            }
+
         }
     }
     return PLAYER_SUCCESS;
@@ -1815,8 +2037,8 @@ int process_es_subtitle(play_para_t *para)
     sub_header[19] = last_duration & 0xff;
 
 
-    //log_print("[ sub_type:0x%x,   data_size:%d,  sub_pts:%lld last_duration %d]\n", sub_type , data_size, sub_pts, last_duration);
-    //log_print("[ sizeof:%d ]\n", sizeof(sub_header));
+    log_print("[ sub_type:0x%x,   data_size:%d,  sub_pts:%lld last_duration %d]\n", sub_type , data_size, sub_pts, last_duration);
+    log_print("[ sizeof:%d ]\n", sizeof(sub_header));
 
     if (write_sub_data(pkt, (char *)&sub_header, sizeof(sub_header))) {
         log_print("[%s:%d]write sub header failed\n", __FUNCTION__, __LINE__);
@@ -1955,12 +2177,20 @@ void player_switch_audio(play_para_t *para)
             return;
         }
     }
+
+	if(para->playctrl_info.read_end_flag){
+		para->playctrl_info.reset_flag = 1;
+		para->playctrl_info.end_flag = 1;
+		para->playctrl_info.time_point = para->state.current_time;	
+		log_print("[%s]read end, reset decoder for switch!curtime=%d\n", __FUNCTION__, para->playctrl_info.time_point);
+		return ;
+	}
 /*
     if (para->playctrl_info.raw_mode 
         && para->astream_info.audio_format == AFORMAT_PCM_BLURAY) {
     	para->playctrl_info.reset_flag = 1;
 	    para->playctrl_info.end_flag = 1;
-	    para->playctrl_info.time_point_ms = para->state.current_ms;
+	    para->playctrl_info.time_point = para->state.current_time;
         return;
     }
 */	
@@ -2027,7 +2257,7 @@ void player_switch_audio(play_para_t *para)
         log_print("[%s:%d]reset audio failed\n", __FUNCTION__, __LINE__);
         return;
     }
-
+	
     /* backup next video packet and time search if it is ES */
     if (para->stream_type == STREAM_ES && para->vstream_info.has_video) {
         AVPacket *avPkt = para->p_pkt->avpkt;
@@ -2114,10 +2344,10 @@ void player_switch_audio(play_para_t *para)
 		log_print("[%s:%d]finish bakup packet,do seek\n", __FUNCTION__, __LINE__);
 
         /* time search based on audio */
-        para->playctrl_info.time_point_ms = para->state.current_ms;
+        para->playctrl_info.time_point = para->state.current_time;
         ret = time_search(para);
         if (ret != PLAYER_SUCCESS) {
-            log_error("[%s:%d]time_search(ms) to pos:%lldms failed!", __FUNCTION__, __LINE__, para->playctrl_info.time_point_ms);
+            log_error("[%s:%d]time_search to pos:%ds failed!", __FUNCTION__, __LINE__, para->playctrl_info.time_point);
         } 
 
         para->playctrl_info.read_end_flag = end_flag;
@@ -2141,6 +2371,7 @@ void player_switch_sub(play_para_t *para)
     AVStream *pstream;
     unsigned int i;
     AVFormatContext *pFCtx = para->pFormatCtx;
+    s_stream_info_t *sinfo = &para->sstream_info;
 
     /* check if it has audio */
     if (para->sstream_info.has_sub == 0) {
@@ -2205,6 +2436,7 @@ void player_switch_sub(play_para_t *para)
         log_print("[%s:%d]set invalid sub pid failed\n", __FUNCTION__, __LINE__);
         return;
     }
+    sinfo->sub_pid = pcodec->sub_pid;
     if (codec_reset_subtile(pcodec)) {
         log_print("[%s:%d]reset subtile failed\n", __FUNCTION__, __LINE__);
     }
@@ -2301,3 +2533,35 @@ int check_avbuffer_enough(play_para_t *para)
 	
 	return ret;
 }
+
+int check_avbuffer_enough_for_ape(play_para_t *para)
+{
+	#define VIDEO_RESERVED_SPACE	(0x10000)	// 64k
+	#define AUDIO_RESERVED_SPACE	(0x2000)	// 8k
+	am_packet_t *pkt = para->p_pkt;
+	int vbuf_enough = 1;
+	int abuf_enough = 1;
+    	int ret = 1;
+    	float high_limit = (para->buffering_threshhold_max > 0) ? para->buffering_threshhold_max : 0.8; 
+    	int nCurrentWriteCount=(pkt->data_size>AUDIO_WRITE_SIZE_PER_TIME)?AUDIO_WRITE_SIZE_PER_TIME:pkt->data_size;
+	if(pkt->type == CODEC_AUDIO)
+	{	
+		/*
+		if(pkt->type == CODEC_AUDIO)
+			log_print("[%s]type:%d data=%x size=%x total=%x\n", __FUNCTION__, pkt->type, para->abuffer.data_level,nCurrentWriteCount,para->abuffer.buffer_size);
+		*/
+		if(para->astream_info.has_audio && (pkt->type == CODEC_AUDIO) &&
+			((para->abuffer.data_level + nCurrentWriteCount) >= (para->abuffer.buffer_size - AUDIO_RESERVED_SPACE))){			
+				abuf_enough = 0;			
+		}
+
+        	ret = vbuf_enough && abuf_enough;
+	}
+	/*if(!abuf_enough || !vbuf_enough) {
+		log_print("check_avbuffer_enough abuflevel %f, vbuflevel %f, limit %f aenough=%d venought=%d\n",
+        para->state.audio_bufferlevel, para->state.video_bufferlevel, high_limit,abuf_enough,vbuf_enough);
+	}*/
+	
+	return ret;
+}
+

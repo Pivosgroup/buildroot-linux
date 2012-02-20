@@ -25,6 +25,9 @@ static int stream_video_init(play_para_t *p_para)
         codec->has_video = 1;
         codec->video_type = vinfo->video_format;
         codec->video_pid = vinfo->video_pid;
+        if ((vinfo->video_format == VFORMAT_H264) || (vinfo->video_format == VFORMAT_H264MVC)) {
+            codec->am_sysinfo.param = (void *)(EXTERNAL_PTS | SYNC_OUTSIDE);
+        }
     }
     codec->stream_type = stream_type_convert(p_para->stream_type, codec->has_video, codec->has_audio);
     codec->noblock = !!p_para->buffering_enable;

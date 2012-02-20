@@ -16,8 +16,7 @@ typedef enum
     DISP_MODE_720P  = 5,
     DISP_MODE_1080I = 6,
     DISP_MODE_1080P = 7
-}
-                  display_mode;
+} display_mode;
 
 typedef struct {
     display_mode disp_mode;
@@ -29,6 +28,52 @@ typedef struct {
     int fb1_freescale_width;
     int fb1_freescale_height;
 } freescale_setting_t;
+
+typedef struct
+{
+}sys_h264_profile_t;
+
+typedef struct
+{
+	int progressive_enable;
+	int interlace_enable;
+	int wmv1_enable;
+	int wmv2_enable;
+	int wmv3_enable;
+}sys_vc1_profile_t;
+
+typedef struct 
+{
+	int es_support;
+	int exceed_720p_enable;
+}sys_real_profile_t;
+
+typedef struct 
+{
+	
+}sys_mpeg12_profile_t;
+
+typedef struct 
+{
+	
+}sys_mpeg4_profile_t;
+
+typedef struct 
+{
+	
+}sys_mjpeg_profile_t;
+
+typedef struct _system_para_
+{
+	sys_h264_profile_t 		h264_para;
+	sys_vc1_profile_t  		vc1_para;
+	sys_real_profile_t 		real_para;
+	sys_mpeg12_profile_t  	mpeg12_para;	
+	sys_mpeg4_profile_t  	mpeg4_para;	
+	sys_mjpeg_profile_t		mjpeg_para;
+}vdec_profile_t;
+
+int get_vdec_profile(vdec_profile_t *vdec_profiles);
 
 int set_sysfs_str(const char *path, const char *val);
 int  get_sysfs_str(const char *path, char *valstr, int size);
@@ -63,6 +108,11 @@ int set_stb_demux_source_hiu(void);
 int set_subtitle_enable(int num);
 int set_subtitle_curr(int num);
 int check_file_same(char *filename2);
+
+//player sysfs API channel
+int set_amutils_enable(int isOn);
+int set_amutils_cmd(const char* cmd);
+int get_amutils_cmd(char* cmd);
 
 #ifdef  __cplusplus
 }

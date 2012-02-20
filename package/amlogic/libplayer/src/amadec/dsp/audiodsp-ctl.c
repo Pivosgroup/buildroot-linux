@@ -37,6 +37,8 @@ firmware_s_t firmware_list[] = {
     {11, MCODEC_FMT_WMAPRO, "audiodsp_codec_wmapro.bin"},
     {12, MCODEC_FMT_ALAC, "audiodsp_codec_alac.bin"},
     {13, MCODEC_FMT_VORBIS, "audiodsp_codec_vorbis.bin"},
+    {14, MCODEC_FMT_AAC_LATM, "audiodsp_codec_aac.bin"},
+    {15, MCODEC_FMT_APE, "audiodsp_codec_ape.bin"},
 
 };
 
@@ -72,6 +74,9 @@ static int switch_audiodsp(audio_format_t fmt)
     switch (fmt) {
     case  AUDIO_FORMAT_MPEG:
         return MCODEC_FMT_MPEG123;
+
+    case  AUDIO_FORMAT_AAC_LATM:
+        return MCODEC_FMT_AAC_LATM;
 
     case  AUDIO_FORMAT_AAC:
         return MCODEC_FMT_AAC;
@@ -112,6 +117,8 @@ static int switch_audiodsp(audio_format_t fmt)
         return MCODEC_FMT_ALAC;
     case  AUDIO_AFORMAT_VORBIS:
         return MCODEC_FMT_VORBIS;
+    case  AUDIO_FORMAT_APE:
+        return MCODEC_FMT_APE;
     default:
         return 0;
     }
@@ -213,7 +220,6 @@ int audiodsp_start(aml_audio_dec_t *audec)
         return -3;
     }
 
-#ifdef ENABLE_WAIT_FORMAT
     ret = ioctl(dsp_ops->dsp_file_fd, AUDIODSP_DECODE_START, 0);
     if(ret==0){
         do{
@@ -223,12 +229,6 @@ int audiodsp_start(aml_audio_dec_t *audec)
 	    }
         }while(!audec->need_stop && (ret!=0));
     }
-#else
-    ret = -1;
-    while (ret != 0 && dsp_ops->dsp_file_fd >= 0 && (!audec->need_stop)) {
-        ret = ioctl(dsp_ops->dsp_file_fd, AUDIODSP_DECODE_START, 0);
-    }
-#endif
 
     if (ret != 0) {
         return -4;

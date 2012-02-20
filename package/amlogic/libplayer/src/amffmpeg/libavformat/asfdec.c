@@ -184,6 +184,34 @@ finish:
     avio_seek(s->pb, off + len, SEEK_SET);
 }
 
+static int asf_extract_cover_pic(AVFormatContext *s, int size)
+{
+    AVIOContext *pb = s->pb;
+    int pic_type, data_len, ret;
+    char mime_type[64];
+    char *data;
+
+    pic_type = avio_r8(pb);
+    data_len = avio_rl32(pb);
+    ret = avio_get_str16le(pb, size - data_len -5, mime_type, sizeof(mime_type));
+    avio_skip(pb, (size - data_len - ret - 5));
+    av_dict_set(&s->metadata, "cover_pic", mime_type, 0);
+
+    if(s->cover_data){
+        av_log(s, AV_LOG_INFO, "Extract cover picture in other object!\n");
+        return 0;
+    }
+    s->cover_data= av_malloc(data_len);
+    if(!s->cover_data){
+        av_log(s, AV_LOG_INFO, "no memery, av_alloc failed!\n");
+        return 0;
+    }
+    s->cover_data_len = data_len;
+    avio_read(pb, s->cover_data, data_len);
+
+    return 1;	
+}
+
 static int asf_read_file_properties(AVFormatContext *s, int64_t size)
 {
     ASFContext *asf = s->priv_data;
@@ -489,6 +517,8 @@ static int asf_read_ext_content_desc(AVFormatContext *s, int64_t size)
             asf->dar[0].num= get_value(s->pb, value_type);
         } else if(!strcmp(name, "AspectRatioY")){
             asf->dar[0].den= get_value(s->pb, value_type);
+        } else if(!strcmp(name, "WM/Picture")){
+            asf_extract_cover_pic(s, value_len);
         } else
             get_tag(s, name, value_type, value_len);
     }
@@ -545,6 +575,36 @@ static int asf_read_metadata(AVFormatContext *s, int64_t size)
 
     return 0;
 }
+
+static int asf_read_metadata_library(AVFormatContext * s, int64_t size)
+{
+    AVIOContext *pb = s->pb;
+    ASFContext *asf = s->priv_data;
+    int dest_count, k, ret;
+
+    dest_count = avio_rl16(pb);
+    for(k = 0; k < dest_count; k++) {
+        int name_len, value_len;
+        char name[1024];
+
+        avio_rl16(pb);  // Language List index
+        avio_rl16(pb); // Stream Number
+        name_len = avio_rl16(pb);
+        if(name_len % 2)
+            name_len += 1; //valid values are even numbers
+        avio_rl16(pb); // value type
+        value_len = avio_rl32(pb);
+        if(ret = avio_get_str16le(pb, name_len, name, sizeof(name)) < name_len)
+            avio_skip(pb, name_len - ret);
+        if(!strcmp(name, "WM/Picture")){
+            asf_extract_cover_pic(s, value_len);
+        } else
+            avio_skip(pb, value_len);
+    }
+
+    return 0;
+}
+
 
 static int asf_read_marker(AVFormatContext *s, int64_t size)
 {
@@ -632,6 +692,8 @@ static int asf_read_header(AVFormatContext *s, AVFormatParameters *ap)
             // there could be a optional stream properties object to follow
             // if so the next iteration will pick it up
             continue;
+        } else if (!ff_guidcmp(&g, &ff_asf_metadata_library_header)) {
+            asf_read_metadata_library(s, gsize);
         } else if (!ff_guidcmp(&g, &ff_asf_head1_guid)) {
             ff_get_guid(pb, &g);
             avio_skip(pb, 6);
@@ -1256,7 +1318,10 @@ static void asf_build_simple_index(AVFormatContext *s, int stream_index)
             last_pos=pos;
             }
         }
-        asf->index_read= 1;
+        if (ict > 1)
+        {
+           asf->index_read= 1;
+        }
     }
     avio_seek(s->pb, current_pos, SEEK_SET);
 }

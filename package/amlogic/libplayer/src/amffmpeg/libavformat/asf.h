@@ -108,6 +108,7 @@ extern const ff_asf_guid ff_asf_language_guid;
 extern const ff_asf_guid ff_asf_content_encryption;
 extern const ff_asf_guid ff_asf_ext_content_encryption;
 extern const ff_asf_guid ff_asf_digital_signature;
+extern const ff_asf_guid ff_asf_metadata_library_header;
 
 extern const AVMetadataConv ff_asf_metadata_conv[];
 

@@ -52,6 +52,7 @@ static void vcodec_info_init(play_para_t *p_para, codec_para_t *v_codec)
         v_codec->am_sysinfo.param     = (void *)0;
     }
 
+    v_codec->am_sysinfo.param = (void *)((unsigned int)v_codec->am_sysinfo.param | (vinfo->video_rotation_degree << 16));
     v_codec->stream_type = stream_type_convert(p_para->stream_type, v_codec->has_video, 0);
     log_print("[%s:%d]video stream_type=%d rate=%d\n", __FUNCTION__, __LINE__, v_codec->stream_type, v_codec->am_sysinfo.rate);
 }
@@ -78,7 +79,10 @@ static void acodec_info_init(play_para_t *p_para, codec_para_t *a_codec)
 	  	pCodecCtx = p_para->pFormatCtx->streams[p_para->astream_info.audio_index]->codec;
                if ((a_codec->audio_type == AFORMAT_ADPCM)||(a_codec->audio_type == AFORMAT_ALAC)) {
             a_codec->audio_info.bitrate = pCodecCtx->sample_fmt;
-        } else {
+        }
+	else if(a_codec->audio_type==AFORMAT_APE)
+		 a_codec->audio_info.bitrate = pCodecCtx->bits_per_coded_sample;
+	 else {
             a_codec->audio_info.bitrate = pCodecCtx->bit_rate;
         }
         a_codec->audio_info.sample_rate = pCodecCtx->sample_rate;

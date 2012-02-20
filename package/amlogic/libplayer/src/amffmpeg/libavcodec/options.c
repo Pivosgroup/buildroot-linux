@@ -578,6 +578,7 @@ int avcodec_copy_context(AVCodecContext *dest, const AVCodecContext *src)
     /* reallocate values that should be allocated separately */
     dest->rc_eq           = NULL;
     dest->extradata       = NULL;
+	dest->extradata1       = NULL;
     dest->intra_matrix    = NULL;
     dest->inter_matrix    = NULL;
     dest->rc_override     = NULL;
@@ -598,6 +599,8 @@ int avcodec_copy_context(AVCodecContext *dest, const AVCodecContext *src)
     }
     alloc_and_copy_or_fail(extradata,    src->extradata_size,
                            FF_INPUT_BUFFER_PADDING_SIZE);
+	alloc_and_copy_or_fail(extradata1,    src->extradata1_size,
+                           FF_INPUT_BUFFER_PADDING_SIZE);
     alloc_and_copy_or_fail(intra_matrix, 64 * sizeof(int16_t), 0);
     alloc_and_copy_or_fail(inter_matrix, 64 * sizeof(int16_t), 0);
     alloc_and_copy_or_fail(rc_override,  src->rc_override_count * sizeof(*src->rc_override), 0);
@@ -609,6 +612,7 @@ fail:
     av_freep(&dest->rc_override);
     av_freep(&dest->intra_matrix);
     av_freep(&dest->inter_matrix);
+	av_freep(&dest->extradata1);
     av_freep(&dest->extradata);
     av_freep(&dest->rc_eq);
     return AVERROR(ENOMEM);

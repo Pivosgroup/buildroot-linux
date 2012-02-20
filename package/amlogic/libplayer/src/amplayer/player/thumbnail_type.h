@@ -9,6 +9,11 @@
 
 #define DEST_FMT PIX_FMT_RGB565
 
+typedef struct {
+    int num;    //numerator
+    int den;    //denominator
+}rational;
+
 typedef struct stream{
     int videoStream;
     AVFormatContext *pFormatCtx;
@@ -23,6 +28,7 @@ typedef struct video_frame {
     int width;
     int height;
     int64_t duration;
+    rational displayAspectRatio;
     int DataSize;
     char *data;
 }video_frame_t;

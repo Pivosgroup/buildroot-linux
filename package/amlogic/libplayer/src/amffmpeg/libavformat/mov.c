@@ -129,6 +129,29 @@ static int mov_read_mac_string(MOVContext *c, AVIOContext *pb, int len,
     return p - dst;
 }
 
+static int mov_extract_cover_pic(AVFormatContext *s, AVIOContext *pb, int type, int size, char *value)
+{
+    if(s->cover_data){
+        av_log(s, AV_LOG_INFO, "Extract cover picture in other atom!\n");
+        return 0;
+    }
+
+    s->cover_data = av_malloc(size);
+    if(!s->cover_data){
+        av_log(s, AV_LOG_INFO, "no memery, av_alloc failed!\n");
+	 return -1;
+    }
+    s->cover_data_len = size;
+    avio_read(pb, s->cover_data, size);
+
+    if (type == 13)
+        strcpy(value, "image/jpeg");  // jpeg
+    else if (type == 14)
+        strcpy(value, "image/png");   // png
+
+    return 0;
+}
+
 static int mov_read_udta_string(MOVContext *c, AVIOContext *pb, MOVAtom atom)
 {
 #ifdef MOV_EXPORT_ALL_METADATA
@@ -137,6 +160,7 @@ static int mov_read_udta_string(MOVContext *c, AVIOContext *pb, MOVAtom atom)
     char str[1024], key2[16], language[4] = {0};
     const char *key = NULL;
     uint16_t str_size, langcode = 0;
+    uint32_t cover_size = 0;
     uint32_t data_type = 0;
     int (*parse)(MOVContext*, AVIOContext*, unsigned, const char *) = NULL;
 
@@ -205,6 +229,8 @@ static int mov_read_udta_string(MOVContext *c, AVIOContext *pb, MOVAtom atom)
     else {
         if (data_type == 3 || (data_type == 0 && langcode < 0x800)) { // MAC Encoded
             mov_read_mac_string(c, pb, str_size, str, sizeof(str));
+        } else if (data_type == 13 || data_type == 14){
+            mov_extract_cover_pic(c->fc, pb, data_type, cover_size, str);
         } else {
             avio_read(pb, str, str_size);
             str[str_size] = 0;
@@ -1980,8 +2006,30 @@ static int mov_read_tkhd(MOVContext *c, AVIOContext *pb, MOVAtom atom)
     sc->width = width >> 16;
     sc->height = height >> 16;
 
-    if (display_matrix[0][0] == -65536 && display_matrix[1][1] == -65536) {
-         av_dict_set(&st->metadata, "rotate", "180", 0);
+    if (display_matrix[0][0] == -65536 
+        && display_matrix[0][1] == 0
+        && display_matrix[1][0] == 0
+        && display_matrix[1][1] == -65536) {
+        av_dict_set(&st->metadata, "rotate", "180", 0);
+        st->rotation_degree = 2;
+    } else if (display_matrix[0][0] == 0 
+        && display_matrix[0][1] == 65536
+        && display_matrix[1][0] == -65536
+        && display_matrix[1][1] == 0) {
+        av_dict_set(&st->metadata, "rotate", "90", 0);
+        st->rotation_degree = 1;
+    } else if (display_matrix[0][0] == 0 
+        && display_matrix[0][1] == -65536
+        && display_matrix[1][0] == 65536
+        && display_matrix[1][1] == 0) {
+        av_dict_set(&st->metadata, "rotate", "270", 0);
+        st->rotation_degree = 3;
+    } else if (display_matrix[0][0] == 65536 
+        && display_matrix[0][1] == 0
+        && display_matrix[1][0] == 0
+        && display_matrix[1][1] == 65536) {
+        av_dict_set(&st->metadata, "rotate", "0", 0);
+        st->rotation_degree = 0;
     }
 
     // transform the display width/height according to the matrix
@@ -2477,7 +2525,7 @@ static int mov_read_header(AVFormatContext *s, AVFormatParameters *ap)
 
     if (pb->seekable && mov->chapter_track > 0)
         mov_read_chapters(s);
-	
+
     return 0;
 }
 
@@ -2514,6 +2562,7 @@ static int mov_read_packet(AVFormatContext *s, AVPacket *pkt)
     AVIndexEntry *sample;
     AVStream *st = NULL;
     int ret;
+	int64_t offset = 0;
  retry:
     sample = mov_find_next_sample(s, &st);
     if (!sample) {
@@ -2530,10 +2579,11 @@ static int mov_read_packet(AVFormatContext *s, AVPacket *pkt)
     sc->current_sample++;
 
     if (st->discard != AVDISCARD_ALL) {
-        if (avio_seek(sc->pb, sample->pos, SEEK_SET) != sample->pos) {
-            av_log(mov->fc, AV_LOG_ERROR, "stream %d, offset 0x%"PRIx64": partial file\n",
-                   sc->ffindex, sample->pos);
-            if (sample->pos > s->file_size)
+		offset = avio_seek(sc->pb, sample->pos, SEEK_SET);
+        if (offset != sample->pos) {
+            av_log(mov->fc, AV_LOG_ERROR, "stream %d, seekto offset 0x%"PRIx64" ret 0x%"PRIx64":partial file\n", 
+				sc->ffindex, sample->pos, offset);
+            if (sample->pos > s->file_size || offset == AVERROR_EOF)
                 return AVERROR_EOF;
             else
                 return -1;
