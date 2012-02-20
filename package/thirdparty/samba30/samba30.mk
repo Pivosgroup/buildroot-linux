@@ -38,6 +38,8 @@ SAMBA30_CONF_ENV = \
 	samba_cv_HAVE_SECURE_MKSTEMP=yes \
 	samba_cv_CC_NEGATIVE_ENUM_VALUES=yes \
 	samba_cv_fpie=no \
+        samba_cv_have_longlong=yes \
+        samba_cv_HAVE_OFF64_T=yes \
 	libreplace_cv_HAVE_IPV6=$(if $(BR2_INET_IPV6),yes,no) \
 	$(if $(BR2_PACKAGE_SAMBA30_AVAHI),AVAHI_LIBS=-pthread)
 
