@@ -12,7 +12,7 @@ LINUX26_SITE:=$(dir $(LINUX26_TARBALL))
 LINUX26_SOURCE:=$(notdir $(LINUX26_TARBALL))
 else
 LINUX26_SOURCE:=linux-$(LINUX26_VERSION).tar.bz2
-LINUX26_SITE:=$(BR2_KERNEL_MIRROR)/linux/kernel/v2.6/
+LINUX26_SITE:=$(BR2_KERNEL_MIRROR)
 endif
 
 LINUX26_DIR:=$(BUILD_DIR)/linux-$(LINUX26_VERSION)
@@ -70,12 +70,34 @@ LINUX26_IMAGE_PATH=$(KERNEL_ARCH_PATH)/boot/$(LINUX26_IMAGE_NAME)
 endif
 endif # BR2_LINUX_KERNEL_VMLINUX
 
+define DOWNLOAD_GIT
+       ( mkdir -p $(DL_DIR)/git; export GIT_DIR=$(DL_DIR)/git/linux/.git; \
+       (test -d $(DL_DIR)/git/linux/.git && $(GIT) cat-file -e $(LINUX26_VERSION) || \
+       (test -d $(DL_DIR)/git/linux/.git && $(GIT) fetch --all && \
+               $(GIT) cat-file -e $(LINUX26_VERSION)) || \
+       (test ! -e $(DL_DIR)/git/linux/.git && $(GIT) clone --no-checkout $(LINUX26_SITE) $(DL_DIR)/git/linux && \
+               $(GIT) cat-file -e $(LINUX26_VERSION) ))) || \
+       (echo "Error extracting revision: $($(PKG)_DL_VERSION)" ; false)
+endef
+
+define EXTRACT_GIT
+       $(Q)( \
+       if  test -d $(DL_DIR)/git/linux/.git -a ! -s $(DL_DIR)/$(LINUX26_SOURCE) ; then \
+               $(call MESSAGE,"Checking out cached revision"); \
+               $(GIT) --work-tree=$(@D) --git-dir=$(DL_DIR)/git/linux/.git checkout -f -q $(LINUX26_VERSION); \
+               touch $(LINUX26_DIR)/.stamp_extracted; touch $(LINUX26_DIR)/.stamp_patched; \
+       else \
+               $(call MESSAGE,"Extracting"); \
+               $(INFLATE$(suffix $(LINUX26_SOURCE))) $(DL_DIR)/$(LINUX26_SOURCE) | \
+               $(TAR) $(TAR_STRIP_COMPONENTS)=1 -C $(@D) $(TAR_OPTIONS) - ;\
+       fi; \
+       )
+endef
+
 # Download
 $(LINUX26_DIR)/.stamp_downloaded:
 	@$(call MESSAGE,"Downloading kernel")
-	$(call DOWNLOAD,$(LINUX26_SITE),$(LINUX26_SOURCE))
-	$(foreach patch,$(filter ftp://% http://%,$(LINUX26_PATCH)),\
-		$(call DOWNLOAD,$(dir $(patch)),$(notdir $(patch)))$(sep))
+	$(Q)$(DOWNLOAD_GIT)
 	mkdir -p $(@D)
 	touch $@
 
@@ -83,24 +105,10 @@ $(LINUX26_DIR)/.stamp_downloaded:
 $(LINUX26_DIR)/.stamp_extracted: $(LINUX26_DIR)/.stamp_downloaded
 	@$(call MESSAGE,"Extracting kernel")
 	mkdir -p $(@D)
-	$(Q)$(INFLATE$(suffix $(LINUX26_SOURCE))) $(DL_DIR)/$(LINUX26_SOURCE) | \
-		tar -C $(@D) $(TAR_STRIP_COMPONENTS)=1 $(TAR_OPTIONS) -
-	$(Q)touch $@
+	$(EXTRACT_GIT)
 
-# Patch
 $(LINUX26_DIR)/.stamp_patched: $(LINUX26_DIR)/.stamp_extracted
-	@$(call MESSAGE,"Patching kernel")
-	for p in $(LINUX26_PATCH) ; do \
-		if echo $$p | grep -q -E "^ftp://|^http://" ; then \
-			toolchain/patch-kernel.sh $(@D) $(DL_DIR) `basename $$p` ; \
-		elif test -d $$p ; then \
-			toolchain/patch-kernel.sh $(@D) $$p linux-\*.patch ; \
-		else \
-			toolchain/patch-kernel.sh $(@D) `dirname $$p` `basename $$p` ; \
-		fi \
-	done
-	$(Q)touch $@
-
+	touch $@
 
 # Configuration
 $(LINUX26_DIR)/.stamp_configured: $(LINUX26_DIR)/.stamp_patched
