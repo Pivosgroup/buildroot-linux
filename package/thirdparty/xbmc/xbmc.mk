@@ -4,7 +4,7 @@
 #
 #################################################################################
 
-XBMC_VERSION = 58f69701dc365f0fc6e80aa5afb4a742b15613dd
+XBMC_VERSION = 9174d538d6d5a7ab1d48956302f5657316b346d2
 XBMC_SITE_METHOD = git
 XBMC_SITE = ssh://git@github.com/Pivosgroup/xbmc.git
 XBMC_INSTALL_STAGING = YES
@@ -12,10 +12,9 @@ XBMC_INSTALL_TARGET = YES
 
 XBMC_DEPENDENCIES = host-lzo host-sdl_image
 
-XBMC_CONF_OPT+=--enable-gles --disable-dvdcss \
-  --disable-x11 --disable-libbluray --disable-sdl \
-  --disable-rsxs --disable-projectm --disable-non-free --enable-neon --disable-optical-drive \
-  --enable-external-ffmpeg --disable-joystick --with-platform=amlogic-m1
+XBMC_CONF_OPT+= --enable-neon --enable-gles --disable-sdl --disable-x11 --disable-xrandr \
+  --disable-projectm --disable-non-free --disable-dvdcss --enable-external-ffmpeg --enable-debug \
+  --with-platform=amlogic-m1
 
 XBMC_DEPENDENCIES += libogg flac libmad libmpeg2 libogg \
   libsamplerate libtheora libvorbis wavpack bzip2 dbus libcdio \
