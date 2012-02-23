@@ -19,8 +19,9 @@
 ::sysinit:/bin/mount -t tmpfs -o size=64k,mode=0755 none /dev
 ::sysinit:/bin/mkdir /dev/pts
 ::sysinit:/bin/mount -t devpts devpts /dev/pts
-::sysinit:/bin.mount -t usbfs none /proc/bus/usb
+::sysinit:/bin/mount -t usbfs none /proc/bus/usb
 ::sysinit:/bin/echo /sbin/mdev > /proc/sys/kernel/hotplug
+::sysinit:/bin/mknod -m 666 /dev/null c 1 3
 ::sysinit:/sbin/mdev -s
 ::sysinit:/bin/mount -o remount,rw /
 ::sysinit:/bin/mount -a
