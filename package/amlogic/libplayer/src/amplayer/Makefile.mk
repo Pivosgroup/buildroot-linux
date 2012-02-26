@@ -49,7 +49,8 @@ else
 endif
 
 CFLAGS+=-I${SRCTREE}/../amffmpeg -I${SRCTREE}/../amcodec/include -I${SRCTREE}/../amadec/include
-CFLAGS+= -fPIC -DENABLE_FREE_SCALE
+CFLAGS+=-fPIC -DENABLE_FREE_SCALE
+CFLAGS+=-mfloat-abi=softfp -mfpu=neon -mtune=cortex-a9 -march=armv7-a
 target_all=  $(TARGET)
 
 
@@ -59,8 +60,8 @@ INCLUDE=${SRCTREE}/include/
 CFLAGS+=-Wall 
 #CFLAGS+=-Werror
 
-CFLAGS+=-O0  -gdwarf-2  -g
-#CFLAGS+=-O2
+#CFLAGS+=-O0  -gdwarf-2  -g
+CFLAGS+=-O2
 
 
 

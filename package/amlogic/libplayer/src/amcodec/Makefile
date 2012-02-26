@@ -35,6 +35,7 @@ LDFLAGS=  -O2  -L$(PREFIX)/lib  -lamadec -lm -lc  -shared -Wl,--shared -Wl,-sona
 INCLUDE=${SRCTREE}/include/ 
 #CFLAGS=-O0  -gdwarf-2  -g
 CFLAGS=-O2   -I$(SRC)/include  -I${SRCTREE}/audio_ctl -I${SRCTREE}/codec -I${SRCTREE}/../amadec/include -fPIC
+CFLAGS+=-mfloat-abi=softfp -mfpu=neon -mtune=cortex-a9 -march=armv7-a
 
 
 
