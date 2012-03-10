@@ -9,7 +9,7 @@ if [ x$ACTION = "x" ] || [ ${ACTION} == "add" ] ; then
     mkdir -p $DIR_NAME
     if [ "${SYSTEM_NTFS}" = "NTFS" ]; then
         ntfs-3g -o utf8 /dev/$1 ${DIR_NAME}
-    elif [ "${SYSTEM_FAT32}" = "FAT32" ]; then
+    elif [ "${SYSTEM_FAT32}" = "FAT32" ] ; then
         mount -t vfat -o utf8 /dev/$1 ${DIR_NAME} 
     else
         mount /dev/$1 ${DIR_NAME}
