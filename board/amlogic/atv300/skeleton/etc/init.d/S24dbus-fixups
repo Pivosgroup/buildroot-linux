@@ -3,5 +3,5 @@
 # cleanup dbus files that can get left behind
 #
 
-[ -f /var/lock/subsys/dbus-daemon ] || rm -f /var/lock/subsys/dbus-daemon
-[ -f /var/run/messagebus.pi] || rm -f /var/run/messagebus.pid
+rm -f /var/lock/subsys/dbus-daemon
+rm -f /var/run/messagebus.pid
