@@ -15,6 +15,7 @@ OBJS = allformats.o         \
        sdp.o                \
        seek.o               \
        utils.o              \
+       nsc.o
 
 # muxers/demuxers
 OBJS-$(CONFIG_A64_MUXER)                 += a64.o

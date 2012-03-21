@@ -48,6 +48,10 @@
 #define READ_RETRY_MAX_TIME_MS (120*1000) 
 /*60 seconds no data get,we will reset it*/
 
+#define READ_RETRY_MAX_TIME_MS (120*1000) 
+/*60 seconds no data get,we will reset it*/
+
+
 typedef struct {
     const AVClass *class;
     URLContext *hd;
@@ -238,7 +242,7 @@ static int http_open(URLContext *h, const char *uri, int flags)
     HTTPContext *s = h->priv_data;
 	int ret;
 	int open_retry=0;
-   // h->is_streamed = 1;
+    h->is_streamed = 1;
 	
     s->filesize = -1;
 	s->is_seek=1;
@@ -259,7 +263,7 @@ static int shttp_open(URLContext *h, const char *uri, int flags)
     HTTPContext *s = h->priv_data;
 	int ret;
 	int open_retry=0;
-   // h->is_streamed = 1;
+    h->is_streamed = 1;
 
     s->filesize = -1;
 	s->is_seek=1;
@@ -555,15 +559,17 @@ retry:
         if (s->chunksize > 0)
             s->chunksize -= len;
     }
-	if(s->canseek && len==AVERROR(EAGAIN)){
+	if(len==AVERROR(EAGAIN)){
 		struct timeval  new_time;
 		long new_time_mseconds;
+		long max_wait_time=READ_RETRY_MAX_TIME_MS;
+		if(!s->canseek) max_wait_time=READ_RETRY_MAX_TIME_MS*2;/*if can't support seek,we wait more time*/
     	gettimeofday(&new_time, NULL);
 		new_time_mseconds = (new_time.tv_usec / 1000 + new_time.tv_sec * 1000);
 		av_log(h, AV_LOG_INFO, "new_time_mseconds=%d,latest_get_time_ms=%d\n", new_time_mseconds,s->latest_get_time_ms);
 		if(s->latest_get_time_ms<=0)
 			s->latest_get_time_ms=new_time_mseconds;
-		if(new_time_mseconds-s->latest_get_time_ms>READ_RETRY_MAX_TIME_MS){
+		if(new_time_mseconds-s->latest_get_time_ms>max_wait_time){
 			av_log(h, AV_LOG_INFO, "new_time_mseconds=%d,latest_get_time_ms=%d  TIMEOUT\n", new_time_mseconds,s->latest_get_time_ms);
 			len=-1;/*force it goto reopen */
 		}

@@ -67,6 +67,10 @@ typedef struct {
 #endif
 } UDPContext;
 
+#define IPPROTO_IPV6 41
+#define IPV6_MULTICAST_HOPS 18
+
+
 #define UDP_TX_BUF_SIZE 32768
 #define UDP_MAX_PKT_SIZE 65536
 
@@ -109,7 +113,7 @@ static int udp_join_multicast_group(int sockfd, struct sockaddr *addr)
 #if HAVE_STRUCT_IPV6_MREQ && defined(IPPROTO_IPV6)
     if (addr->sa_family == AF_INET6) {
         struct ipv6_mreq mreq6;
-
+    	av_log(NULL,AV_LOG_INFO,"IPV6_ADD_MEMBERSHIP\n");
         memcpy(&mreq6.ipv6mr_multiaddr, &(((struct sockaddr_in6 *)addr)->sin6_addr), sizeof(struct in6_addr));
         mreq6.ipv6mr_interface= 0;
         if (setsockopt(sockfd, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq6, sizeof(mreq6)) < 0) {
@@ -169,6 +173,7 @@ static struct addrinfo* udp_resolve_host(const char *hostname, int port,
     hints.ai_socktype = type;
     hints.ai_family   = family;
     hints.ai_flags = flags;
+    av_log(NULL,AV_LOG_INFO,"try get addr info,node=%s,services=%s\n",node,service);
     if ((error = getaddrinfo(node, service, &hints, &res))) {
         res = NULL;
         av_log(NULL, AV_LOG_ERROR, "udp_resolve_host: %s\n", gai_strerror(error));

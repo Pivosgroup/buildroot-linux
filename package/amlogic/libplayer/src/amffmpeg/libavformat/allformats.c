@@ -256,8 +256,8 @@ void av_register_all(void)
     REGISTER_PROTOCOL (RTP, rtp);
     REGISTER_PROTOCOL (TCP, tcp);
     REGISTER_PROTOCOL (UDP, udp);
-
-
-extern int register_list_demux_all(void);
-	register_list_demux_all();
+    extern URLProtocol ff_nsc_protocol; 
+    ffurl_register_protocol(&ff_nsc_protocol, sizeof(ff_nsc_protocol)); 
+    extern int register_list_demux_all(void);
+    register_list_demux_all();
 }

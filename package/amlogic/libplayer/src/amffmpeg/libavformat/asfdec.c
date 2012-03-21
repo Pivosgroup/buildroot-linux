@@ -860,7 +860,7 @@ static int ff_asf_get_packet(AVFormatContext *s, AVIOContext *pb)
     if (packet_length < asf->hdr.min_pktsize)
         padsize += asf->hdr.min_pktsize - packet_length;
     asf->packet_padsize = padsize;
-    av_dlog(s, "packet: size=%d padsize=%d  left=%d\n", s->packet_size, asf->packet_padsize, asf->packet_size_left);
+    av_log(s,AV_LOG_INFO, "packet: size=%d padsize=%d  left=%d\n", s->packet_size, asf->packet_padsize, asf->packet_size_left);
     return 0;
 }
 

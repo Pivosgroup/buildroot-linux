@@ -72,6 +72,7 @@ typedef struct list_mgt
 	int  seq;  
 	AVIOContext	*cur_uio;
 	struct list_demux *demux;
+	int 	have_sub_list;
 }list_mgt_t;
 
 typedef struct list_demux

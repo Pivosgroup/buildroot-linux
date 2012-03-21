@@ -121,13 +121,13 @@ int url_lpfillbuffer(URLContext *s,int size)
 	int ssread;
 	int cache_read_len=0;
 	int64_t tmprp;
-
+	
 	if(!s || !s->lpbuf)
 		return AVERROR(EINVAL);
 
 	lp=s->lpbuf;
 	lp_lock(&lp->mutex);
-
+	
 	if(lp->wp>=lp->rp)
 	{
 		if(lp->rp!=lp->buffer)
@@ -259,6 +259,10 @@ int64_t url_lpseek(URLContext *s, int64_t offset, int whence)
 	if (whence == AVSEEK_SIZE)
 	{
 		int64_t size;
+		if(!s->prot->url_seek){
+			lp_unlock(&lp->mutex);
+			return -1;
+		}
 		size = s->prot->url_seek(s, 0, AVSEEK_SIZE);
 		if(size<0){
 			if ((size = s->prot->url_seek(s, -1, SEEK_END)) < 0)
@@ -275,6 +279,10 @@ int64_t url_lpseek(URLContext *s, int64_t offset, int whence)
 	}
 	else if(whence == SEEK_END)
 	{
+		if(!s->prot->url_seek){
+			lp_unlock(&lp->mutex);
+			return -1;
+		}
 		if ((offset1=s->prot->url_seek(s, offset, SEEK_END)) < 0)
 		{
 			lp_unlock(&lp->mutex);
@@ -354,6 +362,10 @@ int64_t url_lpseek(URLContext *s, int64_t offset, int whence)
 	}else
 	{/*not support in buffer seek,do low level seek now*/
 		lp_sprint( AV_LOG_INFO, "url_lpseek:buffer lowlevel seek  offset=%lld  offset1=%lld whence=%d\n",offset,offset1,whence);
+		if(!s->prot->url_seek){
+			lp_unlock(&lp->mutex);
+			return -1;
+		}
 		if(lp->cache_enable && offset<lp->file_size){
 			/*if cache enable not need to seek here,seek  on cache missed*/
 			;/*do't do seek here*/

@@ -166,7 +166,7 @@ int url_is_file_list(AVIOContext *s,const char *filename)
 	{
 		url_fseek(lio, oldpos, SEEK_SET);
 	}
-	return demux!=NULL?1:0;
+	return demux!=NULL?100:0;
 }
 
 static int list_open_internet(AVIOContext **pbio,struct list_mgt *mgt,const char *filename, int flags)
@@ -218,7 +218,11 @@ static int list_open(URLContext *h, const char *filename, int flags)
 		return ret;
 	}
 	lp_lock_init(&mgt->mutex,NULL);
-	mgt->current_item=mgt->item_list;
+	if(!mgt->have_list_end && (!mgt->have_sub_list) && mgt->item_list->prev != NULL)
+		mgt->current_item=mgt->item_list->prev;//if a live stream,we play the end item to low latency.
+	else
+		mgt->current_item=mgt->item_list;	
+
 	mgt->cur_uio=NULL;
  	h->is_streamed=1;
 	h->is_slowmedia=1;
@@ -322,6 +326,7 @@ retry:
 			}
 			if(url_is_file_list(bio,item->file))
 			{
+				mgt->have_sub_list = 1;
 				/*have 32 bytes space at the end..*/
 				memmove(item->file+5,item->file,strlen(item->file)+1);
 				memcpy(item->file,"list:",5);
@@ -397,7 +402,20 @@ static int list_write(URLContext *h, unsigned char *buf, int size)
 static int64_t list_seek(URLContext *h, int64_t pos, int whence)
 {
 	struct list_mgt *mgt = h->priv_data;
-	struct list_item *item,*item1;
+	URLContext *subh;
+	struct list_mgt *submgt;
+	struct list_item *item,*item1;	
+	struct list_item *cur_item;
+	int fulltime;
+
+	if (!h->support_time_seek) {
+		if(!mgt->have_list_end && mgt->have_sub_list && mgt->cur_uio){
+			if(mgt->cur_uio->support_time_seek){
+				h->support_time_seek = 1;
+				av_log(NULL, AV_LOG_INFO, "sub list support seek\n");
+			}
+		}		
+	}
 	if (whence == AVSEEK_BUFFERED_TIME)
 	{
 		int64_t buffed_time=0;
@@ -424,26 +442,42 @@ static int64_t list_seek(URLContext *h, int64_t pos, int whence)
 	{
 		if(mgt->have_list_end)
 			return mgt->full_time;
-		else
+		else if(mgt->have_sub_list && mgt->cur_uio){
+				subh = mgt->cur_uio->opaque;
+				submgt = subh->priv_data;
+				av_log(NULL, AV_LOG_INFO, "submgt->full_timet=%d\n",submgt->full_time);
+				return submgt->full_time;
+			}
 			return -1;
 	}
 	
-	if(whence == AVSEEK_TO_TIME && pos>=0 && pos<mgt->full_time)
+	if(whence == AVSEEK_TO_TIME)
 	{
 		av_log(NULL, AV_LOG_INFO, "list_seek to Time =%lld,whence=%x\n",pos,whence);
-		for(item=mgt->item_list;item;item=item->next)
-		{
-			if(item->start_time<=pos && pos <item->start_time+item->duration)
-			{	
-				if(mgt->cur_uio)
-					url_fclose(mgt->cur_uio);
-				mgt->cur_uio=NULL;
-				mgt->current_item=item;
-				av_log(NULL, AV_LOG_INFO, "list_seek to item->file =%s\n",item->file);
-				return item->start_time;/*pos=0;*/
+		if (!mgt->have_sub_list) {
+			if(pos>=0 && pos<mgt->full_time) {
+				for(item=mgt->item_list;item;item=item->next)
+				{
+					if(item->start_time<=pos && pos <item->start_time+item->duration)
+					{	
+						if(mgt->cur_uio)
+							url_fclose(mgt->cur_uio);
+						mgt->cur_uio=NULL;
+						mgt->current_item=item;
+						av_log(NULL, AV_LOG_INFO, "list_seek to item->file =%s\n",item->file);
+						return item->start_time;/*pos=0;*/
+					}
+				}
+
+			}
+		} else {
+			subh = mgt->cur_uio->opaque;	
+			submgt = subh->priv_data;
+			if(subh && submgt) {
+				av_log(NULL, AV_LOG_INFO, "have sub list, go2 low level, location=%s\n",submgt->location);
+				return list_seek(subh, pos, whence);
 			}
 		}
-
 	}
 	av_log(NULL, AV_LOG_INFO, "list_seek failed\n");
 	return -1;

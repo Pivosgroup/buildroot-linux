@@ -669,7 +669,15 @@ int64_t avio_seek_time(AVIOContext *h, int stream_index,
 
 static inline int url_support_time_seek(AVIOContext *s)
 {
-    return s->support_time_seek;
+	URLContext *h;
+	if(!s->support_time_seek && s->opaque){
+		h = (URLContext *)s->opaque;
+		if(h && h->support_time_seek){
+			s->support_time_seek = 1;
+			av_log(NULL, AV_LOG_INFO, "[url_support_time_seek]for h->support_time_seek, so s->support_time_seek = 1\n");
+		}
+	}
+	return s->support_time_seek;
 }
  int64_t url_fseektotime(AVIOContext *s,int totime_s,int flags);
  int url_buffering_data(AVIOContext *s,int size);
