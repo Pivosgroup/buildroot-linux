@@ -12,4 +12,5 @@ source "package/thirdparty/libssh2/Config.in"
 source "package/thirdparty/samba30/Config.in"
 source "package/thirdparty/yajl/Config.in"
 source "package/thirdparty/xbmc/Config.in"
+source "package/thirdparty/xios-skin/Config.in"
 endmenu
