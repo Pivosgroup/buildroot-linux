@@ -19,11 +19,13 @@ endef
 
 define AMADEC_INSTALL_STAGING_CMDS
 	cp -rf $(@D)/include/* $(STAGING_DIR)/usr/include
-        install -m 755 $(@D)/libamadec.so* $(STAGING_DIR)/usr/lib
+	install -m 755 $(@D)/libamadec.so* $(STAGING_DIR)/usr/lib
 endef
 
 define AMADEC_INSTALL_TARGET_CMDS
-        install -m 755 $(@D)/libamadec.so* $(TARGET_DIR)/usr/lib
+	mkdir -p $(TARGET_DIR)/lib/firmware
+	cp -rf $(@D)/firmware/*.bin $(TARGET_DIR)/lib/firmware
+	install -m 755 $(@D)/libamadec.so* $(TARGET_DIR)/usr/lib
 endef
 
 $(eval $(call GENTARGETS,package/amlogic,amadec))

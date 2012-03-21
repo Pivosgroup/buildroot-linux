@@ -552,7 +552,6 @@ void audio_set_av_sync_threshold(void *handle, int threshold)
 
     if (!handle) {
         adec_print("audio handle is NULL !\n");
-        return -1;
     }
 
     if ((threshold > 500) || (threshold < 60)) {

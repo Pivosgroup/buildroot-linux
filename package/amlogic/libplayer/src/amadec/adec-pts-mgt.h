@@ -18,6 +18,7 @@ ADEC_BEGIN_DECLS
 #define TSYNC_PCRSCR    "/sys/class/tsync/pts_pcrscr"
 #define TSYNC_EVENT     "/sys/class/tsync/event"
 #define TSYNC_APTS      "/sys/class/tsync/pts_audio"
+#define TSYNC_VPTS      "/sys/class/tsync/pts_video"
 #define TSYNC_ENABLE  "/sys/class/tsync/enable"
 
 #define SYSTIME_CORRECTION_THRESHOLD        (90000*15/100)
