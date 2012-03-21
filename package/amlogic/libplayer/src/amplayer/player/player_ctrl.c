@@ -66,8 +66,6 @@ int player_init(void)
     audio_register_stream_decoder();
     video_register_stream_decoder();
 
-    /*set output black policy to black out--default*/
-    set_black_policy(0);
     set_stb_source_hiu();
     set_stb_demux_source_hiu();
     return PLAYER_SUCCESS;
@@ -98,12 +96,13 @@ int player_start(play_control_t *ctrl_p, unsigned long  priv)
     if (ctrl_p == NULL) {
         return PLAYER_EMPTY_P;
     }
-	    
-	if (!ctrl_p->displast_frame) {
-		set_black_policy(1);            
-	} else if (!check_file_same(ctrl_p->file_name)) {
-		set_black_policy(1);                    
-	}
+    /* set output black policy to black out--default */
+    set_black_policy(0);
+	  if (!ctrl_p->displast_frame) {
+		  set_black_policy(1);
+	  } else if (!check_file_same(ctrl_p->file_name)) {
+		  set_black_policy(1);
+	  }
 	
     pid = player_request_pid();
     if (pid < 0) {
