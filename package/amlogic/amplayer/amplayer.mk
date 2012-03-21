@@ -13,7 +13,7 @@ AMPLAYER_INSTALL_STAGING=YES
 AMPLAYER_DEPENDENCIES=amffmpeg amcodec
 
 define AMPLAYER_BUILD_CMDS
-        $(MAKE)  LD="$(TARGET_LD)" CC="$(TARGET_CC)" SRC=$(CURDIR)/$(AMPLAYER_SITE) -C $(@D) 
+	$(MAKE)  LD="$(TARGET_LD)" CC="$(TARGET_CC)" SRC=$(CURDIR)/$(AMPLAYER_SITE) -C $(@D)
 endef
 
 define AMPLAYER_INSTALL_STAGING_CMDS
@@ -21,7 +21,7 @@ define AMPLAYER_INSTALL_STAGING_CMDS
 endef
 
 define AMPLAYER_INSTALL_TARGET_CMDS
-        $(MAKE) CC="$(TARGET_CC)" INSTALL_DIR=$(TARGET_DIR)/usr/lib STAGING=$(TARGET_DIR)/usr -C $(@D) install
+	$(MAKE) CC="$(TARGET_CC)" INSTALL_DIR=$(TARGET_DIR)/usr/lib STAGING=$(TARGET_DIR)/usr -C $(@D) install
 endef
 
 $(eval $(call GENTARGETS,package/amlogic,amplayer))
