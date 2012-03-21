@@ -13,6 +13,7 @@ define AMREMOTE_CONFIG_BUILD_CMDS
 endef
 
 define AMREMOTE_CONFIG_INSTALL_TARGET_CMDS
+        install -m 755 $(@D)/keytest $(TARGET_DIR)/usr/bin
         install -m 755 $(@D)/amremote_config $(TARGET_DIR)/usr/bin
 endef
 

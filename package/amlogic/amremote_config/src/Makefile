@@ -12,9 +12,12 @@ export TOP
 
 
 
-all:$(TARGET) 
+all:$(TARGET) keytest
 	@echo amremote_config build completed
 	
+keytest:irkey.o
+	$(CC)	$(CFLAGS) $(LDFLAGS) $(OBJS:%.o=%.c)  -o keytest
+
 $(TARGET):$(OBJS) 
 	$(CC)	$(CFLAGS) $(LDFLAGS) $(OBJS:%.o=%.c)  -o $(TARGET)
 
