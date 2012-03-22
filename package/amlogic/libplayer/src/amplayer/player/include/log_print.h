@@ -23,6 +23,6 @@ if the level<global_level print out
 
 
 void log_close(void);
-int log_open(const char *name);
-
+int  log_open(const char *name);
+int  change_print_level(int level);
 #endif

@@ -189,11 +189,11 @@ int update_player_states(play_para_t *para, int force)
     para->state.last_sta = para->state.status;
     para->state.status = get_player_state(para);
 
-    if (check_time_interrupt(&cb->callback_old_time, cb->update_interval) || force) {        
+    if (check_time_interrupt(&cb->callback_old_time, cb->update_interval) || force) {
         player_info_t state;
         MEMCPY(&state, &para->state, sizeof(state));
         //if(force == 1)
-        log_print("**[update_state]pid:%d status=%s(last:%s) err=0x%x curtime=%d (ms:%d) fulltime=%d lsttime=%d\n",
+        log_debug("**[update_state]pid:%d status=%s(last:%s) err=0x%x curtime=%d (ms:%d) fulltime=%d lsttime=%d\n",
                   para->player_id,
                   player_status2str(state.status),
                   player_status2str(state.last_sta),
@@ -202,7 +202,7 @@ int update_player_states(play_para_t *para, int force)
                   state.current_ms,
                   state.full_time,
                   state.last_time);
-		log_print("**[update_state]abuflevel=%.03f vbublevel=%.03f abufrp=%x vbufrp=%x read_end=%d\n",                                 
+        log_debug("**[update_state]abuflevel=%.03f vbublevel=%.03f abufrp=%x vbufrp=%x read_end=%d\n",
                   state.audio_bufferlevel,
                   state.video_bufferlevel,
                   para->abuffer.buffer_rp,
