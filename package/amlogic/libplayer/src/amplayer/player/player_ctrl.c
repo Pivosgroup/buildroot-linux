@@ -91,7 +91,7 @@ int player_start(play_control_t *ctrl_p, unsigned long  priv)
     int pid = -1;
     play_para_t *p_para;
 	print_version_info();
-    log_print("[player_start:enter]p= %p \n", ctrl_p);
+    log_debug("[player_start:enter]p= %p \n", ctrl_p);
 
     if (ctrl_p == NULL) {
         return PLAYER_EMPTY_P;
@@ -134,7 +134,7 @@ int player_start(play_control_t *ctrl_p, unsigned long  priv)
         player_release_pid(pid);
         return PLAYER_CAN_NOT_CREAT_THREADS;
     }
-    log_print("[player_start:exit]pid = %d \n", pid);
+    log_debug("[player_start:exit]pid = %d \n", pid);
 
     return pid;
 }
@@ -159,7 +159,7 @@ int player_start_play(int pid)
     int r = PLAYER_SUCCESS;
     play_para_t *player_para;
 
-    log_print("[player_start_play:enter]pid=%d\n", pid);
+    log_debug("[player_start_play:enter]pid=%d\n", pid);
 
     player_para = player_open_pid_data(pid);
     if (player_para == NULL) {
@@ -175,7 +175,7 @@ int player_start_play(int pid)
     }
 
     player_close_pid_data(pid);
-    log_print("[player_start_play:exit]pid = %d\n", pid);
+    log_debug("[player_start_play:exit]pid = %d\n", pid);
 
     return r;
 }
@@ -199,14 +199,14 @@ int player_stop(int pid)
     int r = PLAYER_SUCCESS;
     play_para_t *player_para;
 
-    log_print("[player_stop:enter]pid=%d\n", pid);
+    log_debug("[player_stop:enter]pid=%d\n", pid);
 
     player_para = player_open_pid_data(pid);
     if (player_para == NULL) {
         return PLAYER_NOT_VALID_PID;
     }
 
-    log_print("[player_stop]player_status=0x%x\n", get_player_state(player_para));
+    log_debug("[player_stop]player_status=0x%x\n", get_player_state(player_para));
     if ((get_player_state(player_para) & 0x30000) == 1) {
         return PLAYER_SUCCESS;
     }
@@ -221,7 +221,7 @@ int player_stop(int pid)
         ffmpeg_interrupt(player_para->thread_mgt.pthread_id);
         r = send_message(player_para, cmd);
         r = player_thread_wait_exit(player_para);
-        log_print("[player_stop:%d]wait player_theadpid[%d] r = %d\n", __LINE__, player_para->player_id, r);
+        log_debug("[player_stop:%d]wait player_theadpid[%d] r = %d\n", __LINE__, player_para->player_id, r);
         clear_all_message(player_para);
         ffmpeg_uninterrupt(player_para->thread_mgt.pthread_id);
     } else {
@@ -229,7 +229,7 @@ int player_stop(int pid)
     }
 
     player_close_pid_data(pid);
-    log_print("[player_stop:exit]pid=%d\n", pid);
+    log_debug("[player_stop:exit]pid=%d\n", pid);
 
     return r;
 }
@@ -297,24 +297,24 @@ int player_exit(int pid)
     int ret = PLAYER_SUCCESS;
     play_para_t *para;
 
-    log_print("[player_exit:enter]pid=%d\n", pid);
+    log_debug("[player_exit:enter]pid=%d\n", pid);
 
     para = player_open_pid_data(pid);
     if (para != NULL) {
-        log_print("[player_exit]player_state=0x%x\n", get_player_state(para));
+        log_debug("[player_exit]player_state=0x%x\n", get_player_state(para));
         if (get_player_state(para) != PLAYER_EXIT) {
             player_stop(pid);
         }
 
         ret = player_thread_wait_exit(para);
-        log_print("[player_exit]player thread already exit: %d\n", ret);
+        log_debug("[player_exit]player thread already exit: %d\n", ret);
         ffmpeg_uninterrupt(para->thread_mgt.pthread_id);
         FREE(para);
         para = NULL;
     }
     player_close_pid_data(pid);
     player_release_pid(pid);
-    log_print("[player_exit:exit]pid=%d\n", pid);
+    log_debug("[player_exit:exit]pid=%d\n", pid);
 
     return ret;
 }
@@ -337,14 +337,14 @@ int player_pause(int pid)
     player_cmd_t cmd;
     int ret = PLAYER_SUCCESS;
 
-    log_print("[player_pause:enter]pid=%d\n", pid);
+    log_debug("[player_pause:enter]pid=%d\n", pid);
 
     MEMSET(&cmd, 0, sizeof(player_cmd_t));
 
     cmd.ctrl_cmd = CMD_PAUSE;
 
     ret = player_send_message(pid, &cmd);
-    log_print("[player_pause:exit]pid=%d ret=%d\n", pid, ret);
+    log_debug("[player_pause:exit]pid=%d ret=%d\n", pid, ret);
 
     return ret;
 }
@@ -367,14 +367,14 @@ int player_resume(int pid)
     player_cmd_t cmd;
     int ret;
 
-    log_print("[player_resume:enter]pid=%d\n", pid);
+    log_debug("[player_resume:enter]pid=%d\n", pid);
 
     MEMSET(&cmd, 0, sizeof(player_cmd_t));
 
     cmd.ctrl_cmd = CMD_RESUME;
 
     ret = player_send_message(pid, &cmd);
-    log_print("[player_resume:exit]pid=%d ret=%d\n", pid, ret);
+    log_debug("[player_resume:exit]pid=%d ret=%d\n", pid, ret);
 
     return ret;
 }
@@ -397,14 +397,14 @@ int player_loop(int pid)
     player_cmd_t cmd;
     int ret;
 
-    log_print("[player_loop:enter]pid=%d\n", pid);
+    log_debug("[player_loop:enter]pid=%d\n", pid);
 
     MEMSET(&cmd, 0, sizeof(player_cmd_t));
 
     cmd.set_mode = CMD_LOOP;
 
     ret = player_send_message(pid, &cmd);
-    log_print("[player_loop:exit]pid=%d ret=%d\n", pid, ret);
+    log_debug("[player_loop:exit]pid=%d ret=%d\n", pid, ret);
 
     return ret;
 }
@@ -428,14 +428,14 @@ int player_noloop(int pid)
     player_cmd_t cmd;
     int ret;
 
-    log_print("[player_loop:enter]pid=%d\n", pid);
+    log_debug("[player_loop:enter]pid=%d\n", pid);
 
     MEMSET(&cmd, 0, sizeof(player_cmd_t));
 
     cmd.set_mode = CMD_NOLOOP;
 
     ret = player_send_message(pid, &cmd);
-    log_print("[player_loop:exit]pid=%d ret=%d\n", pid, ret);
+    log_debug("[player_loop:exit]pid=%d ret=%d\n", pid, ret);
 
     return ret;
 }
@@ -460,7 +460,7 @@ int player_timesearch(int pid, int s_time)
     player_cmd_t cmd;
     int ret;
 
-    log_print("[player_timesearch:enter]pid=%d s_time=%d\n", pid, s_time);
+    log_debug("[player_timesearch:enter]pid=%d s_time=%d\n", pid, s_time);
 
     MEMSET(&cmd, 0, sizeof(player_cmd_t));
 
@@ -468,7 +468,7 @@ int player_timesearch(int pid, int s_time)
     cmd.param = s_time;
 
     ret = player_send_message(pid, &cmd);
-    log_print("[player_timesearch:exit]pid=%d ret=%d\n", pid, ret);
+    log_debug("[player_timesearch:exit]pid=%d ret=%d\n", pid, ret);
 
     return ret;
 }
@@ -493,7 +493,7 @@ int player_forward(int pid, int speed)
     player_cmd_t cmd;
     int ret;
 
-    log_print("[player_forward:enter]pid=%d speed=%d\n", pid, speed);
+    log_debug("[player_forward:enter]pid=%d speed=%d\n", pid, speed);
 
     MEMSET(&cmd, 0, sizeof(player_cmd_t));
 
@@ -501,7 +501,7 @@ int player_forward(int pid, int speed)
     cmd.param = speed;
 
     ret = player_send_message(pid, &cmd);
-    log_print("[player_forward:exit]pid=%d ret=%d\n", pid, ret);
+    log_debug("[player_forward:exit]pid=%d ret=%d\n", pid, ret);
 
     return ret;
 }
@@ -526,7 +526,7 @@ int player_backward(int pid, int speed)
     player_cmd_t cmd;
     int ret;
 
-    log_print("[player_backward:enter]pid=%d speed=%d\n", pid, speed);
+    log_debug("[player_backward:enter]pid=%d speed=%d\n", pid, speed);
 
     MEMSET(&cmd, 0, sizeof(player_cmd_t));
 
@@ -534,7 +534,7 @@ int player_backward(int pid, int speed)
     cmd.param = speed;
 
     ret = player_send_message(pid, &cmd);
-    log_print("[player_backward]cmd=%x param=%d ret=%d\n", cmd.ctrl_cmd, cmd.param, ret);
+    log_debug("[player_backward]cmd=%x param=%d ret=%d\n", cmd.ctrl_cmd, cmd.param, ret);
 
     return ret;
 }
@@ -559,7 +559,7 @@ int player_aid(int pid, int audio_id)
     player_cmd_t cmd;
     int ret;
 
-    log_print("[player_aid:enter]pid=%d aid=%d\n", pid, audio_id);
+    log_debug("[player_aid:enter]pid=%d aid=%d\n", pid, audio_id);
 
     MEMSET(&cmd, 0, sizeof(player_cmd_t));
 
@@ -567,7 +567,7 @@ int player_aid(int pid, int audio_id)
     cmd.param = audio_id;
 
     ret = player_send_message(pid, &cmd);
-    log_print("[player_aid:exit]pid=%d ret=%d\n", pid, ret);
+    log_debug("[player_aid:exit]pid=%d ret=%d\n", pid, ret);
 
     return ret;
 
@@ -593,7 +593,7 @@ int player_sid(int pid, int sub_id)
     player_cmd_t cmd;
     int ret;
 
-    log_print("[player_sid:enter]pid=%d sub_id=%d\n", pid, sub_id);
+    log_debug("[player_sid:enter]pid=%d sub_id=%d\n", pid, sub_id);
 
     MEMSET(&cmd, 0, sizeof(player_cmd_t));
 
@@ -601,7 +601,7 @@ int player_sid(int pid, int sub_id)
     cmd.param = sub_id;
 
     ret = player_send_message(pid, &cmd);
-    log_print("[player_sid:exit]pid=%d sub_id=%d\n", pid, sub_id);
+    log_debug("[player_sid:exit]pid=%d sub_id=%d\n", pid, sub_id);
 
     return ret;
 
@@ -626,7 +626,7 @@ int player_enable_autobuffer(int pid, int enable)
     player_cmd_t cmd;
     int ret;
 
-    log_print("[%s:enter]pid=%d enable=%d\n", __FUNCTION__, pid, enable);
+    log_debug("[%s:enter]pid=%d enable=%d\n", __FUNCTION__, pid, enable);
 
     MEMSET(&cmd, 0, sizeof(player_cmd_t));
 
@@ -634,7 +634,7 @@ int player_enable_autobuffer(int pid, int enable)
     cmd.param = enable;
 
     ret = player_send_message(pid, &cmd);
-    log_print("[%s:exit]pid=%d enable=%d\n", __FUNCTION__, pid, enable);
+    log_debug("[%s:exit]pid=%d enable=%d\n", __FUNCTION__, pid, enable);
 
     return ret;
 
@@ -661,7 +661,7 @@ int player_set_autobuffer_level(int pid, float min, float middle, float max)
     player_cmd_t cmd;
     int ret;
 
-    log_print("[%s:enter]pid=%d min=%.3f middle=%.3f max=%.3f\n", __FUNCTION__, pid, min, middle, max);
+    log_debug("[%s:enter]pid=%d min=%.3f middle=%.3f max=%.3f\n", __FUNCTION__, pid, min, middle, max);
 
     if (min <  middle && middle < max && max < 1) {
         MEMSET(&cmd, 0, sizeof(player_cmd_t));
@@ -676,7 +676,7 @@ int player_set_autobuffer_level(int pid, float min, float middle, float max)
         ret = -1;
         log_error("[%s]invalid param, please check!\n", __FUNCTION__);
     }
-    log_print("[%s:exit]pid=%d min=%.3f middle=%.3f max=%.3f\n", __FUNCTION__, pid, min, middle, max);
+    log_debug("[%s:exit]pid=%d min=%.3f middle=%.3f max=%.3f\n", __FUNCTION__, pid, min, middle, max);
 
     return ret;
 
@@ -719,7 +719,7 @@ int player_send_message(int pid, player_cmd_t *cmd)
         memcpy(mycmd, cmd, sizeof(*cmd));
         r = send_message_by_pid(pid, mycmd);
         if (cmd2str(cmd, buf) != -1) {
-            log_print("[%s]cmd = %s\n", __FUNCTION__, buf);
+            log_debug("[%s]cmd = %s\n", __FUNCTION__, buf);
         }
     } else {
         r = PLAYER_NOMEM;
@@ -873,7 +873,7 @@ int player_get_media_info(int pid, media_info_t *minfo)
     MEMSET(minfo, 0, sizeof(media_info_t));
     MEMCPY(minfo, &player_para->media_info, sizeof(media_info_t));
 
-    log_print("[player_get_media_info]video_num=%d vidx=%d\n", minfo->stream_info.total_video_num, minfo->stream_info.cur_video_index);
+    log_debug("[player_get_media_info]video_num=%d vidx=%d\n", minfo->stream_info.total_video_num, minfo->stream_info.cur_video_index);
     player_close_pid_data(pid);
 
     return PLAYER_SUCCESS;
@@ -937,7 +937,7 @@ int audio_set_mute(int pid, int mute_on)
     player_para = player_open_pid_data(pid);
     if (player_para != NULL) {
         player_para->playctrl_info.audio_mute = mute_on & 0x1;
-        log_print("[audio_set_mute:%d]muteon=%d audio_mute=%d\n", __LINE__, mute_on, player_para->playctrl_info.audio_mute);
+        log_debug("[audio_set_mute:%d]muteon=%d audio_mute=%d\n", __LINE__, mute_on, player_para->playctrl_info.audio_mute);
 
         p = get_audio_codec(player_para);
         if (p != NULL) {
@@ -1004,7 +1004,7 @@ int audio_get_volume(int pid, float *vol)
     int r;
 
     r = codec_get_volume(NULL, vol);
-    log_print("[audio_get_volume:%d]r=%d\n", __LINE__, r);
+    log_debug("[audio_get_volume:%d]r=%d\n", __LINE__, r);
 
     return r;//codec_get_volume(NULL);
 }
@@ -1044,7 +1044,7 @@ int audio_get_lrvolume(int pid, float *lvol,float* rvol)
     int r;
 
     r = codec_get_lrvolume(NULL, lvol,rvol);
-    log_print("[audio_get_volume:%d]r=%d\n", __LINE__, r);
+    log_debug("[audio_get_volume:%d]r=%d\n", __LINE__, r);
 
     return r;//codec_get_volume(NULL);
 }

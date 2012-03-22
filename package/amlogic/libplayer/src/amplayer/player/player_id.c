@@ -69,7 +69,7 @@ int player_release_pid(int pid)
         priv_pid_used[pid] = 0;
         priv_pid_data[pid] = NULL;
         priv_pid_pool &= ~(1 << pid);
-        log_print("[player_release_pid:%d]release pid=%d\n", __LINE__, pid);
+        log_debug("[player_release_pid:%d]release pid=%d\n", __LINE__, pid);
         ret = PLAYER_SUCCESS;
     } else {
 

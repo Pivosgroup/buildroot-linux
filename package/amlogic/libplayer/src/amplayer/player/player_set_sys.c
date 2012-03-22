@@ -81,7 +81,7 @@ int  get_sysfs_str(const char *path, char *valstr, int size)
         sprintf(valstr, "%s", "fail");
         return -1;
     };
-    log_print("get_sysfs_str=%s\n", valstr);
+    log_debug("get_sysfs_str=%s\n", valstr);
     return 0;
 }
 
@@ -215,8 +215,8 @@ int check_file_same(char *filename2)
    len1 = strlen(filename1);
    len2 = strlen(filename2);
    
-   log_print("[%s]file1=%d:%s\n", __FUNCTION__, len1 ,filename1);
-   log_print("[%s]file2=%d:%s\n", __FUNCTION__, len2 ,filename2);
+   log_debug("[%s]file1=%d:%s\n", __FUNCTION__, len1 ,filename1);
+   log_debug("[%s]file2=%d:%s\n", __FUNCTION__, len2 ,filename2);
 
    set_last_file(filename2);
    
@@ -224,7 +224,7 @@ int check_file_same(char *filename2)
        log_print("[%s]not match,1:%d 2:%d\n", __FUNCTION__, len1, len2);
        return 0;
    } else if (!strncmp(filename1, filename2, len2)) {
-       log_print("[%s]match,return 1\n", __FUNCTION__);
+       log_debug("[%s]match,return 1\n", __FUNCTION__);
        return 1;
    }       
        return 0;
@@ -243,13 +243,13 @@ void get_display_mode(char *mode)
     fd = open(path, O_RDONLY);
     if (fd >= 0) {
         read(fd, mode, 16);
-        log_print("[get_display_mode]mode=%s strlen=%d\n", mode, strlen(mode));
+        log_debug("[get_display_mode]mode=%s strlen=%d\n", mode, strlen(mode));
         mode[strlen(mode)] = '\0';
         close(fd);
     } else {
         sprintf(mode, "%s", "fail");
     };
-    log_print("[get_display_mode]display_mode=%s\n", mode);
+    log_debug("[get_display_mode]display_mode=%s\n", mode);
     return ;
 }
 
@@ -372,7 +372,7 @@ int set_fb1_scale_height(int height)
 static int display_mode_convert(char *disp_mode)
 {
     int ret = 0xff;
-    log_print("[display_mode_convert]disp_mode=%s\n", disp_mode);
+    log_debug("[display_mode_convert]disp_mode=%s\n", disp_mode);
     if (!disp_mode) {
         ret = 0xeeee;
     } else if (!strncmp(disp_mode, "480i", 4)) {
@@ -392,7 +392,7 @@ static int display_mode_convert(char *disp_mode)
     } else {
         ret = 0xffff;
     }
-    log_print("[display_mode_convert]disp_mode=%s-->%x\n", disp_mode, ret);
+    log_debug("[display_mode_convert]disp_mode=%s-->%x\n", disp_mode, ret);
     return ret;
 }
 //////////////////////////////////////////////
@@ -406,7 +406,7 @@ static void get_display_axis()
     if (fd >= 0) {
         read(fd, bcmd, sizeof(bcmd));
         bcmd[31] = '\0';
-        log_print("[get_disp_axis]%s\n", bcmd);
+        log_debug("[get_disp_axis]%s\n", bcmd);
         close(fd);
     } else {
         log_error("[%s:%d]open %s failed!\n", __FUNCTION__, __LINE__, path);
@@ -422,7 +422,7 @@ static void get_video_axis()
     if (fd >= 0) {
         read(fd, bcmd, sizeof(bcmd));
         bcmd[31] = '\0';
-        log_print("[get_video_axis]%sn", bcmd);
+        log_debug("[get_video_axis]%sn", bcmd);
         close(fd);
     } else {
         log_error("[%s:%d]open %s failed!\n", __FUNCTION__, __LINE__, path);
@@ -445,8 +445,8 @@ void update_freescale_setting(void)
     if (ioctl(fd_fb, FBIOGET_VSCREENINFO, &vinfo) == 0) {
         osd_width = vinfo.xres;
         osd_height = vinfo.yres;
-        log_print("osd_width = %d", osd_width);
-        log_print("osd_height = %d", osd_height);
+        log_debug("osd_width = %d", osd_width);
+        log_debug("osd_height = %d", osd_height);
 
         for (i = 0; i < num; i ++) {
             if (freescale_setting[i].disp_mode == DISP_MODE_480P) {
@@ -562,15 +562,15 @@ int DisableFreeScale(display_mode mode) {
 		osd_width = vinfo.xres;
 		osd_height = vinfo.yres;
 
-		//log_print("osd_width = %d", osd_width);
-		//log_print("osd_height = %d", osd_height);
+		//log_debug("osd_width = %d", osd_width);
+		//log_debug("osd_height = %d", osd_height);
 	} else {
 		log_print("get FBIOGET_VSCREENINFO fail.");
 		goto exit;
 	}
 		
 	switch(mode) {
-		//log_print("set mid mode=%d", mode);
+		//log_debug("set mid mode=%d", mode);
 
 		case DISP_MODE_480P: //480p		
 			if (fd_ppmgr >= 0) 	write(fd_ppmgr, "0", strlen("0"));
@@ -643,7 +643,7 @@ int EnableFreeScale(display_mode mode) {
  	int osd_width = 0, osd_height = 0;	
 	int ret = -1;
 	
-	//log_print("EnableFreeScale: mode=%d", mode);	
+	//log_debug("EnableFreeScale: mode=%d", mode);	
 	if (mode < DISP_MODE_480I || mode > DISP_MODE_1080P)
 		return 0;	
 		
@@ -683,15 +683,15 @@ int EnableFreeScale(display_mode mode) {
 		osd_height = vinfo.yres;
 		sprintf(daxis_str, "0 0 %d %d 0 0 18 18", vinfo.xres, vinfo.yres);
 		
-		//log_print("osd_width = %d", osd_width);
-		//log_print("osd_height = %d", osd_height);
+		//log_debug("osd_width = %d", osd_width);
+		//log_debug("osd_height = %d", osd_height);
 	} else {
 		log_print("get FBIOGET_VSCREENINFO fail.");
 		goto exit;
 	}
 		
 	switch(mode) {
-		//log_print("set mid mode=%d", mode);
+		//log_debug("set mid mode=%d", mode);
 
 		case DISP_MODE_480P: //480p				
 			if (fd_ppmgr >= 0) 	write(fd_ppmgr, "1", strlen("1"));
@@ -789,7 +789,7 @@ int disable_freescale(int cfg)
 			DisableFreeScale(disp_mode);
 		}
 	}
-	log_print("[disable_freescale]");
+	log_debug("[disable_freescale]");
 	return 0;
 }
 int enable_freescale(int cfg)
@@ -808,7 +808,7 @@ int enable_freescale(int cfg)
 			EnableFreeScale(disp_mode);
 		}
 	}
-	log_print("[enable_freescale]");
+	log_debug("[enable_freescale]");
 	return 0;
 }
 
@@ -825,17 +825,17 @@ int disable_freescale(int cfg)
     int i;
     int num;
 
-    log_print("[disable_freescale]cfg = 0x%x\n", cfg);
+    log_debug("[disable_freescale]cfg = 0x%x\n", cfg);
     //if(cfg == MID_800_400_FREESCALE)
     {
-        log_print("[disable_freescale]mid 800*400, do config...\n");
+        log_debug("[disable_freescale]mid 800*400, do config...\n");
         get_display_mode(mode);
-        log_print("[disable_freescale]display_mode=%s \n", mode);
+        log_debug("[disable_freescale]display_mode=%s \n", mode);
         if (strncmp(mode, "fail", 4)) { //mode !=fail
             disp_mode = display_mode_convert(mode);
             update_freescale_setting();
             num = sizeof(freescale_setting) / sizeof(freescale_setting[0]);
-            log_print("[%s:%d]num=%d\n", __FUNCTION__, __LINE__, num);
+            log_debug("[%s:%d]num=%d\n", __FUNCTION__, __LINE__, num);
             if (disp_mode >= DISP_MODE_480I && disp_mode <= DISP_MODE_1080P) {
                 for (i = 0; i < num; i ++) {
                     if (disp_mode == freescale_setting[i].disp_mode) {
@@ -850,7 +850,7 @@ int disable_freescale(int cfg)
                 set_fb0_freescale(0);
                 set_fb1_freescale(0);
                 set_display_axis(setting->osd_disble_coordinate);
-                log_print("[disable_freescale]mid 800*400 config success!\n");
+                log_debug("[disable_freescale]mid 800*400 config success!\n");
             } else {
                 log_error("[disable_freescale]mid 800*400 config failed, display mode invalid\n");
             }
@@ -875,17 +875,17 @@ int enable_freescale(int cfg)
     int i;
     int num;
 
-    log_print("[enable_freescale]cfg = 0x%x\n", cfg);
+    log_debug("[enable_freescale]cfg = 0x%x\n", cfg);
     //if(cfg == MID_800_400_FREESCALE)
     {
-        log_print("[enable_freescale]mid 800*400, do config...\n");
+        log_debug("[enable_freescale]mid 800*400, do config...\n");
         get_display_mode(mode);
-        log_print("[enable_freescale]display_mode=%s \n", mode);
+        log_debug("[enable_freescale]display_mode=%s \n", mode);
         if (strncmp(mode, "fail", 4)) {
             disp_mode = display_mode_convert(mode);
             update_freescale_setting();
             num = sizeof(freescale_setting) / sizeof(freescale_setting[0]);
-            log_print("[%s:%d]num=%d\n", __FUNCTION__, __LINE__, num);
+            log_debug("[%s:%d]num=%d\n", __FUNCTION__, __LINE__, num);
             if (disp_mode >= DISP_MODE_480I && disp_mode <= DISP_MODE_1080P) {
                 for (i = 0; i < num; i ++) {
                     if (disp_mode == freescale_setting[i].disp_mode) {
@@ -907,7 +907,7 @@ int enable_freescale(int cfg)
                 set_fb1_scale_height(setting->fb1_freescale_height);
                 set_fb0_freescale(1);
                 set_fb1_freescale(1);
-                log_print("[enable_freescale]mid 800*400 config success!\n");
+                log_debug("[enable_freescale]mid 800*400 config success!\n");
             } else {
                 log_error("[enable_freescale]mid 800*400 config failed, display mode invalid\n");
             }
@@ -980,7 +980,7 @@ int get_amutils_cmd(char* cmd){
         int ret = -1;
 		ret = read(fd, cmd, 32);
 		if(ret>0){
-			//log_print("[get_amutils_cmd]cmd=%s strlen=%d\n", cmd, strlen(cmd));
+			//log_debug("[get_amutils_cmd]cmd=%s strlen=%d\n", cmd, strlen(cmd));
 			cmd[strlen(cmd)] = '\0';
 			//write(fd,"clear",strlen("clear"));
 		}
@@ -989,7 +989,7 @@ int get_amutils_cmd(char* cmd){
         sprintf(cmd, "%s", "fail");
 		return -1;
     }
-    //log_print("[get_amutils_cmd]cmd=%s\n", cmd);
+    //log_debug("[get_amutils_cmd]cmd=%s\n", cmd);
     return 0;
 }
 
@@ -1096,7 +1096,7 @@ static int parse_sysparam_str(vdec_profile_t *m_vdec_profiles, char *str)
 			while(str[i] != '\n')					
 				i ++;			
 			pos_end = i;
-			log_print("[%s]j=%d %s start:%d end:%d\n", __FUNCTION__,j, substr[j],pos_start, pos_end);
+			log_debug("[%s]j=%d %s start:%d end:%d\n", __FUNCTION__,j, substr[j],pos_start, pos_end);
 			parse_param(str+pos_start, &substr[j], pos_end-pos_start, m_vdec_profiles);
 		}	
 	}
@@ -1130,7 +1130,7 @@ int get_vdec_profile(vdec_profile_t *vdec_profiles)
 		return 0;
 	}
 
-	log_print("[%s]str=%s\n", __FUNCTION__,valstr);
+	log_debug("[%s]str=%s\n", __FUNCTION__,valstr);
 	parse_sysparam_str(&m_vdec_profiles, valstr);
 	memcpy(vdec_profiles, &m_vdec_profiles, sizeof(vdec_profile_t));
 	close(fd);

@@ -44,7 +44,7 @@ int send_message(play_para_t *para, player_cmd_t *cmd)
 {
     int ret = -1;
     message_pool_t *pool = &para->message_pool;
-    //log_print("[send_message:%d]num=%d in_idx=%d out_idx=%d\n",__LINE__,pool->message_num,pool->message_in_index,pool->message_out_index);
+    //log_debug("[send_message:%d]num=%d in_idx=%d out_idx=%d\n",__LINE__,pool->message_num,pool->message_in_index,pool->message_out_index);
     pthread_mutex_lock(&pool->msg_mutex);
     if (pool->message_num < MESSAGE_MAX) {
         pool->message_list[pool->message_in_index] = cmd;
@@ -94,7 +94,7 @@ player_cmd_t * get_message_locked(play_para_t *para)
         cmd = pool->message_list[pool->message_out_index];
         pool->message_out_index = (pool->message_out_index + 1) % MESSAGE_MAX;
         pool->message_num--;
-        log_print("[get_message_locked:%d]num=%d in_idx=%d out_idx=%d cmd=%x\n", __LINE__, pool->message_num, pool->message_in_index, pool->message_out_index, cmd->ctrl_cmd);
+        log_debug("[get_message_locked:%d]num=%d in_idx=%d out_idx=%d cmd=%x\n", __LINE__, pool->message_num, pool->message_in_index, pool->message_out_index, cmd->ctrl_cmd);
     }
     return cmd;
 }
@@ -107,13 +107,13 @@ player_cmd_t * get_message(play_para_t *para)
         return NULL;
     }
     pthread_mutex_lock(&pool->msg_mutex);
-    //log_print("[get_message]pool=%p msg_num=%d\n",pool,pool->message_num);
+    //log_debug("[get_message]pool=%p msg_num=%d\n",pool,pool->message_num);
     if (pool->message_num > 0) {
 
         cmd = pool->message_list[pool->message_out_index];
         pool->message_out_index = (pool->message_out_index + 1) % MESSAGE_MAX;
         pool->message_num--;
-        log_print("[get_message:%d]num=%d in_idx=%d out_idx=%d cmd=%x\n", __LINE__, pool->message_num, pool->message_in_index, pool->message_out_index, cmd->ctrl_cmd);
+        log_debug("[get_message:%d]num=%d in_idx=%d out_idx=%d cmd=%x\n", __LINE__, pool->message_num, pool->message_in_index, pool->message_out_index, cmd->ctrl_cmd);
     }
     pthread_mutex_unlock(&pool->msg_mutex);
     return cmd;
@@ -126,11 +126,11 @@ player_cmd_t * peek_message_locked(play_para_t *para)
         log_error("[peek_message_locked]pool is null!\n");
         return NULL;
     }
-    //log_print("[get_message]pool=%p msg_num=%d\n",pool,pool->message_num);
+    //log_debug("[get_message]pool=%p msg_num=%d\n",pool,pool->message_num);
     if (pool->message_num > 0) {
 
         cmd = pool->message_list[pool->message_out_index];
-        log_print("[peek_message_locked:%d]num=%d in_idx=%d out_idx=%d cmd=%x\n", __LINE__, pool->message_num, pool->message_in_index, pool->message_out_index, cmd->ctrl_cmd);
+        log_debug("[peek_message_locked:%d]num=%d in_idx=%d out_idx=%d cmd=%x\n", __LINE__, pool->message_num, pool->message_in_index, pool->message_out_index, cmd->ctrl_cmd);
     }
     return cmd;
 }

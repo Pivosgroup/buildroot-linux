@@ -91,7 +91,7 @@ static unsigned long cache_client_open(const char *url, int64_t filesize)
         int max_retry = 0;
 		struct cache_file *cache;
         if (filesize >= cache_setting.max_cache_size || filesize < cache_setting.file_block_size) {
-            log_print("filesize is out of support range=%d\n", filesize);
+            log_error("filesize is out of support range=%d\n", filesize);
             return 0;/*don't cache too big and too small file now.*/
         }
 		if(!cachefile_has_cached_currentfile(cache_setting.cache_dir,url,filesize)){
@@ -168,16 +168,16 @@ int cache_system_init(int enable, const char*dir, int max_size, int block_size)
         if (block_size > 0) {
             cache_setting.file_block_size = block_size;
         }
-        log_print("setcache dir=%s,cache_size=%d,blocksize=%d\n", cache_setting.cache_dir, cache_setting.max_cache_size, cache_setting.file_block_size);
+        log_debug("setcache dir=%s,cache_size=%d,blocksize=%d\n", cache_setting.cache_dir, cache_setting.max_cache_size, cache_setting.file_block_size);
 
     }
     lp_unlock(&cache_setting.mutex);
     if (enable) {
         if ((ret = mgt_dir_cache_files(dir, DEL_ALL_FLAGS)) != 0) {
             cache_setting.cache_enable = 0;
-            log_print("access cache dir failed,disabled the cache now\n");
+            log_error("access cache dir failed,disabled the cache now\n");
         } else {
-            log_print("access cache dir initok,enabled the cache now,cached data size=%lld\n", cache_file_size_add(0));
+            log_debug("access cache dir initok,enabled the cache now,cached data size=%lld\n", cache_file_size_add(0));
         }
 
     }
@@ -202,7 +202,7 @@ int mgt_dir_cache_files(const char * dirpath, int del_flags)
     dir = opendir(dirpath);
     if (dir == NULL) { /*dir have not?*/
         ret = mkdir(dirpath, 0770);
-        log_print("mkdir   %s=%d\n", dirpath, ret);
+        log_debug("mkdir   %s=%d\n", dirpath, ret);
         return ret;
     }
     dirent = readdir(dir);
@@ -210,7 +210,7 @@ int mgt_dir_cache_files(const char * dirpath, int del_flags)
 
     oldest_full_path[0] = '\0';
     while (dirent != NULL && ret++ < 10240) {
-        log_print("d_name:%s\n", dirent->d_name);
+        log_debug("d_name:%s\n", dirent->d_name);
 		strcpy(full_path, dirpath);
         strcpy(full_path + strlen(full_path), "/"); //add //
         strcpy(full_path + strlen(full_path), dirent->d_name);
@@ -225,14 +225,14 @@ int mgt_dir_cache_files(const char * dirpath, int del_flags)
             }
         }
 		if (del_all && strcmp(dirent->d_name,".") && strcmp(dirent->d_name,"..")) {
-            log_print("try del file name=%s,ret=%d\n", full_path, unlink(full_path));
+            log_debug("try del file name=%s,ret=%d\n", full_path, unlink(full_path));
 		}
         dirent = readdir(dir);
     }
     if (del_oldest && !del_all && oldfile_size > 0 && strlen(oldest_full_path) > 0) {
         unlink(oldest_full_path);
         total_size -= oldfile_size;
-        log_print("del oldest file %s,size=%lld,total_size=%lld\n", oldest_full_path, oldfile_size, total_size);
+        log_debug("del oldest file %s,size=%lld,total_size=%lld\n", oldest_full_path, oldfile_size, total_size);
     } else if (del_all) {
         total_size = 0;
     }

@@ -54,7 +54,7 @@ static void vcodec_info_init(play_para_t *p_para, codec_para_t *v_codec)
 
     v_codec->am_sysinfo.param = (void *)((unsigned int)v_codec->am_sysinfo.param | (vinfo->video_rotation_degree << 16));
     v_codec->stream_type = stream_type_convert(p_para->stream_type, v_codec->has_video, 0);
-    log_print("[%s:%d]video stream_type=%d rate=%d\n", __FUNCTION__, __LINE__, v_codec->stream_type, v_codec->am_sysinfo.rate);
+    log_debug("[%s:%d]video stream_type=%d rate=%d\n", __FUNCTION__, __LINE__, v_codec->stream_type, v_codec->am_sysinfo.rate);
 }
 static void acodec_info_init(play_para_t *p_para, codec_para_t *a_codec)
 {
@@ -69,7 +69,7 @@ static void acodec_info_init(play_para_t *p_para, codec_para_t *a_codec)
     a_codec->noblock = !!p_para->buffering_enable;
 
     a_codec->stream_type = stream_type_convert(p_para->stream_type, 0, a_codec->has_audio);
-    log_print("[%s:%d]audio stream_type=%d afmt=%d apid=%d asample_rate=%d achannel=%d\n",
+    log_debug("[%s:%d]audio stream_type=%d afmt=%d apid=%d asample_rate=%d achannel=%d\n",
               __FUNCTION__, __LINE__, a_codec->stream_type, a_codec->audio_type, a_codec->audio_pid,
               a_codec->audio_samplerate, a_codec->audio_channels);
 
@@ -93,13 +93,13 @@ static void acodec_info_init(play_para_t *p_para, codec_para_t *a_codec)
         if (a_codec->audio_info.extradata_size > 0) {
 	     if(a_codec->audio_info.extradata_size > 	AUDIO_EXTRA_DATA_SIZE)
 	     {
-      			log_print("[%s:%d],extra data size exceed max  extra data buffer,cut it to max buffer size ", __FUNCTION__, __LINE__);
+      			log_error("[%s:%d],extra data size exceed max  extra data buffer,cut it to max buffer size ", __FUNCTION__, __LINE__);
 			a_codec->audio_info.extradata_size = 	AUDIO_EXTRA_DATA_SIZE;
   	     }
             memcpy((char*)a_codec->audio_info.extradata, pCodecCtx->extradata, a_codec->audio_info.extradata_size);
         }
         a_codec->audio_info.valid = 1;
-   	log_print("[%s]fmt=%d srate=%d chanels=%d extrasize=%d,block align %d,codec id 0x%x\n", __FUNCTION__, a_codec->audio_type,\
+   	log_debug("[%s]fmt=%d srate=%d chanels=%d extrasize=%d,block align %d,codec id 0x%x\n", __FUNCTION__, a_codec->audio_type,\
 			a_codec->audio_info.sample_rate, a_codec->audio_info.channels,a_codec->audio_info.extradata_size,a_codec->audio_info.block_align,a_codec->audio_info.codec_id);
 
     }
@@ -164,7 +164,7 @@ static int stream_es_init(play_para_t *p_para)
         p_para->acodec = a_codec;
     }
     if (!p_para->vcodec && !p_para->acodec) {
-        log_print("[stream_es_init] no audio and no video codec init!\n");
+        log_error("[stream_es_init] no audio and no video codec init!\n");
         return DECODER_INIT_FAILED;
     }
     if (sinfo->has_sub) {

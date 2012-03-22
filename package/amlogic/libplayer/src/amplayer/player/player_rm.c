@@ -48,7 +48,7 @@ static int stream_rm_init(play_para_t *p_para)
         }
         codec->am_sysinfo.param = &tbl;
 
-        log_print("video_type = %d  video_pid = %d\n", codec->video_type, codec->video_pid);
+        log_debug("video_type = %d  video_pid = %d\n", codec->video_type, codec->video_pid);
     }
 
     if (ainfo->has_audio) {
@@ -63,7 +63,7 @@ static int stream_rm_init(play_para_t *p_para)
             log_error("[%s:%d]real cook info error!\n", __FUNCTION__, __LINE__);
         }
         codec->audio_info.valid = 1;
-        log_print("audio_type = %d  audio_pid = %d channel= %d rate=%d\n", codec->audio_type, codec->audio_pid, codec->audio_channels, codec->audio_samplerate);
+        log_debug("audio_type = %d  audio_pid = %d channel= %d rate=%d\n", codec->audio_type, codec->audio_pid, codec->audio_channels, codec->audio_samplerate);
     }
     codec->stream_type = stream_type_convert(p_para->stream_type, codec->has_video, codec->has_audio);
     ret = codec_init(codec);

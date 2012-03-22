@@ -49,7 +49,7 @@ static int try_decode_picture(play_para_t *p_para, int video_index)
     }
 
     cur_pos = url_ftell(p_para->pFormatCtx->pb);
-    log_print("[%s:%d]codec id 0x%x, cur_pos 0x%llx, video index %d\n", 
+    log_debug("[%s:%d]codec id 0x%x, cur_pos 0x%llx, video index %d\n", 
         __FUNCTION__, __LINE__, ic->codec_id, cur_pos, video_index);
     av_init_packet(&avpkt);
 
@@ -76,7 +76,7 @@ static int try_decode_picture(play_para_t *p_para, int video_index)
         read_packets++;
     }
 
-    log_print("[%s:%d]got one picture\n", __FUNCTION__, __LINE__);
+    log_debug("[%s:%d]got one picture\n", __FUNCTION__, __LINE__);
     if (picture) {
         av_free(picture);
     }
@@ -107,7 +107,7 @@ static void get_av_codec_type(play_para_t *p_para)
     int video_index = p_para->vstream_info.video_index;
     int audio_index = p_para->astream_info.audio_index;
     int sub_index = p_para->sstream_info.sub_index;
-    log_print("[%s:%d]vidx=%d aidx=%d sidx=%d\n", __FUNCTION__, __LINE__, video_index, audio_index, sub_index);
+    log_debug("[%s:%d]vidx=%d aidx=%d sidx=%d\n", __FUNCTION__, __LINE__, video_index, audio_index, sub_index);
 
 	if (video_index != -1) {
         pStream = pFormatCtx->streams[video_index];
@@ -157,7 +157,7 @@ static void get_av_codec_type(play_para_t *p_para)
             int wrap_points = (pCodecCtx->mpeg4_vol_sprite >> 16) & 0xffff;
             int vol_sprite = pCodecCtx->mpeg4_vol_sprite & 0xffff;
             if (vol_sprite == 2) { // not support totally
-                log_print("[%s:%d]mpeg4 vol sprite usage %d, GMC wrappoint %d\n",
+                log_debug("[%s:%d]mpeg4 vol sprite usage %d, GMC wrappoint %d\n",
                     __FUNCTION__, __LINE__, vol_sprite, wrap_points);
                 if (wrap_points > 2) {
                     p_para->vstream_info.has_video = 0;
@@ -177,7 +177,7 @@ static void get_av_codec_type(play_para_t *p_para)
             p_para->vstream_info.video_ratio64  = (pStream->sample_aspect_ratio.num << 32) | pStream->sample_aspect_ratio.den;
             p_para->vstream_info.video_rotation_degree = pStream->rotation_degree;
 
-			log_print("[%s:%d]time_base=%d/%d,r_frame_rate=%d/%d ratio=%d/%d video_pts=%.3f\n", __FUNCTION__, __LINE__, \
+			log_debug("[%s:%d]time_base=%d/%d,r_frame_rate=%d/%d ratio=%d/%d video_pts=%.3f\n", __FUNCTION__, __LINE__, \
 						pCodecCtx->time_base.num, pCodecCtx->time_base.den, \
 						pStream->r_frame_rate.den, pStream->r_frame_rate.num, \
 						pStream->sample_aspect_ratio.num, pStream->sample_aspect_ratio.den, p_para->vstream_info.video_pts);
@@ -189,7 +189,7 @@ static void get_av_codec_type(play_para_t *p_para)
             if (0 != pStream->r_frame_rate.num) {
                 p_para->vstream_info.video_rate = (int64_t)UNIT_FREQ * pStream->r_frame_rate.den / pStream->r_frame_rate.num;
             }
-            log_print("[%s:%d]video_codec_rate=%d,video_rate=%d\n", __FUNCTION__, __LINE__, p_para->vstream_info.video_codec_rate, p_para->vstream_info.video_rate);
+            log_debug("[%s:%d]video_codec_rate=%d,video_rate=%d\n", __FUNCTION__, __LINE__, p_para->vstream_info.video_codec_rate, p_para->vstream_info.video_rate);
 
             if (p_para->vstream_info.video_format != VFORMAT_MPEG12) {
                 p_para->vstream_info.extradata_size = pCodecCtx->extradata_size;
@@ -206,7 +206,7 @@ static void get_av_codec_type(play_para_t *p_para)
                         fix_rate = UNIT_FREQ * pStream->duration * pStream->time_base.num / pStream->time_base.den / pStream->nb_frames;
                     }
                     p_para->vstream_info.video_rate = fix_rate;
-                    log_print("[%s:%d]video_codec_rate=%d,video_rate=%d\n", __FUNCTION__, __LINE__, p_para->vstream_info.video_codec_rate, p_para->vstream_info.video_rate);
+                    log_debug("[%s:%d]video_codec_rate=%d,video_rate=%d\n", __FUNCTION__, __LINE__, p_para->vstream_info.video_codec_rate, p_para->vstream_info.video_rate);
 
                 }
             } else if (p_para->file_type == FLV_FILE) {
@@ -217,7 +217,7 @@ static void get_av_codec_type(play_para_t *p_para)
         }
     } else {
         p_para->vstream_info.has_video = 0;
-        log_print("no video specified!\n");
+        log_debug("no video specified!\n");
     }
     if (audio_index != -1) {
         pStream = pFormatCtx->streams[audio_index];
@@ -226,14 +226,14 @@ static void get_av_codec_type(play_para_t *p_para)
         p_para->astream_info.audio_format   = audio_type_convert(pCodecCtx->codec_id, p_para->file_type);
 		p_para->astream_info.audio_channel  = pCodecCtx->channels;
 		p_para->astream_info.audio_samplerate = pCodecCtx->sample_rate;
-		log_print("[%s:%d]afmt=%d apid=%d asr=%d ach=%d aidx=%d\n",
+		log_debug("[%s:%d]afmt=%d apid=%d asr=%d ach=%d aidx=%d\n",
               __FUNCTION__, __LINE__, p_para->astream_info.audio_format, 
               p_para->astream_info.audio_pid, p_para->astream_info.audio_samplerate,
               p_para->astream_info.audio_channel, p_para->astream_info.audio_index);
         /* only support 2ch flac,cook,raac */
         if ((p_para->astream_info.audio_channel > 2) && 
 			(IS_AUDIO_NOT_SUPPORT_EXCEED_2CH(p_para->astream_info.audio_format))) {
-            log_print(" afmt=%d channel=%d ******** we do not support more than 2ch \n", \
+            log_debug(" afmt=%d channel=%d ******** we do not support more than 2ch \n", \
 				p_para->astream_info.audio_format, p_para->astream_info.audio_channel);
             p_para->astream_info.has_audio = 0;           
         }
@@ -244,12 +244,12 @@ static void get_av_codec_type(play_para_t *p_para)
             uint8_t *ppp = pCodecCtx->extradata;
             if (ppp != NULL) {
                 char profile = (*ppp) >> 3;
-                log_print(" aac profile = %d  ********* { MAIN, LC, SSR } \n", profile);
+                log_debug(" aac profile = %d  ********* { MAIN, LC, SSR } \n", profile);
 
                 if (profile == 1) {
                     pCodecCtx->profile = FF_PROFILE_AAC_MAIN;
 					p_para->astream_info.has_audio = 0;
-					log_print("AAC MAIN not support yet!!\n");
+					log_debug("AAC MAIN not support yet!!\n");
                 }
                 //else
                 //  p_para->astream_info.has_audio = 0;
@@ -297,7 +297,7 @@ static void get_av_codec_type(play_para_t *p_para)
         }
     } else {
         p_para->astream_info.has_audio = 0;
-        log_print("no audio specified!\n");
+        log_debug("no audio specified!\n");
     }
     if (sub_index != -1) {
         pStream = pFormatCtx->streams[sub_index];
@@ -427,9 +427,9 @@ static void get_stream_info(play_para_t *p_para)
     p_para->vstream_info.video_index = video_index;
     p_para->astream_info.audio_index = audio_index;
     p_para->sstream_info.sub_index = sub_index;
-    log_print("Video index %d and Audio index %d to be played (index -1 means no stream)\n", video_index, audio_index);
+    log_debug("Video index %d and Audio index %d to be played (index -1 means no stream)\n", video_index, audio_index);
     if (p_para->sstream_info.has_sub) {
-        log_print("Subtitle index %d detected\n", sub_index);
+        log_debug("Subtitle index %d detected\n", sub_index);
     }
 
     get_av_codec_type(p_para);
@@ -440,7 +440,7 @@ static void get_stream_info(play_para_t *p_para)
         } else {
             p_para->data_offset = p_para->pFormatCtx->data_offset;
         }
-        log_print("[%s:%d]real offset %lld\n", __FUNCTION__, __LINE__, p_para->data_offset);
+        log_debug("[%s:%d]real offset %lld\n", __FUNCTION__, __LINE__, p_para->data_offset);
 		
         if (p_para->vstream_info.video_height > 720) {
             log_print("[%s:%d]real video_height=%d, exceed 720 not support!\n", __FUNCTION__, __LINE__, p_para->vstream_info.video_height);
@@ -449,7 +449,7 @@ static void get_stream_info(play_para_t *p_para)
     }
      else{
 	 	p_para->data_offset = p_para->pFormatCtx->data_offset;
-		log_print("[%s:%d]data start offset %lld\n", __FUNCTION__, __LINE__, p_para->data_offset);
+		log_debug("[%s:%d]data start offset %lld\n", __FUNCTION__, __LINE__, p_para->data_offset);
      }
 
     if (video_index != -1) {
@@ -511,7 +511,7 @@ static int set_decode_para(play_para_t*am_p)
     AVIOContext *pb = am_p->pFormatCtx->pb;
 
     get_stream_info(am_p);
-    log_print("[%s:%d]has_video=%d vformat=%d has_audio=%d aformat=%d", __FUNCTION__, __LINE__, \
+    log_debug("[%s:%d]has_video=%d vformat=%d has_audio=%d aformat=%d", __FUNCTION__, __LINE__, \
               am_p->vstream_info.has_video, am_p->vstream_info.video_format, \
               am_p->astream_info.has_audio, am_p->astream_info.audio_format);
 	
@@ -632,14 +632,14 @@ static int set_decode_para(play_para_t*am_p)
             }
         } else if (am_p->astream_info.audio_format == AFORMAT_COOK ||
                    am_p->astream_info.audio_format == AFORMAT_RAAC) {
-            log_print("[%s:%d]get real auido header info...\n", __FUNCTION__, __LINE__);
+            log_debug("[%s:%d]get real auido header info...\n", __FUNCTION__, __LINE__);
             url_fseek(pb, 0, SEEK_SET); // get cook info from the begginning of the file
             buf = MALLOC(AUDIO_EXTRA_DATA_SIZE);
             if (buf) {
                 do {
                     buf += total_rev_bytes;
                     rev_byte = get_buffer(pb, buf, (AUDIO_EXTRA_DATA_SIZE - total_rev_bytes));
-                    log_print("[%s:%d]rev_byte=%d total=%d\n", __FUNCTION__, __LINE__, rev_byte, total_rev_bytes);
+                    log_debug("[%s:%d]rev_byte=%d total=%d\n", __FUNCTION__, __LINE__, rev_byte, total_rev_bytes);
                     if (rev_byte < 0) {
                         if (rev_byte == AVERROR(EAGAIN)) {
                             continue;
@@ -704,10 +704,10 @@ static int ff_reach_end(play_para_t *para)
     if (para->playctrl_info.loop_flag) {
         para->playctrl_info.time_point = 0;
         para->playctrl_info.init_ff_fr = 0;
-        log_print("ff reach end,loop play\n");
+        log_debug("ff reach end,loop play\n");
     } else {
         para->playctrl_info.time_point = para->state.full_time;
-        log_print("ff reach end,stop play\n");
+        log_debug("ff reach end,stop play\n");
     }
     set_player_state(para, PLAYER_FF_END);
     update_playing_info(para);
@@ -805,10 +805,10 @@ int player_dec_reset(play_para_t *p_para)
         if (p_para->vcodec) {
             p_para->codec->has_video = 1;
         }
-        log_print("[%s:%d]para->codec pointer to acodec!\n", __FUNCTION__, __LINE__);
+        log_debug("[%s:%d]para->codec pointer to acodec!\n", __FUNCTION__, __LINE__);
     } else if (p_para->vcodec) {
         p_para->codec = p_para->vcodec;
-        log_print("[%s:%d]para->codec pointer to vcodec!\n", __FUNCTION__, __LINE__);
+        log_debug("[%s:%d]para->codec pointer to vcodec!\n", __FUNCTION__, __LINE__);
     }
 
     if (p_para->playctrl_info.fast_forward) {
@@ -816,16 +816,16 @@ int player_dec_reset(play_para_t *p_para)
 			p_para->state.full_time > 0) {			
             p_para->playctrl_info.end_flag = 1;
 			set_black_policy(p_para->playctrl_info.black_out);
-			log_print("[%s]ff end: tpos=%d black=%d\n", __FUNCTION__, p_para->playctrl_info.time_point, p_para->playctrl_info.black_out);
+			log_debug("[%s]ff end: tpos=%d black=%d\n", __FUNCTION__, p_para->playctrl_info.time_point, p_para->playctrl_info.black_out);
             return ret;
         }
 
-        log_print("[player_dec_reset]time_point=%d step=%d\n", p_para->playctrl_info.time_point, p_para->playctrl_info.f_step);
+        log_debug("[player_dec_reset]time_point=%d step=%d\n", p_para->playctrl_info.time_point, p_para->playctrl_info.f_step);
         p_para->playctrl_info.time_point += p_para->playctrl_info.f_step;
         if (p_para->playctrl_info.time_point >= p_para->state.full_time &&
 			p_para->state.full_time > 0) {
             ff_reach_end(p_para);
-            log_print("reach stream end,play end!\n");
+            log_debug("reach stream end,play end!\n");
         }
     } else if (p_para->playctrl_info.fast_backward) {
         if (p_para->playctrl_info.time_point == 0) {
@@ -837,7 +837,7 @@ int player_dec_reset(play_para_t *p_para)
             	p_para->playctrl_info.time_point -= p_para->playctrl_info.f_step;        	
         } else {
             fb_reach_head(p_para);
-            log_print("reach stream head,fast backward stop,play from start!\n");
+            log_debug("reach stream head,fast backward stop,play from start!\n");
         }
     } else {
         if (!p_para->playctrl_info.search_flag && p_para->playctrl_info.loop_flag) {
@@ -861,7 +861,7 @@ int player_dec_reset(play_para_t *p_para)
     }
 
     if (mute_flag) {
-        log_print("[%s:%d]audio_mute=%d\n", __FUNCTION__, __LINE__, p_para->playctrl_info.audio_mute);
+        log_debug("[%s:%d]audio_mute=%d\n", __FUNCTION__, __LINE__, p_para->playctrl_info.audio_mute);
         codec_audio_automute(p_para->acodec->adec_priv, p_para->playctrl_info.audio_mute);
     }
     p_para->state.last_time = p_para->playctrl_info.time_point;
@@ -891,7 +891,7 @@ static int check_ctx_bitrate(play_para_t *p_para)
             flag = -1;
         }
     }
-    log_print("[check_ctx_bitrate:%d]bit_rate=%d ic->bit_rate=%d\n", __LINE__, bit_rate, ic->bit_rate);
+    log_debug("[check_ctx_bitrate:%d]bit_rate=%d ic->bit_rate=%d\n", __LINE__, bit_rate, ic->bit_rate);
     if (p_para->file_type == ASF_FILE) {
         if (ic->bit_rate == 0) {
             ic->bit_rate = bit_rate;
@@ -901,7 +901,7 @@ static int check_ctx_bitrate(play_para_t *p_para)
             ic->bit_rate = bit_rate ;
         }
     }
-    log_print("[check_ctx_bitrate:%d]bit_rate=%d ic->bit_rate=%d\n", __LINE__, bit_rate, ic->bit_rate);
+    log_debug("[check_ctx_bitrate:%d]bit_rate=%d ic->bit_rate=%d\n", __LINE__, bit_rate, ic->bit_rate);
     return flag;
 }
 
@@ -921,13 +921,13 @@ static void subtitle_para_init(play_para_t *player)
 
 	//FFT: get proerty from build.prop
 	GetSystemSettingString("media.amplayer.divx.certified", out, &default_sub);
-	log_print("[%s:%d]out = %s !\n", __FUNCTION__, __LINE__, out);
+	log_debug("[%s:%d]out = %s !\n", __FUNCTION__, __LINE__, out);
 	
 	//FFT: set default subtitle index for divx certified
 	if (strcmp(out, "enable")==0){	
 		set_subtitle_enable(0);
 		set_subtitle_curr(0xff);
-		log_print("[%s:%d]set default subtitle index !\n", __FUNCTION__, __LINE__);
+		log_debug("[%s:%d]set default subtitle index !\n", __FUNCTION__, __LINE__);
 	}
     if (player->sstream_info.has_sub) {
         if (player->sstream_info.sub_type == CODEC_ID_DVD_SUBTITLE) {
@@ -947,10 +947,10 @@ static void subtitle_para_init(play_para_t *player)
     }
     if (player->astream_info.start_time != -1) {
         set_subtitle_startpts(player->astream_info.start_time);
-        log_print("player set startpts is 0x%llx\n", player->astream_info.start_time);
+        log_debug("player set startpts is 0x%llx\n", player->astream_info.start_time);
     } else if (player->vstream_info.start_time != -1) {
         set_subtitle_startpts(player->vstream_info.start_time);
-        log_print("player set startpts is 0x%llx\n", player->vstream_info.start_time);
+        log_debug("player set startpts is 0x%llx\n", player->vstream_info.start_time);
     } else {
         set_subtitle_startpts(0);
     }
@@ -998,7 +998,7 @@ int player_dec_init(play_para_t *p_para)
     p_para->state.name = p_para->file_name;
     p_para->file_type = file_type;
     p_para->stream_type = stream_type;
-    log_print("[player_dec_init:%d]fsize=%lld full_time=%d bitrate=%d\n", __LINE__, p_para->file_size, p_para->state.full_time, p_para->pFormatCtx->bit_rate);
+    log_debug("[player_dec_init:%d]fsize=%lld full_time=%d bitrate=%d\n", __LINE__, p_para->file_size, p_para->state.full_time, p_para->pFormatCtx->bit_rate);
 
     if (p_para->stream_type == STREAM_AUDIO) {
         p_para->astream_num = 1;
@@ -1014,21 +1014,21 @@ int player_dec_init(play_para_t *p_para)
 	#ifdef DUMP_INDEX
 	int i,j;
 	AVStream *pStream;
-	log_print("*********************************************\n");
+	log_debug("*********************************************\n");
 	for(i = 0; i<p_para->pFormatCtx->nb_streams; i ++) {
 		pStream = p_para->pFormatCtx->streams[2];		
 		for(j = 0; j<pStream->nb_index_entries; j++){
-			log_print("stream[%d]:idx[%d] pos:%llx time:%llx\n",2, j, pStream->index_entries[j].pos, pStream->index_entries[j].timestamp);
+			log_debug("stream[%d]:idx[%d] pos:%llx time:%llx\n",2, j, pStream->index_entries[j].pos, pStream->index_entries[j].timestamp);
 		}
 	}
-	log_print("*********************************************\n");
+	log_debug("*********************************************\n");
 	#endif
 
     if (p_para->stream_type != STREAM_TS && p_para->stream_type != STREAM_PS) {
         if (check_ctx_bitrate(p_para) == 0) {
             if ((0 != p_para->pFormatCtx->bit_rate) && (0 != p_para->file_size)) {
                 full_time = (int)((p_para->file_size << 3) / p_para->pFormatCtx->bit_rate);
-                log_print("[player_dec_init:%d]bit_rate=%d file_size=%lld full_time=%d\n", __LINE__, p_para->pFormatCtx->bit_rate, p_para->file_size, full_time);
+                log_debug("[player_dec_init:%d]bit_rate=%d file_size=%lld full_time=%d\n", __LINE__, p_para->pFormatCtx->bit_rate, p_para->file_size, full_time);
 
                 if (abs(p_para->state.full_time - full_time) > 600) {
                     p_para->state.full_time = full_time;
@@ -1058,7 +1058,7 @@ int player_dec_init(play_para_t *p_para)
         }
 
     }
-    log_print("[player_dec_init:%d]bit_rate=%d file_size=%lld file_type=%d stream_type=%d full_time=%d\n", __LINE__, p_para->pFormatCtx->bit_rate, p_para->file_size, p_para->file_type, p_para->stream_type, p_para->state.full_time);
+    log_debug("[player_dec_init:%d]bit_rate=%d file_size=%lld file_type=%d stream_type=%d full_time=%d\n", __LINE__, p_para->pFormatCtx->bit_rate, p_para->file_size, p_para->file_type, p_para->stream_type, p_para->state.full_time);
 
     if (p_para->pFormatCtx->iformat->flags & AVFMT_NOFILE) {
         p_para->playctrl_info.raw_mode = 0;
@@ -1075,7 +1075,7 @@ int player_dec_init(play_para_t *p_para)
         } else {
             p_para->max_raw_size = MAX_BURST_WRITE;
         }
-        log_print("====bitrate=%d max_raw_size=%d\n", p_para->pFormatCtx->bit_rate, p_para->max_raw_size);
+        log_debug("====bitrate=%d max_raw_size=%d\n", p_para->pFormatCtx->bit_rate, p_para->max_raw_size);
     }
     if (p_para->playctrl_info.time_point >= 0) {
         ret = time_search(p_para);
@@ -1091,7 +1091,7 @@ int player_dec_init(play_para_t *p_para)
 			p_para->state.current_ms=p_para->playctrl_info.time_point*1000;
 		}
     } else if (p_para->playctrl_info.raw_mode) {
-        //log_print("*****data offset 0x%x\n", p_para->data_offset);
+        //log_debug("*****data offset 0x%x\n", p_para->data_offset);
         url_fseek(p_para->pFormatCtx->pb, p_para->data_offset, SEEK_SET);
     }
     subtitle_para_init(p_para);
@@ -1147,10 +1147,10 @@ int player_decoder_init(play_para_t *p_para)
         if (p_para->vcodec) {
             p_para->codec->has_video = 1;
         }
-        log_print("[%s:%d]para->codec pointer to acodec!\n", __FUNCTION__, __LINE__);
+        log_debug("[%s:%d]para->codec pointer to acodec!\n", __FUNCTION__, __LINE__);
     } else if (p_para->vcodec) {
         p_para->codec = p_para->vcodec;
-        log_print("[%s:%d]para->codec pointer to vcodec!\n", __FUNCTION__, __LINE__);
+        log_debug("[%s:%d]para->codec pointer to vcodec!\n", __FUNCTION__, __LINE__);
     }
 	
 	

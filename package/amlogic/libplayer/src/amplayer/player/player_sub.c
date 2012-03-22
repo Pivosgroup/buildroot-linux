@@ -672,7 +672,7 @@ subtitle_t *internal_sub_read_line_vplayer(int fd, subtitle_t *current)
         }
 
         p = &line[plen];
-        //log_print("plen %d, p %s\n", plen, p);
+        //log_debug("plen %d, p %s\n", plen, p);
 
         i = 0;
         if (*p != '|') {

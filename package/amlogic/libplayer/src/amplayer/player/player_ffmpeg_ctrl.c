@@ -108,7 +108,7 @@ int ffmpeg_open_file(play_para_t *am_p)
 	const char * header=am_p->start_param ? am_p->start_param->headers : NULL;
     // Open video file
     if (am_p == NULL) {
-        log_print("[ffmpeg_open_file] Empty pointer!\n");
+        log_error("[ffmpeg_open_file] Empty pointer!\n");
         return FFMPEG_EMP_POINTER;
     }
     if (am_p->byteiobufsize > 0) {
@@ -118,19 +118,19 @@ int ffmpeg_open_file(play_para_t *am_p)
 Retry_open:
         //ret = av_open_input_file(&pFCtx, am_p->file_name, NULL, byteiosize, NULL, am_p->start_param ? am_p->start_param->headers : NULL);
 		ret = av_open_input_file_header(&pFCtx, am_p->file_name, NULL, byteiosize, NULL,header);
-		log_print("[ffmpeg_open_file] file=%s,header=%s\n",am_p->file_name,header);
+		log_debug("[ffmpeg_open_file] file=%s,header=%s\n",am_p->file_name,header);
         if (ret != 0) {
             if (ret == AVERROR(EAGAIN)) {
                 goto  Retry_open;
             }
-            log_print("ffmpeg error: Couldn't open input file! ret==%x\n", ret);
+            log_error("ffmpeg error: Couldn't open input file! ret==%x\n", ret);
             return FFMPEG_OPEN_FAILED; // Couldn't open file
         }
         am_p->pFormatCtx = pFCtx;
 
         return FFMPEG_SUCCESS;
     } else {
-        log_print("not assigned a file to play\n");
+        log_error("not assigned a file to play\n");
         return FFMPEG_NO_FILE;
     }
 }
@@ -200,7 +200,7 @@ int ffmpeg_parse_file(play_para_t *am_p)
     // Open video file
     ret = av_find_stream_info(pFCtx);
     if (ret < 0) {
-        log_print("ERROR:Couldn't find stream information, ret=====%d\n", ret);
+        log_error("ERROR:Couldn't find stream information, ret=====%d\n", ret);
         return FFMPEG_PARSE_FAILED; // Couldn't find stream information
     }
     return FFMPEG_SUCCESS;
