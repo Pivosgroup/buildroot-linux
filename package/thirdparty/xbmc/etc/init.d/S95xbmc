@@ -9,6 +9,10 @@ case "$1" in
         export LD_LIBRARY_PATH=/usr/lib/mysql:$LD_LIBRARY_PATH
         export XBMC_HOME=/usr/share/xbmc
         /usr/bin/amremote_config /etc/xbmc/remote.conf
+        until /usr/lib/xbmc/xbmc.bin; do
+            echo "XBMC crashed with exit code $?.  Respawning.." >&2
+            sleep 1
+        done
         fbset -g 1280 720 1280 1440 32
         /usr/lib/xbmc/xbmc.bin
         ;;
