@@ -7,4 +7,184 @@
     <defaultplayer>amlplayer</defaultplayer>
     <defaultdvdplayer>amlplayer</defaultdvdplayer>
   </video>
+
+  <settingsoverride>
+    <!-- Settings/Appearance/Skin/Navigation sounds -->
+    <override>
+      <setting hidden="true" locked="true">lookandfeel.soundskin</setting>
+      <default>false</default>
+    </override>
+    <!-- Settings/Appearance/Skin/Show RSS news feeds -->
+    <override>
+      <setting>lookandfeel.enablerssfeeds</setting>
+      <default>false</default>
+    </override>
+    <!-- Settings/Appearance/Video/Playback/Render method -->
+    <override>
+      <setting hidden="true" locked="true">videoplayer.rendermethod</setting>
+      <default>0</default>
+    </override>
+    <!-- Settings/Appearance/Video/Playback/Adjust refresh rate -->
+    <override>
+      <setting hidden="true" locked="true">videoplayer.adjustrefreshrate</setting>
+      <default>false</default>
+    </override>
+    <!-- Settings/Appearance/Video/Playback/Pause after adjust refresh rate -->
+    <override>
+      <setting hidden="true" locked="true">videoplayer.pauseafterrefreshchange</setting>
+      <default>0</default>
+    </override>
+    <!-- Settings/Appearance/Video/Playback/Sync playback to display -->
+    <override>
+      <setting hidden="true" locked="true">videoplayer.usedisplayasclock</setting>
+      <default>false</default>
+    </override>
+    <!-- Settings/Appearance/Video/Playback/AV sync method -->
+    <override>
+      <setting hidden="true" locked="true">videoplayer.synctype</setting>
+      <default>false</default>
+    </override>
+    <!-- Settings/Appearance/Video/Playback/Activate teletext -->
+    <override>
+      <setting hidden="true" locked="true">videoplayer.teletextenabled</setting>
+      <default>false</default>
+    </override>
+    <!-- Settings/Appearance/Video/Subtitles/Character set -->
+    <override>
+      <setting hidden="true" locked="true">subtitles.charset</setting>
+      <default>Default</default>
+    </override>
+    <!-- Settings/Appearance/Video/DVDs/Forced DVD player region -->
+    <override>
+      <setting hidden="true" locked="true">dvds.playerregion</setting>
+      <default>0</default>
+    </override>
+    <!-- Settings/Appearance/Video/DVDs/Attempt to skip introductin before DVD menu -->
+    <override>
+      <setting hidden="true" locked="true">dvds.automenu</setting>
+      <default>false</default>
+    </override>
+    <!-- Settings/Appearance/Music/Playback/Visualization -->
+    <override>
+      <setting hidden="true" locked="true">musicplayer.visualisation</setting>
+      <default>Disabled</default>
+    </override>
+    <!-- Settings/Appearance/Music/Audio CDS ALL DISABLED -->
+    <override>
+      <setting hidden="true" locked="true">audiocds</setting>
+      <default>Disabled</default>
+    </override>
+    <!-- Settings/Appearance/Music/Karaoke ALL DISABLED-->
+    <override>
+      <setting hidden="true" locked="true">karaoke</setting>
+      <default>Disabled</default>
+    </override>
+    <override>
+      <setting hidden="true" locked="true">karaoke.enabled</setting>
+      <default>false</default>
+    </override>
+    <!-- Settings/System/Video output/Display mode -->
+    <override>
+      <setting hidden="true" locked="true">videoscreen.screenmode</setting>
+      <default>DESKTOP</default>
+    </override>
+    <!-- Settings/System/Video output/Display mode -->
+    <override>
+      <setting hidden="true" locked="true">videoscreen.screen</setting>
+      <default>0</default>
+    </override>
+    <!-- Settings/System/Video output/Vertical blank sync (ALWAYS=2)-->
+    <override>
+      <setting hidden="true" locked="true">videoscreen.vsync</setting>
+      <default>2</default>
+    </override>
+    <!-- Settings/System/Video output/Test patterns...-->
+    <override>
+      <setting hidden="true" locked="true">videoscreen.testpattern</setting>
+      <default>0</default>
+    </override>
+    <!-- Settings/System/Audio output mode (HDMI) -->
+    <override>
+      <setting hidden="true" locked="true">audiooutput.mode</setting>
+      <default>2</default>
+    </override>
+    <!-- Settings/System/Audio output/Speaker configuration (2.0)-->
+    <override>
+      <setting hidden="true" locked="true">audiooutput.channellayout</setting>
+      <default>0</default>
+    </override>
+    <!-- Settings/System/Audio output/Boost volume level on downmix -->
+    <override>
+      <setting hidden="true" locked="true">audiooutput.dontnormalizelevels</setting>
+      <default>true</default>
+    </override>
+    <!-- Settings/System/Audio output/Audio output device -->
+    <override>
+      <setting hidden="true" locked="true">audiooutput.audiodevice</setting>
+      <default>default</default>
+    </override>
+    <!-- Settings/System/Audio output/Custom audio device -->
+    <override>
+      <setting hidden="true" locked="true">audiooutput.customdevice</setting>
+      <default>Auto</default>
+    </override>
+    <!-- Settings/System/Audio output/Passthrough output device -->
+    <override>
+      <setting hidden="true" locked="true">audiooutput.passthroughdevice</setting>
+      <default>default</default>
+    </override>
+    <!-- Settings/System/Audio output/Custom pasthrough device -->
+    <override>
+      <setting hidden="true" locked="true">audiooutput.custompassthrough</setting>
+      <default>Auto</default>
+    </override>
+    <!-- Settings/System/Input devices/Remote control sends keyboard presses -->
+    <override>
+      <setting hidden="false" locked="true">input.remoteaskeyboard</setting>
+      <default>true</default>
+    </override>
+    <!-- Settings/System/Input devices/Enable mouse and Touch Screen support -->
+    <override>
+      <setting hidden="true" locked="true">input.enablemouse</setting>
+      <default>false</default>
+    </override>
+    <!--
+    !-- During playback Video Settings/Deinterlace video --
+    <override>
+      <setting hidden="true" locked="true">deinterlacemode</setting>
+      <default>Auto</default>
+    </override>
+    !-- During playback Video Settings/Deinterlace method --
+    <override>
+      <setting hidden="true" locked="true">interlacemethod</setting>
+      <default>Auto</default>
+    </override>
+    !-- During playback Video Settings/Video scaling method --
+    <override>
+      <setting hidden="true" locked="true">scalingmethod</setting>
+      <default>Auto</default>
+    /override>
+    !-- During playback Video Settings/Crop black bars --
+    <override>
+      <setting hidden="true" locked="true">autocrop</setting>
+      <default>false</default>
+    </override>
+    !-- During playback Video Settings/Post-processing --
+    <override>
+      <setting hidden="false" locked="true">postprocess</setting>
+      <default>false</default>
+    </override>
+    !-- During playback Audio Settings/Volume amplification --
+    <override>
+      <setting hidden="true" locked="true">volumeamplification</setting>
+      <default>0</default>
+    </override>
+    !-- During playback Audio Settings/Audio offset --
+    <override>
+      <setting hidden="true" locked="true">audiodelay</setting>
+      <default>0</default>
+    </override>
+    -->
+  </settingsoverride>
+
 </advancedsettings>
