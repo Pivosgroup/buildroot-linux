@@ -10,7 +10,7 @@ case "$1" in
         export XBMC_HOME=/usr/share/xbmc
         /usr/bin/amremote_config /etc/xbmc/remote.conf
         fbset -g 1280 720 1280 1440 32
-        /usr/lib/xbmc/xbmc.bin --settings=/etc/xbmc/xbmc-settings.xml
+        /usr/lib/xbmc/xbmc.bin
         ;;
   stop)
         echo -n "Stopping XBMC..."
