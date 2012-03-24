@@ -524,8 +524,8 @@ int av_probe_input_buffer(AVIOContext *pb, AVInputFormat **fmt,
     }
 
 	oldoffset = avio_tell(pb);
-  if (s) old_dataoff = s->data_offset;
-  if (s && av_match_ext(filename, "ts") || av_match_ext(filename, "m2ts")) {
+	old_dataoff = s->data_offset;
+	if (av_match_ext(filename, "ts") || av_match_ext(filename, "m2ts")) {
 		probe_flag = 1;
 		do{
 			pre_data = avio_r8(pb);
@@ -580,7 +580,7 @@ retry_probe:
     if (!*fmt) {
         av_free(buf);
         return AVERROR_INVALIDDATA;
-    } else if(s && strcmp((*fmt)->name,"mpegts") && probe_flag){
+    } else if(strcmp((*fmt)->name,"mpegts") && probe_flag){
 		s->data_offset = old_dataoff;	
 		probe_flag =0;
 		*fmt = NULL;	
