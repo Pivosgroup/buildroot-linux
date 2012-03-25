@@ -14,13 +14,15 @@ case "$1" in
             exit_value=$?
             case "$exit_value" in
               0)   echo "XBMC exit" >&2
-                   exit 0
+                   exit exit_value
                    ;;
-              64)  echo "XBMC exit with reboot" >&2
-                   reboot
-                   ;;
-              66)  echo "XBMC exit with shutdown" >&2
+              64)  echo "XBMC exit with shutdown" >&2
                    poweroff
+                   exit exit_value
+                   ;;
+              66)  echo "XBMC exit with reboot" >&2
+                   reboot
+                   exit exit_value
                    ;;
               137) echo "XBMC was killed" >&2
                    exit exit_value
