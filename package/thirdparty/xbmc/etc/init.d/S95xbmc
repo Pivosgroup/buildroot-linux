@@ -11,7 +11,25 @@ case "$1" in
         /usr/bin/amremote_config /etc/xbmc/remote.conf
         fbset -g 1280 720 1280 1440 32
         until /usr/lib/xbmc/xbmc.bin; do
-            echo "XBMC crashed with exit code $?.  Respawning.." >&2
+            exit_value=$?
+            case "$exit_value" in
+              0)   echo "XBMC exit" >&2
+                   exit 0
+                   ;;
+              64)  echo "XBMC exit with reboot" >&2
+                   reboot
+                   ;;
+              66)  echo "XBMC exit with shutdown" >&2
+                   poweroff
+                   ;;
+              137) echo "XBMC was killed" >&2
+                   exit exit_value
+                   ;;
+              143) echo "XBMC was terminated" >&2
+                   exit exit_value
+                   ;;
+            esac
+            echo "XBMC crashed with exit code $exit_value.  Respawning.." >&2
             sleep 1
         done
         ;;
