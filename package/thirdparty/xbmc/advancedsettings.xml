@@ -108,6 +108,16 @@
       <setting hidden="true" locked="true">audiooutput.mode</setting>
       <default>2</default>
     </override>
+    <!-- Settings/System/AC3 Capable Receiver -->
+    <override>
+      <setting hidden="false" locked="false">audiooutput.ac3passthrough</setting>
+      <default>0</default>
+    </override>
+    <!-- Settings/System/DTS Capable Receiver -->
+    <override>
+      <setting hidden="false" locked="false">audiooutput.dtspassthrough</setting>
+      <default>0</default>
+    </override>
     <!-- Settings/System/Audio output/Speaker configuration (2.0)-->
     <override>
       <setting hidden="true" locked="true">audiooutput.channellayout</setting>
