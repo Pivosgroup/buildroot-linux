@@ -16,4 +16,4 @@ AFPFS_NG_CONF_ENV = \
 AFPFS_NG_CONF_OPT = \
 	--disable-fuse 
 
-$(eval $(call AUTOTARGETS,package/thirdpardy,afpfs-ng))
+$(eval $(call AUTOTARGETS,package/thirdparty,afpfs-ng))
