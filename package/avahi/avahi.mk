@@ -10,7 +10,7 @@
 # either version 2.1 of the License, or (at your option) any
 # later version.
 
-AVAHI_VERSION = 0.6.27
+AVAHI_VERSION = 0.6.31
 AVAHI_SOURCE = avahi-$(AVAHI_VERSION).tar.gz
 AVAHI_SITE = http://www.avahi.org/download/
 AVAHI_INSTALL_STAGING = YES
@@ -64,7 +64,7 @@ AVAHI_CONF_ENV = ac_cv_func_strtod=yes \
 		jm_cv_func_working_re_compile_pattern=yes \
 		ac_use_included_regex=no \
 		avahi_cv_sys_cxx_works=yes \
-		DATADIR=share
+		DATADIRNAME=share
 
 AVAHI_CONF_OPT = --localstatedir=/var \
 		--disable-qt3 \
@@ -79,8 +79,8 @@ AVAHI_CONF_OPT = --localstatedir=/var \
 		--with-distro=none \
 		$(if $(BR2_HAVE_DOCUMENTATION),--enable,--disable)-manpages \
 		$(if $(BR2_PACKAGE_AVAHI_AUTOIPD),--enable,--disable)-autoipd \
-		--with-avahi-user=default \
-		--with-avahi-group=default \
+		--with-avahi-user=root \
+		--with-avahi-group=root \
 		--with-autoipd-user=default \
 		--with-autoipd-group=default
 
@@ -160,18 +160,8 @@ define AVAHI_INSTALL_DAEMON_INITSCRIPT
 	$(INSTALL) -m 0755 package/avahi/S50avahi-daemon $(TARGET_DIR)/etc/init.d/
 endef
 
-# avahi build sys erroneously only installs dbus service if systemd is enabled
-define AVAHI_INSTALL_DAEMON_DBUS_SERVICE
-	$(INSTALL) -m 0644 -D $(@D)/avahi-daemon/org.freedesktop.Avahi.service \
-		$(TARGET_DIR)/usr/share/dbus-1/system-services/org.freedesktop.Avahi.service
-endef
-
 ifeq ($(BR2_PACKAGE_AVAHI_DAEMON),y)
 AVAHI_POST_INSTALL_TARGET_HOOKS += AVAHI_INSTALL_DAEMON_INITSCRIPT
-
-ifeq ($(BR2_PACKAGE_DBUS),y)
-AVAHI_POST_INSTALL_TARGET_HOOKS += AVAHI_INSTALL_DAEMON_DBUS_SERVICE
-endif
 
 endif
 
