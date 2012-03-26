@@ -18,7 +18,7 @@ endef
 define XIOS_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/share/xbmc/addons/skin.xios/media
 	cd $(@D); cp -rf `ls -I media -1` $(TARGET_DIR)/usr/share/xbmc/addons/skin.xios
-	cp $(@D)/media/Textures.xbt $(TARGET_DIR)/usr/share/xbmc/addons/skin.xios/media
+	cp -f $(@D)/media/Textures.xbt $(TARGET_DIR)/usr/share/xbmc/addons/skin.xios/media
 endef
 
 $(eval $(call GENTARGETS,package/thirdparty,xios))
