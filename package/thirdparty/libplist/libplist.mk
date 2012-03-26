@@ -9,4 +9,4 @@ LIBPLIST_SOURCE = libplist-$(LIBPLIST_VERSION).tar.gz
 LIBPLIST_INSTALL_STAGING = YES
 LIBPLIST_INSTALL_TARGET = YES
 
-$(eval $(call CMAKETARGETS,package/thirdpardy,libplist))
+$(eval $(call CMAKETARGETS,package/thirdparty,libplist))

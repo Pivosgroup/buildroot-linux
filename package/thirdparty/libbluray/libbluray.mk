@@ -10,4 +10,4 @@ LIBBLURAY_INSTALL_STAGING = YES
 LIBBLURAY_INSTALL_TARGET = YES
 LIBBLURAY_AUTORECONF = YES
 
-$(eval $(call AUTOTARGETS,package/thirdpardy,libbluray))
+$(eval $(call AUTOTARGETS,package/thirdparty,libbluray))

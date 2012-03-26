@@ -14,4 +14,4 @@ define FRIBIDI_INSTALL_TARGET_CMDS
        cp -dpf $(@D)/.libs/libfribidi.so* $(TARGET_DIR)/usr/lib/
 endef
 
-$(eval $(call AUTOTARGETS,package/thirdpardy,fribidi))
+$(eval $(call AUTOTARGETS,package/thirdparty,fribidi))
