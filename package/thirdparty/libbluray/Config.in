@@ -1,0 +1,7 @@
+config BR2_PACKAGE_LIBBLURAY
+        bool "libbluray"
+        help
+          LIBBLURAY is a client library for accessing bluray disks.
+
+          http://www.videolan.org/developers/libbluray.html
+
