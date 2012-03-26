@@ -1,0 +1,5 @@
+config BR2_PACKAGE_AFPFS_NG
+        bool "afpfs-ng"
+        help
+          AFPFS_NG is a client library for accessing AFP shares over a network
+
