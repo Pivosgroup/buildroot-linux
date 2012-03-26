@@ -1,0 +1,4 @@
+config BR2_PACKAGE_LIBSHAIRPORT
+        bool "libshairport"
+        help
+          LIBSHAIRPORT is a client library that emulates an airplay server
