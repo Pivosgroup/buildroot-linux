@@ -4,7 +4,7 @@
 #
 #################################################################################
 
-XBMC_VERSION = 7e2f23775f772970f8bb9810dfb93bc510bac62a
+XBMC_VERSION = 1cccdd22bde6a9e29148d72b1cf5536ed6c0303c
 XBMC_SITE_METHOD = git
 XBMC_SITE = ssh://git@github.com/Pivosgroup/xbmc.git
 XBMC_INSTALL_STAGING = YES
@@ -21,7 +21,7 @@ XBMC_DEPENDENCIES += libogg flac libmad libmpeg2 libogg \
   python lzo zlib libgcrypt openssl mysql_client sqlite fontconfig \
   freetype jasper jpeg libmodplug libpng libungif tiff libcurl \
   libmicrohttpd libssh2 boost fribidi ncurses pcre libnfs afpfs-ng libplist libshairport libbluray \
-  readline expat libxml2 yajl samba30 libass opengl libusb-compat
+  readline expat libxml2 yajl samba30 libass opengl libusb-compat avahi
 
 XBMC_CONF_ENV += PYTHON_VERSION="$(PYTHON_VERSION_MAJOR)"
 XBMC_CONF_ENV += PYTHON_LDFLAGS="-L$(STAGING_DIR)/usr/lib/ -lpython$(PYTHON_VERSION_MAJOR) -lpthread -ldl -lutil -lm"

@@ -1,8 +1,4 @@
 <advancedsettings>
-  <audio>
-    <defaultplayer>amlplayer</defaultplayer>
-  </audio>
-
   <video>
     <defaultplayer>amlplayer</defaultplayer>
     <defaultdvdplayer>amlplayer</defaultdvdplayer>
