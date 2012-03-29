@@ -14,7 +14,6 @@
     <setting>subtitles.charset</setting>
     <setting>dvds.playerregion</setting>
     <setting>dvds.automenu</setting>
-    <setting>musicplayer.visualisation</setting>
     <setting>audiocds</setting>
     <setting>karaoke</setting>
     <setting>videoscreen.screenmode</setting>
