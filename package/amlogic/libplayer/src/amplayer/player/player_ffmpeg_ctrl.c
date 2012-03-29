@@ -83,9 +83,9 @@ int ffmpeg_buffering_data(play_para_t *para)
 {
 	int ret;
     if (para && para->pFormatCtx && para->pFormatCtx->pb) {
-		player_mate_wake(para,100*1000);
+		//player_mate_wake(para,100*1000);
         ret=url_buffering_data(para->pFormatCtx->pb, 0);
-		player_mate_sleep(para);
+		//player_mate_sleep(para);
 		return ret;
     } else {
         return -1;

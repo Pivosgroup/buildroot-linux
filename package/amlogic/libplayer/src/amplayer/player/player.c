@@ -768,7 +768,7 @@ void *player_thread(play_para_t *player)
     set_player_state(player, PLAYER_START);
     update_playing_info(player);
     update_player_states(player, 1);
-	player_mate_init(player,1000*100);
+	//player_mate_init(player,1000*100);
     if (player->vstream_info.video_format == VFORMAT_SW) {
         log_debug("Use SW video decoder\n");
 
@@ -1043,7 +1043,7 @@ release:
     set_cntl_mode(player, TRICKMODE_NONE);
 
 release0:
-	player_mate_release(player);
+	//player_mate_release(player);
 	set_black_policy(player->playctrl_info.black_out);
     log_debug("\npid[%d]player_thread release0 begin...(sta:0x%x)\n", player->player_id, get_player_state(player));
     if (get_player_state(player) == PLAYER_ERROR) {
