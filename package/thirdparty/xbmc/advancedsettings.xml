@@ -8,6 +8,7 @@
     <setting>lookandfeel.soundskin</setting>
     <setting>videoplayer.rendermethod</setting>
     <setting>videoplayer.adjustrefreshrate</setting>
+    <setting>videoplayer.pauseafterrefreshchange</setting>
     <setting>videoplayer.usedisplayasclock</setting>
     <setting>videoplayer.synctype</setting>
     <setting>videoplayer.teletextenabled</setting>
