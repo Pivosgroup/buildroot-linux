@@ -14,12 +14,12 @@
 # process   == program to run
 
 # Startup the system
-::sysinit:/bin/mount -t proc none /proc
-::sysinit:/bin/mount -t sysfs none /sys
-::sysinit:/bin/mount -t tmpfs -o size=64k,mode=0755 none /dev
-::sysinit:/bin/mkdir /dev/pts
+::sysinit:/bin/mount -n -t proc none /proc
+::sysinit:/bin/mount -n -t sysfs none /sys
+::sysinit:/bin/mkdir -p /dev/pts
+::sysinit:/bin/mount -n -t devpts -o gid=5,mode=620 none /dev/pts
 ::sysinit:/bin/mkdir -p /dev/shm
-::sysinit:/bin/mount -t devpts devpts /dev/pts
+::sysinit:/bin/mount -t tmpfs -o size=64k,mode=0755 none /dev
 ::sysinit:/bin/mount -t usbfs none /proc/bus/usb
 ::sysinit:/bin/echo /sbin/mdev > /proc/sys/kernel/hotplug
 ::sysinit:/bin/mknod -m 666 /dev/null c 1 3
