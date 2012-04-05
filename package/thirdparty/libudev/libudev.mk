@@ -11,7 +11,13 @@ LIBUDEV_INSTALL_TARGET = YES
 LIBUDEV_CONF_OPT += --disable-gudev --disable-rule_generator --disable-extras
 LIBUDEV_CONF_OPT += --disable-introspection --disable-hwdb --disable-keymap --disable-mtd_probe
 
-LIBUDEV_INSTALL_STAGING_OPT = DESTDIR=$(STAGING_DIR) install-libLTLIBRARIES install-includeHEADERS
-LIBUDEV_INSTALL_TARGET_OPT = DESTDIR=$(TARGET_DIR) install-libLTLIBRARIES
+LIBUDEV_INSTALL_STAGING_OPT  = DESTDIR=$(STAGING_DIR)
+LIBUDEV_INSTALL_STAGING_OPT += install-libLTLIBRARIES
+LIBUDEV_INSTALL_STAGING_OPT += install-includeHEADERS
+LIBUDEV_INSTALL_STAGING_OPT += install-pkgconfigDATA
+LIBUDEV_INSTALL_STAGING_OPT += install-sharepkgconfigDATA
+
+LIBUDEV_INSTALL_TARGET_OPT   = DESTDIR=$(TARGET_DIR)
+LIBUDEV_INSTALL_TARGET_OPT  += install-libLTLIBRARIES
 
 $(eval $(call AUTOTARGETS,package/thirdparty,libudev))
