@@ -1,0 +1,6 @@
+config BR2_PACKAGE_LIBUDEV
+	bool "libudev"
+	help
+	  UDEV Interface
+
+	  https://www.kernel.org/pub/linux/utils/kernel/hotplug/libudev/
