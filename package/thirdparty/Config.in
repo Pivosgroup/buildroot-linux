@@ -1,4 +1,5 @@
 menu "XBMC and its Dependencies"
+source "package/thirdparty/bluez_utils/Config.in"
 source "package/thirdparty/boost/Config.in"
 source "package/thirdparty/fribidi/Config.in"
 source "package/thirdparty/jasper/Config.in"
