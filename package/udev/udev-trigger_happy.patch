@@ -1,0 +1,14 @@
+diff -ruN udev-173/extras/input_id/input_id.c udev-173-good//extras/input_id/input_id.c
+--- udev-173/extras/input_id/input_id.c	2011-07-18 14:00:25.747859817 -0400
++++ udev-173-good//extras/input_id/input_id.c	2012-04-05 23:11:19.677562254 -0400
+@@ -30,6 +30,10 @@
+ #include "libudev.h"
+ #include "libudev-private.h"
+ 
++#ifndef BTN_TRIGGER_HAPPY
++#define BTN_TRIGGER_HAPPY 0x2c0
++#endif
++
+ /* we must use this kernel-compatible implementation */
+ #define BITS_PER_LONG (sizeof(unsigned long) * 8)
+ #define NBITS(x) ((((x)-1)/BITS_PER_LONG)+1)
