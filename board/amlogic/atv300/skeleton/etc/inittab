@@ -14,17 +14,10 @@
 # process   == program to run
 
 # Startup the system
-::sysinit:/bin/mount -n -t proc none /proc
-::sysinit:/bin/mount -n -t sysfs none /sys
-::sysinit:/bin/mkdir -p /dev/pts
-::sysinit:/bin/mount -n -t devpts -o gid=5,mode=620 none /dev/pts
-::sysinit:/bin/mkdir -p /dev/shm
-::sysinit:/bin/mount -t tmpfs -o size=64k,mode=0755 none /dev
-::sysinit:/bin/mount -t usbfs none /proc/bus/usb
-::sysinit:/bin/echo /sbin/mdev > /proc/sys/kernel/hotplug
-::sysinit:/bin/mknod -m 666 /dev/null c 1 3
-::sysinit:/sbin/mdev -s
+::sysinit:/bin/mount -t proc none /proc
 ::sysinit:/bin/mount -o remount,rw /
+::sysinit:/bin/mkdir -p /dev/pts
+::sysinit:/bin/mkdir -p /dev/shm
 ::sysinit:/bin/mount -a
 ::sysinit:/bin/hostname -F /etc/hostname
 ::sysinit:/sbin/ifconfig lo 127.0.0.1 up

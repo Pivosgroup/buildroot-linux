@@ -12,9 +12,20 @@ UDEV_CONF_OPT =			\
 	--sbindir=/sbin		\
 	--with-rootlibdir=/lib	\
 	--libexecdir=/lib/udev	\
-	--disable-introspection
+	--disable-introspection \
+  --disable-gtk-doc-html
 
 UDEV_DEPENDENCIES = host-gperf host-pkg-config
+
+define UDEV_REMOVE_MTD_PROBE_RULE
+    rm -f $(TARGET_DIR)/lib/udev/rules.d/75-probe_mtd.rules
+    rm -f $(STAGING_DIR)/lib/udev/rules.d/75-probe_mtd.rules
+endef
+
+ifneq ($(BR2_PACKAGE_UDEV_MTD_PROBE),y)
+UDEV_CONF_OPT += --disable-mtd_probe
+UDEV_POST_INSTALL_TARGET_HOOKS += UDEV_REMOVE_MTD_PROBE_RULE
+endif
 
 ifeq ($(BR2_PACKAGE_UDEV_ALL_EXTRAS),y)
 UDEV_DEPENDENCIES += libusb libusb-compat usbutils hwdata libglib2

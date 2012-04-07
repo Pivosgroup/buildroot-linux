@@ -8,6 +8,12 @@ config BR2_PACKAGE_UDEV
 
 if BR2_PACKAGE_UDEV
 
+config BR2_PACKAGE_UDEV_MTD_PROBE
+	bool "Install mtd_probe callout"
+	default y
+	help
+	  mtd_probe - udev callout to probe mtd devices
+
 config BR2_PACKAGE_UDEV_ALL_EXTRAS
 	bool "enable all extras"
 	depends on BR2_LARGEFILE # acl
