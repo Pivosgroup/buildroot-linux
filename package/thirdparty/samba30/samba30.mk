@@ -5,7 +5,7 @@
 #############################################################
 SAMBA30_VERSION:=3.0.37
 SAMBA30_SOURCE:=samba-$(SAMBA30_VERSION).tar.gz
-SAMBA30_SITE:=http://samba.org/samba/ftp/stable/
+SAMBA30_SITE:=http://samba.org/samba/ftp/stable
 
 SAMBA30_SUBDIR = source
 SAMBA30_AUTORECONF = NO

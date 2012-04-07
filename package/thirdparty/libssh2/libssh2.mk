@@ -4,7 +4,7 @@
 #
 #############################################################
 LIBSSH2_VERSION = 1.2.8
-LIBSSH2_SITE = http://www.libssh2.org/download/
+LIBSSH2_SITE = http://www.libssh2.org/download
 LIBSSH2_SOURCE = libssh2-$(LIBSSH2_VERSION).tar.gz
 LIBSSH2_INSTALL_STAGING = YES
 LIBSSH2_INSTALL_TARGET = YES

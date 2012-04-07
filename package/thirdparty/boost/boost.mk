@@ -6,7 +6,7 @@
 BOOST_VERSION:=1_46_0
 BOOST_VERSION2:=1.46.0
 BOOST_SOURCE:=boost_$(BOOST_VERSION).tar.bz2
-BOOST_SITE:=http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/boost/
+BOOST_SITE:=http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/boost
 BOOST_INSTALL_STAGING=YES
 BOOST_INSTALL_TARGET=YES
 

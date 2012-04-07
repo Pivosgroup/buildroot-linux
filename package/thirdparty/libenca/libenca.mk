@@ -4,7 +4,7 @@
 #
 #############################################################
 LIBENCA_VERSION = 1.9
-LIBENCA_SITE = http://dl.cihar.com/enca/
+LIBENCA_SITE = http://dl.cihar.com/enca
 LIBENCA_SOURCE = enca-$(LIBENCA_VERSION).tar.bz2
 LIBENCA_INSTALL_STAGING = YES
 LIBENCA_INSTALL_TARGET = YES
