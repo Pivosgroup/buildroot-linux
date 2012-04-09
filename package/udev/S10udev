@@ -31,6 +31,10 @@ case "$1" in
         echo -e '\000\000\000\000' > /proc/sys/kernel/hotplug
         $UDEV_BIN -d || (echo "FAIL" && exit 1)
         echo "done"
+        echo "Initializing coldplug devices"
+        /sbin/udevadm trigger --action=add --type=subsystems 2>/dev/null
+        /sbin/udevadm trigger --action=add --type=devices 2>/dev/null
+        echo "done"
         ;;
     stop)
         # Stop execution of events
