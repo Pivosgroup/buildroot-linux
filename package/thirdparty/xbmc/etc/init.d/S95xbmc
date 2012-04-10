@@ -25,9 +25,11 @@ case "$1" in
                    exit $exit_value
                    ;;
               137) echo "XBMC was killed" >&2
+                   dd if=/dev/zero of=/dev/fb0 bs=1280 count=2880
                    exit $exit_value
                    ;;
               143) echo "XBMC was terminated" >&2
+                   dd if=/dev/zero of=/dev/fb0 bs=1280 count=2880
                    exit $exit_value
                    ;;
             esac
