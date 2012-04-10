@@ -5,12 +5,18 @@
 
 case "$1" in
   start)
- 	echo "Starting network..."
-	/sbin/ifup -a
-	;;
+    echo "Starting network..."
+    # make sure eth0 and wlan0 interfaces are up
+    # xbmc will take care of actually configuring them
+    # do it this way to keep from triggering
+    # a lengthy dhcp probe at boot.
+    ifconfig eth0 up
+    ifconfig wlan0 up
+  ;;
   stop)
-	echo -n "Stopping network..."
-	/sbin/ifdown -a
+    echo -n "Stopping network..."
+    ifconfig eth0 down
+    ifconfig wlan0 down
 	;;
   restart|reload)
 	"$0" stop

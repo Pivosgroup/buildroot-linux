@@ -1,7 +1,0 @@
-#!/bin/sh
-#
-# cleanup dbus files that can get left behind
-#
-
-rm -f /var/lock/subsys/dbus-daemon
-rm -f /var/run/messagebus.pid

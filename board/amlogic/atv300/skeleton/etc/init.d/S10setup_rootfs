@@ -1,0 +1,29 @@
+#!/bin/sh
+
+if [ "X$1" = "Xstart" ]; then
+  echo "S10setup_rootfs: moving /etc"
+  # /etc must be rw, move it to /tmp and bind
+  mkdir -p /tmp/etc
+  cp -rf /etc /tmp/
+  mount -o bind /tmp/etc /etc
+  #
+  echo "S10setup_rootfs: moving /media"
+  # /media is where usb drives mount, move it to /tmp and bind
+  mkdir -p /tmp/media
+  cp -rf /media /tmp/
+  mount -o bind /tmp/media /media
+  #
+  echo "S10setup_rootfs: mounting /tmp/userdata"
+  # mtd4 is userdata, mount it and bind /root and /home
+  mkdir -p /tmp/userdata
+  mount -t yaffs2 /dev/mtdblock4 /tmp/userdata
+  mkdir -p /tmp/userdata/xios/root
+  mount -o bind /tmp/userdata/xios/root /root
+  mkdir -p /tmp/userdata/xios/home
+  mount -o bind /tmp/userdata/xios/home /home
+  #
+  echo "S10setup_rootfs: remount / ro"
+  mount -o remount,ro /
+  #
+  echo "S10setup_rootfs: done"
+fi
