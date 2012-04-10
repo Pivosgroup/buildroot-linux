@@ -1,6 +1,22 @@
 #!/bin/sh
 
 if [ "X$1" = "Xstart" ]; then
+  echo "S10setup_rootfs: checking keys"
+  # Make sure dropbear directory exists
+  if [ ! -d /etc/dropbear ] ; then
+    mkdir -p /etc/dropbear
+  fi
+  # Check for the Dropbear RSA key
+  if [ ! -f /etc/dropbear/dropbear_rsa_host_key ] ; then
+    echo -n "generating rsa key... "
+    /usr/bin/dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key > /dev/null 2>&1
+  fi
+  # Check for the Dropbear DSS key
+  if [ ! -f /etc/dropbear/dropbear_dss_host_key ] ; then
+    echo -n "generating dsa key... "
+    /usr/bin/dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key > /dev/null 2>&1
+  fi
+  #
   echo "S10setup_rootfs: moving /etc"
   # /etc must be rw, move it to /tmp and bind
   mkdir -p /tmp/etc
