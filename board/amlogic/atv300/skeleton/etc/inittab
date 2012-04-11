@@ -39,7 +39,6 @@ null::sysinit:/bin/touch /var/log/messages
 null::respawn:/sbin/syslogd -n
 null::respawn:/sbin/klogd -n
 tty3::respawn:/usr/bin/tail -f /var/log/messages
-#null::respawn:/usr/sbin/telnetd -l /bin/sh
 
 # Stuff to do for the 3-finger salute
 ::ctrlaltdel:/sbin/reboot
