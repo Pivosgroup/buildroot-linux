@@ -30,13 +30,11 @@ if [ "X$1" = "Xstart" ]; then
   mount -o bind /tmp/media /media
   #
   echo "S10setup_rootfs: mounting /tmp/userdata"
-  # mtd4 is userdata, mount it and bind /root and /home
+  # mtd4 is userdata, mount it and bind to /root
   mkdir -p /tmp/userdata
   mount -t yaffs2 /dev/mtdblock4 /tmp/userdata
   mkdir -p /tmp/userdata/xios/root
   mount -o bind /tmp/userdata/xios/root /root
-  mkdir -p /tmp/userdata/xios/home
-  mount -o bind /tmp/userdata/xios/home /home
   #
   echo "S10setup_rootfs: remount / ro"
   mount -o remount,ro /
