@@ -1,0 +1,13 @@
+show_progress(0.500000, 70);
+format("yaffs2", "MTD", "system");
+mount("yaffs2", "MTD", "system", "/system");
+package_extract_dir("system", "/system");
+assert(package_extract_file("logo.img", "/tmp/logo.img"),
+       write_raw_image("/tmp/logo.img", "logo"),
+       delete("/tmp/logo.img"));
+show_progress(0.480000, 20);
+assert(package_extract_file("boot.img", "/tmp/boot.img"),
+       write_raw_image("/tmp/boot.img", "boot"),
+       delete("/tmp/boot.img"));
+show_progress(0.020000, 0);
+unmount("/system");
