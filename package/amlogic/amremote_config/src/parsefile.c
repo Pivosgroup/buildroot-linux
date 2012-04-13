@@ -112,7 +112,7 @@ int get_config_from_file(FILE *fp, remote_config_t *remote)
                 if (!*name)
                     continue;
                 ircode = strtoul(name, NULL, 0);
-                if(ircode > 3) continue;
+                if(ircode > 9) continue;
                 remote->mouse_map[ircode] = strtoul(value, NULL, 0) & 0xff;
                 continue;
             }
