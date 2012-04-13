@@ -1,4 +1,4 @@
-XIOS_VERSION = a43ebdadd245e59166d783c5dd8ea2294a0f61e1
+XIOS_VERSION = 2d1f23d9e4c3a3fc601d1c3b4cecf6f77cfa8d89
 XIOS_SITE_METHOD = git
 XIOS_SITE = git@github.com:Pivosgroup/skin.pivos.git
 XIOS_INSTALL_STAGING = YES
