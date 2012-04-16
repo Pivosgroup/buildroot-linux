@@ -4,7 +4,7 @@
 #
 #################################################################################
 
-XBMC_VERSION = 5b1cf9a423c7a9a34b7830685893c6ad16e76cdb
+XBMC_VERSION = 31972d773cbd4fdcc14851ecb7465cd1e5535913
 XBMC_SITE_METHOD = git
 XBMC_SITE = ssh://git@github.com/Pivosgroup/xbmc.git
 XBMC_INSTALL_STAGING = YES
@@ -42,7 +42,21 @@ define XBMC_INSTALL_ETC
   cp -f package/thirdparty/xbmc/*.xml $(TARGET_DIR)/usr/share/xbmc/system/
 endef
 
+define XBMC_CLEAN_UNUSED_ADDONS
+  rm -rf $(TARGET_DIR)/usr/share/xbmc/addons/screensaver.rsxs.plasma
+  rm -rf $(TARGET_DIR)/usr/share/xbmc/addons/visualization.milkdrop
+  rm -rf $(TARGET_DIR)/usr/share/xbmc/addons/visualization.projectm
+  rm -rf $(TARGET_DIR)/usr/share/xbmc/addons/visualization.itunes
+endef
+
+define XBMC_CLEAN_CONFLUENCE_SKIN
+  find $(TARGET_DIR)/usr/share/xbmc/addons/skin.confluence/media -name *.png -delete
+  find $(TARGET_DIR)/usr/share/xbmc/addons/skin.confluence/media -name *.jpg -delete
+endef
+
 XBMC_PRE_CONFIGURE_HOOKS += XBMC_BOOTSTRAP
 XBMC_POST_INSTALL_TARGET_HOOKS += XBMC_INSTALL_ETC
+XBMC_POST_INSTALL_TARGET_HOOKS += XBMC_CLEAN_UNUSED_ADDONS
+XBMC_POST_INSTALL_TARGET_HOOKS += XBMC_CLEAN_CONFLUENCE_SKIN
 
 $(eval $(call AUTOTARGETS,package/thirdparty,xbmc))
