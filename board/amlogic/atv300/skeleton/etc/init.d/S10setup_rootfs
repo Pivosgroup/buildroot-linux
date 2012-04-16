@@ -1,6 +1,10 @@
 #!/bin/sh
 
 if [ "X$1" = "Xstart" ]; then
+  #
+  echo "S10setup_rootfs: remount / rw"
+  mount -o remount,rw /
+  #
   echo "S10setup_rootfs: checking keys"
   # Make sure dropbear directory exists
   if [ ! -d /etc/dropbear ] ; then
@@ -20,13 +24,13 @@ if [ "X$1" = "Xstart" ]; then
   echo "S10setup_rootfs: moving /etc"
   # /etc must be rw, move it to /tmp and bind
   mkdir -p /tmp/etc
-  cp -rf /etc /tmp/
+  cp -a /etc /tmp/
   mount -o bind /tmp/etc /etc
   #
   echo "S10setup_rootfs: moving /media"
   # /media is where usb drives mount, move it to /tmp and bind
   mkdir -p /tmp/media
-  cp -rf /media /tmp/
+  cp -a /media /tmp/
   mount -o bind /tmp/media /media
   #
   echo "S10setup_rootfs: mounting /tmp/userdata"
