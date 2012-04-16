@@ -1,0 +1,23 @@
+config BR2_TARGET_ROOTFS_TAR_AML
+	bool "Aml-Specific tarball"
+	help
+	  Build a tar archive of the root filesystem
+
+choice
+        prompt "SquashFS Compression"
+        depends on BR2_TARGET_ROOTFS_TAR_AML
+        default BR2_TARGET_ROOTFS_SQUASHFS_TAR_AML_GZIP
+        help
+          Select the squashfs compression algorithm to use when
+          generating the filesystem.
+
+config BR2_TARGET_ROOTFS_SQUASHFS_TAR_AML_GZIP
+       bool "gzip"
+
+config BR2_TARGET_ROOTFS_SQUASHFS_TAR_AML_LZMA
+       bool "lzma"
+
+config BR2_TARGET_ROOTFS_SQUASHFS_TAR_AML_LZO
+       bool "lzo"
+
+endchoice
