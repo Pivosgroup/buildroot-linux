@@ -1,0 +1,13 @@
+config BR2_TARGET_ROOTFS_RECOVERY_AML
+	bool "AMLogic Recovery Image"
+        select BR2_TARGET_ROOTFS_TAR_AML
+	help
+	  Image ready for flashing via android's recovery partition
+
+
+config BR2_TARGET_ROOTFS_RECOVERY_AML_WIPE_USERDATA
+        bool "erase userdata partition"
+	depends on BR2_TARGET_ROOTFS_RECOVERY_AML
+	default y
+        help
+          Whether to wipe the userdata partition

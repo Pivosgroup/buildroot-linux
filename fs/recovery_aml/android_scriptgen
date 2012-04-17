@@ -1,0 +1,222 @@
+#!/usr/bin/python
+import edify_generator
+import os
+import subprocess
+import string
+from optparse import OptionParser
+
+def MostPopularKey(d, default):
+  """Given a dict, return the key corresponding to the largest
+  value.  Returns 'default' if the dict is empty."""
+  x = [(v, k) for (k, v) in d.iteritems()]
+  if not x: return default
+  x.sort()
+  return x[-1][1]
+
+class Options(object): pass
+OPTIONS = Options()
+OPTIONS.info_dict = None
+
+class Item:
+  """Items represent the metadata (user, group, mode) of files and
+  directories in the system image."""
+  ITEMS = {}
+  def __init__(self, name, dir=False):
+    self.name = name
+    self.uid = None
+    self.gid = None
+    self.mode = None
+    self.dir = dir
+
+    if len(name) > 1:
+      self.parent = Item.Get(os.path.dirname(name), dir=True)
+      self.parent.children.append(self)
+    else:
+      self.parent = None
+    if dir:
+      self.children = []
+
+  def Dump(self, indent=0):
+    if self.uid is not None:
+      print "%s%s %d %d %o" % ("  "*indent, self.name, self.uid, self.gid, self.mode)
+    else:
+      print "%s%s %s %s %s" % ("  "*indent, self.name, self.uid, self.gid, self.mode)
+    if self.dir:
+      print "%s%s" % ("  "*indent, self.descendants)
+      print "%s%s" % ("  "*indent, self.best_subtree)
+      for i in self.children:
+        i.Dump(indent=indent+1)
+
+  @classmethod
+  def Get(cls, name, dir=False):
+    if name not in cls.ITEMS:
+      cls.ITEMS[name] = Item(name, dir=dir)
+    return cls.ITEMS[name]
+
+  @classmethod
+  def GetMetadata(cls, path, script):
+      # Run the external 'fs_config' program to determine the desired
+      # uid, gid, and mode for every Item object.  Note this uses the
+      # one in the client now, which might not be the same as the one
+      # used when this target_files was built.
+      for i in cls.ITEMS.itervalues():
+         if i.name:
+           try:
+             p = subprocess.check_output(["stat","--format=%n|%u|%g|%a",i.name]).strip()
+           except:
+             continue
+           name, uid, gid, mode = p.split("|")
+           i.uid = int(uid)
+           i.gid = int(gid)
+           i.mode = int(mode, 8)
+     #      script.SetPermissions("/"+i.name, i.uid, i.gid, i.mode)
+
+  def SetPermissions(self, script):
+    """Append set_perm/set_perm_recursive commands to 'script' to
+    set all permissions, users, and groups for the tree of files
+    rooted at 'self'."""
+    self.CountChildMetadata()
+
+    def recurse(item, current):
+      # current is the (uid, gid, dmode, fmode) tuple that the current
+      # item (and all its children) have already been set to.  We only
+      # need to issue set_perm/set_perm_recursive commands if we're
+      # supposed to be something different.
+      subpath = string.replace(item.name,self.name,"/system")
+      if item.dir:
+        if current != item.best_subtree:
+          script.SetPermissionsRecursive(subpath, *item.best_subtree)
+          current = item.best_subtree
+
+        if item.uid != current[0] or item.gid != current[1] or \
+           item.mode != current[2]:
+          if item.uid is not None and item.gid is not None:
+            script.SetPermissions(subpath, item.uid, item.gid, item.mode)
+
+        for i in item.children:
+          recurse(i, current)
+      else:
+        if item.uid != current[0] or item.gid != current[1] or \
+               item.mode != current[3]:
+          script.SetPermissions(subpath, item.uid, item.gid, item.mode)
+
+    recurse(self, (-1, -1, -1, -1))
+
+  def CountChildMetadata(self):
+    """Count up the (uid, gid, mode) tuples for all children and
+    determine the best strategy for using set_perm_recursive and
+    set_perm to correctly chown/chmod all the files to their desired
+    values.  Recursively calls itself for all descendants.
+
+    Returns a dict of {(uid, gid, dmode, fmode): count} counting up
+    all descendants of this node.  (dmode or fmode may be None.)  Also
+    sets the best_subtree of each directory Item to the (uid, gid,
+    dmode, fmode) tuple that will match the most descendants of that
+    Item.
+    """
+    assert self.dir
+    d = self.descendants = {(self.uid, self.gid, self.mode, None): 1}
+    for i in self.children:
+      if i.dir:
+        for k, v in i.CountChildMetadata().iteritems():
+          d[k] = d.get(k, 0) + v
+      else:
+        k = (i.uid, i.gid, None, i.mode)
+        d[k] = d.get(k, 0) + 1
+
+    # Find the (uid, gid, dmode, fmode) tuple that matches the most
+    # descendants.
+
+    # First, find the (uid, gid) pair that matches the most
+    # descendants.
+    ug = {}
+    for (uid, gid, _, _), count in d.iteritems():
+      if uid is not None and gid is not None:
+        ug[(uid, gid)] = ug.get((uid, gid), 0) + count
+    ug = MostPopularKey(ug, (0, 0))
+
+    # Now find the dmode and fmode that match the most descendants
+    # with that (uid, gid), and choose those.
+    best_dmode = (0, 0755)
+    best_fmode = (0, 0644)
+    for k, count in d.iteritems():
+      if k[:2] != ug: continue
+      if k[2] is not None and count >= best_dmode[0]: best_dmode = (count, k[2])
+      if k[3] is not None and count >= best_fmode[0]: best_fmode = (count, k[3])
+    self.best_subtree = ug + (best_dmode[1], best_fmode[1])
+
+    return d
+
+def main():
+  usage = "usage: %prog [options] arg"
+  parser = OptionParser(usage)
+  parser.add_option("-p", dest="path",
+                      help=" topdir. must contain 'target' folder")
+  parser.add_option("-o", dest="outputfile",
+                      help=" output file")
+  parser.add_option("-i", "--ignore-usr", dest="ignoreusr", action="store_true",
+                      help=" don't scan usr/ dir")
+  parser.add_option("-w", "--wipe-userdata", dest="wipeuserdata", action="store_true",
+                      help=" wipe userdata partition during install")
+  (options, args) = parser.parse_args()
+
+  script = edify_generator.EdifyGenerator(3, OPTIONS.info_dict)
+  symlinks = []
+  item = Item
+  for parent, dirnames, filenames in os.walk(options.path):
+    if 'usr' in dirnames and parent == options.path and options.ignoreusr:
+      dirnames.remove('usr')
+    for dirname in dirnames:
+      fulldirname = parent + "/"+dirname
+      if os.path.islink(fulldirname):
+        linkname = os.path.realpath(fulldirname)
+        pos = linkname.find(options.path)
+        if pos >= 0:
+          symlinks.append((linkname[pos+len(options.path):], "/system/" + fulldirname[len(options.path)+1:]))
+        else:
+          symlinks.append((linkname, "/system/" + fulldirname[len(options.path)+1:]))
+      else:
+        item.Get(fulldirname, dir=True)
+    for filename in filenames:
+      fullfilename = parent + "/"+filename
+      if os.path.islink(fullfilename):
+        linkname = os.path.realpath(fullfilename)
+        pos = linkname.find(options.path)
+        if pos >= 0:
+          symlinks.append((linkname[pos+len(options.path):], "/system/" + fullfilename[len(options.path)+1:]))
+        else:
+          symlinks.append((linkname, "/system/" + fullfilename[len(options.path)+1:]))
+      else:
+        item.Get(fullfilename, dir=False)
+  symlinks.sort()
+
+  if symlinks != None:
+        print "Reading files/folders..."
+        Item.GetMetadata(options.path, script)
+        print "Setting permissions..."
+        Item.Get(options.path).SetPermissions(script)
+        print "Creating symlinks..."
+        script.MakeSymlinks(symlinks)
+        f = open(options.outputfile, 'w')
+        f.write('show_progress(0.500000, 3);\n')
+        f.write('format("yaffs2", "MTD", "system");\n')
+        if options.wipeuserdata:
+          f.write('format("yaffs2", "MTD", "userdata");\n')
+        f.write('mount("yaffs2", "MTD", "system", "/system");\n')
+        f.write('show_progress(0.300000, 60);\n')
+        f.write('package_extract_dir("system", "/system");\n')
+        f.write("\n".join(script.script) + "\n")
+        f.write('assert(package_extract_file("logo.img", "/tmp/logo.img"),\n')
+        f.write('       write_raw_image("/tmp/logo.img", "logo"),\n')
+        f.write('       delete("/tmp/logo.img"));\n')
+        f.write('show_progress(0.180000, 20);\n')
+        f.write('assert(package_extract_file("boot.img", "/tmp/boot.img"),\n')
+        f.write('       write_raw_image("/tmp/boot.img", "boot"),\n')
+        f.write('       delete("/tmp/boot.img"));\n')
+        f.write('show_progress(0.020000, 0);\n')
+        f.write('unmount("/system");\n')
+        f.close()
+        print "Done!"
+
+if __name__ == '__main__':
+  main()
