@@ -6,5 +6,10 @@ config BR2_PACKAGE_MYSQL_CLIENT
 	help
 	  MySQL client
 
+config BR2_PACKAGE_MYSQL_CLIENT_LIB_ONLY
+	bool "Install client library only"
+	default n
+	depends on BR2_PACKAGE_MYSQL_CLIENT
+
 comment "Mysql client requires a toolchain with C++ support enabled"
 	depends on !BR2_INSTALL_LIBSTDCPP
