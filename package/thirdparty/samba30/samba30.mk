@@ -108,17 +108,6 @@ endef
 
 SAMBA30_POST_INSTALL_TARGET_HOOKS += SAMBA30_REMOVE_UNNEEDED_HEADERS
 
-SAMBA30_POST_INSTALL_TARGET_HOOKS += SAMBA30_REMOVE_SWAT_DOCUMENTATION
-
-define SAMBA30_INSTALL_CONFIG
-	# install config
-	@if [ ! -f $(TARGET_DIR)/etc/samba/smb.conf ]; then \
-		$(INSTALL) -m 0755 -D package/samba/simple.conf $(TARGET_DIR)/etc/samba/smb.conf; \
-	fi
-endef
-
-SAMBA30_POST_INSTALL_TARGET_HOOKS += SAMBA30_INSTALL_CONFIG
-
 define SAMBA30_AUTOGEN
 	@$(call MESSAGE,"Reconfiguring")
         ( cd $(@D)/source && ./autogen.sh )
