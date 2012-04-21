@@ -19,8 +19,8 @@ define ROOTFS_RECOVERY_AML_CMD
  cp -f fs/recovery_aml/update-binary $(BINARIES_DIR)/aml_recovery/META-INF/com/google/android/ && \
  cp -f fs/recovery_aml/logo.img $(BINARIES_DIR)/aml_recovery/ && \
  cp -f $(BINARIES_DIR)/uImage $(BINARIES_DIR)/aml_recovery/boot.img && \
- find $(BINARIES_DIR)/aml_recovery/system/ -type d -empty -exec sh -c 'echo "dummy" > "{}"/.empty' \; && \
  find $(BINARIES_DIR)/aml_recovery/system/ -type l -delete && \
+ find $(BINARIES_DIR)/aml_recovery/system/ -type d -empty -exec sh -c 'echo "dummy" > "{}"/.empty' \; && \
  pushd $(BINARIES_DIR)/aml_recovery/ >/dev/null && \
  zip -m -q -r -y $(BINARIES_DIR)/aml_recovery/update-unsigned.img logo.img boot.img META-INF system && \
  popd >/dev/null && \
