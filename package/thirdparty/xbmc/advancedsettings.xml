@@ -4,6 +4,11 @@
     <defaultdvdplayer>amlplayer</defaultdvdplayer>
   </video>
 
+  <gui>
+    <algorithmdirtyregions>3</algorithmdirtyregions>
+    <nofliptimeout>0</nofliptimeout>
+  </gui>
+
   <hidesettings>
     <setting>lookandfeel.soundskin</setting>
     <setting>videoplayer.rendermethod</setting>
