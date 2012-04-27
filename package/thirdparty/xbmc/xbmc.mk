@@ -39,7 +39,10 @@ endef
 
 define XBMC_INSTALL_ETC
   cp -rf package/thirdparty/xbmc/etc $(TARGET_DIR)
-  cp -f package/thirdparty/xbmc/*.xml $(TARGET_DIR)/usr/share/xbmc/system/
+  cp -f package/thirdparty/xbmc/guisettings.xml $(TARGET_DIR)/usr/share/xbmc/system/
+  cp -f package/thirdparty/xbmc/advancedsettings.xml $(TARGET_DIR)/usr/share/xbmc/system/
+  cp -f package/thirdparty/xbmc/nobs.xml $(TARGET_DIR)/usr/share/xbmc/system/keymaps/
+
 endef
 
 define XBMC_CLEAN_UNUSED_ADDONS

@@ -1,0 +1,7 @@
+<keymap>
+  <global>
+     <keyboard>
+       <backslash>osd</backslash>
+     </keyboard>
+  </global>
+</keymap>
