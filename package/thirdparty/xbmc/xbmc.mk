@@ -16,6 +16,8 @@ XBMC_CONF_OPT+= --enable-neon --enable-gles --disable-sdl --disable-x11 --disabl
   --disable-projectm --disable-non-free --disable-dvdcss --enable-external-ffmpeg --enable-debug \
   --with-platform=amlogic-m1
 
+XBMC_MAKE_OPT+= -j1
+
 XBMC_DEPENDENCIES += libogg flac libmad libmpeg2 libogg \
   libsamplerate libtheora libvorbis wavpack bzip2 dbus libcdio \
   python lzo zlib libgcrypt openssl mysql_client sqlite fontconfig \
