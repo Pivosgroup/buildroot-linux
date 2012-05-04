@@ -2,10 +2,10 @@
 
 if [ "X$1" = "Xstart" ]; then
   #
-  echo "S10setup_rootfs: remount / rw"
+  echo "S10setup: remount / rw"
   mount -o remount,rw /
   #
-  echo "S10setup_rootfs: checking keys"
+  echo "S10setup: checking keys"
   # Make sure dropbear directory exists
   if [ ! -d /etc/dropbear ] ; then
     mkdir -p /etc/dropbear
@@ -21,27 +21,33 @@ if [ "X$1" = "Xstart" ]; then
     /usr/bin/dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key > /dev/null 2>&1
   fi
   #
-  echo "S10setup_rootfs: moving /etc"
+  echo "S10setup: moving /etc"
   # /etc must be rw, move it to /tmp and bind
   mkdir -p /tmp/etc
   cp -a /etc /tmp/
   mount -o bind /tmp/etc /etc
   #
-  echo "S10setup_rootfs: moving /media"
+  echo "S10setup: moving /media"
   # /media is where usb drives mount, move it to /tmp and bind
   mkdir -p /tmp/media
   cp -a /media /tmp/
   mount -o bind /tmp/media /media
   #
-  echo "S10setup_rootfs: mounting /tmp/userdata"
+  echo "S10setup: mounting /tmp/userdata"
   # mtd4 is userdata, mount it and bind to /root
   mkdir -p /tmp/userdata
   mount -t yaffs2 /dev/mtdblock4 /tmp/userdata
   mkdir -p /tmp/userdata/xios/root
   mount -o bind /tmp/userdata/xios/root /root
   #
-  echo "S10setup_rootfs: remount / ro"
+  echo "S10setup: remount / ro"
   mount -o remount,ro /
   #
-  echo "S10setup_rootfs: done"
+  # we startup as performance, then switch to ondemand (kernel bug) and
+  # limit to 600Mhz instead of 200MHz to keep audio hw from stalling.
+  echo "S10setup: switching to ondemand"
+  echo "ondemand" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+  echo "600000"   > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+  #
+  echo "S10setup: done"
 fi
