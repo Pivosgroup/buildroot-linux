@@ -356,11 +356,12 @@ static int mov_read_default(MOVContext *c, AVIOContext *pb, MOVAtom atom)
             if (err < 0)
                 return err;			
             if (c->found_moov && c->found_mdat &&
-                (!pb->seekable || start_pos + a.size == avio_size(pb)))
-                return 0;
+                (!pb->seekable  ||pb->is_slowmedia  ||pb->is_streamed|| start_pos + a.size == avio_size(pb)))
+                return 0;/*can't seek,slowmedia,streamed all don't do else parser now*/
             left = a.size - avio_tell(pb) + start_pos;
-            if (left > 0) /* skip garbage at atom end */
+            if (left > 0){ /* skip garbage at atom end */
                 avio_skip(pb, left);
+            }
         }
 
         total_size += a.size;

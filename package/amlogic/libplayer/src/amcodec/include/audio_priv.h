@@ -11,8 +11,12 @@
 */
 #ifndef CODEC_PRIV_H_
 #define CODEC_PRIV_H_
-void audio_start(void **priv);
+
+#include <adec-external-ctrl.h>
+
+void audio_start(void **priv, arm_audio_info *a_ainfo);
 void audio_stop(void **priv);
 void audio_pause(void *priv);
 void audio_resume(void *priv);
+
 #endif

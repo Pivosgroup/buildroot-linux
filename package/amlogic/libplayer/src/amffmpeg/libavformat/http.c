@@ -186,6 +186,8 @@ static int http_open_cnx(URLContext *h)
  fail:
     if (hd)
         ffurl_close(hd);
+    if(s->is_seek && s->canseek)
+		s->canseek=0;//changed can't support seek;
     s->hd = NULL;
 	av_log(h, AV_LOG_ERROR, "HTTP open Failed\n");
     return AVERROR(EIO);

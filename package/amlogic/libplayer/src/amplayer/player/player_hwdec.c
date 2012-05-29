@@ -100,9 +100,21 @@ int extract_adts_header_info(play_para_t *para)
     }
     if (pCodecCtx->extradata) {
         p = pCodecCtx->extradata;
-        hdr.profile = (*p >> 3) - 1;
-        hdr.sample_freq_idx = (*p & 0x7) << 1 | (*(p + 1) >> 7);
-        hdr.channel_configuration = (*(p + 1) & 0x7f) >> 3;
+        hdr.profile = (*p >> 3) - 1;		// 5 bits        
+        hdr.sample_freq_idx = (*p & 0x7) << 1 | (*(p + 1) >> 7); // 4 bits
+        hdr.channel_configuration = (*(p + 1) & 0x7f) >> 3; // 4 bits
+	 if((*p >> 3) == 5/*AOT_SBR*/ || ((*p >> 3) == 29/*AOT_PS*/ &&
+        // check for W6132 Annex YYYY draft MP3onMP4
+        !((*(p+1) & 0x7) & 0x03 && !(((*(p+1) & 0x7)<<6|(*(p + 2) >> 2))& 0x3F)))){
+        	//skip 4  bits for ex-sample-freq_idx
+        	hdr.profile = ((*(p + 2) & 0x7f) >> 2)-1; // 5 bits        	
+        	
+	 }
+	 log_print("aac insert adts header:profile %d,sr_index %d,ch_config %d\n", hdr.profile,hdr.sample_freq_idx,hdr.channel_configuration);
+	 log_print("extra data size %d,DATA:\n",pCodecCtx->extradata_size);
+	 for(i = 0; i < pCodecCtx->extradata_size;i++)
+	 	log_print("[0x%x]\n",p[i]);
+	 
         hdr.syncword = 0xfff;
         hdr.id = 0;
         hdr.layer = 0;

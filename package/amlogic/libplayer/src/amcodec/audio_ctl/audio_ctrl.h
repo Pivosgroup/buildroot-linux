@@ -12,7 +12,10 @@
 
 #ifndef AUDIO_CTRL_H
 #define AUDIO_CTRL_H
-void audio_start(void **priv);
+
+#include <adec-external-ctrl.h>
+
+void audio_start(void **priv, arm_audio_info *a_ainfo);
 void audio_stop(void **priv);
 void audio_pause(void *priv);
 void audio_resume(void *priv);

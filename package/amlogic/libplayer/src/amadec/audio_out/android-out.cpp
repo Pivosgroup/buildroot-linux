@@ -217,7 +217,7 @@ extern "C" int android_stop(struct aml_audio_dec* audec)
     audio_out_operations_t *out_ops = &audec->aout_ops;
     AudioTrack *track = (AudioTrack *)out_ops->private_data;
 
-    usleep(500000); //sleep 500ms
+    //usleep(500000); //sleep 500ms
     Mutex::Autolock _l(mLock);
 
     if (!track) {

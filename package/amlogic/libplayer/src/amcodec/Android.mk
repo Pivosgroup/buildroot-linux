@@ -7,7 +7,12 @@ LOCAL_SRC_FILES := \
 	codec/codec_msg.c \
 	audio_ctl/audio_ctrl.c
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/codec $(LOCAL_PATH)/audio_ctl $(LOCAL_PATH)/../amadec/include
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include \
+										$(LOCAL_PATH)/codec \
+										$(LOCAL_PATH)/audio_ctl \
+										$(LOCAL_PATH)/../amadec/include \
+										$(LOCAL_PATH)/../amffmpeg
+										
 LOCAL_ARM_MODE := arm
 LOCAL_STATIC_LIBRARIES := libamadec
 LOCAL_MODULE:= libamcodec
@@ -23,15 +28,14 @@ LOCAL_SRC_FILES := \
 	codec/codec_msg.c \
 	audio_ctl/audio_ctrl.c
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/codec $(LOCAL_PATH)/audio_ctl $(LOCAL_PATH)/../amadec/include
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/codec $(LOCAL_PATH)/audio_ctl $(LOCAL_PATH)/../amadec/include $(LOCAL_PATH)/../amffmpeg
 
 
 
-LOCAL_STATIC_LIBRARIES := libamadec 
-LOCAL_SHARED_LIBRARIES += libutils libmedia libz libbinder libdl libcutils libc
+LOCAL_STATIC_LIBRARIES := libamadec
+LOCAL_SHARED_LIBRARIES += libutils libmedia libz libbinder libdl libcutils libc libdl
 
 LOCAL_ARM_MODE := arm
-LOCAL_STATIC_LIBRARIES := libamadec
 LOCAL_MODULE:= libamcodec
 LOCAL_MODULE_TAGS := optional
 LOCAL_PRELINK_MODULE := false

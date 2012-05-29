@@ -112,6 +112,48 @@ int adec_pts_start(aml_audio_dec_t *audec)
     return 0;
 }
 
+int adec_pts_droppcm(aml_audio_dec_t *audec)
+{
+    unsigned long vpts, apts;
+    int drop_size;
+    int fd;
+    int ret;
+    char buf[32];
+    char buffer[8*1024];
+
+    fd = open(TSYNC_VPTS, O_RDONLY);
+    if (fd < 0) {
+        adec_print("unable to open file %s,err: %s", TSYNC_VPTS, strerror(errno));
+        return -1;
+    }
+
+    read(fd, buf, sizeof(buf));
+    close(fd);
+    if (sscanf(buf, "0x%lx", &vpts) < 1) {
+        adec_print("unable to get vpts from: %s", buf);
+        return -1;
+    }
+
+    apts = adec_calc_pts(audec);
+
+    if(apts < vpts){
+        drop_size = ((vpts - apts)/90) * (audec->samplerate/1000) * audec->channels *2;
+	 while(drop_size > 0){
+	 	ret = audec->adsp_ops.dsp_read(&audec->adsp_ops, buffer, MIN(drop_size, 8192));
+	       drop_size -= ret;
+	 }
+    }
+	
+#if 0
+    while(apts < vpts){
+        audec->adsp_ops.dsp_read(&audec->adsp_ops, buffer, 8192);
+	 apts = adec_calc_pts(audec);
+    }
+#endif
+
+    return 0;
+}
+
 /**
  * \brief pause pts manager
  * \return 0 on success otherwise -1

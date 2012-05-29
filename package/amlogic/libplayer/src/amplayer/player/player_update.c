@@ -921,6 +921,9 @@ static void check_force_end(play_para_t *p_para, struct buf_status *vbuf, struct
             }
         }
         if (p_para->astream_info.has_audio) {
+	    if(p_para->astream_info.audio_format==AFORMAT_AMR||AFORMAT_PCM_S16LE==p_para->astream_info.audio_format)
+		if(p_para->state.current_time<p_para->state.full_time)
+			p_para->check_end.end_count = CHECK_END_COUNT; 
             if (p_para->abuffer.rp_is_changed) {
                 p_para->check_end.end_count = CHECK_END_COUNT;                
             } else {

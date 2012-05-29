@@ -35,4 +35,7 @@ typedef unsigned int    adec_bool_t;
 #define ARRAY_SIZE(x)  (sizeof(x) / sizeof((x)[0]))
 #endif
 
+#define MAX(X, Y)    ((X) > (Y)) ? (X) : (Y)
+#define MIN(X, Y)    ((X) < (Y)) ? (X) : (Y)
+
 #endif

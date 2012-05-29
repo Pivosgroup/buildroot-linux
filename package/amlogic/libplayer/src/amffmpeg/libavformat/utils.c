@@ -525,7 +525,7 @@ int av_probe_input_buffer(AVIOContext *pb, AVInputFormat **fmt,
 
 	oldoffset = avio_tell(pb);
 	old_dataoff = s->data_offset;
-	if (av_match_ext(filename, "ts") || av_match_ext(filename, "m2ts")) {
+	if (av_match_ext(filename, "ts") || av_match_ext(filename, "m2ts")) {		
 		probe_flag = 1;
 		do{
 			pre_data = avio_r8(pb);
@@ -2110,7 +2110,6 @@ static int64_t seek_last_valid_pkt(AVFormatContext *ic)
 	int ret;
 	unsigned char *buf1;
 	unsigned char *buf2;
-	
 	
 	buf1 = av_malloc(CHECK_FULL_ZERO_SIZE);	
 	if(!buf1)

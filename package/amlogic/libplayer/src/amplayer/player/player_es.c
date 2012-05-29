@@ -67,6 +67,7 @@ static void acodec_info_init(play_para_t *p_para, codec_para_t *a_codec)
     a_codec->audio_channels = ainfo->audio_channel;
     a_codec->audio_samplerate = ainfo->audio_samplerate;
     a_codec->noblock = !!p_para->buffering_enable;
+	log_print("acodec_info_init  p_para->astream_info.audio_index = %d, p_para->pFormatCtx->streams[p_para->astream_info.audio_index] = %d!\n", p_para->astream_info.audio_index, p_para->pFormatCtx->streams[p_para->astream_info.audio_index]);
 
     a_codec->stream_type = stream_type_convert(p_para->stream_type, 0, a_codec->has_audio);
     log_debug("[%s:%d]audio stream_type=%d afmt=%d apid=%d asample_rate=%d achannel=%d\n",

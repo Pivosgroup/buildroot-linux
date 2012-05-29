@@ -808,7 +808,342 @@ int enable_freescale(int cfg)
 			EnableFreeScale(disp_mode);
 		}
 	}
-	log_debug("[enable_freescale]");
+	log_print("[enable_freescale]");
+	return 0;
+}
+
+/*
+int disable_freescale_MBX()
+{
+  char mode[16];
+	char m1080scale[8];
+	int freeScaleOsd0File = -1, freeScaleOsd1File = -1;
+	int fd_ppmgr = -1,fd_ppmgr_rect = -1;
+	
+  property_get("ro.platform.has.1080scale",m1080scale,"fail");
+  if(!strncmp(m1080scale, "fail", 4))
+  {
+  	return 0;
+  }
+	get_display_mode(mode);
+  if(strncmp(m1080scale, "2", 1) && (strncmp(m1080scale, "1", 1) || (strncmp(mode, "1080i", 5) && strncmp(mode, "1080p", 5) && strncmp(mode, "720p", 4))))
+  {
+    log_print("[disable_freescale_MBX] not freescale mode!\n");
+    return 0;
+  }
+	
+	if((freeScaleOsd0File = open("/sys/class/graphics/fb0/free_scale", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb0/scale fail.");
+	}
+	if((freeScaleOsd1File = open("/sys/class/graphics/fb1/free_scale", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb0/scale fail.");
+	}
+	if((fd_ppmgr = open("/sys/class/ppmgr/ppscaler", O_RDWR)) < 0) {
+		log_print("open /sys/class/ppmgr/ppscaler fail.");	
+	}
+	if((fd_ppmgr_rect = open("/sys/class/ppmgr/ppscaler_rect", O_RDWR)) < 0) {
+		log_print("open /sys/class/ppmgr/ppscaler_rect fail.");	
+	}
+	
+  if (fd_ppmgr >= 0) 	write(fd_ppmgr, "0", strlen("0"));
+	//if(fd_ppmgr_rect >= 0)
+    //write(fd_ppmgr_rect, "0 0 0 0 1", strlen("0 0 0 0 1"));
+	write(freeScaleOsd0File, "0", strlen("0"));
+	write(freeScaleOsd1File, "0", strlen("0"));
+  property_set("rw.vout.powerkeydisable", "true");
+	return 0;
+}
+
+int enable_freescale_MBX()
+{
+	int freeScaleOsd0File = -1, freeScaleOsd1File = -1, videoAxisFile = -1;
+	int fd_ppmgr = -1,fd_ppmgr_rect = -1;
+	char mode[16];
+	char m1080scale[8];
+	char vaxis_x_str[8];
+	char vaxis_y_str[8];
+	char vaxis_width_str[8];
+	char vaxis_height_str[8];
+	display_mode disp_mode;
+	char vaxis_str[32];
+	char ppmgr_rect_str[32];
+	int vaxis_x, vaxis_y, vaxis_width, vaxis_height, vaxis_right, vaxis_bottom;
+
+  property_get("ro.platform.has.1080scale",m1080scale,"fail");
+  if(!strncmp(m1080scale, "fail", 4))
+  {
+  	return 0;
+  }
+	get_display_mode(mode);
+	if(strncmp(m1080scale, "2", 1) && (strncmp(m1080scale, "1", 1) || (strncmp(mode, "1080i", 5) && strncmp(mode, "1080p", 5) && strncmp(mode, "720p", 4))))
+  {
+    log_print("[enable_freescale_MBX]not freescale mode!\n");
+    return 0;
+  }
+  
+	if((freeScaleOsd0File = open("/sys/class/graphics/fb0/free_scale", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb0/free_scale fail.");
+	}
+	if((freeScaleOsd1File = open("/sys/class/graphics/fb1/free_scale", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb1/free_scale fail.");
+	}
+	if((videoAxisFile = open("/sys/class/video/axis", O_RDWR)) < 0) {
+		log_print("open /sys/class/video/axis fail.");
+	}
+	if((fd_ppmgr = open("/sys/class/ppmgr/ppscaler", O_RDWR)) < 0) {
+		log_print("open /sys/class/ppmgr/ppscaler fail.");	
+	}
+	if((fd_ppmgr_rect = open("/sys/class/ppmgr/ppscaler_rect", O_RDWR)) < 0) {
+		log_print("open /sys/class/ppmgr/ppscaler_rect fail.");	
+	}
+	
+	if (strncmp(mode, "fail", 4)) { //mode !=fail
+		disp_mode = display_mode_convert(mode);
+		if (disp_mode < DISP_MODE_480I || disp_mode > DISP_MODE_1080P) {
+		  log_print("display mode fail: %d", disp_mode);
+			return 0;
+		}
+	}
+	log_print("display mode: %d", disp_mode);
+	switch(disp_mode)
+	{
+		case DISP_MODE_480I:
+			property_get("ubootenv.var.480ioutputx",vaxis_x_str,"0");
+		  property_get("ubootenv.var.480ioutputy",vaxis_y_str,"0");
+		  property_get("ubootenv.var.480ioutputwidth",vaxis_width_str,"720");
+		  property_get("ubootenv.var.480ioutputheight",vaxis_height_str,"480");
+			break;
+		case DISP_MODE_480P:
+			property_get("ubootenv.var.480poutputx",vaxis_x_str,"0");
+			property_get("ubootenv.var.480poutputy",vaxis_y_str,"0");
+			property_get("ubootenv.var.480poutputwidth",vaxis_width_str,"720");
+			property_get("ubootenv.var.480poutputheight",vaxis_height_str,"480");
+			break;
+		case DISP_MODE_576I:
+		  property_get("ubootenv.var.576ioutputx",vaxis_x_str,"0");
+		  property_get("ubootenv.var.576ioutputy",vaxis_y_str,"0");
+		  property_get("ubootenv.var.576ioutputwidth",vaxis_width_str,"720");
+		  property_get("ubootenv.var.576ioutputheight",vaxis_height_str,"576");
+			break;
+		case DISP_MODE_576P:
+		  property_get("ubootenv.var.576poutputx",vaxis_x_str,"0");
+		  property_get("ubootenv.var.576poutputy",vaxis_y_str,"0");
+		  property_get("ubootenv.var.576poutputwidth",vaxis_width_str,"720");
+		  property_get("ubootenv.var.576poutputheight",vaxis_height_str,"576");
+			break;
+		case DISP_MODE_720P:
+		  property_get("ubootenv.var.720poutputx",vaxis_x_str,"0");
+		  property_get("ubootenv.var.720poutputy",vaxis_y_str,"0");
+		  property_get("ubootenv.var.720poutputwidth",vaxis_width_str,"1280");
+		  property_get("ubootenv.var.720poutputheight",vaxis_height_str,"720");
+			break;
+		case DISP_MODE_1080I:
+		  property_get("ubootenv.var.1080ioutputx",vaxis_x_str,"0");
+		  property_get("ubootenv.var.1080ioutputy",vaxis_y_str,"0");
+		  property_get("ubootenv.var.1080ioutputwidth",vaxis_width_str,"1920");
+		  property_get("ubootenv.var.1080ioutputheight",vaxis_height_str,"1080");
+			break;
+		case DISP_MODE_1080P:
+		  property_get("ubootenv.var.1080poutputx",vaxis_x_str,"0");
+		  property_get("ubootenv.var.1080poutputy",vaxis_y_str,"0");
+		  property_get("ubootenv.var.1080poutputwidth",vaxis_width_str,"1920");
+		  property_get("ubootenv.var.1080poutputheight",vaxis_height_str,"1080");
+			break;
+		default:
+			break;
+	}
+	
+	vaxis_x = atoi(vaxis_x_str);
+	vaxis_y = atoi(vaxis_y_str);
+	vaxis_width = atoi(vaxis_width_str);
+	vaxis_height = atoi(vaxis_height_str);
+	vaxis_right = vaxis_x + vaxis_width;
+	vaxis_bottom = vaxis_y + vaxis_height;
+	
+  log_print("[enable_freescale_MBX]set video axis: %d %d %d %d \n", vaxis_x, vaxis_y, vaxis_right, vaxis_bottom);
+	sprintf(vaxis_str, "%d %d %d %d", vaxis_x, vaxis_y, vaxis_right, vaxis_bottom);
+	sprintf(ppmgr_rect_str, "%d %d %d %d 0", vaxis_x, vaxis_y, vaxis_right, vaxis_bottom);
+  //if(fd_ppmgr_rect >= 0)
+    //write(fd_ppmgr_rect, ppmgr_rect_str, strlen(ppmgr_rect_str));
+	write(videoAxisFile, vaxis_str, strlen(vaxis_str));
+  if (fd_ppmgr >= 0) 	write(fd_ppmgr, "1", strlen("1"));
+	write(freeScaleOsd0File, "1", strlen("1"));
+	write(freeScaleOsd1File, "1", strlen("1"));
+  property_set("rw.vout.powerkeydisable", "false");
+	return 0;
+}
+
+int disable_2X_2XYscale()
+{
+  char mode[16];
+	char m1080scale[8];
+	int scaleFile = -1, scaleOsd1File = -1;
+	
+  property_get("ro.platform.has.1080scale",m1080scale,"fail");
+  if(!strncmp(m1080scale, "fail", 4))
+  {
+  	return 0;
+  }
+	get_display_mode(mode);
+	if(strncmp(m1080scale, "2", 1) && (strncmp(m1080scale, "1", 1) || (strncmp(mode, "1080i", 5) && strncmp(mode, "1080p", 5) && strncmp(mode, "720p", 4))))
+  {
+    log_print("[disable_2X_2XYscale]not freescale mode!\n");
+    return 0;
+  }
+  
+	if((scaleFile = open("/sys/class/graphics/fb0/scale", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb0/scale fail.");
+	}
+	if((scaleOsd1File = open("/sys/class/graphics/fb1/scale", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb0/scale fail.");
+	}
+	
+	write(scaleFile, "0", strlen("0"));
+	write(scaleOsd1File, "0", strlen("0"));
+	return 0;
+}
+
+int enable_2Xscale()
+{
+  char mode[16];
+	char m1080scale[8];
+	int scaleFile = -1, scaleaxisFile = -1;
+	char saxis_str[32];
+	display_mode disp_mode;
+	
+  property_get("ro.platform.has.1080scale",m1080scale,"fail");
+  if(!strncmp(m1080scale, "fail", 4))
+  {
+  	return 0;
+  }
+	get_display_mode(mode);
+	disp_mode = display_mode_convert(mode);
+	if (disp_mode < DISP_MODE_1080I || disp_mode > DISP_MODE_1080P) {
+		return 0;
+	}
+	if(strncmp(m1080scale, "2", 1) && (strncmp(m1080scale, "1", 1) || (strncmp(mode, "1080i", 5) && strncmp(mode, "1080p", 5) && strncmp(mode, "720p", 4))))
+  {
+    log_print("[enable_2Xscale]not freescale mode!\n");
+  }
+  else
+  {
+    return 0;
+  }
+  
+	if((scaleFile = open("/sys/class/graphics/fb0/scale", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb0/scale fail.");
+	}
+	if((scaleaxisFile = open("/sys/class/graphics/fb0/scale_axis", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb0/scale_axis fail.");
+	}
+	
+	memset(saxis_str,0,32);
+	sprintf(saxis_str, "0 0 %d %d", vinfo.xres/2-1, vinfo.yres-1);
+	write(scaleaxisFile, saxis_str, strlen(saxis_str));
+	write(scaleFile, "0x10000", strlen("0x10000"));
+	return 0;
+}
+
+int enable_2XYscale()
+{
+  char mode[16];
+	char m1080scale[8];
+	int scaleFile = -1, scaleaxisFile = -1, scaleOsd1File = -1, scaleaxisOsd1File = -1;
+	
+  property_get("ro.platform.has.1080scale",m1080scale,"fail");
+  if(!strncmp(m1080scale, "fail", 4))
+  {
+  	return 0;
+  }
+	get_display_mode(mode);
+	if((strncmp(m1080scale, "2", 1) && strncmp(m1080scale, "1", 1)) || (strncmp(mode, "1080i", 5) && strncmp(mode, "1080p", 5)))
+  {
+    log_print("[enable_2XYscale]not freescale mode!\n");
+    return 0;
+  }
+  
+	if((scaleFile = open("/sys/class/graphics/fb0/scale", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb0/scale fail.");
+	}
+	if((scaleaxisFile = open("/sys/class/graphics/fb0/scale_axis", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb0/scale_axis fail.");
+	}
+	if((scaleOsd1File = open("/sys/class/graphics/fb1/scale", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb0/scale fail.");
+	}
+	if((scaleaxisOsd1File = open("/sys/class/graphics/fb1/scale_axis", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb0/scale_axis fail.");
+	}
+	
+	write(scaleaxisFile, "0 0 959 539", strlen("0 0 959 539"));
+	write(scaleaxisOsd1File, "1280 720 1920 1080", strlen("1280 720 1920 1080"));
+	write(scaleFile, "0x10001", strlen("0x10001"));
+	write(scaleOsd1File, "0x10001", strlen("0x10001"));
+	return 0;
+}
+
+int GL_2X_scale(int mSwitch)
+{
+  char mode[16];
+	char m1080scale[8];
+	int request2XScaleFile = -1, scaleOsd1File = -1, scaleaxisOsd1File = -1, blankFB0 = -1;
+	char raxis_str[32],saxis_str[32];
+	
+  property_get("ro.platform.has.1080scale",m1080scale,"fail");
+  if(!strncmp(m1080scale, "fail", 4))
+  {
+  	return 0;
+  }
+	get_display_mode(mode);
+	if(strncmp(m1080scale, "2", 1) && (strncmp(m1080scale, "1", 1) || (strncmp(mode, "1080i", 5) && strncmp(mode, "1080p", 5))))
+  {
+    log_print("[enable_2XYscale]not freescale mode!\n");
+    return 0;
+  }
+  
+	if((request2XScaleFile = open("/sys/class/graphics/fb0/request2XScale", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb0/scale fail.");
+	}
+	if((scaleOsd1File = open("/sys/class/graphics/fb1/scale", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb1/scale fail.");
+	}
+	if((scaleaxisOsd1File = open("/sys/class/graphics/fb1/scale_axis", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb1/scale_axis fail.");
+	}
+	if((blankFB0 = open("/sys/class/graphics/fb0/blank", O_RDWR)) < 0) {
+		log_print("open /sys/class/graphics/fb0/blank fail.");
+	}
+	write(blankFB0, "1", strlen("1"));
+	if(mSwitch == 0)
+	{
+			write(request2XScaleFile, "2", strlen("2"));
+			write(scaleOsd1File, "0", strlen("0"));
+	}
+	else if(mSwitch == 1)
+	{
+		if(!strncmp(mode, "480i", 4) || !strncmp(mode, "480p", 4))
+		{
+			write(request2XScaleFile, "16 720 480", strlen("16 720 480"));
+			write(scaleaxisOsd1File, "1280 720 720 480", strlen("1280 720 720 480"));
+			write(scaleOsd1File, "0x10001", strlen("0x10001"));
+		}
+		else if(!strncmp(mode, "576i", 4) || !strncmp(mode, "576p", 4))
+		{
+			write(request2XScaleFile, "16 720 576", strlen("16 720 576"));
+			write(scaleaxisOsd1File, "1280 720 720 576", strlen("1280 720 720 576"));
+			write(scaleOsd1File, "0x10001", strlen("0x10001"));
+		}
+		else if(!strncmp(mode, "720p", 4))
+		{
+			write(request2XScaleFile, "2", strlen("2"));
+		}
+		else if(!strncmp(mode, "1080i", 5) || !strncmp(mode, "1080p", 5))
+		{
+			write(request2XScaleFile, "8", strlen("8"));
+			write(scaleaxisOsd1File, "1280 720 1920 1080", strlen("1280 720 1920 1080"));
+			write(scaleOsd1File, "0x10001", strlen("0x10001"));
+		}
+	}
 	return 0;
 }
 

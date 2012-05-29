@@ -30,12 +30,14 @@ int main(int argc,char ** argv)
 		ctrl.video_index=-1;
 		ctrl.audio_index=-1;
 		ctrl.sub_index=-1;
+		ctrl.t_pos=-1;
 		pid=player_start(&ctrl,0);
 		if(pid<0)
 			{
 			printf("play failed=%d\n",pid);
 			return -1;
 			}
+		player_start_play(pid);
 		while(!player_thread_stop(player_get_state(pid)))
 		usleep(10000);
 		player_stop(pid);

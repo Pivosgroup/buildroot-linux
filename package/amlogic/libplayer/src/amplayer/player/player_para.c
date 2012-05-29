@@ -1135,7 +1135,11 @@ int player_decoder_init(play_para_t *p_para)
         log_print("[player_dec_init] codec init failed!\n");
         ret = DECODER_INIT_FAILED;
         goto failed;
+    }else{
+        set_stb_source_hiu();
+        set_stb_demux_source_hiu();
     }
+
     p_para->decoder = decoder;
     p_para->check_end.end_count = CHECK_END_COUNT;
 	p_para->check_end.interval = CHECK_END_INTERVAL;	 

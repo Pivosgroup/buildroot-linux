@@ -15,8 +15,19 @@
 extern "C"
 {
 #endif
+    //pass to arm audio decoder
+    typedef struct {
+        int sample_rate;      ///< audio stream sample rate
+        int channels;         ///< audio stream channels
+        int format;           ///< codec format id
+        int handle;           ///< codec device handler
+    } arm_audio_info;
+    //audio decoder type, default arc
+    #define AUDIO_ARC_DECODER 0
+    #define AUDIO_ARM_DECODER 1
+    #define AUDIO_FFMPEG_DECODER 2
 
-    int audio_decode_init(void **handle);
+    int audio_decode_init(void **handle, arm_audio_info *a_ainfo);
     int audio_decode_start(void *handle);
     int audio_decode_pause(void *handle);
     int audio_decode_resume(void *handle);
@@ -36,7 +47,13 @@ extern "C"
 
     int audio_decode_set_lrvolume(void *, float lvol,float rvol);	
     int audio_decode_get_lrvolume(void *, float* lvol,float* rvol);	
-    int audio_get_soundtrack(void *, int* );	
+    int audio_get_soundtrack(void *, int* );
+#if 0
+	int get_audio_decoder(void);
+	int get_decoder_status(void *p,struct adec_status *adec);
+#endif
+    void audio_set_av_sync_threshold(void *handle, int threshold);
+    int audio_decode_basic_init(void);
 
 #ifdef  __cplusplus
 }

@@ -781,10 +781,12 @@ static int ebml_parse_id(MatroskaDemuxContext *matroska, EbmlSyntax *syntax,
         matroska->media_offset = url_ftell(matroska->ctx->pb) - 4;
     }
 
-    if ((MATROSKA_ID_TRACKS == id) && (url_ftell(matroska->ctx->pb) > matroska->media_offset)) {
+
+    // 此处去掉，满地可.mkv会出现有两个video
+    /*if (matroska->in_read_header && (MATROSKA_ID_TRACKS == id) && (url_ftell(matroska->ctx->pb) > matroska->media_offset)) {
 		av_log(matroska->ctx, AV_LOG_ERROR, "Track exceed media offset %llx > %llx\n", url_ftell(matroska->ctx->pb), matroska->media_offset);
 		return -1;
-    }
+    }*/
     
     return ebml_parse_elem(matroska, &syntax[i], data);
 }

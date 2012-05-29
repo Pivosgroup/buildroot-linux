@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include <audio-dec.h>
+#include <adec-external-ctrl.h>
 
 
 int audio_decode_basic_init(void)
@@ -28,7 +29,7 @@ int audio_decode_basic_init(void)
  * \param handle pointer to player private data
  * \return 0 on success otherwise -1 if an error occurred
  */
-int audio_decode_init(void **handle)
+int audio_decode_init(void **handle, arm_audio_info *a_ainfo)
 {
     int ret;
     aml_audio_dec_t *audec;
@@ -43,7 +44,13 @@ int audio_decode_init(void **handle)
         adec_print("malloc failed! not enough memory !");
         return -1;
     }
-
+    //set param for arm audio decoder
+    memset(audec, 0, sizeof(aml_audio_dec_t));
+    audec->channels=a_ainfo->channels;
+    audec->samplerate=a_ainfo->sample_rate;
+    audec->format=a_ainfo->format;
+    audec->adsp_ops.dsp_file_fd=a_ainfo->handle;
+//	adec_print("audio_decode_init  pcodec = %d, pcodec->ctxCodec = %d!\n", pcodec, pcodec->ctxCodec);
     ret = audiodec_init(audec);
     if (ret) {
         adec_print("adec init failed!");
@@ -552,10 +559,12 @@ void audio_set_av_sync_threshold(void *handle, int threshold)
 
     if (!handle) {
         adec_print("audio handle is NULL !\n");
+        return;
     }
 
     if ((threshold > 500) || (threshold < 60)) {
         adec_print("threshold %d id too small or too large.\n", threshold);
+        return;
     }
 
     audec->avsync_threshold = threshold * 90;

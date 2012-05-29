@@ -225,9 +225,9 @@ const char * codec_error_msg(int error)
 * @param[in]  line   Line where error happens
 */
 /* --------------------------------------------------------------------------*/
-void print_error_msg(int error, int errno, char *func, int line)
+void print_error_msg(int error, int syserr, char *func, int line)
 {
-    CODEC_PRINT("Error=%x : %s,errno=%d : %s,func=%s,line=%d\n", error, codec_error_msg(error),errno, codec_error_msg(errno),func, line);
+    CODEC_PRINT("Error=%x errno=%d : %s,func=%s,line=%d\n", error, syserr, codec_error_msg(syserr),func, line);
 }
 
 
