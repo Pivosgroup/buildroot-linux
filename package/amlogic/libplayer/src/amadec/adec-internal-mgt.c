@@ -78,7 +78,7 @@ static int audio_hardware_ctrl(hw_command_t cmd)
 
     fd = open(AUDIO_CTRL_DEVICE, O_RDONLY);
     if (fd < 0) {
-        adec_print("Open Device %s Failed!", AUDIO_CTRL_DEVICE);
+        adec_print("Open Device %s Failed!\n", AUDIO_CTRL_DEVICE);
         return -1;
     }
 
@@ -100,7 +100,7 @@ static int audio_hardware_ctrl(hw_command_t cmd)
         break;
 
     default:
-        adec_print("Unknow Command %d!", cmd);
+        adec_print("Unknow Command %d!\n", cmd);
         break;
 
     };
@@ -125,7 +125,7 @@ static void start_adec(aml_audio_dec_t *audec)
         audec->state = ACTIVE;
 
         while ((!audiodsp_get_first_pts_flag(dsp_ops)) && (!audec->need_stop)) {
-            adec_print("wait first pts checkin complete !");
+            adec_print("wait first pts checkin complete !\n");
             usleep(100000);
         }
 
@@ -218,7 +218,6 @@ static void mute_adec(aml_audio_dec_t *audec, int en)
     audio_out_operations_t *aout_ops = &audec->aout_ops;
 
     if (aout_ops->mute) {
-        adec_print("%s the output !\n", (en ? "mute" : "unmute"));
         aout_ops->mute(audec, en);
         audec->muted = en;
     }
@@ -234,7 +233,6 @@ static void adec_set_volume(aml_audio_dec_t *audec, float vol)
     audio_out_operations_t *aout_ops = &audec->aout_ops;
 
     if (aout_ops->set_volume) {
-        adec_print("set audio volume! vol = %f\n", vol);
         aout_ops->set_volume(audec, vol);
     }
 }
@@ -250,7 +248,6 @@ static void adec_set_lrvolume(aml_audio_dec_t *audec, float lvol,float rvol)
     audio_out_operations_t *aout_ops = &audec->aout_ops;
 
     if (aout_ops->set_lrvolume) {
-        adec_print("set audio volume! left vol = %f,right vol:%f\n", lvol,rvol);
         aout_ops->set_lrvolume(audec, lvol,rvol);
     }
 }
@@ -318,7 +315,7 @@ static void *adec_message_loop(void *args)
         if (ret == 0) {
             ret = aout_ops->init(audec);
             if (ret) {
-                adec_print("Audio out device init failed!");
+                adec_print("Audio out device init failed!\n");
                 feeder_release(audec);
                 continue;
             }
@@ -355,25 +352,25 @@ static void *adec_message_loop(void *args)
 
         case CMD_PAUSE:
 
-            adec_print("Receive PAUSE Command!");
+            adec_print("Receive PAUSE Command!\n");
             pause_adec(audec);
             break;
 
         case CMD_RESUME:
 
-            adec_print("Receive RESUME Command!");
+            adec_print("Receive RESUME Command!\n");
             resume_adec(audec);
             break;
 
         case CMD_STOP:
 
-            adec_print("Receive STOP Command!");
+            adec_print("Receive STOP Command!\n");
             stop_adec(audec);
             break;
 
         case CMD_MUTE:
 
-            adec_print("Receive Mute Command!");
+            adec_print("Receive Mute Command!\n");
             if (msg->has_arg) {
                 mute_adec(audec, msg->value.en);
             }
@@ -381,14 +378,14 @@ static void *adec_message_loop(void *args)
 
         case CMD_SET_VOL:
 
-            adec_print("Receive Set Vol Command!");
+            adec_print("Receive Set Vol Command!\n");
             if (msg->has_arg) {
                 adec_set_volume(audec, msg->value.volume);
             }
             break;
 	 case CMD_SET_LRVOL:
 
-            adec_print("Receive Set LRVol Command!");
+            adec_print("Receive Set LRVol Command!\n");
             if (msg->has_arg) {
                 adec_set_lrvolume(audec, msg->value.volume,msg->value_ext.volume);
             }
@@ -396,36 +393,36 @@ static void *adec_message_loop(void *args)
 		
         case CMD_CHANL_SWAP:
 
-            adec_print("Receive Channels Swap Command!");
+            adec_print("Receive Channels Swap Command!\n");
             audio_hardware_ctrl(HW_CHANNELS_SWAP);
             break;
 
         case CMD_LEFT_MONO:
 
-            adec_print("Receive Left Mono Command!");
+            adec_print("Receive Left Mono Command!\n");
             audio_hardware_ctrl(HW_LEFT_CHANNEL_MONO);
             break;
 
         case CMD_RIGHT_MONO:
 
-            adec_print("Receive Right Mono Command!");
+            adec_print("Receive Right Mono Command!\n");
             audio_hardware_ctrl(HW_RIGHT_CHANNEL_MONO);
             break;
 
         case CMD_STEREO:
 
-            adec_print("Receive Stereo Command!");
+            adec_print("Receive Stereo Command!\n");
             audio_hardware_ctrl(HW_STEREO_MODE);
             break;
 
         case CMD_RELEASE:
 
-            adec_print("Receive RELEASE Command!");
+            adec_print("Receive RELEASE Command!\n");
             release_adec(audec);
             break;
 
         default:
-            adec_print("Unknow Command!");
+            adec_print("Unknow Command!\n");
             break;
 
         }
@@ -436,7 +433,7 @@ static void *adec_message_loop(void *args)
         }
     } while (audec->state != TERMINATED);
 
-    adec_print("Exit Message Loop Thread!");
+    adec_print("Exit Message Loop Thread!\n");
     pthread_exit(NULL);
     return NULL;
 }

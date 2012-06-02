@@ -22,8 +22,8 @@
 #include <log-print.h>
 #include <alsa-out.h>
 
-
-#define USE_INTERPOLATION
+// do not use interpolation, it creates audio artifacts.
+//#define USE_INTERPOLATION
 
 static snd_pcm_sframes_t (*readi_func)(snd_pcm_t *handle, void *buffer, snd_pcm_uframes_t size);
 static snd_pcm_sframes_t (*writei_func)(snd_pcm_t *handle, const void *buffer, snd_pcm_uframes_t size);
@@ -114,6 +114,58 @@ static void pcm_interpolation(int interpolation, unsigned num_channel, unsigned 
 }
 #endif
 
+static int check_passthrough(void)
+{
+    int  val = 0;
+    char bcmd[256] = {0};
+    const char *path = "/sys/class/audiodsp/digital_raw";
+    int fd = open(path, O_RDONLY);
+    if (fd >= 0) {
+        read(fd, bcmd, sizeof(bcmd));
+        close(fd);
+        if (strstr(bcmd, "RAW") != 0)
+          val = 1;
+    }
+    return val;
+}
+
+static void pcm_deamplification(alsa_param_t *alsa_param, u_char *pcm_data, size_t pcm_frames)
+{
+    int i, nsamples;
+    short *pcm_samples;
+
+    if (alsa_param->pass_flag) {
+        // audio passthough is active, do not touch pcm_data,
+        return;
+    }
+
+    if (alsa_param->volume_deamp >= 1.0f) {
+        // deamplification required.
+        return;
+    }
+
+    if (alsa_param->format != SND_PCM_FORMAT_S16_LE) {
+        // we only handle 16-bit little endian pcm samples.
+        return;
+    }
+
+    pcm_samples = (unsigned short*)pcm_data;
+    nsamples = pcm_frames * alsa_param->channelcount;
+
+    if (alsa_param->mute_flag || alsa_param->volume_deamp <= 0.0f) {
+        // fast path for mute or volume <= 0.0.
+        for (i = 0; i < nsamples; i++) {
+            pcm_samples[i] = 0;
+        }
+    } else {
+        int value;
+        for (i = 0; i < nsamples; i++) {
+          // must be int. so that we can check over/under flow.
+          value = (int)((float)pcm_samples[i] * alsa_param->volume_deamp);
+          pcm_samples[i] = (short)value;
+        }
+    }
+}
 
 static int set_params(alsa_param_t *alsa_params)
 {
@@ -306,6 +358,7 @@ static unsigned oversample_play(alsa_param_t * alsa_param, char * src, unsigned 
                 *to ++ = *from++;
                 from += 2;
             }
+            pcm_deamplification(alsa_param, output_buffer, frames / 2);
             ret = pcm_write(alsa_param, output_buffer, frames / 2);
             ret = ret * alsa_param->bits_per_frame / 8;
             ret = ret * 2;
@@ -326,6 +379,7 @@ static unsigned oversample_play(alsa_param_t * alsa_param, char * src, unsigned 
                 *to++ = r;
             }
 #endif
+            pcm_deamplification(alsa_param, output_buffer, frames * 2);
             ret = pcm_write(alsa_param, output_buffer, frames * 2);
             ret = ret * alsa_param->bits_per_frame / 8;
             ret = ret / 2;
@@ -350,6 +404,7 @@ static unsigned oversample_play(alsa_param_t * alsa_param, char * src, unsigned 
                 *to++ = r;
             }
 #endif
+            pcm_deamplification(alsa_param, output_buffer, frames * 4);
             ret = pcm_write(alsa_param, output_buffer, frames * 4);
             ret = ret * alsa_param->bits_per_frame / 8;
             ret = ret / 4;
@@ -363,6 +418,7 @@ static unsigned oversample_play(alsa_param_t * alsa_param, char * src, unsigned 
                 *to++ = *from++;
                 from++;
             }
+            pcm_deamplification(alsa_param, output_buffer, frames);
             ret = pcm_write(alsa_param, output_buffer, frames);
             ret = ret * alsa_param->bits_per_frame / 8;
         } else if (alsa_param->oversample == 0) {
@@ -372,6 +428,7 @@ static unsigned oversample_play(alsa_param_t * alsa_param, char * src, unsigned 
                 *to++ = *from;
                 *to++ = *from++;
             }
+            pcm_deamplification(alsa_param, output_buffer, frames);
             ret = pcm_write(alsa_param, output_buffer, frames);
             ret = ret * (alsa_param->bits_per_frame) / 8;
             ret = ret / 2;
@@ -393,6 +450,7 @@ static unsigned oversample_play(alsa_param_t * alsa_param, char * src, unsigned 
                 *to++ = *from++;
             }
 #endif
+            pcm_deamplification(alsa_param, output_buffer, frames * 2);
             ret = pcm_write(alsa_param, output_buffer, frames * 2);
             ret = ret * (alsa_param->bits_per_frame) / 8;
             ret = ret / 4;
@@ -418,6 +476,7 @@ static unsigned oversample_play(alsa_param_t * alsa_param, char * src, unsigned 
                 *to++ = *from++;
             }
 #endif
+            pcm_deamplification(alsa_param, output_buffer, frames * 4);
             ret = pcm_write(alsa_param, output_buffer, frames * 4);
             ret = ret * (alsa_param->bits_per_frame) / 8;
             ret = ret / 8;
@@ -434,6 +493,7 @@ static int alsa_play(alsa_param_t * alsa_param, char * data, unsigned len)
     if (!alsa_param->flag) {
         l = len * 8 / alsa_param->bits_per_frame;
         l = l & (~(32 - 1)); /*driver only support  32 frames each time */
+        pcm_deamplification(alsa_param, data, l);
         r = pcm_write(alsa_param, data, l);
         r = r * alsa_param->bits_per_frame / 8;
     } else {
@@ -588,7 +648,11 @@ int alsa_init(struct aml_audio_dec* audec)
     alsa_param->realchanl = audec->channels;
     //alsa_param->rate = audec->samplerate;
     alsa_param->format = SND_PCM_FORMAT_S16_LE;
-   alsa_param->wait_flag=0;
+    alsa_param->wait_flag = 0;
+    // audio mute, passthough and volume deamplification
+    alsa_param->mute_flag = 0;
+    alsa_param->pass_flag = check_passthrough();
+    alsa_param->volume_deamp = 1.0f;
 
 #ifdef USE_INTERPOLATION
     memset(pass1_history, 0, 64 * sizeof(int));
@@ -766,6 +830,8 @@ unsigned long alsa_latency(struct aml_audio_dec* audec)
  */
 int alsa_mute(struct aml_audio_dec* audec, adec_bool_t en)
 {
+    alsa_param_t *alsa_param = (alsa_param_t *)audec->aout_ops.private_data;
+    alsa_param->mute_flag = en;
     return 0;
 }
 
@@ -777,6 +843,15 @@ int alsa_mute(struct aml_audio_dec* audec, adec_bool_t en)
  */
 int alsa_set_volume(struct aml_audio_dec* audec, float vol)
 {
+    alsa_param_t *alsa_param = (alsa_param_t *)audec->aout_ops.private_data;
+
+    if (vol > 1.0f)
+        alsa_param->volume_deamp = 1.0f;
+    else if (vol < 0.0f)
+        alsa_param->volume_deamp = 0.0f;
+    else
+        alsa_param->volume_deamp = vol;
+
     return 0;
 }
 

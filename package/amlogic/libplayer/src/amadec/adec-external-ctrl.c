@@ -253,7 +253,7 @@ int audio_decode_set_mute(void *handle, int en)
         cmd->has_arg = 1;
         ret = adec_send_message(audec, cmd);
     } else {
-        adec_print("message alloc failed, no memory!");
+        adec_print("message alloc failed, no memory!\n");
         ret = -1;
     }
 
@@ -281,11 +281,11 @@ int audio_decode_set_volume(void *handle, float vol)
     if (cmd) {
         cmd->ctrl_cmd = CMD_SET_VOL;
         cmd->value.volume = vol;
-	 audec->volume = vol;
+        audec->volume = vol;
         cmd->has_arg = 1;	
         ret = adec_send_message(audec, cmd);
     } else {
-        adec_print("message alloc failed, no memory!");
+        adec_print("message alloc failed, no memory!\n");
         ret = -1;
     }
 
@@ -312,14 +312,14 @@ int audio_decode_set_lrvolume(void *handle, float lvol,float rvol)
     cmd = adec_message_alloc();
     if (cmd) {
         cmd->ctrl_cmd = CMD_SET_LRVOL;
+        cmd->value_ext.volume = rvol;
         cmd->value.volume = lvol;
-	 audec->volume = lvol;
         cmd->has_arg = 1;
-	 cmd->value_ext.volume = rvol;
-	 audec->volume_ext = rvol;
+        audec->volume = lvol;
+        audec->volume_ext = rvol;
         ret = adec_send_message(audec, cmd);
     } else {
-        adec_print("message alloc failed, no memory!");
+        adec_print("message alloc failed, no memory!\n");
         ret = -1;
     }
 

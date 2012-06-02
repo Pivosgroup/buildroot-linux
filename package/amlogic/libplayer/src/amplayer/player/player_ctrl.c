@@ -985,7 +985,22 @@ int audio_get_volume_range(int pid, int *min, int *max)
 /* --------------------------------------------------------------------------*/
 int audio_set_volume(int pid, float val)
 {
-    return codec_set_volume(NULL, val);
+    int ret = PLAYER_FAILED;
+    play_para_t *player_para;
+    codec_para_t *p;
+
+    player_para = player_open_pid_data(pid);
+    if (player_para != NULL) {
+        p = get_audio_codec(player_para);
+        if (p != NULL) {
+            ret = codec_set_volume(p, val);
+        }
+        player_close_pid_data(pid);
+    } else {
+        ret = codec_set_volume(NULL, val);
+    }
+
+    return ret;
 }
 
 /* --------------------------------------------------------------------------*/
@@ -1023,9 +1038,24 @@ int audio_get_volume(int pid, float *vol)
  * @details set volume to val
  */
 /* --------------------------------------------------------------------------*/
-int audio_set_lrvolume(int pid, float lvol,float rvol)
+int audio_set_lrvolume(int pid, float lvol, float rvol)
 {
-    return codec_set_lrvolume(NULL, lvol,rvol );
+    int ret = PLAYER_FAILED;
+    play_para_t *player_para;
+    codec_para_t *p;
+
+    player_para = player_open_pid_data(pid);
+    if (player_para != NULL) {
+        p = get_audio_codec(player_para);
+        if (p != NULL) {
+            ret = codec_set_lrvolume(p, lvol, rvol);
+        }
+        player_close_pid_data(pid);
+    } else {
+        ret = codec_set_lrvolume(NULL, lvol, rvol);
+    }
+
+    return ret;
 }
 
 /* --------------------------------------------------------------------------*/
