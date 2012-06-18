@@ -4,20 +4,23 @@ case "$1" in
   start)
         echo "Starting mali..."
         /bin/echo 0 > /sys/class/graphics/fb0/blank
-        /bin/echo 1 > /sys/class/graphics/fb1/blank
-	/sbin/modprobe mali
-	;;
+        #/sbin/modprobe ump
+        /sbin/modprobe mali
+    ;;
   stop)
         echo "Stopping mali..."
         /sbin/modprobe -r mali
-	;;
+        #/sbin/modprobe -r ump
+    ;;
   restart|reload)
         echo "Restarting mali..."
         /sbin/modprobe -r mali
+        #/sbin/modprobe -r ump
+        #/sbin/modprobe ump
         /sbin/modprobe mali
-	;;
+    ;;
   *)
-  	;;
+    ;;
 esac
 
 exit $?

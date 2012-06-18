@@ -1,6 +1,19 @@
 #!/bin/sh
 
 if [ "X$1" = "Xstart" ]; then
+  echo "S10setup: init fb0, fb1"
+  # blank the fb's
+  echo 1 > /sys/class/graphics/fb0/blank
+  echo 1 > /sys/class/graphics/fb1/blank
+  # clear them
+  dd if=/dev/zero of=/dev/fb0 bs=1280 count=2880
+  dd if=/dev/zero of=/dev/fb1 bs=1280 count=2880
+  # bugfix for m3 kernel, init fb0 to 24 bpp first
+  #  or the init to 32 bpp will not work
+  fbset -fb /dev/fb0 -g 1280 720 1280 1440 24
+  # setup the default fb sizes, bbp and buffering
+  fbset -fb /dev/fb0 -g 1280 720 1280 1440 32
+  fbset -fb /dev/fb1 -g 1280 720 1280 1440 32
   #
   echo "S10setup: remount / rw"
   mount -o remount,rw /
@@ -44,10 +57,12 @@ if [ "X$1" = "Xstart" ]; then
   mount -o remount,ro /
   #
   # we startup as performance, then switch to ondemand (kernel bug) and
-  # limit to 600Mhz instead of 200MHz to keep audio hw from stalling.
+  # if m1, limit to 600Mhz instead of 200MHz to keep audio hw from stalling.
   echo "S10setup: switching to ondemand"
   echo "ondemand" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-  echo "600000"   > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+  if [ `grep -c -i "MESON-M1" /proc/cpuinfo` -gt 0 ]; then
+    echo "600000"   > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq ;
+  fi
   #
   echo "S10setup: done"
 fi
