@@ -139,17 +139,17 @@ typedef struct
     int has_video;
     int has_audio;
     int has_sub;
-    int has_chapter;
     int nb_streams;
     int total_video_num;
     int cur_video_index;
     int total_audio_num;
-    int total_chapter_num;
     int cur_audio_index;
     int total_sub_num;      
     int cur_sub_index;	
     int seekable;
     int drm_check;
+    int has_chapter;
+    int total_chapter_num;
 }mstream_info_t;
 
 typedef struct
