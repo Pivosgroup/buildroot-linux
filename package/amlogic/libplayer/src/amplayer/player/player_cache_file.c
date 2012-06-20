@@ -292,7 +292,7 @@ int cachefile_write(struct cache_file * cache, int64_t off, char *buf, int size)
         data_off += CACHE_PAGE_SIZE;
     }
     cache->last_write_off = off + size;
-    //  log_debug("write data to file off end=%lld,size=%d\n",off,size);
+    //  log_print("write data to file off end=%lld,size=%d\n",off,size);
     return 0;
 }
 

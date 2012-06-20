@@ -41,7 +41,6 @@
 #define CODEC_SUB_DEVICE            "/dev/amstream_sub"
 #define CODEC_SUB_READ_DEVICE       "/dev/amstream_sub_read"
 
-
 CODEC_HANDLE codec_h_open(const char *port_addr, int flags);
 int codec_h_close(CODEC_HANDLE h);
 int codec_h_write(CODEC_HANDLE , void *, int);

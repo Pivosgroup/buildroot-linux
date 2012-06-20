@@ -164,7 +164,7 @@ void ff_put_v(AVIOContext *bc, uint64_t val);
  *         final \0
  */
 int ff_get_line(AVIOContext *s, char *buf, int maxlen);
-
+int ff_get_assic_line(AVIOContext *s, char *buf, int maxlen);
 #define SPACE_CHARS " \t\r\n"
 
 /**

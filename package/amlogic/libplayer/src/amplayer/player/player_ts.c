@@ -31,6 +31,8 @@ static int stream_ts_init(play_para_t *p_para)
         codec->video_pid = vinfo->video_pid;
         if ((codec->video_type == VFORMAT_H264) || (codec->video_type == VFORMAT_H264MVC)) {
             codec->am_sysinfo.format = vinfo->video_codec_type;
+            codec->am_sysinfo.width = vinfo->video_width;
+            codec->am_sysinfo.height = vinfo->video_height;
         } else if (codec->video_type == VFORMAT_VC1) {
             codec->am_sysinfo.format = vinfo->video_codec_type;
             codec->am_sysinfo.width = vinfo->video_width;
@@ -44,7 +46,7 @@ static int stream_ts_init(play_para_t *p_para)
         codec->audio_pid = ainfo->audio_pid;
         codec->audio_channels = ainfo->audio_channel;
         codec->audio_samplerate = ainfo->audio_samplerate;
-		pCodecCtx = p_para->pFormatCtx->streams[p_para->astream_info.audio_index]->codec;
+		pCodecCtx = p_para->pFormatCtx->streams[p_para->astream_info.audio_index]->codec;	
         /*if ((codec->audio_type == AFORMAT_ADPCM) || (codec->audio_type == AFORMAT_WMA)
             || (codec->audio_type == AFORMAT_WMAPRO) || (codec->audio_type == AFORMAT_PCM_S16BE)
             || (codec->audio_type == AFORMAT_PCM_S16LE) || (codec->audio_type == AFORMAT_PCM_U8)
@@ -67,7 +69,8 @@ static int stream_ts_init(play_para_t *p_para)
             codec->audio_info.valid = 1;
 
         }
-     	 log_debug("[%s:%d]audio bitrate=%d sample_rate=%d channels=%d codec_id=%x block_align=%d,extra size\n",
+	 codec->avsync_threshold = p_para->start_param->avsync_threshold;
+     	 log_print("[%s:%d]audio bitrate=%d sample_rate=%d channels=%d codec_id=%x block_align=%d,extra size\n",
                   __FUNCTION__, __LINE__, codec->audio_info.bitrate, codec->audio_info.sample_rate, codec->audio_info.channels,
                   codec->audio_info.codec_id, codec->audio_info.block_align,codec->audio_info.extradata_size);
        }

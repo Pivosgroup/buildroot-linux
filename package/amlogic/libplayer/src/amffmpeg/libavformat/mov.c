@@ -191,6 +191,8 @@ static int mov_read_udta_string(MOVContext *c, AVIOContext *pb, MOVAtom atom)
         parse = mov_metadata_track_or_disc_number; break;
     case MKTAG( 'd','i','s','k'): key = "disc";
         parse = mov_metadata_track_or_disc_number; break;
+    case MKTAG( 'c','o','v','r'): key = "cover_pic"; break;
+    case MKTAG(0xa9,'x','y','z'): key = "GPSCoordinates"; break;
     }
 
     if (c->itunes_metadata && atom.size > 8) {
@@ -200,6 +202,7 @@ static int mov_read_udta_string(MOVContext *c, AVIOContext *pb, MOVAtom atom)
             data_type = avio_rb32(pb); // type
             avio_rb32(pb); // unknown
             str_size = data_size - 16;
+	     cover_size = data_size -16;
             atom.size -= 16;
         } else return 0;
     } else if (atom.size > 4 && key && !c->itunes_metadata) {
@@ -234,6 +237,11 @@ static int mov_read_udta_string(MOVContext *c, AVIOContext *pb, MOVAtom atom)
         } else {
             avio_read(pb, str, str_size);
             str[str_size] = 0;
+        }
+        // Android MP4 writer put an additional '/' at the end, discard it.
+        // The CTS test seems the added '/' is not needed.
+        if ((atom.type == MKTAG(0xa9,'x','y','z')) && (str[str_size-1] == 0x2f)) {
+            str[str_size-1] = 0;
         }
         av_dict_set(&c->fc->metadata, key, str, 0);
         if (*language && strcmp(language, "und")) {
@@ -290,7 +298,7 @@ static int mov_read_default(MOVContext *c, AVIOContext *pb, MOVAtom atom)
 	
     if (atom.size < 0)
         atom.size = INT64_MAX;
-    while (total_size + 8 < atom.size && !url_feof(pb)) {
+    while (total_size + 8 < atom.size && !url_feof(pb) && !url_interrupt_cb()) {
         int (*parse)(MOVContext*, AVIOContext*, MOVAtom) = NULL;
         a.size = atom.size;
         a.type=0;
@@ -605,6 +613,7 @@ static int mov_read_mdat(MOVContext *c, AVIOContext *pb, MOVAtom atom)
     if(atom.size == 0) /* wrong one (MP4) */
         return 0;
     c->found_mdat=1;
+    c->fc->media_dataoffset = url_ftell(pb);
     return 0; /* now go for moov */
 }
 
@@ -2565,6 +2574,10 @@ static int mov_read_packet(AVFormatContext *s, AVPacket *pkt)
     int ret;
 	int64_t offset = 0;
  retry:
+    if (url_interrupt_cb()) {
+        av_log(s, AV_LOG_WARNING, "interrupt, exit\n");
+        return AVERROR_EXIT;
+    }
     sample = mov_find_next_sample(s, &st);
     if (!sample) {
         mov->found_mdat = 0;

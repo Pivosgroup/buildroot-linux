@@ -26,5 +26,6 @@
 	player_sub.o \
 	player_thumbnail.o \
 	player_mate.o \
+	player_profile.o \
 	version.o \
 

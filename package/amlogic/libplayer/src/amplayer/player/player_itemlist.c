@@ -50,7 +50,7 @@ struct item * item_alloc(int ext) {
 
 void item_free(struct item *item)
 {
-    return FREE(item);
+    FREE(item);
 }
 
 

@@ -91,10 +91,16 @@
 #define AMSTREAM_IOC_SET_SYNC_ADISCON  _IOW(AMSTREAM_IOC_MAGIC, 0x45, unsigned long)
 #define AMSTREAM_IOC_GET_SYNC_VDISCON  _IOR(AMSTREAM_IOC_MAGIC, 0x46, unsigned long)
 #define AMSTREAM_IOC_SET_SYNC_VDISCON  _IOW(AMSTREAM_IOC_MAGIC, 0x47, unsigned long)
+#define AMSTREAM_IOC_GET_VIDEO_DISABLE  _IOR(AMSTREAM_IOC_MAGIC, 0x48, unsigned long)
+#define AMSTREAM_IOC_SET_VIDEO_DISABLE  _IOW(AMSTREAM_IOC_MAGIC, 0x49, unsigned long)
+#define AMSTREAM_IOC_SET_PCRSCR       _IOW(AMSTREAM_IOC_MAGIC, 0x4a, unsigned long)
+#define AMSTREAM_IOC_GET_VIDEO_AXIS   _IOR(AMSTREAM_IOC_MAGIC, 0x4b, unsigned long)
+#define AMSTREAM_IOC_SET_VIDEO_AXIS   _IOW(AMSTREAM_IOC_MAGIC, 0x4c, unsigned long)
 #define AMSTREAM_IOC_SUB_NUM	_IOR(AMSTREAM_IOC_MAGIC, 0x50, unsigned long)
 #define AMSTREAM_IOC_SUB_INFO	_IOR(AMSTREAM_IOC_MAGIC, 0x51, unsigned long)
 
-#define AMSTREAM_IOC_VF_STATUS	_IOR(AMSTREAM_IOC_MAGIC, 0x60, unsigned long)
+#define AMSTREAM_IOC_SET_DEMUX  _IOW(AMSTREAM_IOC_MAGIC, 0x90, unsigned long)
+
 struct buf_status {
     int size;
     int data_len;

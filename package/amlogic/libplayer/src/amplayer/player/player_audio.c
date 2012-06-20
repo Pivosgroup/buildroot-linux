@@ -42,14 +42,14 @@ static int stream_audio_init(play_para_t *p_para)
         if (codec->audio_info.extradata_size > 0 ) {
 	     if(codec->audio_info.extradata_size > 	AUDIO_EXTRA_DATA_SIZE)
 	     {
-      			log_error("[%s:%d],extra data size exceed max  extra data buffer,cut it to max buffer size ", __FUNCTION__, __LINE__);
+      			log_print("[%s:%d],extra data size exceed max  extra data buffer,cut it to max buffer size ", __FUNCTION__, __LINE__);
 			codec->audio_info.extradata_size = 	AUDIO_EXTRA_DATA_SIZE;
   	     }
             memcpy((char*)codec->audio_info.extradata, p_para->pFormatCtx->streams[p_para->astream_info.audio_index]->codec->extradata, codec->audio_info.extradata_size);
         }
         codec->audio_info.valid = 1;
-        log_debug("[%s:%d]block_align=%d,,sample_rate=%d,,channels=%d,,bitrate=%d,,codec_id=%d,extra size %d\n", __FUNCTION__, __LINE__, codec->audio_info.block_align,
-                  codec->audio_info.sample_rate, codec->audio_info.channels , codec->audio_info.extradata_size, codec->audio_info.codec_id,codec->audio_info.extradata_size);
+        log_print("[%s:%d]block_align=%d,,sample_rate=%d,,channels=%d,,bitrate=%d,,codec_id=%d,extra size %d\n", __FUNCTION__, __LINE__, codec->audio_info.block_align,
+                  codec->audio_info.sample_rate, codec->audio_info.channels , codec->audio_info.extradata_size, codec->audio_info.codec_id,codec->audio_info.extradata_size);        
     }
     ret = codec_init(codec);
     if (ret != CODEC_ERROR_NONE) {
@@ -58,7 +58,7 @@ static int stream_audio_init(play_para_t *p_para)
         }
         goto error1;
     }
-    log_debug("[%s:%d]codec init finished! mute_on:%d\n", __FUNCTION__, __LINE__, p_para->playctrl_info.audio_mute);
+    log_print("[%s:%d]codec init finished! mute_on:%d\n", __FUNCTION__, __LINE__, p_para->playctrl_info.audio_mute);
     /*ret = codec_set_mute(codec, p_para->playctrl_info.audio_mute);
     if (ret != CODEC_ERROR_NONE) {
         codec_close(codec);
@@ -68,7 +68,7 @@ static int stream_audio_init(play_para_t *p_para)
     return PLAYER_SUCCESS;
 
 error1:
-    log_error("[audio]codec_init failed!ret=%x stream_type=%d\n", ret, codec->stream_type);
+    log_print("[audio]codec_init failed!ret=%x stream_type=%d\n", ret, codec->stream_type);
     codec_free(codec);
     return DECODER_INIT_FAILED;
 }

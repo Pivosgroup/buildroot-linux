@@ -706,10 +706,13 @@ static int asf_read_header(AVFormatContext *s, AVFormatParameters *ap)
             if (!s->keylen) {
                 if (!ff_guidcmp(&g, &ff_asf_content_encryption)) {
                     av_log(s, AV_LOG_WARNING, "DRM protected stream detected, decoding will likely fail!\n");
+                    s->drmcontent = 1;
                 } else if (!ff_guidcmp(&g, &ff_asf_ext_content_encryption)) {
                     av_log(s, AV_LOG_WARNING, "Ext DRM protected stream detected, decoding will likely fail!\n");
+                    s->drmcontent = 1;
                 } else if (!ff_guidcmp(&g, &ff_asf_digital_signature)) {
                     av_log(s, AV_LOG_WARNING, "Digital signature detected, decoding will likely fail!\n");
+                    s->drmcontent = 1;
                 }
             }
         }
@@ -860,7 +863,7 @@ static int ff_asf_get_packet(AVFormatContext *s, AVIOContext *pb)
     if (packet_length < asf->hdr.min_pktsize)
         padsize += asf->hdr.min_pktsize - packet_length;
     asf->packet_padsize = padsize;
-    av_log(s,AV_LOG_INFO, "packet: size=%d padsize=%d  left=%d\n", s->packet_size, asf->packet_padsize, asf->packet_size_left);
+   //// av_log(s,AV_LOG_INFO, "packet: size=%d padsize=%d  left=%d\n", s->packet_size, asf->packet_padsize, asf->packet_size_left);
     return 0;
 }
 

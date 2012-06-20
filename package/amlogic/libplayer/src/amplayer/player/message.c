@@ -44,7 +44,7 @@ int send_message(play_para_t *para, player_cmd_t *cmd)
 {
     int ret = -1;
     message_pool_t *pool = &para->message_pool;
-    //log_debug("[send_message:%d]num=%d in_idx=%d out_idx=%d\n",__LINE__,pool->message_num,pool->message_in_index,pool->message_out_index);
+    //log_print("[send_message:%d]num=%d in_idx=%d out_idx=%d\n",__LINE__,pool->message_num,pool->message_in_index,pool->message_out_index);
     pthread_mutex_lock(&pool->msg_mutex);
     if (pool->message_num < MESSAGE_MAX) {
         pool->message_list[pool->message_in_index] = cmd;
@@ -94,7 +94,7 @@ player_cmd_t * get_message_locked(play_para_t *para)
         cmd = pool->message_list[pool->message_out_index];
         pool->message_out_index = (pool->message_out_index + 1) % MESSAGE_MAX;
         pool->message_num--;
-        log_debug("[get_message_locked:%d]num=%d in_idx=%d out_idx=%d cmd=%x\n", __LINE__, pool->message_num, pool->message_in_index, pool->message_out_index, cmd->ctrl_cmd);
+        log_print("[get_message_locked:%d]num=%d in_idx=%d out_idx=%d cmd=%x\n", __LINE__, pool->message_num, pool->message_in_index, pool->message_out_index, cmd->ctrl_cmd);
     }
     return cmd;
 }
@@ -107,13 +107,13 @@ player_cmd_t * get_message(play_para_t *para)
         return NULL;
     }
     pthread_mutex_lock(&pool->msg_mutex);
-    //log_debug("[get_message]pool=%p msg_num=%d\n",pool,pool->message_num);
+    //log_print("[get_message]pool=%p msg_num=%d\n",pool,pool->message_num);
     if (pool->message_num > 0) {
 
         cmd = pool->message_list[pool->message_out_index];
         pool->message_out_index = (pool->message_out_index + 1) % MESSAGE_MAX;
         pool->message_num--;
-        log_debug("[get_message:%d]num=%d in_idx=%d out_idx=%d cmd=%x\n", __LINE__, pool->message_num, pool->message_in_index, pool->message_out_index, cmd->ctrl_cmd);
+        log_print("[get_message:%d]num=%d in_idx=%d out_idx=%d cmd=%x\n", __LINE__, pool->message_num, pool->message_in_index, pool->message_out_index, cmd->ctrl_cmd);
     }
     pthread_mutex_unlock(&pool->msg_mutex);
     return cmd;
@@ -126,11 +126,11 @@ player_cmd_t * peek_message_locked(play_para_t *para)
         log_error("[peek_message_locked]pool is null!\n");
         return NULL;
     }
-    //log_debug("[get_message]pool=%p msg_num=%d\n",pool,pool->message_num);
+    //log_print("[get_message]pool=%p msg_num=%d\n",pool,pool->message_num);
     if (pool->message_num > 0) {
 
         cmd = pool->message_list[pool->message_out_index];
-        log_debug("[peek_message_locked:%d]num=%d in_idx=%d out_idx=%d cmd=%x\n", __LINE__, pool->message_num, pool->message_in_index, pool->message_out_index, cmd->ctrl_cmd);
+        log_print("[peek_message_locked:%d]num=%d in_idx=%d out_idx=%d cmd=%x\n", __LINE__, pool->message_num, pool->message_in_index, pool->message_out_index, cmd->ctrl_cmd);
     }
     return cmd;
 }
@@ -189,11 +189,12 @@ int update_player_states(play_para_t *para, int force)
     para->state.last_sta = para->state.status;
     para->state.status = get_player_state(para);
 
-    if (check_time_interrupt(&cb->callback_old_time, cb->update_interval) || force) {
+    if (check_time_interrupt(&cb->callback_old_time, cb->update_interval) || force) {        
         player_info_t state;
         MEMCPY(&state, &para->state, sizeof(state));
         //if(force == 1)
-        log_debug("**[update_state]pid:%d status=%s(last:%s) err=0x%x curtime=%d (ms:%d) fulltime=%d lsttime=%d\n",
+#if 0
+        log_print("**[update_state]pid:%d status=%s(last:%s) err=0x%x curtime=%d (ms:%d) fulltime=%d lsttime=%d\n",
                   para->player_id,
                   player_status2str(state.status),
                   player_status2str(state.last_sta),
@@ -202,12 +203,13 @@ int update_player_states(play_para_t *para, int force)
                   state.current_ms,
                   state.full_time,
                   state.last_time);
-        log_debug("**[update_state]abuflevel=%.03f vbublevel=%.03f abufrp=%x vbufrp=%x read_end=%d\n",
+		log_print("**[update_state]abuflevel=%.03f vbublevel=%.03f abufrp=%x vbufrp=%x read_end=%d\n",                                 
                   state.audio_bufferlevel,
                   state.video_bufferlevel,
                   para->abuffer.buffer_rp,
                   para->vbuffer.buffer_rp,
                   para->playctrl_info.read_end_flag);
+#endif
         fn = cb->update_statue_callback;
         if (fn) {
             fn(para->player_id, &state);
@@ -265,7 +267,7 @@ int cmd2str(player_cmd_t *cmd, char *buf)
             break;
 
         case CMD_SEARCH:
-            len = sprintf(buf, "%s:%d", "PLAYER_SEEK", cmd->param);
+            len = sprintf(buf, "%s:%f", "PLAYER_SEEK", cmd->f_param);
             break;
 
         case CMD_FF:
@@ -409,4 +411,4 @@ int send_event(play_para_t *para, int msg, unsigned long ext1, unsigned long ext
         cb->notify_fn(para->player_id, msg, ext1, ext2);
     }
     return 0;
-}            
+}

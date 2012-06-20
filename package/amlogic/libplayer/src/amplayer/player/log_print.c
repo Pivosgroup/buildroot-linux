@@ -4,13 +4,14 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-
+#include <log_print.h>
 #define  LOG_TAG    "amplayer"
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 
+#define LEVEL_SETING_PATH "media.amplayer.loglevel"
 
-static int global_level = 5;
+static int global_level = 50;
 
 int log_open(const char *name)
 {
@@ -39,6 +40,19 @@ void log_lprint(const int level, const char *fmt, ...)
     }
 }
 
+int update_loglevel_setting(void)
+{
+	int ret;
+	char value[64];
+	if(GetSystemSettingString(LEVEL_SETING_PATH,value,NULL)>0 && (sscanf(value, "%d", &ret)) > 0){
+		log_print("get loglevel setting,loglevel changed to %d\n",ret);
+		global_level=ret;///for amplayer
+		av_log_set_level(ret);//for ffmpeg//
+	}else{
+	}
+	return 0;
+}
+
 #else
 #define __USE_GNU 1
 #define _GNU_SOURCE 1
@@ -59,6 +73,10 @@ void log_lprint(const int level, const char *fmt, ...)
 static int log_fd = -1;
 static int global_level = 5;
 
+int update_loglevel_setting(void)
+{
+	return 0;
+}
 
 static int get_system_time(char *timebuf)
 {

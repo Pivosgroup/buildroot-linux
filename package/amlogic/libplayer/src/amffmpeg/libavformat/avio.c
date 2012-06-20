@@ -283,7 +283,7 @@ static inline int retry_transfer_wrapper(URLContext *h, unsigned char *buf, int 
                                          int (*transfer_func)(URLContext *h, unsigned char *buf, int size))
 {
     int ret, len;
-    int fast_retries = 50;
+    int fast_retries = 10;
 
     len = 0;
     while (len < size_min) {
@@ -300,7 +300,7 @@ static inline int retry_transfer_wrapper(URLContext *h, unsigned char *buf, int 
 			} else {                          	
 				return ret;
             }
-			av_log(NULL,AV_LOG_INFO,"read/write time out,retry=%d\n",fast_retries);
+			av_log(NULL,AV_LOG_INFO,"**read/write time out,retry=%d\n",fast_retries);
         } else if (ret < 1)
             return ret < 0 ? ret : len;
         if (ret)

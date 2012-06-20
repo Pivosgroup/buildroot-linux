@@ -25,11 +25,27 @@
 #include <io.h>
 #endif
 #include <unistd.h>
+#include <string.h>
+#include <strings.h>
 #include <sys/time.h>
 #include <stdlib.h>
 #include "os_support.h"
 #include "file_list.h"
-#include <strings.h>
+#include "internal.h"
+#include "libavutil/intreadwrite.h"
+#include "url.h"
+
+#ifndef HAVE_MEMRCHR
+void* memrchr (const void *buffer, int c, size_t n);
+void* memrchr (const void *buffer, int c, size_t n)
+{
+	const unsigned char *p = buffer;
+	for (p += n; n ; n--)
+		if (*--p == c)
+			return p;
+	return NULL;
+}
+#endif /*HAVE_MEMRCHR*/
 
 #define EXTM3U						"#EXTM3U"
 #define EXTINF						"#EXTINF"
@@ -87,12 +103,73 @@ static int m3u_format_get_line(AVIOContext *s,char *line,int line_size)
 	return 0;
 }
 
+struct variant_info {
+    char bandwidth[20];
+};
+
+static void handle_variant_args(struct variant_info *info, const char *key,
+                                int key_len, char **dest, int *dest_len)
+{
+    if (!strncmp(key, "BANDWIDTH=", key_len)) {
+        *dest     =        info->bandwidth;
+        *dest_len = sizeof(info->bandwidth);
+    }
+}
+
+struct key_info {
+     char uri[MAX_URL_SIZE];
+     char method[10];
+     char iv[35];
+};
+
+static void handle_key_args(struct key_info *info, const char *key,
+                            int key_len, char **dest, int *dest_len)
+{
+    if (!strncmp(key, "METHOD=", key_len)) {
+        *dest     =        info->method;
+        *dest_len = sizeof(info->method);
+    } else if (!strncmp(key, "URI=", key_len)) {
+        *dest     =        info->uri;
+        *dest_len = sizeof(info->uri);
+    } else if (!strncmp(key, "IV=", key_len)) {
+        *dest     =        info->iv;
+        *dest_len = sizeof(info->iv);
+    }
+}
+
+static struct variant *new_variant(struct list_mgt *mgt, int bandwidth,
+                                   const char *url, const char *base)
+{
+	struct variant *var = av_mallocz(sizeof(struct variant));
+	if (!var)
+		return NULL;
+
+	var->bandwidth = bandwidth;
+  
+	if(base){
+		av_strlcpy(var->url, base, sizeof(var->url));
+	}
+	av_strlcat(var->url, url, sizeof(var->url));	
+	dynarray_add(&mgt->variants, &mgt->n_variants, var);
+	return var;
+}
+static void free_variant_list(struct list_mgt *mgt)
+{
+    int i;
+    for (i = 0; i < mgt->n_variants; i++) {
+        struct variant *var = mgt->variants[i];        
+        av_free(var);
+    }
+    av_freep(&mgt->variants);
+    mgt->n_variants = 0;
+}
+
+#define TRICK_LOGIC_BASE 200
 static int m3u_parser_line(struct list_mgt *mgt,unsigned char *line,struct list_item*item)
 {
 	unsigned char *p=line; 
 	int enditem=0;
-		
-	p=line;
+	const char* ptr = NULL;		
 	while(*p==' ' && p!='\0' && p-line<1024) p++;
 	if(*p!='#' && strlen(p)>0)
 	{
@@ -123,16 +200,96 @@ static int m3u_parser_line(struct list_mgt *mgt,unsigned char *line,struct list_
 			av_log(NULL, AV_LOG_INFO, "get new sequence number:%ld\n",seq);
 			}else{
 				//av_log(NULL, AV_LOG_INFO, "drop this list,sequence number:%ld\n",seq);
-				return -1;
+				return 0;
 
 			}
 			
 		}else{
-			av_log(NULL, AV_LOG_INFO, "get a invalid sequence number\n");
+			mgt->seq = seq;
+			av_log(NULL, AV_LOG_INFO, "get a invalid sequence number:%d\n",seq);
 
 		}
 	}
+	
+	else if(is_TAG(p,EXT_X_STREAM_INF)){
+		struct variant_info info = {{0}};           
+		ff_parse_key_value(p, (ff_parse_key_val_cb) handle_variant_args,
+		           &info);
+		mgt->bandwidth = atoi(info.bandwidth);		
+		av_log(NULL, AV_LOG_INFO, "get a stream info,bandwidth:%d\n",mgt->bandwidth);		
+		mgt->is_variant = 1;
+		return -(TRICK_LOGIC_BASE+1);
+	}
+	
+	else if(av_strstart(p,"#EXT-X-KEY:",&ptr)){
+		
+		struct key_info info = {{0}};
+		uint8_t iv[16] = "";
+		ff_parse_key_value(ptr, (ff_parse_key_val_cb) handle_key_args,
+		                   &info);
+		av_log(NULL,AV_LOG_INFO,"==========start dump a aes key===========\n");
+		av_log(NULL,AV_LOG_INFO,"==========key location : %s\n",info.uri);
+		av_log(NULL,AV_LOG_INFO,"==========key iv : %s\n",info.iv);
+		av_log(NULL,AV_LOG_INFO,"==========key method : %s\n",info.method);
+		av_log(NULL,AV_LOG_INFO,"==========end dump a aes key===========\n");
+		struct encrypt_key_priv_t* key_priv_info = av_mallocz(sizeof(struct encrypt_key_priv_t));
+		if(NULL == key_priv_info){
+			av_log(NULL,AV_LOG_ERROR,"no memory for key_info\n");
+			return -1;
+		}		
+
+		if(NULL!=mgt->key_tmp){
+			av_log(NULL,AV_LOG_INFO,"released old key info\n");
+			av_free(mgt->key_tmp);
+			mgt->key_tmp = NULL;
+		}
+		
+		enum KeyType key_type = KEY_NONE;
+		if (!strcmp(info.method, "AES-128")){
+		    	key_type = KEY_AES_128;
+			
+		}
+		if (!strncmp(info.iv, "0x", 2) || !strncmp(info.iv, "0X", 2)) {
+			ff_hex_to_data(iv, info.iv + 2);
+			mgt->has_iv = 1;
+		}else{
+			mgt->has_iv = 0;
+		}
+		if(key_type ==KEY_AES_128){
+			key_priv_info->key_type = key_type;
+			if(mgt->has_iv>0){
+				memcpy(key_priv_info->iv,iv,sizeof(key_priv_info->iv));
+			}
+			
+			av_log(NULL,AV_LOG_INFO,"aes key location : %s\n",info.uri);
+			av_strlcpy(key_priv_info->key_from, info.uri, sizeof(key_priv_info->key_from));
+			key_priv_info->is_have_key_file = 0;
+			mgt->key_tmp = key_priv_info;
+			mgt->flags |= KEY_FLAG;
+			return -(TRICK_LOGIC_BASE+0);
+			
+		}else{
+			av_log(NULL,AV_LOG_INFO,"just only support aes key\n");
+			av_free(key_priv_info);
+			key_priv_info = NULL;
+		}
+		
+		
+	}
 	else{
+
+		if(mgt->is_variant>0){
+			if (!new_variant(mgt, mgt->bandwidth, p, mgt->prefix)) {	
+				free_variant_list(mgt);
+			 	return -1;
+			}
+			mgt->is_variant = 0;
+			mgt->bandwidth  = 0;	
+			
+			return -(TRICK_LOGIC_BASE+2);
+			
+		}
+		
 		return 0;
 	}
 	return enditem;
@@ -153,15 +310,21 @@ static int m3u_format_parser(struct list_mgt *mgt, AVIOContext *s)
 	char *oprefix=mgt->location!=NULL?mgt->location:mgt->filename;
 	
 	if(oprefix){
-		char *tail,*tailex;
-		if(is_NET_URL(oprefix))
-			tail=strchr(oprefix+9,'/');/*skip Http:// and shttp:*/
-		else
-			tail=strchr(oprefix,'/');
-		if(is_NET_URL(oprefix))
-			tailex=strrchr(oprefix+9,'/');/*skip Http:// and shttp:*/
-		else
-			tailex=strrchr(oprefix,'/');
+		char *tail,*tailex,*extoptions;
+		extoptions=strchr(oprefix,'?');/*ext options is start with ? ,we don't need in nested*/
+		if(is_NET_URL(oprefix)){
+			tail=strchr(oprefix+9,'/');/*skip Http:// and shttp:,and to first '/'*/
+			if(!extoptions)// no ?
+				tailex=strrchr(oprefix+9,'/');/*skip Http:// and shttp:,start to  last '/'*/
+			else
+				tailex=memrchr(oprefix+9,'/',extoptions-oprefix-9);/*skip Http:// and shttp:,start to  last '/',between http-->? */
+		}else{
+			tail=strchr(oprefix,'/'); /*first '/'*/
+			if(!extoptions)//no ?
+				tailex=strrchr(oprefix,'/'); /*to last '/' */
+			else
+				tailex=memrchr(oprefix+9,'/',extoptions-oprefix-9);/*skip Http:// and shttp:,start to  last '/',between http-->? */
+		}
 		
 		if(tail!=NULL){
 			prefix_len=tail-oprefix+1;/*left '/'..*/
@@ -173,10 +336,19 @@ static int m3u_format_parser(struct list_mgt *mgt, AVIOContext *s)
 			prefixex_len=tailex-oprefix+1;/*left '/'..*/
 			memcpy(prefixex,oprefix,prefixex_len);
 			prefixex[prefixex_len]='\0';
+			if(NULL!=mgt->prefix){
+				av_free(mgt->prefix);
+				mgt->prefix = NULL;
+			}
+			mgt->prefix = strdup(prefixex);
 		}
 	}
 	memset(&tmpitem,0,sizeof(tmpitem));
 	av_log(NULL, AV_LOG_INFO, "m3u_format_parser get prefix=%s\n",prefix);
+	av_log(NULL, AV_LOG_INFO, "m3u_format_parser get prefixex=%s\n",prefixex);
+	if(mgt->n_variants>0){
+		free_variant_list(mgt);
+	}
 	while(m3u_format_get_line(s,line,1024)>=0)
 	{
 		ret = m3u_parser_line(mgt,line,&tmpitem);
@@ -215,6 +387,27 @@ static int m3u_format_parser(struct list_mgt *mgt, AVIOContext *s)
 					strcpy(item->file,tmpitem.file);
 				}
 			}
+
+			if(mgt->flags&KEY_FLAG&&NULL!= mgt->key_tmp&&mgt->key_tmp->is_have_key_file>0){
+				item->key_ctx = av_mallocz(sizeof(struct AES128KeyContext));
+				if(!item->key_ctx){
+					ret = AVERROR(ENOMEM);
+					break;
+				}				
+				memcpy(item->key_ctx->key,mgt->key_tmp->key,sizeof(item->key_ctx->key));
+				if(mgt->has_iv>0){
+					memcpy(item->key_ctx->iv,mgt->key_tmp->iv,sizeof(item->key_ctx->iv));				
+				}else{//from applehttp.c
+					
+					int seq = mgt->seq+mgt->item_num;
+					av_log(NULL,AV_LOG_INFO,"Current item seq number:%d\n",seq);		
+					AV_WB32(item->key_ctx->iv + 12, seq);
+				}
+
+				
+				item->ktype = mgt->key_tmp->key_type;
+
+			}
 			if(mgt->flags&REAL_STREAMING_FLAG){
 				ret =list_test_and_add_item(mgt,item);
 			}else{
@@ -237,6 +430,31 @@ static int m3u_format_parser(struct list_mgt *mgt, AVIOContext *s)
 
 		}
 		else if(ret <0){
+			if(ret ==-(TRICK_LOGIC_BASE+0)&&(mgt->flags&KEY_FLAG)&&NULL!= mgt->key_tmp&&0==mgt->key_tmp->is_have_key_file){//get key from server
+				 URLContext *uc;
+			        if (ffurl_open(&uc, mgt->key_tmp->key_from, AVIO_FLAG_READ) == 0) {
+			            if (ffurl_read_complete(uc, mgt->key_tmp->key, sizeof(mgt->key_tmp->key))
+			                != sizeof(mgt->key_tmp->key)) {
+			                av_log(NULL, AV_LOG_ERROR, "Unable to read key file %s\n",
+			                       mgt->key_tmp->key_from);					
+					
+					}
+					av_log(NULL,AV_LOG_INFO,"Just get aes key file from server\n");		
+					mgt->key_tmp->is_have_key_file = 1;
+						
+					ffurl_close(uc);
+			       } else {
+			            	av_log(NULL, AV_LOG_ERROR, "Unable to open key file %s\n",
+			                   mgt->key_tmp->key_from);
+			       }
+				memset(&tmpitem,0,sizeof(tmpitem));   
+				continue;   
+			}
+			
+			if(ret ==-(TRICK_LOGIC_BASE+1)||ret ==-(TRICK_LOGIC_BASE+2)){
+				memset(&tmpitem,0,sizeof(tmpitem));   
+				continue;
+			}			
 			break;
 		}
 		else{
@@ -244,6 +462,13 @@ static int m3u_format_parser(struct list_mgt *mgt, AVIOContext *s)
 				mgt->flags|=ALLOW_CACHE_FLAG;
 		}
 		
+	}
+	if(mgt->key_tmp){
+		av_free(mgt->key_tmp);
+		mgt->key_tmp = NULL;
+	}
+	if(mgt->n_variants>1){//just choose  middle definition;
+		mgt->ctype = MIDDLE_BANDWIDTH;
 	}
 	mgt->file_size=AVERROR_STREAM_SIZE_NOTVALID;
 	mgt->full_time=start_time;

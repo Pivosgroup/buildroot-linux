@@ -16,13 +16,7 @@
 #include "thread_mgt.h"
 #include <semaphore.h>
 
-//#define DEBUG
-
-#ifdef DEBUG
-#define mate_print(fmt,args...) 	log_print(fmt,##args)
-#else
-#define mate_print(fmt,args...) 	do { if (0) log_print(fmt,##args); } while (0)
-#endif
+#define mate_print(fmt,args...) 	log_debug(fmt,##args)
 //#define mate_print(fmt...)
 
 struct player_mate{

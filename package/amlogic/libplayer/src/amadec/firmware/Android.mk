@@ -7,14 +7,20 @@ for f in *.bin; do \
   md5sum "$$f" > "$$f".checksum; \
 done;})
 
-copy_from := $(wildcard $(LOCAL_PATH)/*.bin)
+audio_firmware_files := $(wildcard $(LOCAL_PATH)/*.bin)
 
-copy_from += $(wildcard $(LOCAL_PATH)/*.checksum)
+audio_firmware_files += $(wildcard $(LOCAL_PATH)/*.checksum)
 
-install_pairs := $(foreach f,$(copy_from),$(f):system/etc/firmware/$(notdir $(f)))
 
-$(error $(install_pairs))
+LOCAL_MODULE := audio_firmware
+LOCAL_MODULE_TAGS := optional
 
-PRODUCT_COPY_FILES += $(install_pairs)
+LOCAL_REQUIRED_MODULES := $(audio_firmware_files)
 
+audio_firmware: $(audio_firmware_files) | $(ACP)
+	$(hide) mkdir -p $(TARGET_OUT_ETC)/firmware/
+	$(hide) $(ACP) -fp $(audio_firmware_files) $(TARGET_OUT_ETC)/firmware/
+
+$(error build from this directory disabled)
+include $(BUILD_PHONY_PACKAGE)
 

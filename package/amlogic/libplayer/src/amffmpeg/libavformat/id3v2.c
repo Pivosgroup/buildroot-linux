@@ -189,6 +189,51 @@ finish:
         av_dict_set(m, "date", date, 0);
 }
 
+static int parse_apic_tag(AVFormatContext *s, AVIOContext *pb, int taglen, const char *key, int flag)
+{
+    int cover_len = taglen;
+    char mime[32];
+    char dscrp[512];
+    int ret;
+	
+    if(s->cover_data){
+        av_log(s, AV_LOG_INFO, "Has parsed APIC tag!\n");
+        return 0;
+    }
+
+    if(flag) {
+        avio_r8(pb);  // Text encoding
+        cover_len --;
+        ret = avio_get_str(pb, cover_len, mime, sizeof(mime));  // MIME Type
+        cover_len -= ret;
+        avio_r8(pb);  // Picture Type
+        cover_len --;
+        ret = avio_get_str(pb, cover_len, dscrp, sizeof(dscrp));  // Description
+        cover_len -= ret;
+    } else {
+        avio_r8(pb);  // Text encoding
+        cover_len --;
+        ret = avio_get_str(pb, 3, mime, sizeof(mime));  // MIME Type
+        cover_len -= 3;
+        avio_r8(pb);  // Picture Type
+        cover_len --;
+        ret = avio_get_str(pb, cover_len, dscrp, sizeof(dscrp));  // Description
+        cover_len -= ret;
+    }
+	
+    s->cover_data = av_malloc(cover_len);
+    if(!s->cover_data){
+        av_log(s, AV_LOG_INFO, "no memery, av_alloc failed!\n");
+	 return -1;
+    }
+    s->cover_data_len = cover_len;
+    avio_read(pb, s->cover_data, cover_len);
+
+    av_dict_set(&s->metadata, "cover_pic", mime, 0);
+
+    return 0;
+}
+
 static void ff_id3v2_parse(AVFormatContext *s, int len, uint8_t version, uint8_t flags)
 {
     int isv34, unsync;
@@ -285,6 +330,12 @@ static void ff_id3v2_parse(AVFormatContext *s, int len, uint8_t version, uint8_t
                 read_ttag(s, s->pb, tlen, tag);
             }
         }
+        else if(tag[0] == 'A' && tag[1] == 'P' && tag[2] == 'I' && tag[3] == 'C') {
+	     parse_apic_tag(s, s->pb, tlen, tag, isv34);
+	 }
+	 else if(tag[0] == 'P' && tag[1] == 'I' && tag[2] == 'C') {
+	     parse_apic_tag(s, s->pb, tlen, tag, isv34);
+	 }
         else if (!tag[0]) {
             if (tag[1])
                 av_log(s, AV_LOG_WARNING, "invalid frame id, assuming padding");

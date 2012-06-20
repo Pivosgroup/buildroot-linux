@@ -80,6 +80,7 @@ int codec_audio_set_audioinfo(codec_para_t *p);
 int codec_get_apts(codec_para_t *pcodec);
 int codec_get_vpts(codec_para_t *pcodec);
 int codec_get_pcrscr(codec_para_t *pcodec);
+int codec_set_pcrscr(codec_para_t *pcodec, int val);
 int codec_set_syncenable(codec_para_t *pcodec, int enable);
 int codec_set_sync_audio_discont(codec_para_t *pcodec, int discontinue);
 int codec_get_sync_audio_discont(codec_para_t *pcodec);
@@ -88,7 +89,5 @@ int codec_get_sync_video_discont(codec_para_t *pcodec);
 
 int codec_get_sub_num(codec_para_t *pcodec);
 int codec_get_sub_info(codec_para_t *pcodec, subtitle_info_t *sub_info);
-
-int codec_get_vfstates(codec_para_t *p, vframe_states_t *vfsta);
 
 #endif

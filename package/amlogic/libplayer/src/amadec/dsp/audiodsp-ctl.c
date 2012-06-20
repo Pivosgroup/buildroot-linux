@@ -25,7 +25,7 @@
 firmware_s_t firmware_list[] = {
     {0, MCODEC_FMT_MPEG123, "audiodsp_codec_mad.bin"},
     {1, MCODEC_FMT_AAC, "audiodsp_codec_aac_helix.bin"},
-    {2, MCODEC_FMT_AC3, "audiodsp_codec_ac3.bin"},
+    {2, MCODEC_FMT_AC3, "audiodsp_codec_ddp_dcv.bin"},
     {3, MCODEC_FMT_DTS, "audiodsp_codec_dca.bin"},
     {4, MCODEC_FMT_FLAC, "audiodsp_codec_flac.bin"},
     {5, MCODEC_FMT_COOK, "audiodsp_codec_cook.bin"},
@@ -69,55 +69,55 @@ static int register_firmware(int fd, int fmt, char *name)
  * \param fmt audio format
  * \return new format on success otherwise zero
  */
-static int switch_audiodsp(audio_format_t fmt)
+static int switch_audiodsp(adec_audio_format_t fmt)
 {
     switch (fmt) {
-    case  AUDIO_FORMAT_MPEG:
+    case  ADEC_AUDIO_FORMAT_MPEG:
         return MCODEC_FMT_MPEG123;
 
-    case  AUDIO_FORMAT_AAC_LATM:
+    case  ADEC_AUDIO_FORMAT_AAC_LATM:
         return MCODEC_FMT_AAC_LATM;
 
-    case  AUDIO_FORMAT_AAC:
+    case  ADEC_AUDIO_FORMAT_AAC:
         return MCODEC_FMT_AAC;
 
-    case  AUDIO_FORMAT_AC3:
+    case  ADEC_AUDIO_FORMAT_AC3:
         return MCODEC_FMT_AC3;
 
-    case  AUDIO_FORMAT_DTS:
+    case  ADEC_AUDIO_FORMAT_DTS:
         return MCODEC_FMT_DTS;
 
-    case  AUDIO_FORMAT_FLAC:
+    case  ADEC_AUDIO_FORMAT_FLAC:
         return MCODEC_FMT_FLAC;
 
-    case  AUDIO_FORMAT_COOK:
+    case  ADEC_AUDIO_FORMAT_COOK:
         return MCODEC_FMT_COOK;
 
-    case  AUDIO_FORMAT_AMR:
+    case  ADEC_AUDIO_FORMAT_AMR:
         return MCODEC_FMT_AMR;
 
-    case  AUDIO_FORMAT_RAAC:
+    case  ADEC_AUDIO_FORMAT_RAAC:
         return MCODEC_FMT_RAAC;
 
-    case AUDIO_FORMAT_ADPCM:
+    case ADEC_AUDIO_FORMAT_ADPCM:
         return MCODEC_FMT_ADPCM;
 
-    case AUDIO_FORMAT_PCM_S16BE:
-    case AUDIO_FORMAT_PCM_S16LE:
-    case AUDIO_FORMAT_PCM_U8:
-    case AUDIO_AFORMAT_PCM_BLURAY:
+    case ADEC_AUDIO_FORMAT_PCM_S16BE:
+    case ADEC_AUDIO_FORMAT_PCM_S16LE:
+    case ADEC_AUDIO_FORMAT_PCM_U8:
+    case ADEC_AUDIO_AFORMAT_PCM_BLURAY:
         return MCODEC_FMT_PCM;
 
-    case AUDIO_FORMAT_WMA:
+    case ADEC_AUDIO_FORMAT_WMA:
         return MCODEC_FMT_WMA;
 
-    case  AUDIO_FORMAT_WMAPRO:
+    case  ADEC_AUDIO_FORMAT_WMAPRO:
         return MCODEC_FMT_WMAPRO;
-    case  AUDIO_AFORMAT_ALAC:
+    case  ADEC_AUDIO_AFORMAT_ALAC:
         return MCODEC_FMT_ALAC;
-    case  AUDIO_AFORMAT_VORBIS:
+    case  ADEC_AUDIO_AFORMAT_VORBIS:
         return MCODEC_FMT_VORBIS;
-    case  AUDIO_FORMAT_APE:
+    case  ADEC_AUDIO_FORMAT_APE:
         return MCODEC_FMT_APE;
     default:
         return 0;
@@ -195,6 +195,7 @@ int audiodsp_init(dsp_operations_t *dsp_ops)
  * \param dsp_ops pointer to dsp operation struct
  * \return 0 on success otherwise negative code error
  */
+ static err_count = 0;
 int audiodsp_start(aml_audio_dec_t *audec)
 {
     int m_fmt;
@@ -221,11 +222,15 @@ int audiodsp_start(aml_audio_dec_t *audec)
     }
 
     ret = ioctl(dsp_ops->dsp_file_fd, AUDIODSP_DECODE_START, 0);
+    err_count = 0;
     if(ret==0){
         do{
             ret = ioctl(dsp_ops->dsp_file_fd, AUDIODSP_WAIT_FORMAT, 0);
 	    if(ret!=0 && !audec->need_stop){
+                err_count++;			
                 usleep(10000);
+                if (err_count > 10) // dead loop ? never 
+                    return -4;					
 	    }
         }while(!audec->need_stop && (ret!=0));
     }
@@ -351,4 +356,32 @@ int audiodsp_get_first_pts_flag(dsp_operations_t *dsp_ops)
     ioctl(dsp_ops->dsp_file_fd, AUDIODSP_GET_FIRST_PTS_FLAG, &val);
 
     return val;
+}
+
+int audiodsp_automute_on(dsp_operations_t *dsp_ops)
+{
+    int ret;
+
+    if (dsp_ops->dsp_file_fd < 0) {
+        adec_print("read error!! audiodsp have not opened\n");
+        return -1;
+    }
+
+    ret = ioctl(dsp_ops->dsp_file_fd, AUDIODSP_AUTOMUTE_ON, 0);
+
+    return ret;
+}
+
+int audiodsp_automute_off(dsp_operations_t *dsp_ops)
+{
+    int ret;
+
+    if (dsp_ops->dsp_file_fd < 0) {
+        adec_print("read error!! audiodsp have not opened\n");
+        return -1;
+    }
+
+    ret = ioctl(dsp_ops->dsp_file_fd, AUDIODSP_AUTOMUTE_OFF, 0);
+
+    return ret;
 }

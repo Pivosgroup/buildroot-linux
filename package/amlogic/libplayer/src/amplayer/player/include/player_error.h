@@ -4,6 +4,7 @@
 #define P_PRE       (0x02000000)
 #define F_PRE       (0x03000000)
 #define X_PRE       (0x04000000)
+#define D_PRE       (0x05000000)
 
 #define PLAYER_SUCCESS          (0)
 #define PLAYER_FAILED           (-(P_PRE|0x01))
@@ -55,6 +56,8 @@
 #define DIVX_AUTHOR_ERR         (-(X_PRE|0x1))
 #define DIVX_EXPIRED            (-(X_PRE|0x2))
 
+#define DRM_NOERROR             (0)
+#define DRM_UNSUPPORT           (-(D_PRE|0x1))
 
 char * player_error_msg(int error);
 #endif

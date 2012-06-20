@@ -1311,7 +1311,9 @@ static int handle_packet(MpegTSContext *ts, const uint8_t *packet)
         return 0;
 
     pos = avio_tell(ts->stream->pb);
-    ts->pos47= pos % ts->raw_packet_size;
+    if (pos < s->file_size) {
+        ts->pos47= pos % ts->raw_packet_size;
+    }
 
     if (tss->type == MPEGTS_SECTION) {
         if (is_start) {

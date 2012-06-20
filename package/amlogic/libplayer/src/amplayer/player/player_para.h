@@ -105,7 +105,7 @@ typedef  struct {
     unsigned int switch_audio_id;
     unsigned int switch_sub_id;
     unsigned int is_playlist;	
-    int time_point;
+    float time_point;
     int f_step;
     int read_max_retry_cnt;
 	int audio_ready;		
@@ -115,6 +115,8 @@ typedef  struct {
     int64_t last_seek_offset;
     int seek_offset_same;
 	int seek_frame_fail;
+    long avsync_check_old_time;
+    long vbuf_rpchanged_Old_time;
 } p_ctrl_info_t;
 
 int player_dec_init(struct play_para *p_para);
@@ -122,4 +124,5 @@ int player_decoder_init(struct play_para *p_para);
 void player_para_reset(struct play_para *para);
 int player_dec_reset(struct play_para *p_para);
 void player_clear_ctrl_flags(p_ctrl_info_t *cflag);
+int player_offset_init(struct play_para *p_para);
 #endif

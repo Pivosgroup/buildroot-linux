@@ -29,51 +29,7 @@ typedef struct {
     int fb1_freescale_height;
 } freescale_setting_t;
 
-typedef struct
-{
-}sys_h264_profile_t;
 
-typedef struct
-{
-	int progressive_enable;
-	int interlace_enable;
-	int wmv1_enable;
-	int wmv2_enable;
-	int wmv3_enable;
-}sys_vc1_profile_t;
-
-typedef struct 
-{
-	int es_support;
-	int exceed_720p_enable;
-}sys_real_profile_t;
-
-typedef struct 
-{
-	
-}sys_mpeg12_profile_t;
-
-typedef struct 
-{
-	
-}sys_mpeg4_profile_t;
-
-typedef struct 
-{
-	
-}sys_mjpeg_profile_t;
-
-typedef struct _system_para_
-{
-	sys_h264_profile_t 		h264_para;
-	sys_vc1_profile_t  		vc1_para;
-	sys_real_profile_t 		real_para;
-	sys_mpeg12_profile_t  	mpeg12_para;	
-	sys_mpeg4_profile_t  	mpeg4_para;	
-	sys_mjpeg_profile_t		mjpeg_para;
-}vdec_profile_t;
-
-int get_vdec_profile(vdec_profile_t *vdec_profiles);
 
 int set_sysfs_str(const char *path, const char *val);
 int  get_sysfs_str(const char *path, char *valstr, int size);
@@ -82,6 +38,7 @@ int get_sysfs_int(const char *path);
 
 int set_black_policy(int blackout);
 int get_black_policy();
+int get_karaok_flag();
 int set_tsync_enable(int enable);
 int set_tsync_discontinue(int enable);
 int get_pts_discontinue();
@@ -104,6 +61,8 @@ int set_fb1_scale_height(int height);
 int check_audiodsp_fatal_err(void);
 int set_stb_source_hiu(void);
 int set_stb_demux_source_hiu(void);
+int get_stb_demux_source(char *strval, int size);
+int get_stb_source(char *strval, int size);
 
 int set_subtitle_enable(int num);
 int set_subtitle_curr(int num);

@@ -27,6 +27,28 @@
 
 #define SUBTITLE_EVENT
 #define TS_PACKET_SIZE 188
+#define DEMUX_PLAYER_SOURCE 1
+
+/* --------------------------------------------------------------------------*/
+/**
+* @brief  codec_set_demux_source  set ts demux source
+*
+* @param[in]  pcodec    Pointer of codec parameter structure
+* @param[in]  source    set 1 for player     
+*
+* @return     0 for success, or fail type if < 0
+*/
+/* --------------------------------------------------------------------------*/
+static int codec_set_demux_source(codec_para_t *pcodec, int source)
+{    
+    int ret = 0;		
+	
+    ret = codec_h_control(pcodec->handle, AMSTREAM_IOC_SET_DEMUX, (unsigned long)source);
+	if (ret < 0) {
+		return ret;
+	}	
+    return ret;     
+}
 
 /* --------------------------------------------------------------------------*/
 /**
@@ -482,6 +504,7 @@ static inline int codec_ts_init(codec_para_t *pcodec)
         return CODEC_OPEN_HANDLE_FAILED;
     }
     pcodec->handle = handle;
+    codec_set_demux_source(pcodec, DEMUX_PLAYER_SOURCE);
     if (pcodec->has_video) {
         r = set_video_format(pcodec);
         if (r < 0) {
@@ -655,11 +678,22 @@ int codec_init(codec_para_t *pcodec)
     }
     if (pcodec->has_audio) {
         arm_audio_info a_ainfo;
+        memset(&a_ainfo,0,sizeof(arm_audio_info));
         a_ainfo.channels=pcodec->audio_channels;
         a_ainfo.sample_rate=pcodec->audio_samplerate;
         a_ainfo.format=pcodec->audio_type;
         a_ainfo.handle=pcodec->handle;
+        if(IS_AUIDO_NEED_EXT_INFO(pcodec->audio_type))
+        {
+            a_ainfo.extradata_size=pcodec->audio_info.extradata_size;
+            if(a_ainfo.extradata_size>0&&a_ainfo.extradata_size<=AUDIO_EXTRA_DATA_SIZE)
+                memcpy((char*)a_ainfo.extradata,pcodec->audio_info.extradata,a_ainfo.extradata_size);
+            else
+                a_ainfo.extradata_size=0;
+        }
         audio_start(&pcodec->adec_priv, &a_ainfo);
+        if(pcodec->avsync_threshold > 0)
+            audio_set_avsync_threshold(pcodec->adec_priv, pcodec->avsync_threshold);
     }
     return ret;
 }
@@ -763,6 +797,14 @@ void codec_resume_audio(codec_para_t *pcodec, unsigned int orig)
         a_ainfo.sample_rate = pcodec->audio_samplerate;
         a_ainfo.format = pcodec->audio_type;
         a_ainfo.handle = pcodec->handle;
+        if(IS_AUIDO_NEED_EXT_INFO(pcodec->audio_type))
+        {
+            a_ainfo.extradata_size=pcodec->audio_info.extradata_size;
+            if(a_ainfo.extradata_size>0&&a_ainfo.extradata_size<=AUDIO_EXTRA_DATA_SIZE)
+                memcpy((char*)a_ainfo.extradata,pcodec->audio_info.extradata,a_ainfo.extradata_size);
+            else
+                a_ainfo.extradata_size=0;
+        }
         audio_start(&pcodec->adec_priv, &a_ainfo);
     }
     return;
@@ -856,19 +898,16 @@ int codec_get_vdec_state(codec_para_t *p, struct vdec_status *vdec)
 int codec_get_adec_state(codec_para_t *p, struct adec_status *adec)
 {
 #if 0
-	if (get_audio_decoder() != AUDIO_ARC_DECODER)
-  {
+    if(get_audio_decoder()!=AUDIO_ARC_DECODER)
     return get_decoder_status(p->adec_priv,adec);
-  }
-  else
 #endif
-  {
     int r;
     struct am_io_param am_io;
     r = codec_h_control(p->handle, AMSTREAM_IOC_ADECSTAT, (unsigned long)&am_io);
-    memcpy(adec, &am_io.astatus, sizeof(*adec));
+    if(r == 0){
+        memcpy(adec, &am_io.astatus, sizeof(*adec));
+    }
     return system_error_to_codec_error(r);
-  }
 }
 
 /* --------------------------------------------------------------------------*/
@@ -1618,6 +1657,35 @@ int codec_get_pcrscr(codec_para_t *pcodec)
 
 /* --------------------------------------------------------------------------*/
 /**
+* @brief  codec_set_pcrscr  set system pcrscr
+*
+* @param[in]  pcodec  Pointer of codec parameter structure
+* @param[in]  val  system pcrscr value
+*
+* @return     0 is success , or -1 failed.
+*/
+/* --------------------------------------------------------------------------*/
+int codec_set_pcrscr(codec_para_t *pcodec, int val)
+{
+    unsigned int pcrscr;
+    int ret;
+    
+    if (!pcodec) {
+        CODEC_PRINT("[%s]ERROR invalid pointer!\n", __FUNCTION__);
+        return -1;
+    }
+	
+    ret = codec_h_control(pcodec->handle, AMSTREAM_IOC_SET_PCRSCR, val);
+    if (ret < 0) {
+        CODEC_PRINT("[%s]ioctl failed %d\n", __FUNCTION__, ret);
+        return -1;
+    }
+
+    return 0;
+}
+
+/* --------------------------------------------------------------------------*/
+/**
 * @brief  codec_set_syncenable  enable or disable av sync
 *
 * @param[in]  pcodec  Pointer of codec parameter structure
@@ -1703,11 +1771,15 @@ int codec_get_sync_video_discont(codec_para_t *pcodec)
     return discontinue;   
 }
 
-int codec_get_vfstates(codec_para_t *p, vframe_states_t *vfsta)
-{
-	return codec_h_control(p->cntl_handle, AMSTREAM_IOC_VF_STATUS, (unsigned long)vfsta);    
-}
-
+/* --------------------------------------------------------------------------*/
+/**
+* @brief  codec_get_sub_num  get the number of subtitle
+*
+* @param[in]  pcodec       Pointer of codec parameter structure
+*
+* @return     the number of subtitle, or fail if < 0
+*/
+/* --------------------------------------------------------------------------*/
 int codec_get_sub_num(codec_para_t *pcodec)
 {
     int sub_num = 0;
@@ -1720,6 +1792,16 @@ int codec_get_sub_num(codec_para_t *pcodec)
     return sub_num;
 }
 
+/* --------------------------------------------------------------------------*/
+/**
+* @brief  codec_get_sub_info  get subtitle information
+*
+* @param[in]   pcodec       Pointer of codec parameter structure
+* @param[out]  sub_info     Pointer of subtitle_info_t to save the subtitle information
+*
+* @return     0 for success, or fail type if < 0
+*/
+/* --------------------------------------------------------------------------*/
 int codec_get_sub_info(codec_para_t *pcodec, subtitle_info_t *sub_info)
 {    
     int ret = 0;
@@ -1735,3 +1817,4 @@ int codec_get_sub_info(codec_para_t *pcodec, subtitle_info_t *sub_info)
 	}	
     return ret;     
 }
+

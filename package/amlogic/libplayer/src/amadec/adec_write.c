@@ -7,6 +7,7 @@ int init_buff(buffer_stream_t *bs,int length)
 	if(!buffer)
 	{
 		printf("Err:malloc failed \n");
+		bs->data=NULL;
 		return -1;
 	}
 	bs->data=buffer;
@@ -32,6 +33,7 @@ int reset_buffer(buffer_stream_t *bs)
 
 int release_buffer(buffer_stream_t *bs)
 {
+       if(bs->data)
 	free(bs->data);
 	free(bs);
 	bs=NULL;

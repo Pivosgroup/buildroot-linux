@@ -721,6 +721,7 @@ static int avi_read_header(AVFormatContext *s, AVFormatParameters *ap)
                 case AVMEDIA_TYPE_SUBTITLE:
                     st->codec->codec_type = AVMEDIA_TYPE_SUBTITLE;
                     st->request_probe= 1;
+                    avio_skip(pb, size);
                     break;
                 default:
                     st->codec->codec_type = AVMEDIA_TYPE_DATA;
@@ -985,6 +986,11 @@ static int avi_read_packet(AVFormatContext *s, AVPacket *pkt)
     }
 
 resync:
+    if (url_interrupt_cb()){
+        av_log(s, AV_LOG_WARNING, "[%s]interrupt, return error!\n", __FUNCTION__);
+        return AVERROR_EXIT;
+    }
+    
     if(avi->stream_index >= 0){
         AVStream *st= s->streams[ avi->stream_index ];
         AVIStream *ast= st->priv_data;

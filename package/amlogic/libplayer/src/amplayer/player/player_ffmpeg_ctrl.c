@@ -81,11 +81,14 @@ int ffmpeg_init(void)
 }
 int ffmpeg_buffering_data(play_para_t *para)
 {
-	int ret;
-    if (para && para->pFormatCtx && para->pFormatCtx->pb) {
-		//player_mate_wake(para,100*1000);
-        ret=url_buffering_data(para->pFormatCtx->pb, 0);
-		//player_mate_sleep(para);
+	int ret=-1;
+    if (para && para->pFormatCtx ) {
+		player_mate_wake(para,100*1000);
+		if(para->pFormatCtx->pb)	/*lpbuf buffering*/
+			ret=url_buffering_data(para->pFormatCtx->pb, 0);
+		if(ret<0) /*iformat may buffering.,call lp buf also*/
+			ret=av_buffering_data(para->pFormatCtx,0);		
+		player_mate_sleep(para);
 		return ret;
     } else {
         return -1;
@@ -108,7 +111,7 @@ int ffmpeg_open_file(play_para_t *am_p)
 	const char * header=am_p->start_param ? am_p->start_param->headers : NULL;
     // Open video file
     if (am_p == NULL) {
-        log_error("[ffmpeg_open_file] Empty pointer!\n");
+        log_print("[ffmpeg_open_file] Empty pointer!\n");
         return FFMPEG_EMP_POINTER;
     }
     if (am_p->byteiobufsize > 0) {
@@ -118,19 +121,19 @@ int ffmpeg_open_file(play_para_t *am_p)
 Retry_open:
         //ret = av_open_input_file(&pFCtx, am_p->file_name, NULL, byteiosize, NULL, am_p->start_param ? am_p->start_param->headers : NULL);
 		ret = av_open_input_file_header(&pFCtx, am_p->file_name, NULL, byteiosize, NULL,header);
-		log_debug("[ffmpeg_open_file] file=%s,header=%s\n",am_p->file_name,header);
+		log_print("[ffmpeg_open_file] file=%s,header=%s\n",am_p->file_name,header);
         if (ret != 0) {
             if (ret == AVERROR(EAGAIN)) {
                 goto  Retry_open;
             }
-            log_error("ffmpeg error: Couldn't open input file! ret==%x\n", ret);
+            log_print("ffmpeg error: Couldn't open input file! ret==%x\n", ret);
             return FFMPEG_OPEN_FAILED; // Couldn't open file
         }
         am_p->pFormatCtx = pFCtx;
 
         return FFMPEG_SUCCESS;
     } else {
-        log_error("not assigned a file to play\n");
+        log_print("not assigned a file to play\n");
         return FFMPEG_NO_FILE;
     }
 }
@@ -200,7 +203,7 @@ int ffmpeg_parse_file(play_para_t *am_p)
     // Open video file
     ret = av_find_stream_info(pFCtx);
     if (ret < 0) {
-        log_error("ERROR:Couldn't find stream information, ret=====%d\n", ret);
+        log_print("ERROR:Couldn't find stream information, ret=====%d\n", ret);
         return FFMPEG_PARSE_FAILED; // Couldn't find stream information
     }
     return FFMPEG_SUCCESS;

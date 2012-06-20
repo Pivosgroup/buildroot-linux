@@ -58,8 +58,8 @@ LOCAL_CFLAGS+=-DLIBPLAYER_BUILD_TIME=\"${LIBPLAYER_BUILD_TIME}\"
 LOCAL_CFLAGS+=-DLIBPLAYER_BUILD_NAME=\"${LIBPLAYER_BUILD_NAME}\"
 LOCAL_CFLAGS+=-DLIBPLAYER_GIT_UNCOMMIT_FILE_NUM=${LIBPLAYER_GIT_UNCOMMIT_FILE_NUM}
 
-LOCAL_STATIC_LIBRARIES := libamcodec libavformat libswscale libavcodec libavutil libamadec 
-LOCAL_SHARED_LIBRARIES += libutils libmedia libz libbinder libdl libcutils libc
+LOCAL_STATIC_LIBRARIES := libamcodec libavformat libswscale libavcodec libavutil libamadec
+LOCAL_SHARED_LIBRARIES += libutils libmedia libz libbinder libdl libcutils libc libamavutils
 
 LOCAL_MODULE := libamplayer
 LOCAL_MODULE_TAGS := optional

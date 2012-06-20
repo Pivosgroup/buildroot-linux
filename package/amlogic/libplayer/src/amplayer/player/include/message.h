@@ -56,8 +56,8 @@ typedef enum {
 } get_info_t;
 
 typedef struct {
-    int min;
-    int max;
+    float min;
+    float max;
 } volume_range_t;
 
 typedef struct {

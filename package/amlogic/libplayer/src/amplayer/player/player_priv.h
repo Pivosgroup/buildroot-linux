@@ -20,13 +20,21 @@
 #include "player_id.h"
 #include "player_para.h"
 #include "player_set_sys.h"
+#include "player_profile.h"
 
 
 struct stream_decoder;
 struct am_packet;
 
 #define  MALLOC(s)      malloc(s)
-#define  FREE(d)        free(d)
+///#define  FREE(d)        free(d)
+/* macro to free allocated memory */
+#define FREE(d) \
+do { \
+    if((d)!=NULL)\
+    		free((d)); \
+    (d) = NULL; \
+}while(0)
 #define  MEMCPY(d,s,l)  memcpy(d,s,l)
 #define  MEMSET(d,s,l)  memset(d,s,l)
 #define  MIN(x,y)       ((x)<(y)?(x):(y))
@@ -36,7 +44,7 @@ struct am_packet;
 #define VB_SIZE             (0x100000)
 #define AB_SIZE             (0x60000)
 #define MAX_BURST_WRITE     (VB_SIZE/32)
-#define MAX_RAW_DATA_SIZE   (0x10000)       //64k
+#define MAX_RAW_DATA_SIZE   (0x20000)       //128k
 #define MIN_RAW_DATA_SIZE   (0x1000)        //4k
 #define RESERVE_VIDEO_SIZE  (256)
 #define RESERVE_AUDIO_SIZE  (64)
@@ -45,8 +53,6 @@ struct am_packet;
 #define CHECK_END_COUNT     (40)
 #define CHECK_AUDIO_HALT_CNT (50)
 #define CHECK_VIDEO_HALT_CNT (20)
-#define CHECK_AVDEC_HALT_CNT (10)
-#define CHECK_AVDEC_HALT_INTERVAL  (50) //ms
 #define CHECK_END_INTERVAL  (100)   //ms
 #define MAX_TRY_READ_COUNT  (50)
 
@@ -105,8 +111,6 @@ typedef struct{
 	int		data_level;   // real audio data length	    
 	int		buffer_size;	
 	int 	check_rp_change_cnt;
-	int     check_rp_change_interval;
-	long	check_rp_old_timems;
 	unsigned int	buffer_rp;
 	unsigned int	rp_is_changed;
 	unsigned int	buf_empty;
@@ -134,6 +138,7 @@ typedef struct play_para {
     unsigned int    discontinue_point;
 	unsigned int    discontinue_last_point;
     unsigned int    discontinue_flag;
+    unsigned int    karaok_flag;
     check_end_info_t check_end;
 
     read_write_size read_size;
@@ -176,7 +181,8 @@ typedef struct play_para {
     float buffering_threshhold_min;
     float buffering_threshhold_middle;
     float buffering_threshhold_max;
-
+    float buffering_start_time_s;
+   
     struct am_packet *p_pkt;
 
 	void *player_mate;/*player's mate thread handle*/
@@ -216,6 +222,5 @@ void *player_mate_init(play_para_t *player,int intervals);
 int player_mate_wake(play_para_t *player,int delay);
 int player_mate_sleep(play_para_t *player);
 int player_mate_release(play_para_t *player);
-
 
 #endif

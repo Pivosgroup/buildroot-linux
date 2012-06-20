@@ -38,7 +38,7 @@ static int rtsp_read_play(AVFormatContext *s)
     int i;
     char cmd[1024];
 
-    av_log(s, AV_LOG_DEBUG, "hello state=%d\n", rt->state);
+    av_log(s, AV_LOG_INFO, "hello state=%d\n", rt->state);
     rt->nb_byes = 0;
 
     if (!(rt->server_type == RTSP_SERVER_REAL && rt->need_subscription)) {
@@ -131,7 +131,7 @@ int ff_rtsp_setup_input_streams(AVFormatContext *s, RTSPMessageHeader *reply)
         return AVERROR_INVALIDDATA;
     }
 
-    av_log(s, AV_LOG_VERBOSE, "SDP:\n%s\n", content);
+    av_log(s, AV_LOG_INFO, "SDP:\n%s\n", content);
     /* now we got the SDP description, we parse it */
     ret = ff_sdp_parse(s, (const char *)content);
     av_freep(&content);
@@ -153,7 +153,7 @@ static int rtsp_read_header(AVFormatContext *s,
 {
     RTSPState *rt = s->priv_data;
     int ret;
-
+	av_log(NULL, AV_LOG_INFO, "[%s:%d\n]", __FUNCTION__, __LINE__);
     ret = ff_rtsp_connect(s);
     if (ret)
         return ret;
@@ -381,14 +381,17 @@ static int rtsp_read_seek(AVFormatContext *s, int stream_index,
 static int rtsp_read_close(AVFormatContext *s)
 {
     RTSPState *rt = s->priv_data;
-
+	RTSPMessageHeader reply1, *reply = &reply1;
 #if 0
     /* NOTE: it is valid to flush the buffer here */
     if (rt->lower_transport == RTSP_LOWER_TRANSPORT_TCP) {
         avio_close(&rt->rtsp_gb);
     }
 #endif
-    ff_rtsp_send_cmd_async(s, "TEARDOWN", rt->control_uri, NULL);
+	av_log(NULL, AV_LOG_INFO, "[%s:%d\n]", __FUNCTION__, __LINE__);
+    //ff_rtsp_send_cmd_async(s, "TEARDOWN", rt->control_uri, NULL);
+	ff_rtsp_send_cmd(s, "TEARDOWN", rt->control_uri, NULL,
+                                     reply, NULL);
 
     ff_rtsp_close_streams(s);
     ff_rtsp_close_connections(s);

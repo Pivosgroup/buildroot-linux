@@ -115,6 +115,21 @@ typedef struct {
  */
 #define AV_LOG_DEBUG    48
 
+
+/**
+ * Stuff which is only useful for libav* developers.
+ */
+#define AV_LOG_DEBUG1    51
+/**
+ * Stuff which is only useful for libav* developers.
+ */
+#define AV_LOG_DEBUG2    52
+
+/**
+ * Stuff which is only useful for libav* developers.
+ */
+#define AV_LOG_DEBUG3    53
+
 /**
  * Send the specified message to the log if the level is less than or equal
  * to the current av_log_level. By default, all logging messages are sent to

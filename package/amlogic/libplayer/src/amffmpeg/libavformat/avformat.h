@@ -430,6 +430,7 @@ typedef struct AVInputFormat {
      */
     int (*read_seek2)(struct AVFormatContext *s, int stream_index, int64_t min_ts, int64_t ts, int64_t max_ts, int flags);
 
+    int (*bufferingdata)(struct AVFormatContext *,int size);
 #if FF_API_OLD_METADATA2
     const AVMetadataConv *metadata_conv;
 #endif
@@ -767,6 +768,8 @@ typedef struct AVFormatContext {
 #define AVFMT_FLAG_PRIV_OPT    0x20000 ///< Enable use of private options by delaying codec open (this could be made default once all code is converted)
 #define AVFMT_FLAG_KEEP_SIDE_DATA 0x40000 ///< Dont merge side data but keep it seperate.
 
+#define AVFMT_FLAG_FILESIZE_NOT_VALID 0x100000 ///< Dont use filesize calculate duration/bitrate.because file size always changed.
+
     int loop_input;
 
     /**
@@ -884,9 +887,12 @@ typedef struct AVFormatContext {
     /* added by Z.C for avi or some other files seekable */
     int seekable;
 
-    int support_seek;
+    /* added by Z.C for some media types' media data offset, avoid to use the same data_offset above */
+    int64_t media_dataoffset;
 
-    uint64_t video_avg_frame_time, audio_avg_frame_time;
+	int support_seek;
+
+	uint64_t video_avg_frame_time, audio_avg_frame_time;
 
     /* added by GP for storing music's embedded picture */
     int cover_data_len;
@@ -896,6 +902,9 @@ typedef struct AVFormatContext {
 	 *added by XH for avoid repeat seek binary failed
 	 */
 	int seek_binary_failed;
+
+    /* added by Z.C for DRM content */
+    int drmcontent;
 } AVFormatContext;
 
 typedef struct AVPacketList {
@@ -1651,4 +1660,7 @@ attribute_deprecated int avf_sdp_create(AVFormatContext *ac[], int n_files, char
  */
 int av_match_ext(const char *filename, const char *extensions);
 
+
+/*cal low level buffering data.*/
+int av_buffering_data(AVFormatContext *s,int size);
 #endif /* AVFORMAT_AVFORMAT_H */

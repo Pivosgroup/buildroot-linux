@@ -1002,6 +1002,7 @@ static int ff_rtsp_send_cmd_with_content_async(AVFormatContext *s,
 int ff_rtsp_send_cmd_async(AVFormatContext *s, const char *method,
                            const char *url, const char *headers)
 {
+	av_log(NULL, AV_LOG_INFO, "ff_rtsp_send_cmd_async: %s \n", method);
     return ff_rtsp_send_cmd_with_content_async(s, method, url, headers, NULL, 0);
 }
 
@@ -1009,6 +1010,7 @@ int ff_rtsp_send_cmd(AVFormatContext *s, const char *method, const char *url,
                      const char *headers, RTSPMessageHeader *reply,
                      unsigned char **content_ptr)
 {
+	av_log(NULL, AV_LOG_INFO, "ff_rtsp_send_cmd: %s \n", method);
     return ff_rtsp_send_cmd_with_content(s, method, url, headers, reply,
                                          content_ptr, NULL, 0);
 }
@@ -1118,8 +1120,10 @@ int ff_rtsp_make_setup_request(AVFormatContext *s, const char *host, int port,
                                 "?localport=%d", j);
                     /* we will use two ports per rtp stream (rtp and rtcp) */
                     j += 2;
-                    if (ffurl_open(&rtsp_st->rtp_handle, buf, AVIO_FLAG_READ_WRITE) == 0)
+                    if (ffurl_open(&rtsp_st->rtp_handle, buf, AVIO_FLAG_READ_WRITE) == 0){
+						av_log(NULL, AV_LOG_INFO, "[%s]ffurl_open,handle=%d\n", __FUNCTION__, rtsp_st->rtp_handle);
                         goto rtp_opened;
+                    }
                 }
             }
 
@@ -1688,16 +1692,22 @@ int ff_rtsp_fetch_packet(AVFormatContext *s, AVPacket *pkt)
         len = udp_read_packet(s, &rtsp_st, rt->recvbuf, RECVBUF_SIZE, wait_end);
         if (len > 0 && rtsp_st->transport_priv && rt->transport == RTSP_TRANSPORT_RTP)
             rtp_check_and_send_back_rr(rtsp_st->transport_priv, len);
+	if(len==AVERROR(ETIMEDOUT) && rt->rcv_bytes>10240){
+                  len=AVERROR_EOF;/*if we have rcv data befor and no data later,we think it has become EOF*/
+        }
         break;
     }
+    if(ret>0)
+        rt->rcv_bytes+=ret;
     if (len == AVERROR(EAGAIN) && first_queue_st &&
         rt->transport == RTSP_TRANSPORT_RTP) {
         rtsp_st = first_queue_st;
         ret = rtp_parse_packet(rtsp_st->transport_priv, pkt, NULL, 0);
         goto end;
     }
-    if (len < 0)
+    if (len < 0){
         return len;
+    }
     if (len == 0)
         return AVERROR_EOF;
     if (rt->transport == RTSP_TRANSPORT_RDT) {
@@ -1748,7 +1758,6 @@ end:
     if (ret == 1)
         /* more packets may follow, so we save the RTP context */
         rt->cur_transport_priv = rtsp_st->transport_priv;
-
     return ret;
 }
 #endif /* CONFIG_RTPDEC */

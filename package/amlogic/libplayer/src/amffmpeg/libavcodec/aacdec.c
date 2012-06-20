@@ -2185,7 +2185,13 @@ static int aac_decode_frame_int(AVCodecContext *avctx, void *data,
     multiplier = (ac->m4ac.sbr == 1) ? ac->m4ac.ext_sample_rate > ac->m4ac.sample_rate : 0;
     samples <<= multiplier;
     if (ac->output_configured < OC_LOCKED) {
+        /*modify by X.H. for dsp not support sbr, so sample_rate needn't*2 
+        */
+        #if 0     
         avctx->sample_rate = ac->m4ac.sample_rate << multiplier;
+        #else
+        avctx->sample_rate = ac->m4ac.sample_rate;
+        #endif
         avctx->frame_size = samples;
     }
 

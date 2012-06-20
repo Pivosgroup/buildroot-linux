@@ -524,7 +524,10 @@ int av_probe_input_buffer(AVIOContext *pb, AVInputFormat **fmt,
     }
 
 	oldoffset = avio_tell(pb);
-	old_dataoff = s->data_offset;
+	if(s)
+		old_dataoff = s->data_offset;
+	else
+		old_dataoff=0;
 	if (av_match_ext(filename, "ts") || av_match_ext(filename, "m2ts")) {		
 		probe_flag = 1;
 		do{
@@ -534,7 +537,8 @@ int av_probe_input_buffer(AVIOContext *pb, AVInputFormat **fmt,
 				avio_seek(pb, -1, SEEK_CUR);
 				data_offset --;
 				av_log(NULL,AV_LOG_INFO, "*****[%s] [%llx] data_offset=%d\n", __FUNCTION__, avio_tell(pb), data_offset);
-				s->data_offset = data_offset;
+				if(s)
+					s->data_offset = data_offset;
 				break;	
 			}
 		/*find the ts sync header if no erroris,not eof and interrupt*/
@@ -543,10 +547,10 @@ int av_probe_input_buffer(AVIOContext *pb, AVInputFormat **fmt,
 	
 retry_probe:	
     for(probe_size= PROBE_BUF_MIN; probe_size<=max_probe_size && !*fmt && ret >= 0;
-        probe_size = FFMIN(probe_size<<1, FFMAX(max_probe_size, probe_size+1))) {
+        probe_size = FFMIN(pd.buf_size<<1, FFMAX(max_probe_size, probe_size+1))) {
         int ret, score = probe_size < max_probe_size ? AVPROBE_SCORE_MAX/4 : 0;
-        int buf_offset = (probe_size == PROBE_BUF_MIN) ? 0 : probe_size>>1;
-
+       // int buf_offset = (probe_size == PROBE_BUF_MIN) ? 0 : probe_size>>1;
+	 int buf_offset =  pd.buf_size ;
         if (probe_size < offset) {
             continue;
         }
@@ -555,7 +559,7 @@ retry_probe:
         buf = av_realloc(buf, probe_size + AVPROBE_PADDING_SIZE);
         if ((ret = avio_read(pb, buf + buf_offset, probe_size - buf_offset)) < 0) {
             /* fail if error was not end of file, otherwise, lower score */
-            if (ret != AVERROR_EOF) {
+            if (ret != AVERROR_EOF &&ret != AVERROR(EAGAIN)) {
                 av_free(buf);
                 return ret;
             }
@@ -579,6 +583,18 @@ retry_probe:
 	
     if (!*fmt) {
         av_free(buf);
+        if(probe_flag)
+        {
+        	if(s)
+            		s->data_offset = old_dataoff;	
+		probe_flag =0;
+		buf = NULL;
+    		pd.buf = NULL;
+    		pd.buf_size = 0;
+    		avio_seek(pb, oldoffset, SEEK_SET);
+    		av_log(logctx, AV_LOG_INFO, "not real ts/m2ts,probe again\n");
+    		goto retry_probe;			
+        }
         return AVERROR_INVALIDDATA;
     } else if(strcmp((*fmt)->name,"mpegts") && probe_flag){
 		s->data_offset = old_dataoff;	
@@ -646,9 +662,11 @@ typedef struct auto_switch_protol{
 	int (*probe_check)(ByteIOContext *,char *);	
 }auto_switch_protol_t;
 
+#include "hlsproto.h"
 auto_switch_protol_t switch_table[]=
 {
 	{"list:",url_is_file_list},
+/*	{"hls+",hlsproto_probe},*/
 	{"nsc:",is_nsc_file},
 	{NULL,NULL}
 };
@@ -820,7 +838,8 @@ int av_read_packet(AVFormatContext *s, AVPacket *pkt)
 {
     int ret, i;
     AVStream *st;
-
+    int codec_type_bk=0;
+    int codec_id_bk=0;
     for(;;){
         AVPacketList *pktl = s->raw_packet_buffer;
 
@@ -860,7 +879,8 @@ int av_read_packet(AVFormatContext *s, AVPacket *pkt)
             if(s->subtitle_codec_id)st->codec->codec_id= s->subtitle_codec_id;
             break;
         }
-
+	codec_type_bk=st->codec->codec_type;
+	codec_id_bk=st->codec->codec_id;
         if(!pktl && st->request_probe <= 0)
             return ret;
 
@@ -883,8 +903,15 @@ int av_read_packet(AVFormatContext *s, AVPacket *pkt)
 
             if(end || av_log2(pd->buf_size) != av_log2(pd->buf_size - pkt->size)){
                 int score= set_codec_from_probe_data(s, st, pd);
+		if(st->codec->codec_type==1&&codec_type_bk!=st->codec->codec_type&&st->id>=0x1e0 && st->id<=0x1ef){
+			//new stream type is auido,its original stream id is (0x1e0~0x1ef video),revert codec_id and codec type   
+			st->codec->codec_id=codec_id_bk;
+			st->codec->codec_type=codec_type_bk;
+			av_log(s, AV_LOG_DEBUG, "change stream type need revert\n");
+		}
                 if(    (st->codec->codec_id != CODEC_ID_NONE && score > AVPROBE_SCORE_MAX/4)
-                    || end){
+                    || end 
+                    || (st->codec->codec_id != CODEC_ID_NONE && s->pb && s->pb->fastdetectedinfo && score>0)){/*if is slowmedia do short detect.*/
                     pd->buf_size=0;
                     av_freep(&pd->buf);
                     st->request_probe= -1;
@@ -1418,7 +1445,15 @@ int av_read_frame(AVFormatContext *s, AVPacket *pkt)
         }
     }
 }
-
+int av_buffering_data(AVFormatContext *s,int size)
+{
+	/*can add buffering on top level.
+	size <0 .get buffering time;
+	*/
+	if(s && s->iformat && s->iformat->bufferingdata)
+		return s->iformat->bufferingdata(s,size);
+	return -1;
+}
 /* XXX: suppress the packet queue */
 static void flush_packet_queue(AVFormatContext *s)
 {
@@ -2040,7 +2075,8 @@ static void av_update_stream_timings(AVFormatContext *ic)
     }
     if (duration != INT64_MIN) {
         ic->duration = duration;
-        if (ic->file_size > 0) {
+        if (ic->file_size > 0 && ic->bit_rate<=0) {
+	     /*if bitrate have set,don't change it by file size,because the file size maybe not real media data for m3u demux*/
             /* compute the bitrate */
             ic->bit_rate = (double)ic->file_size * 8.0 * AV_TIME_BASE /
                 (double)ic->duration;
@@ -3139,8 +3175,12 @@ int av_read_pause(AVFormatContext *s)
 void av_close_input_stream(AVFormatContext *s)
 {
     flush_packet_queue(s);
-    if (s->iformat->read_close)
+	if (s->iformat)
+		av_log(NULL, AV_LOG_INFO, "[%s]format=%s\n", __FUNCTION__, s->iformat->name);
+    if (s->iformat->read_close){
+		av_log(NULL, AV_LOG_INFO, "format %s read_close\n", s->iformat->name);
         s->iformat->read_close(s);
+    }
     avformat_free_context(s);
 }
 
@@ -3192,8 +3232,10 @@ void avformat_free_context(AVFormatContext *s)
 
 void av_close_input_file(AVFormatContext *s)
 {
+	av_log(NULL, AV_LOG_ERROR, "av_close_input_file--%d\n",__LINE__);
     AVIOContext *pb = (s->iformat->flags & AVFMT_NOFILE) || (s->flags & AVFMT_FLAG_CUSTOM_IO) ?
                        NULL : s->pb;
+	av_log(NULL, AV_LOG_ERROR, "av_close_input_file--%d\n",__LINE__);
     av_close_input_stream(s);
     if (pb)
         avio_close(pb);
@@ -4464,6 +4506,9 @@ void ff_make_absolute_url(char *buf, int size, const char *base,
                           const char *rel)
 {
     char *sep;
+    char* protol_prefix;
+    char* option_start;
+	
     /* Absolute path, relative to the current server */
     if (base && strstr(base, "://") && rel[0] == '/') {
         if (base != buf)
@@ -4478,14 +4523,24 @@ void ff_make_absolute_url(char *buf, int size, const char *base,
         av_strlcat(buf, rel, size);
         return;
     }
+    protol_prefix=strstr(rel, "://");
+    option_start=strstr(rel, "?");
     /* If rel actually is an absolute url, just copy it */
-    if (!base || strstr(rel, "://") || rel[0] == '/') {
+    if (!base  || rel[0] == '/' || (option_start==NULL  && protol_prefix) || (option_start  && protol_prefix<option_start) ) {
+	  /* refurl  have  http://,ftp://,and don't have "?"
+	  	refurl  have  http://,ftp://,and  have "?", so we must ensure it is not a option, link  refurl=filename?authurl=http://xxxxxx
+	  */
         av_strlcpy(buf, rel, size);
         return;
     }
     if (base != buf)
         av_strlcpy(buf, base, size);
     /* Remove the file name from the base url */
+	
+   option_start = strchr(buf, '?'); /*cut the ? tail, we don't need auth&parameters info..*/
+    if (option_start)
+        option_start[0] = '\0';
+	 
     sep = strrchr(buf, '/');
     if (sep)
         sep[1] = '\0';

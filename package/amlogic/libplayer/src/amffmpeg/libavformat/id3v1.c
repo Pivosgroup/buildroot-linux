@@ -174,12 +174,55 @@ const char * const ff_id3v1_genre_str[ID3v1_GENRE_MAX + 1] = {
     [147] = "SynthPop",
 };
 
+static void convert_iso8859_to_string(const uint8_t *data, int size, char *s) {
+    int utf8len = 0;
+    int i;
+	
+    for (i = 0; i < size; ++i) {
+        if (data[i] == '\0') {
+            size = i;
+            break;
+        } else if (data[i] < 0x80) {
+            ++utf8len;
+        } else {
+            utf8len += 2;
+        }
+    }
+
+    if (utf8len == size) {
+        // Only ASCII characters present.
+
+        memcpy(s, data, size);
+	 s[size] = '\0';
+        return;
+    }
+
+    char *ptr = s;
+    for (i = 0; i < size; ++i) {
+        if (data[i] == '\0') {
+            break;
+        } else if (data[i] < 0x80) {
+            *ptr++ = data[i];
+        } else if (data[i] < 0xc0) {
+            *ptr++ = 0xc2;
+            *ptr++ = data[i];
+        } else {
+            *ptr++ = 0xc3;
+            *ptr++ = data[i] - 64;
+        }
+    }
+    *ptr = '\0';
+
+}
+
 static void get_string(AVFormatContext *s, const char *key,
                        const uint8_t *buf, int buf_size)
 {
     int i, c;
     char *q, str[512];
 
+    convert_iso8859_to_string(buf, buf_size, str);
+#if 0
     q = str;
     for(i = 0; i < buf_size; i++) {
         c = buf[i];
@@ -190,6 +233,7 @@ static void get_string(AVFormatContext *s, const char *key,
         *q++ = c;
     }
     *q = '\0';
+#endif
 
     if (*str)
         av_dict_set(&s->metadata, key, str, 0);

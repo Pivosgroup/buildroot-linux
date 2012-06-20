@@ -12,7 +12,8 @@
 
 
 
-typedef struct  url_lpbuf{
+typedef struct  url_lpbuf{
+
 	unsigned char *buffer;
 	unsigned char *buffer_end;
 	int buffer_size;
@@ -24,9 +25,10 @@ typedef struct  url_lpbuf{
 	lock_t mutex;
 	int cache_enable;
 	unsigned long cache_id;
+	int dbg_cnt;
 }url_lpbuf_t;
-#define IO_LP_BUFFER_SIZE (1024*1024*6)
-#define IO_LP_BUFFER_MINI_SIZE (1024*64)
+#define IO_LP_BUFFER_SIZE (1024*1024*64)
+#define IO_LP_BUFFER_MINI_SIZE (1024*32)
 
 
 int url_lpopen(URLContext *s,int size);
@@ -38,6 +40,12 @@ int url_lpfree(URLContext *s);
 int url_lp_intelligent_buffering(URLContext *s,int size);
 int url_lp_getbuffering_size(URLContext *s,int *forward_data,int *back_data);
 int64_t url_lp_get_buffed_pos(URLContext *s);
+
+int url_lpopen_ex(URLContext *s,
+			int size,
+			int flags,
+	 	    	int (*read_packet)(void *opaque, uint8_t *buf, int buf_size),
+                  	int64_t (*seek)(void *opaque, int64_t offset, int whence));
 
 #endif
 

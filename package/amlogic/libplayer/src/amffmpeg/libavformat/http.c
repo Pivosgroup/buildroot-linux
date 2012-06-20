@@ -42,13 +42,13 @@
 #define BUFFER_SIZE (1024*4)
 #define MAX_REDIRECTS 8
 #define OPEN_RETRY_MAX 3
-#define READ_RETRY_MAX 10
+#define READ_RETRY_MAX 3
 #define MAX_CONNECT_LINKS 1
 
 #define READ_RETRY_MAX_TIME_MS (120*1000) 
 /*60 seconds no data get,we will reset it*/
 
-#define READ_RETRY_MAX_TIME_MS (120*1000) 
+/*#define READ_RETRY_MAX_TIME_MS (120*1000) 
 /*60 seconds no data get,we will reset it*/
 
 
@@ -60,6 +60,7 @@ typedef struct {
     int http_code;
     int64_t chunksize;      /**< Used if "Transfer-Encoding: chunked" otherwise -1. */
     int64_t off, filesize;
+    int do_readseek_size;
     char location[MAX_URL_SIZE];
     HTTPAuthState auth_state;
     unsigned char headers[BUFFER_SIZE];
@@ -161,14 +162,18 @@ static int http_open_cnx(URLContext *h)
 
     s->hd = hd;
     cur_auth_type = s->auth_state.auth_type;
-    if (http_connect(h, path, hoststr, auth, &location_changed) < 0)
+    if (http_connect(h, path, hoststr, auth, &location_changed) < 0){
+       	av_log(h, AV_LOG_ERROR, "http_open_cnx:http_connect failed\n");
         goto fail;
+    }
     if (s->http_code == 401) {
         if (cur_auth_type == HTTP_AUTH_NONE && s->auth_state.auth_type != HTTP_AUTH_NONE) {
             ffurl_close(hd);
             goto redo;
-        } else
+        } else{
+        	av_log(h, AV_LOG_ERROR, "http_open_cnx:failed s->http_code=%d cur_auth_type=%d\n",s->http_code, cur_auth_type);
             goto fail;
+        }
     }
     if ((s->http_code == 301 || s->http_code == 302 || s->http_code == 303 || s->http_code == 307)
         && location_changed == 1) {
@@ -201,19 +206,22 @@ static int http_reopen_cnx(URLContext *h,int64_t off)
     int64_t old_chunksize=s->chunksize ;	
 	int old_buf_size=0;
 	char old_buf[BUFFER_SIZE];
-	
+	av_log(h, AV_LOG_INFO, "[%s]off=%d s->off=%d\n", __FUNCTION__, off, s->off);
     if(off>=0)
-		s->off = off;
+		s->off = off;	
     /* if it fails, continue on old connection */
 	/*reget it*/
 	if(s->max_connects>1 && old_hd){
 		old_buf_size = s->buf_end - s->buf_ptr;
     	memcpy(old_buf, s->buf_ptr, old_buf_size);
 	}else{
-		if(old_hd)
+		if(old_hd){
 			ffurl_close(old_hd);
+			av_log(h, AV_LOG_INFO, "[%s]close old handle\n", __FUNCTION__);
+		}
 		old_hd=NULL;
 	}
+	av_log(h, AV_LOG_INFO, "[%s]isseek=%d canseek=%d\n", __FUNCTION__, s->is_seek,s->canseek);
     s->chunksize = -1;
     if (http_open_cnx(h) < 0) {
 		if(s->max_connects>1 && old_hd){
@@ -288,6 +296,7 @@ static int shttp_open(URLContext *h, const char *uri, int flags)
 static int http_getc(HTTPContext *s)
 {
     int len = 0;
+    int retry=0;
     if (s->buf_ptr >= s->buf_end) {
 		do {
 	        len = ffurl_read(s->hd, s->buffer, BUFFER_SIZE);
@@ -300,7 +309,9 @@ static int http_getc(HTTPContext *s)
 	        } else if (len > 0) {
 	        	s->buf_ptr = s->buffer;
 				s->buf_end = s->buffer + len;
-	        }		
+	        }	
+		 if(retry++>10)
+		 	return AVERROR(EIO);/*10 times,avoid alway no return problem*/
 		}while (len == AVERROR(EAGAIN));		
     }
     return *s->buf_ptr++;
@@ -377,8 +388,11 @@ static int process_line(URLContext *h, char *line, int line_count,
         } else if (!strcasecmp (tag, "Content-Range")) {
             /* "bytes $from-$to/$document_size" */
             const char *slash;
-            if (!strncmp (p, "bytes ", 6)) {
-                p += 6;
+            if (!strncmp (p, "bytes ", 5)) {
+                p += 5;
+		   while((*p) == ' ' ) {//eat blank
+			p++;
+		   }		
                 s->off = atoll(p);
                 if ((slash = strchr(p, '/')) && strlen(slash) > 0)
                     s->filesize = atoll(slash+1);
@@ -475,6 +489,7 @@ static int http_connect(URLContext *h, const char *path, const char *hoststr,
     s->off = 0;
     s->filesize = -1;
     s->willclose = 0;
+    s->do_readseek_size=0;//
     if (post) {
         /* Pretend that it did work. We didn't read any header yet, since
          * we've still to send the POST data, but the code calling this
@@ -500,16 +515,29 @@ static int http_connect(URLContext *h, const char *path, const char *hoststr,
         s->line_count++;
     }
 
-    return (off == s->off) ? 0 : -1;
+
+    if(off>s->off && (off-s->off)<1024*1024){/*if seek failed & the gap  is not too big(1M),we can do read seek*/
+		/*server can't support seek,the off is ignored.we do read seek later;*/
+		s->do_readseek_size=off-s->off;
+		s->off=off;
+     }
+	return (off == s->off) ? 0 : -1;
 }
 
 
 static int http_read(URLContext *h, uint8_t *buf, int size)
 {
+	#define MILLION 1000
+
     HTTPContext *s = h->priv_data;
     int len;
 	int err_retry=READ_RETRY_MAX;
 retry:	
+	if (url_interrupt_cb()) {
+		av_log(h, AV_LOG_INFO, "http_read interrupt, err :-%d\n", AVERROR(EIO));
+		return AVERROR(EIO);
+	}
+	
     if (s->chunksize >= 0) {
         if (!s->chunksize) {
             char line[32];
@@ -544,8 +572,8 @@ retry:
         s->buf_ptr += len;
     } else {
         if (!s->willclose && s->filesize >= 0 && s->off >= s->filesize){
-			av_log(h, AV_LOG_ERROR, "http_read error %d\n",AVERROR_EOF);
-            return AVERROR_EOF;
+			av_log(h, AV_LOG_ERROR, "http_read eof len=%d\n",len);
+            return 0;
         }
 		if(s->hd){
         	len = ffurl_read(s->hd, buf, size);
@@ -562,17 +590,18 @@ retry:
             s->chunksize -= len;
     }
 	if(len==AVERROR(EAGAIN)){
-		struct timeval  new_time;
+		struct timespec new_time;
 		long new_time_mseconds;
 		long max_wait_time=READ_RETRY_MAX_TIME_MS;
 		if(!s->canseek) max_wait_time=READ_RETRY_MAX_TIME_MS*2;/*if can't support seek,we wait more time*/
-    	gettimeofday(&new_time, NULL);
-		new_time_mseconds = (new_time.tv_usec / 1000 + new_time.tv_sec * 1000);
-		av_log(h, AV_LOG_INFO, "new_time_mseconds=%d,latest_get_time_ms=%d\n", new_time_mseconds,s->latest_get_time_ms);
+    	clock_gettime(CLOCK_MONOTONIC, &new_time);
+		av_log(h, AV_LOG_INFO, "clock_gettime sec=%u nsec=%u\n", new_time.tv_sec, new_time.tv_nsec);
+		new_time_mseconds = (new_time.tv_nsec / 1000000 + new_time.tv_sec * MILLION);
 		if(s->latest_get_time_ms<=0)
 			s->latest_get_time_ms=new_time_mseconds;
+		av_log(h, AV_LOG_INFO, "new_time_mseconds=%u,latest_get_time_ms=%u diff=%u max_wait_time=%u\n", new_time_mseconds,s->latest_get_time_ms,(new_time_mseconds-s->latest_get_time_ms),max_wait_time);
 		if(new_time_mseconds-s->latest_get_time_ms>max_wait_time){
-			av_log(h, AV_LOG_INFO, "new_time_mseconds=%d,latest_get_time_ms=%d  TIMEOUT\n", new_time_mseconds,s->latest_get_time_ms);
+			av_log(h, AV_LOG_INFO, "new_time_mseconds=%u,latest_get_time_ms=%u  TIMEOUT\n", new_time_mseconds,s->latest_get_time_ms);
 			len=-1;/*force it goto reopen */
 		}
 	}else{
@@ -583,15 +612,26 @@ retry:
 		len=-1;/*force to retry,if else data <10,don't do it*/
 	}
 errors:
-	
+	if(len<0)
+		av_log(h, AV_LOG_ERROR, "len=-%d err_retry=%d\n", -len, err_retry);	
 	if(len<0 && len!=AVERROR(EAGAIN)&& err_retry-->0 && !url_interrupt_cb())
 	{
 		av_log(h, AV_LOG_INFO, "http_read failed err try=%d\n", err_retry);
 		http_reopen_cnx(h,-1);
 		goto retry;
 	}
-	
-		return len;
+	if(s->do_readseek_size>0){
+		/*we have do seek failed,the offset is not  same as uper level need drop data here now.*/
+		if(len>s->do_readseek_size){
+			len=len-s->do_readseek_size;
+			memmove(buf,buf+s->do_readseek_size,len);
+			s->do_readseek_size=0;
+		}else{///(len<=s->do_readseek_size)
+			s->do_readseek_size-=len;
+			goto retry;
+		}
+	}
+	return len;
 
 }
 

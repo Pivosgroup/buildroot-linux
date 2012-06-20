@@ -25,6 +25,7 @@
 #include <libavformat/avio.h>
 
 #include <pthread.h>
+#include "internal.h"
 
 #define lock_t			pthread_mutex_t
 #define lp_lock_init(x,v) 	pthread_mutex_init(x,v)
@@ -47,15 +48,59 @@
 struct list_mgt;
 struct list_demux;
 
+enum KeyType {
+    KEY_NONE = 0,
+    KEY_AES_128,
+};
+
+struct encrypt_key_priv_t{
+	enum KeyType key_type;
+	char key_from[MAX_URL_SIZE];
+	uint8_t key[16];
+	uint8_t iv[16];
+	int is_have_key_file; //just get file from server 
+};
+
+#define MAX_BUFFER_BLOCKS 150
+#define BLOCKSIZE 16
+
+struct AES128KeyContext{	
+	uint8_t key[16];
+	uint8_t iv[16];
+};
+
+struct AESCryptoContext{
+	uint8_t inbuffer [BLOCKSIZE*MAX_BUFFER_BLOCKS],
+		outbuffer[BLOCKSIZE*MAX_BUFFER_BLOCKS];
+	uint8_t *outptr;
+	int indata, indata_used, outdata;
+	int eof;	
+	struct AVAES *aes;
+	int have_init;
+};
 typedef struct list_item
 {
 	const char *file;
 	int 	   flags;	  
 	int 		start_time;
 	int 		duration;
+	enum KeyType ktype;
+	struct AES128KeyContext* key_ctx; //just store key info.
+	struct AESCryptoContext* crypto;
 	struct list_item * prev;
 	struct list_item * next;
 }list_item_t;
+struct variant{
+	char url[MAX_URL_SIZE];
+	int bandwidth;
+};
+
+typedef enum _ClarityType{
+	LOW_BANDWIDTH,
+	MIDDLE_BANDWIDTH,//default
+	HIGH_BANDWIDTH,
+	
+}ClarityType;
 
 typedef struct list_mgt
 {
@@ -70,6 +115,16 @@ typedef struct list_mgt
 	int 	full_time;
 	int 	have_list_end;
 	int  seq;  
+	//added for Playlist file with encrypted media segments
+	ClarityType ctype; //default is HIGH_BANDWIDTH
+	int n_variants;
+	struct variant ** variants;
+	int is_variant;
+	int has_iv;
+	int bandwidth;
+	char* prefix; //	
+	struct encrypt_key_priv_t* key_tmp; //just for parsing using,if ended parsing,just free this pointer.
+	//end.
 	AVIOContext	*cur_uio;
 	struct list_demux *demux;
 	int 	have_sub_list;
@@ -79,7 +134,7 @@ typedef struct list_demux
 {
 	const char * name;
 	int (*probe)(AVIOContext *s,const char *file);
-	int (*parser)(struct list_mgt *mgt, AVIOContext *s);
+	int (*parser)(struct list_mgt *mgt,AVIOContext *s);
 	struct list_demux *next;
 }list_demux_t;
 URLProtocol *get_file_list_protocol(void);

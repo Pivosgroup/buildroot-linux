@@ -48,6 +48,7 @@ static int stream_ps_init(play_para_t *p_para)
         codec->audio_pid = ainfo->audio_pid;
         codec->audio_channels = ainfo->audio_channel;
         codec->audio_samplerate = ainfo->audio_samplerate;
+        codec->avsync_threshold = p_para->start_param->avsync_threshold;
 
         /*if ((codec->audio_type == AFORMAT_ADPCM) ||
             (codec->audio_type == AFORMAT_WMA) ||
@@ -78,7 +79,7 @@ static int stream_ps_init(play_para_t *p_para)
             }
             codec->audio_info.valid = 1;
         }
-        log_debug("[%s:%d]audio bitrate=%d sample_rate=%d channels=%d codec_id=%x block_align=%d,extra size\n",
+        log_print("[%s:%d]audio bitrate=%d sample_rate=%d channels=%d codec_id=%x block_align=%d,extra size\n",
                   __FUNCTION__, __LINE__, codec->audio_info.bitrate, codec->audio_info.sample_rate, codec->audio_info.channels,
                   codec->audio_info.codec_id, codec->audio_info.block_align,codec->audio_info.extradata_size);
     }

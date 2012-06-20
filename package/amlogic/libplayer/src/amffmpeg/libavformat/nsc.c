@@ -216,7 +216,7 @@ int is_nsc_file(AVIOContext *pb,const char *name)
 	if(!pb) return 0;	
 	do
 	{	
-		ret=ff_get_line(pb,line,1024);		
+		ret=ff_get_assic_line(pb,line,1024);		
 		av_log(NULL,AV_LOG_INFO,"is_ncs_file check line%s ret=%d\n",line, ret);	
 		if(ret<10) continue;		
 		if(!strncmp(line,ADDRESS_ITEM,strlen(ADDRESS_ITEM)))

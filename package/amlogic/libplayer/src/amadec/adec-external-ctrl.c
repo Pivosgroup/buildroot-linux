@@ -13,7 +13,6 @@
 #include <string.h>
 
 #include <audio-dec.h>
-#include <adec-external-ctrl.h>
 
 
 int audio_decode_basic_init(void)
@@ -50,6 +49,10 @@ int audio_decode_init(void **handle, arm_audio_info *a_ainfo)
     audec->samplerate=a_ainfo->sample_rate;
     audec->format=a_ainfo->format;
     audec->adsp_ops.dsp_file_fd=a_ainfo->handle;
+    audec->extradata_size=a_ainfo->extradata_size;
+    if(a_ainfo->extradata_size>0&&a_ainfo->extradata_size<=AUDIO_EXTRA_DATA_SIZE)
+        memcpy((char*)audec->extradata,(char*)a_ainfo->extradata,a_ainfo->extradata_size);
+   
 //	adec_print("audio_decode_init  pcodec = %d, pcodec->ctxCodec = %d!\n", pcodec, pcodec->ctxCodec);
     ret = audiodec_init(audec);
     if (ret) {
@@ -253,7 +256,7 @@ int audio_decode_set_mute(void *handle, int en)
         cmd->has_arg = 1;
         ret = adec_send_message(audec, cmd);
     } else {
-        adec_print("message alloc failed, no memory!\n");
+        adec_print("message alloc failed, no memory!");
         ret = -1;
     }
 
@@ -281,11 +284,11 @@ int audio_decode_set_volume(void *handle, float vol)
     if (cmd) {
         cmd->ctrl_cmd = CMD_SET_VOL;
         cmd->value.volume = vol;
-        audec->volume = vol;
+	 audec->volume = vol;
         cmd->has_arg = 1;	
         ret = adec_send_message(audec, cmd);
     } else {
-        adec_print("message alloc failed, no memory!\n");
+        adec_print("message alloc failed, no memory!");
         ret = -1;
     }
 
@@ -312,14 +315,14 @@ int audio_decode_set_lrvolume(void *handle, float lvol,float rvol)
     cmd = adec_message_alloc();
     if (cmd) {
         cmd->ctrl_cmd = CMD_SET_LRVOL;
-        cmd->value_ext.volume = rvol;
         cmd->value.volume = lvol;
+	 audec->volume = lvol;
         cmd->has_arg = 1;
-        audec->volume = lvol;
-        audec->volume_ext = rvol;
+	 cmd->value_ext.volume = rvol;
+	 audec->volume_ext = rvol;
         ret = adec_send_message(audec, cmd);
     } else {
-        adec_print("message alloc failed, no memory!\n");
+        adec_print("message alloc failed, no memory!");
         ret = -1;
     }
 
@@ -553,21 +556,21 @@ int audio_get_decoded_nb_frames(void *handle)
  * \param handle pointer to player private data
  * \param threshold av sync time threshold in ms
  */
-void audio_set_av_sync_threshold(void *handle, int threshold)
+int audio_set_av_sync_threshold(void *handle, int threshold)
 {
     aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
 
     if (!handle) {
         adec_print("audio handle is NULL !\n");
-        return;
+        return -1;
     }
 
     if ((threshold > 500) || (threshold < 60)) {
         adec_print("threshold %d id too small or too large.\n", threshold);
-        return;
     }
 
     audec->avsync_threshold = threshold * 90;
+    return 0;
 }
 int audio_get_soundtrack(void *handle, int* strack )
 {

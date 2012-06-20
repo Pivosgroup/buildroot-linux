@@ -11,11 +11,11 @@ int PlayerSettingIsEnable(const char* path)
     char value[1024];
     if (GetSystemSettingString(path, value, NULL) > 0) {
         if ((!strcmp(value, "1") || !strcmp(value, "true") || !strcmp(value, "enable"))) {
-            log_debug("%s is enabled\n", path);
+            log_print("%s is enabled\n", path);
             return 1;
         }
     }
-    log_debug("%s is disabled\n", path);
+    log_print("%s is disabled\n", path);
     return 0;
 }
 
@@ -26,11 +26,11 @@ float PlayerGetSettingfloat(const char* path)
     float ret = 0.0;
     if (GetSystemSettingString(path, value, NULL) > 0) {
         if ((sscanf(value, "%f", &ret)) > 0) {
-            log_debug("%s is set to %f\n", path, ret);
+            log_print("%s is set to %f\n", path, ret);
             return ret;
         }
     }
-    log_debug("%s is not set\n", path);
+    log_print("%s is not set\n", path);
     return ret;
 }
 
@@ -50,7 +50,7 @@ int PlayerGetVFilterFormat()
 	int filter_fmt = 0;
 	
     if (GetSystemSettingString("media.amplayer.disable-vcodecs", value, NULL) > 0) {
-		log_debug("[%s:%d]disable_vdec=%s\n", __FUNCTION__, __LINE__, value);
+		log_print("[%s:%d]disable_vdec=%s\n", __FUNCTION__, __LINE__, value);
 		if (strstr(value,"MPEG12") != NULL || strstr(value,"mpeg12") != NULL) {
 			filter_fmt |= FILTER_VFMT_MPEG12;
 		} 
@@ -79,7 +79,7 @@ int PlayerGetVFilterFormat()
 			filter_fmt |= FILTER_VFMT_SW;
 		}
     }
-	log_debug("[%s:%d]filter_vfmt=%x\n", __FUNCTION__, __LINE__, filter_fmt);
+	log_print("[%s:%d]filter_vfmt=%x\n", __FUNCTION__, __LINE__, filter_fmt);
     return filter_fmt;
 }
 
@@ -109,7 +109,7 @@ int PlayerGetAFilterFormat()
 	int filter_fmt = 0;	
 	
     if (GetSystemSettingString("media.amplayer.disable-acodecs", value, NULL) > 0) {
-		log_debug("[%s:%d]disable_adec=%s\n", __FUNCTION__, __LINE__, value);
+		log_print("[%s:%d]disable_adec=%s\n", __FUNCTION__, __LINE__, value);
 		if (strstr(value,"mpeg") != NULL || strstr(value,"MPEG") != NULL) {
 			filter_fmt |= FILTER_AFMT_MPEG;
 		} 
@@ -168,7 +168,7 @@ int PlayerGetAFilterFormat()
 			filter_fmt |= FILTER_AFMT_VORBIS;
 		}
     }
-	log_debug("[%s:%d]filter_afmt=%x\n", __FUNCTION__, __LINE__, filter_fmt);
+	log_print("[%s:%d]filter_afmt=%x\n", __FUNCTION__, __LINE__, filter_fmt);
     return filter_fmt;
 }
 

@@ -16,6 +16,7 @@ float thumbnail_get_aspect_ratio(void *handle);
 void thumbnail_get_duration(void *handle, int64_t *duration);
 int thumbnail_get_key_metadata(void* handle, char* key, const char** value);
 int thumbnail_get_key_data(void* handle, char* key, const void** data, int* data_size);
+void thumbnail_get_video_rotation(void *handle, int* rotation);
 int thumbnail_decoder_close(void *handle);
 void thumbnail_res_free(void* handle);
 

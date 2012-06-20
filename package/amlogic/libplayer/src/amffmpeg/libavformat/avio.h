@@ -69,6 +69,7 @@ typedef struct {
     attribute_deprecated int is_streamed;
 	int is_slowmedia;
 #endif
+    int fastdetectedinfo;
     int max_packet_size;
     unsigned long checksum;
     unsigned char *checksum_ptr;
@@ -94,6 +95,8 @@ typedef struct {
     int seekable;
 	int enabled_lp_buffer;
 	int support_time_seek;
+	int is_encrypted_media;
+	int flags;
 } AVIOContext;
 
 /* unbuffered I/O */
@@ -120,6 +123,7 @@ typedef struct URLContext {
 	char *headers; /**< specified URL */
     int is_connected;
 	int is_slowmedia;
+	 int fastdetectedinfo;/*need fast detect*/
 	int support_time_seek;
 	char *location;
 } URLContext;
@@ -575,6 +579,10 @@ int avio_get_str16be(AVIOContext *pb, int maxlen, char *buf, int buflen);
  */
 #define AVIO_FLAG_NONBLOCK 8
 
+
+#define AVIO_FLAG_SIZE_NOTVALID  0x10000
+
+
 /**
  * Create and initialize a AVIOContext for accessing the
  * resource indicated by url.
@@ -669,7 +677,9 @@ int64_t avio_seek_time(AVIOContext *h, int stream_index,
 
 static inline int url_support_time_seek(AVIOContext *s)
 {
-	URLContext *h;
+	URLContext *h;	
+	if (!s)
+		return 0;
 	if(!s->support_time_seek && s->opaque){
 		h = (URLContext *)s->opaque;
 		if(h && h->support_time_seek){
@@ -685,5 +695,8 @@ static inline int url_support_time_seek(AVIOContext *s)
  int64_t url_buffed_pos(AVIOContext *s);
  int64_t url_fbuffered_time(AVIOContext *s);
 #define av_read_frame_flush(s) ff_read_frame_flush(s)
+int ffio_fdopen_resetlpbuf(AVIOContext *s,int lpsize);
+
+
 
 #endif /* AVFORMAT_AVIO_H */

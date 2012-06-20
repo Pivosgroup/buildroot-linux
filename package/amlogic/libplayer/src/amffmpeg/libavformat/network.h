@@ -90,7 +90,8 @@ static inline int ff_network_wait_fd(int fd, int write)
 			break;/*fd ready or errors*/
 		if(p.revents & (ev | POLLERR | POLLHUP))
 			return 0;/*disconnect , EOF*/	
-		av_log(NULL,AV_LOG_INFO,"ff_network_wait_fd,retry=%d\n",retry);
+		if(retry < 4)
+			av_log(NULL,AV_LOG_INFO,"ff_network_wait_fd,retry=%d\n",retry);
 	}while(retry-->0);
     return ret < 0 ? ff_neterrno() : p.revents & (ev | POLLERR | POLLHUP) ? 0 : AVERROR(EAGAIN);
 }

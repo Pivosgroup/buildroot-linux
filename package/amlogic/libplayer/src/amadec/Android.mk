@@ -21,18 +21,6 @@ LOCAL_MODULE := libamadec
 
 LOCAL_ARM_MODE := arm
 
-$(shell cd $(LOCAL_PATH)/firmware && { \
-for f in *.bin; do \
-  md5sum "$$f" > "$$f".checksum; \
-done;})
-
-copy_from := $(wildcard $(LOCAL_PATH)/firmware/*.bin)
-
-copy_from += $(wildcard $(LOCAL_PATH)/firmware/*.checksum)
-
-install_pairs := $(foreach f,$(copy_from),$(f):system/etc/firmware/$(notdir $(f)))
-
-PRODUCT_COPY_FILES += $(install_pairs)
 
 include $(BUILD_STATIC_LIBRARY)
 
@@ -58,8 +46,64 @@ LOCAL_MODULE := libamadec
 LOCAL_ARM_MODE := arm
 LOCAL_SHARED_LIBRARIES += libutils libmedia libz libbinder libdl libcutils libc
 
-
 LOCAL_PRELINK_MODULE := false
 LOCAL_MODULE_TAGS := optional
 include $(BUILD_SHARED_LIBRARY)
 
+
+#
+# audio_firmware module
+#   includes all audio firmware files, which are modules themselves.
+#
+
+include $(CLEAR_VARS)
+
+ifeq ($(TARGET_BOARD_PLATFORM),meson6)
+    audio_firmware_dir := firmware-m6
+else
+    audio_firmware_dir := firmware
+endif
+
+# generate md5 checksum files
+$(shell cd $(LOCAL_PATH)/$(audio_firmware_dir) && { \
+for f in *.bin; do \
+  md5sum "$$f" > "$$f".checksum; \
+done;})
+
+# gather list of relative filenames
+audio_firmware_files := $(wildcard $(LOCAL_PATH)/$(audio_firmware_dir)/*.bin)
+audio_firmware_files += $(wildcard $(LOCAL_PATH)/$(audio_firmware_dir)/*.checksum)
+audio_firmware_files := $(patsubst $(LOCAL_PATH)/%,%,$(audio_firmware_files))
+
+# define function to create a module for each file
+# $(1): filename
+define _add-audio-firmware-module
+    include $$(CLEAR_VARS)
+    LOCAL_MODULE := audio-firmware_$(notdir $(1))
+    LOCAL_MODULE_STEM := $(notdir $(1))
+    _audio_firmware_modules += $$(LOCAL_MODULE)
+    LOCAL_SRC_FILES := $1
+    LOCAL_MODULE_TAGS := optional
+    LOCAL_MODULE_CLASS := ETC
+    LOCAL_MODULE_PATH := $$(TARGET_OUT_ETC)/firmware
+    include $$(BUILD_PREBUILT)
+endef
+
+# create modules, one for each file
+_audio_firmware_modules :=
+_audio_firmware :=
+$(foreach _firmware, $(audio_firmware_files), \
+  $(eval $(call _add-audio-firmware-module,$(_firmware))))
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := audio_firmware
+LOCAL_MODULE_CLASS := ETC
+LOCAL_MODULE_TAGS := optional
+
+LOCAL_REQUIRED_MODULES := $(_audio_firmware_modules)
+
+include $(BUILD_PHONY_PACKAGE)
+
+_audio_firmware_modules :=
+_audio_firmware :=

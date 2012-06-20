@@ -20,6 +20,7 @@
  */
 
 #include "libavutil/avstring.h"
+#include "libavutil/aes.h"
 #include "avformat.h"
 #include "url.h"
 #include <fcntl.h>
@@ -31,6 +32,8 @@
 #include <stdlib.h>
 #include "os_support.h"
 #include "file_list.h"
+//#include "amconfigutils.h"
+
 static struct list_demux *list_demux_list=NULL;
 #define unused(x)	(x=x)
 
@@ -132,6 +135,15 @@ static int list_del_item(struct list_mgt *mgt,struct list_item*item)
 			item->next->prev=tmp;
 	}
 	mgt->item_num--;
+	if(item->ktype == KEY_AES_128){
+		if(item->crypto){
+			if(item->crypto->aes)
+				av_free(item->crypto->aes);
+			av_free(item->crypto);
+
+		}
+		av_free(item->key_ctx);
+	}
 	av_free(item);
 	item = NULL;
 	return 0;		
@@ -146,6 +158,8 @@ int url_is_file_list(AVIOContext *s,const char *filename)
 	list_demux_t *demux;
 	AVIOContext *lio=s;
 	int64_t	   *oldpos=0;
+	//if(am_getconfig_bool("media.amplayer.usedm3udemux"))
+	//	return 0;/*if used m3u demux,always failed;*/
 	if(!lio)
 	{
 		ret=url_fopen(&lio,filename,AVIO_FLAG_READ);
@@ -174,24 +188,55 @@ static int list_open_internet(AVIOContext **pbio,struct list_mgt *mgt,const char
 	list_demux_t *demux;
 	int ret;
 	AVIOContext *bio;
-	ret=url_fopen(&bio,filename,flags);
+	char* url = filename; 
+reload:
+	ret=url_fopen(&bio,url,flags);
 	if(ret!=0)
 		{
 			return AVERROR(EIO); 
 		}
 	mgt->location=bio->reallocation;
-	demux=probe_demux(bio,filename);
+	demux=probe_demux(bio,url);
 	if(!demux)
 	{
 		ret=-1;
 		goto error;
 	}
 	ret=demux->parser(mgt,bio);
-	if(ret<=0)
+	if(ret<=0&&mgt->n_variants ==0)
 	{
 		ret=-1;
 		goto error;
+	}else{
+		if(mgt->item_num ==0&&mgt->n_variants>1){//simplely choose server,mabye need sort variants when got it from server.
+			if(bio){
+				url_fclose(bio);					
+			}
+			if(mgt->ctype ==HIGH_BANDWIDTH){
+				struct variant *v =mgt->variants[mgt->n_variants-1];
+				url = v->url;
+				av_log(NULL, AV_LOG_INFO, "reload playlist,url:%s\n",mgt->filename);
+				goto reload;
+			}else if(mgt->ctype ==LOW_BANDWIDTH){
+				struct variant *v =mgt->variants[0];
+				url = v->url;
+				av_log(NULL, AV_LOG_INFO, "reload playlist,url:%s\n",mgt->filename);
+				goto reload;
+			}else if(mgt->ctype ==MIDDLE_BANDWIDTH){
+				struct variant *v = NULL;
+				if(mgt->n_variants>4){
+					v =mgt->variants[mgt->n_variants/2 -1];
+				}else{
+					v =mgt->variants[mgt->n_variants-1];
+				}
+				url = v->url;
+				av_log(NULL, AV_LOG_INFO, "reload playlist,url:%s\n",mgt->filename);
+				goto reload;
+			}
+		}
+
 	}
+	
 	*pbio=bio;
 	return 0;
 error:
@@ -208,7 +253,8 @@ static int list_open(URLContext *h, const char *filename, int flags)
 	mgt=av_malloc(sizeof(struct list_mgt));
 	if(!mgt)
 		return AVERROR(ENOMEM);
-	memset(mgt,0,sizeof(*mgt));
+	memset(mgt,0,sizeof(struct list_mgt));
+	mgt->key_tmp = NULL;
 	mgt->seq = -1;
 	mgt->filename=filename+5;
 	mgt->flags=flags;
@@ -321,9 +367,9 @@ retry:
 			len=url_fopen(&bio,item->file,AVIO_FLAG_READ | URL_MINI_BUFFER | URL_NO_LP_BUFFER);
 			if(len!=0)
 			{
-				av_log(NULL, AV_LOG_INFO, "list url_fopen failed =%d\n",len);
+				av_log(NULL, AV_LOG_ERROR, "list url_fopen failed =%d\n",len);
 				return len;
-			}
+			}			
 			if(url_is_file_list(bio,item->file))
 			{
 				mgt->have_sub_list = 1;
@@ -337,12 +383,87 @@ retry:
 					av_log(NULL, AV_LOG_INFO, "file list url_fopen failed =%d\n",len);
 					return len;
 				}
+			}else{
+				if(item->ktype == KEY_AES_128){	
+					if(item->key_ctx&&!item->crypto){
+						item->crypto = av_mallocz(sizeof(struct AESCryptoContext));
+						if(!item->crypto){							
+							len = AVERROR(ENOMEM);
+							return len;
+						}
+						item->crypto->aes =  av_mallocz(av_aes_size);		
+						if(!item->crypto->aes){
+							len = AVERROR(ENOMEM);
+							return len;
+						}
+						
+						av_aes_init(item->crypto->aes,item->key_ctx->key, 128, 1);
+						item->crypto->have_init = 1;
+						
+					}
+					bio->is_encrypted_media =1;
+				}				
 			}
 			mgt->cur_uio=bio;
 		}
 	}
 	if(mgt->cur_uio){
-		len=get_buffer(mgt->cur_uio,buf,size);
+		if(size>0&&mgt->cur_uio->is_encrypted_media>0&&mgt->current_item->key_ctx&&mgt->current_item->crypto){//codes from crypto.c			
+			int blocks;
+			struct AESCryptoContext* c = mgt->current_item->crypto;
+readagain:			
+			len = 0;
+			if (c->outdata > 0) {
+				size = FFMIN(size, c->outdata);
+				memcpy(buf, c->outptr, size);
+				c->outptr  += size;
+				c->outdata -= size;
+				len =size;				
+			}
+			// We avoid using the last block until we've found EOF,
+			// since we'll remove PKCS7 padding at the end. So make
+			// sure we've got at least 2 blocks, so we can decrypt
+			// at least one.
+			while (c->indata - c->indata_used < 2*BLOCKSIZE) {
+				int n = get_buffer(mgt->cur_uio,c->inbuffer + c->indata,
+				                   sizeof(c->inbuffer) - c->indata);
+				if (n <= 0) {
+				    c->eof = 1;
+				    break;
+				}
+				c->indata += n;				
+			}
+			blocks = (c->indata - c->indata_used) / BLOCKSIZE;
+			if (blocks!=0){
+				if (!c->eof)
+					blocks--;
+				av_aes_crypt(c->aes, c->outbuffer, c->inbuffer + c->indata_used, blocks,mgt->current_item->key_ctx->iv, 1);
+				c->outdata      = BLOCKSIZE * blocks;
+				c->outptr       = c->outbuffer;
+				c->indata_used += BLOCKSIZE * blocks;
+				if (c->indata_used >= sizeof(c->inbuffer)/2) {
+					memmove(c->inbuffer, c->inbuffer + c->indata_used,
+						c->indata - c->indata_used);
+					c->indata     -= c->indata_used;
+					c->indata_used = 0;
+				}
+				if (c->eof) {
+					// Remove PKCS7 padding at the end
+					int padding = c->outbuffer[c->outdata - 1];
+					c->outdata -= padding;
+				}
+
+				if(len==0){
+					goto readagain;
+				}
+			}else{
+				len  =0;
+			}				
+			
+			
+		}else{
+			len=get_buffer(mgt->cur_uio,buf,size);
+		}
 		//av_log(NULL, AV_LOG_INFO, "list_read get_buffer=%d\n",len);
 	}
 	if(len==AVERROR(EAGAIN))
@@ -351,8 +472,12 @@ retry:
 	{/*end of the file*/
 		av_log(NULL, AV_LOG_INFO, "try switchto_next_item buf=%x,size=%d,len=%d\n",buf,size,len);
 
-		if(item && (item->flags & ENDLIST_FLAG))
+		if(item && (item->flags & ENDLIST_FLAG)){
+		    if(mgt->cur_uio)
+			    url_fclose(mgt->cur_uio);
+    		av_log(NULL, AV_LOG_INFO, "ENDLIST_FLAG, return 0\n");
 			return 0;
+		}
 		item=switchto_next_item(mgt);
 		if(!item){
 			if(mgt->flags&REAL_STREAMING_FLAG){
@@ -380,6 +505,7 @@ retry:
 			goto retry;
 		}
 		else{	
+			av_log(NULL, AV_LOG_INFO, "[%s]item->flags=%x \n", __FUNCTION__, item->flags);
 			goto retry;
 		}
 	}
@@ -387,7 +513,7 @@ retry:
 		fresh_item_list(mgt);	
 	}
 
-	av_log(NULL, AV_LOG_INFO, "list_read end buf=%x,size=%d\n",buf,size);
+	//av_log(NULL, AV_LOG_INFO, "list_read end buf=%x,size=%d return len=%x\n",buf,size,len);
     return len;
 }
 
@@ -431,7 +557,7 @@ static int64_t list_seek(URLContext *h, int64_t pos, int whence)
 					buffed_time=mgt->full_time;/*read to end list, show full bufferd*/
 			}
 		}
-		av_log(NULL, AV_LOG_INFO, "list current buffed_time=%lld\n",buffed_time);
+		//av_log(NULL, AV_LOG_INFO, "list current buffed_time=%lld\n",buffed_time);
 		return buffed_time;
 	}
 	
@@ -440,14 +566,14 @@ static int64_t list_seek(URLContext *h, int64_t pos, int whence)
 	av_log(NULL, AV_LOG_INFO, "list_seek pos=%lld,whence=%x\n",pos,whence);
 	if (whence == AVSEEK_FULLTIME)
 	{
-		if(mgt->have_list_end)
+		if(mgt->have_list_end){
+			av_log(NULL, AV_LOG_INFO, "return mgt->full_timet=%d\n",mgt->full_time);
 			return mgt->full_time;
-		else if(mgt->have_sub_list && mgt->cur_uio){
+		}else if(mgt->have_sub_list && mgt->cur_uio){
 				subh = mgt->cur_uio->opaque;
-				submgt = subh->priv_data;
-				av_log(NULL, AV_LOG_INFO, "submgt->full_timet=%d\n",submgt->full_time);
-				return submgt->full_time;
-			}
+				av_log(NULL, AV_LOG_INFO, "seek sub file for fulltime\n");
+				return list_seek(subh,pos, whence);
+		}else
 			return -1;
 	}
 	
@@ -471,6 +597,10 @@ static int64_t list_seek(URLContext *h, int64_t pos, int whence)
 
 			}
 		} else {
+		    if(!mgt->cur_uio){
+   				av_log(NULL, AV_LOG_ERROR, "byteio already close, seek failed!\n");
+		        return -1;
+		    }
 			subh = mgt->cur_uio->opaque;	
 			submgt = subh->priv_data;
 			if(subh && submgt) {
@@ -494,9 +624,32 @@ static int list_close(URLContext *h)
 		{
 		item1=item;
 		item=item->next;
+	if(item->ktype == KEY_AES_128){	
+		if(item->key_ctx){
+			av_free(item->key_ctx);
+		}
+		if(item->crypto){
+			if(item->crypto->aes)
+				av_free(item->crypto->aes);
+			av_free(item->crypto->aes);
+		}
+		
+
+	}
 		av_free(item1);
 	
 		}
+	int i;
+	for (i = 0; i < mgt->n_variants; i++) {
+	    struct variant *var = mgt->variants[i];        
+	    av_free(var);
+	}
+	av_freep(&mgt->variants);
+	mgt->n_variants = 0;
+	if(NULL!=mgt->prefix){
+		av_free(mgt->prefix);
+		mgt->prefix = NULL;
+	}
 	av_free(mgt);
 	unused(h);
 	return 0;

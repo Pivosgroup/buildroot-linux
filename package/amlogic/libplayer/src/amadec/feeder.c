@@ -18,9 +18,9 @@
 
 /**
  * \brief get audio format
- * \return audio format on success otherwise AUDIO_FORMAT_UNKNOWN
+ * \return audio format on success otherwise ADEC_AUDIO_FORMAT_UNKNOWN
  */
-static audio_format_t get_audio_format(void)
+static adec_audio_format_t get_audio_format(void)
 {
     int fd;
     char format[21];
@@ -31,7 +31,7 @@ static audio_format_t get_audio_format(void)
     fd = open(FORMAT_PATH, O_RDONLY);
     if (fd < 0) {
         adec_print("amadec device not found");
-        return AUDIO_FORMAT_UNKNOWN;
+        return ADEC_AUDIO_FORMAT_UNKNOWN;
     }
 
     len = read(fd, format, 20);
@@ -40,138 +40,138 @@ static audio_format_t get_audio_format(void)
     }
     if (strncmp(format, "NA", 2) == 0) {
         close(fd);
-        return AUDIO_FORMAT_UNKNOWN;
+        return ADEC_AUDIO_FORMAT_UNKNOWN;
     }
 
     adec_print("amadec format: %s", format);
 
     if (strncmp(format, "amadec_mpeg", 11) == 0) {
         close(fd);
-        return AUDIO_FORMAT_MPEG;
+        return ADEC_AUDIO_FORMAT_MPEG;
     }
 
     if (strncmp(format, "amadec_pcm_s16le", 16) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_PCM_S16LE;
+        return ADEC_AUDIO_FORMAT_PCM_S16LE;
     }
 
     if (strncmp(format, "amadec_pcm_s16be", 16) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_PCM_S16BE;
+        return ADEC_AUDIO_FORMAT_PCM_S16BE;
     }
 
     if (strncmp(format, "amadec_pcm_u8", 13) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_PCM_U8;
+        return ADEC_AUDIO_FORMAT_PCM_U8;
     }
 
     if (strncmp(format, "amadec_adpcm", 12) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_ADPCM;
+        return ADEC_AUDIO_FORMAT_ADPCM;
     }
 
     if (strncmp(format, "amadec_aac_latm", 15) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_AAC_LATM;
+        return ADEC_AUDIO_FORMAT_AAC_LATM;
     }
 
     if (strncmp(format, "amadec_aac", 10) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_AAC;
+        return ADEC_AUDIO_FORMAT_AAC;
     }
 
     if (strncmp(format, "amadec_ac3", 10) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_AC3;
+        return ADEC_AUDIO_FORMAT_AC3;
     }
 
     if (strncmp(format, "amadec_alaw", 11) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_ALAW;
+        return ADEC_AUDIO_FORMAT_ALAW;
     }
 
     if (strncmp(format, "amadec_mulaw", 12) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_MULAW;
+        return ADEC_AUDIO_FORMAT_MULAW;
     }
 
     if (strncmp(format, "amadec_dts", 10) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_DTS;
+        return ADEC_AUDIO_FORMAT_DTS;
     }
 
     if (strncmp(format, "amadec_flac", 11) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_FLAC;
+        return ADEC_AUDIO_FORMAT_FLAC;
     }
 
     if (strncmp(format, "amadec_cook", 11) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_COOK;
+        return ADEC_AUDIO_FORMAT_COOK;
     }
 
     if (strncmp(format, "amadec_amr", 10) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_AMR;
+        return ADEC_AUDIO_FORMAT_AMR;
     }
 
     if (strncmp(format, "amadec_raac", 11) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_RAAC;
+        return ADEC_AUDIO_FORMAT_RAAC;
     }
 
     if (strncmp(format, "amadec_wmapro", 13) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_WMAPRO;
+        return ADEC_AUDIO_FORMAT_WMAPRO;
     }
 
     if (strncmp(format, "amadec_wma", 10) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_WMA;
+        return ADEC_AUDIO_FORMAT_WMA;
     }
 
     if (strncmp(format, "amadec_pcm_bluray", 10) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_AFORMAT_PCM_BLURAY;
+        return ADEC_AUDIO_AFORMAT_PCM_BLURAY;
     }
     if (strncmp(format, "amadec_alac", 11) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_AFORMAT_ALAC;
+        return ADEC_AUDIO_AFORMAT_ALAC;
     }
     if (strncmp(format, "amadec_vorbis", 13) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_AFORMAT_VORBIS;
+        return ADEC_AUDIO_AFORMAT_VORBIS;
     }
     if (strncmp(format, "amadec_ape", 10) == 0) {
         /*TODO: get format/channel numer/sample rate etc */
         close(fd);
-        return AUDIO_FORMAT_APE;
+        return ADEC_AUDIO_FORMAT_APE;
     }
 
     close(fd);
 
     adec_print("audio format unknow.");
 
-    return AUDIO_FORMAT_UNKNOWN;
+    return ADEC_AUDIO_FORMAT_UNKNOWN;
 }
 
 /**
@@ -187,7 +187,7 @@ int feeder_init(aml_audio_dec_t *audec)
     dsp_ops = &audec->adsp_ops;
 
     audec->format = get_audio_format();
-    if (audec->format == AUDIO_FORMAT_UNKNOWN) {
+    if (audec->format == ADEC_AUDIO_FORMAT_UNKNOWN) {
         adec_print("Unknown audio format!");
         return -1;
     }

@@ -15,6 +15,33 @@ static inline void calc_aspect_ratio(rational *ratio, struct stream *stream)
     ratio->den = den;
 }
 
+static void find_thumbnail_frame(AVFormatContext *pFormatCtx, int video_index, int64_t *thumb_time, int64_t *thumb_offset)
+{
+    int i = 0;
+    int maxFrameSize = 0;
+    int64_t thumbTime = 0;
+    int64_t thumbOffset = 0;
+    AVPacket packet;
+    AVStream *st = pFormatCtx->streams[video_index];
+
+    while((i < 20) && (av_read_frame(pFormatCtx, &packet) >= 0)){
+        if((packet.stream_index == video_index) && (packet.flags & AV_PKT_FLAG_KEY)){
+            ++i;
+            if(packet.size > maxFrameSize){
+                maxFrameSize = packet.size;
+                thumbTime = packet.pts;
+                thumbOffset = avio_tell(pFormatCtx->pb);
+            }
+        }
+        av_free_packet(&packet);
+    }
+    if(thumbTime != AV_NOPTS_VALUE)
+        *thumb_time = av_rescale_q(thumbTime, st->time_base, AV_TIME_BASE_Q);
+    else
+        *thumb_time = AV_NOPTS_VALUE;
+    *thumb_offset = thumbOffset;
+}
+
 void * thumbnail_res_alloc(void)
 {
     struct video_frame * frame;
@@ -95,6 +122,8 @@ int thumbnail_decoder_open(void *handle, const char* filename)
 	 goto err1;
     }
 
+   find_thumbnail_frame(stream->pFormatCtx, video_index, &frame->thumbNailTime, &frame->thumbNailOffset); 
+	
     stream->videoStream = video_index;
     stream->pCodecCtx = stream->pFormatCtx->streams[video_index]->codec;
     if(stream->pCodecCtx == NULL)
@@ -115,8 +144,6 @@ int thumbnail_decoder_open(void *handle, const char* filename)
     }
 	
     frame->duration = stream->pFormatCtx->duration;
-
-    calc_aspect_ratio(&frame->displayAspectRatio, stream);
 
     stream->pFrameYUV = avcodec_alloc_frame();
     if(stream->pFrameYUV == NULL) {
@@ -161,9 +188,27 @@ int thumbnail_extract_video_frame(void *handle, int64_t time, int flag)
     int count;
     struct video_frame *frame = (struct video_frame *)handle;
     struct stream *stream = &frame->stream;
+    AVFormatContext *pFormatCtx = stream->pFormatCtx;
     AVPacket        packet;
 
-    while(av_read_frame(stream->pFormatCtx, &packet) >= 0) {
+    if(time < 0){
+        if(frame->thumbNailTime != AV_NOPTS_VALUE) {
+	     log_print("seek to thumbnail frame by timestamp(0x%llx)!\n", frame->thumbNailTime);
+            av_seek_frame(pFormatCtx, stream->videoStream, frame->thumbNailTime, AVSEEK_FLAG_BACKWARD);
+	 }else{
+	     log_print("seek to thumbnail frame by offset(%lld)!\n", frame->thumbNailOffset);
+            avio_seek(pFormatCtx->pb, frame->thumbNailOffset, SEEK_SET);
+	 }
+	 	
+    }else{
+        //int64_t thumbTime;
+		
+        //thumbTime = av_rescale_q(time, AV_TIME_BASE_Q, stream->pFormatCtx->streams[stream->videoStream]->time_base);
+        av_seek_frame(pFormatCtx, stream->videoStream, time, AVSEEK_FLAG_BACKWARD);
+    }
+	avcodec_flush_buffers(stream->pCodecCtx);
+	
+    while(av_read_frame(pFormatCtx, &packet) >= 0) {
         if(packet.stream_index==stream->videoStream){
             if(count >= 10){
                 log_print("exceed count, cann't get frame!\n");
@@ -234,6 +279,9 @@ void thumbnail_get_video_size(void *handle, int* width, int* height)
 float thumbnail_get_aspect_ratio(void *handle)
 {
     struct video_frame *frame = (struct video_frame *)handle;
+    struct stream *stream = &frame->stream;
+
+    calc_aspect_ratio(&frame->displayAspectRatio, stream);
 
     if( !frame->displayAspectRatio.num || !frame->displayAspectRatio.den)
         return (float)frame->width / frame->height;
@@ -283,6 +331,33 @@ int thumbnail_get_key_data(void* handle, char* key, const void** data, int* data
     }
 
     return 0;
+}
+
+void thumbnail_get_video_rotation(void *handle, int* rotation)
+{
+    struct video_frame *frame = (struct video_frame *)handle;
+    struct stream *stream = &frame->stream;
+    int stream_rotation = stream->pFormatCtx->streams[stream->videoStream]->rotation_degree;
+
+    switch (stream_rotation) {
+        case 1:
+            *rotation = 90;
+            break;
+
+        case 2:
+            *rotation = 180;
+            break;
+
+        case 3:
+            *rotation = 270;
+            break;
+
+        default:
+            *rotation = 0;
+            break;
+    }
+
+    return;
 }
 
 int thumbnail_decoder_close(void *handle)

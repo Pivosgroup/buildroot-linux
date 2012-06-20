@@ -15,6 +15,7 @@
 #include "amports/amstream.h"
 #include "amports/vformat.h"
 #include "amports/aformat.h"
+#include "ppmgr/ppmgr.h"
 
 typedef int CODEC_HANDLE;
 
@@ -77,6 +78,7 @@ unsigned int noblock:
     dec_sysinfo_t am_sysinfo;   ///< system information for video
     audio_info_t audio_info;    ///< audio information pass to audiodsp
     int packet_size;            ///< data size per packet
+    int avsync_threshold;    ///<for adec in ms>
     void * adec_priv;          ///<for adec>
 } codec_para_t;
 
@@ -89,16 +91,23 @@ typedef struct
 }subtitle_info_t;
 #define MAX_SUB_NUM			(32)
 
-typedef struct {
-	int vf_pool_size;
-	int buf_free_num;
-	int buf_recycle_num;
-    int buf_avail_num;
-} vframe_states_t;
-
 #define IS_VALID_PID(t)     (t>=0 && t<=0x1fff)
 #define IS_VALID_STREAM(t)  (t>0 && t<=0x1fff)
 #define IS_VALID_ATYPE(t)   (t>=0 && t<AFORMAT_MAX)
 #define IS_VALID_VTYPE(t)   (t>=0 && t<VFORMAT_MAX)
 
+//pass to arm audio decoder
+typedef struct {
+    int sample_rate;         ///< audio stream sample rate
+    int channels;            ///< audio stream channels
+    int format;            ///< codec format id
+    int handle;        ///< codec device handler
+    int extradata_size;      ///< extra data size
+    char extradata[AUDIO_EXTRA_DATA_SIZE];
+} arm_audio_info;
+
+//audio decoder type, default arc
+#define AUDIO_ARC_DECODER 0
+#define AUDIO_ARM_DECODER 1
+#define AUDIO_FFMPEG_DECODER 2
 #endif

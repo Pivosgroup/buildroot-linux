@@ -321,4 +321,7 @@ int codec_get_soundtrack(codec_para_t *p,int* strack)
 
 }
 
-
+int audio_set_avsync_threshold(void *priv, int threshold)
+{
+    return audio_set_av_sync_threshold(priv, threshold);
+}

@@ -17,7 +17,6 @@
 
 #include <audio-dec.h>
 #include <adec-pts-mgt.h>
-#include <adec-external-ctrl.h>
 
 #ifdef ANDROID
 #include <cutils/properties.h>
@@ -28,7 +27,7 @@
  * \param cmd control commands
  * \return 0 on success otherwise -1
  */
- #if 1
+ #if 0
 #define ACODEC_FMT_NULL 	0
 #define ACODEC_FMT_AAC		1
 #define ACODEC_FMT_AC3		2
@@ -69,6 +68,7 @@ audio_type_t audio_type[] = {
     {ACODEC_FMT_VORBIS, "vorbis"},
     {ACODEC_FMT_AAC_LATM, "aac_latm"},
     {ACODEC_FMT_APE, "ape"},
+    {ACODEC_FMT_MPEG, "mp3"},
 };
 
 static int audio_decoder = AUDIO_ARC_DECODER;
@@ -78,7 +78,7 @@ static int audio_hardware_ctrl(hw_command_t cmd)
 
     fd = open(AUDIO_CTRL_DEVICE, O_RDONLY);
     if (fd < 0) {
-        adec_print("Open Device %s Failed!\n", AUDIO_CTRL_DEVICE);
+        adec_print("Open Device %s Failed!", AUDIO_CTRL_DEVICE);
         return -1;
     }
 
@@ -100,7 +100,7 @@ static int audio_hardware_ctrl(hw_command_t cmd)
         break;
 
     default:
-        adec_print("Unknow Command %d!\n", cmd);
+        adec_print("Unknow Command %d!", cmd);
         break;
 
     };
@@ -125,7 +125,7 @@ static void start_adec(aml_audio_dec_t *audec)
         audec->state = ACTIVE;
 
         while ((!audiodsp_get_first_pts_flag(dsp_ops)) && (!audec->need_stop)) {
-            adec_print("wait first pts checkin complete !\n");
+            adec_print("wait first pts checkin complete !");
             usleep(100000);
         }
 
@@ -136,12 +136,14 @@ static void start_adec(aml_audio_dec_t *audec)
 		
         if (audec->auto_mute) {
             avsync_en(0);
+            audiodsp_automute_on(dsp_ops);
             adec_pts_pause();
 
             while ((!audec->need_stop) && track_switch_pts(audec)) {
                 usleep(1000);
             }
 
+            audiodsp_automute_off(dsp_ops);
             avsync_en(1);
             adec_pts_resume();
 
@@ -218,6 +220,7 @@ static void mute_adec(aml_audio_dec_t *audec, int en)
     audio_out_operations_t *aout_ops = &audec->aout_ops;
 
     if (aout_ops->mute) {
+        adec_print("%s the output !\n", (en ? "mute" : "unmute"));
         aout_ops->mute(audec, en);
         audec->muted = en;
     }
@@ -233,6 +236,7 @@ static void adec_set_volume(aml_audio_dec_t *audec, float vol)
     audio_out_operations_t *aout_ops = &audec->aout_ops;
 
     if (aout_ops->set_volume) {
+        adec_print("set audio volume! vol = %f\n", vol);
         aout_ops->set_volume(audec, vol);
     }
 }
@@ -248,6 +252,7 @@ static void adec_set_lrvolume(aml_audio_dec_t *audec, float lvol,float rvol)
     audio_out_operations_t *aout_ops = &audec->aout_ops;
 
     if (aout_ops->set_lrvolume) {
+        adec_print("set audio volume! left vol = %f,right vol:%f\n", lvol,rvol);
         aout_ops->set_lrvolume(audec, lvol,rvol);
     }
 }
@@ -315,7 +320,7 @@ static void *adec_message_loop(void *args)
         if (ret == 0) {
             ret = aout_ops->init(audec);
             if (ret) {
-                adec_print("Audio out device init failed!\n");
+                adec_print("Audio out device init failed!");
                 feeder_release(audec);
                 continue;
             }
@@ -352,25 +357,25 @@ static void *adec_message_loop(void *args)
 
         case CMD_PAUSE:
 
-            adec_print("Receive PAUSE Command!\n");
+            adec_print("Receive PAUSE Command!");
             pause_adec(audec);
             break;
 
         case CMD_RESUME:
 
-            adec_print("Receive RESUME Command!\n");
+            adec_print("Receive RESUME Command!");
             resume_adec(audec);
             break;
 
         case CMD_STOP:
 
-            adec_print("Receive STOP Command!\n");
+            adec_print("Receive STOP Command!");
             stop_adec(audec);
             break;
 
         case CMD_MUTE:
 
-            adec_print("Receive Mute Command!\n");
+            adec_print("Receive Mute Command!");
             if (msg->has_arg) {
                 mute_adec(audec, msg->value.en);
             }
@@ -378,14 +383,14 @@ static void *adec_message_loop(void *args)
 
         case CMD_SET_VOL:
 
-            adec_print("Receive Set Vol Command!\n");
+            adec_print("Receive Set Vol Command!");
             if (msg->has_arg) {
                 adec_set_volume(audec, msg->value.volume);
             }
             break;
 	 case CMD_SET_LRVOL:
 
-            adec_print("Receive Set LRVol Command!\n");
+            adec_print("Receive Set LRVol Command!");
             if (msg->has_arg) {
                 adec_set_lrvolume(audec, msg->value.volume,msg->value_ext.volume);
             }
@@ -393,36 +398,36 @@ static void *adec_message_loop(void *args)
 		
         case CMD_CHANL_SWAP:
 
-            adec_print("Receive Channels Swap Command!\n");
+            adec_print("Receive Channels Swap Command!");
             audio_hardware_ctrl(HW_CHANNELS_SWAP);
             break;
 
         case CMD_LEFT_MONO:
 
-            adec_print("Receive Left Mono Command!\n");
+            adec_print("Receive Left Mono Command!");
             audio_hardware_ctrl(HW_LEFT_CHANNEL_MONO);
             break;
 
         case CMD_RIGHT_MONO:
 
-            adec_print("Receive Right Mono Command!\n");
+            adec_print("Receive Right Mono Command!");
             audio_hardware_ctrl(HW_RIGHT_CHANNEL_MONO);
             break;
 
         case CMD_STEREO:
 
-            adec_print("Receive Stereo Command!\n");
+            adec_print("Receive Stereo Command!");
             audio_hardware_ctrl(HW_STEREO_MODE);
             break;
 
         case CMD_RELEASE:
 
-            adec_print("Receive RELEASE Command!\n");
+            adec_print("Receive RELEASE Command!");
             release_adec(audec);
             break;
 
         default:
-            adec_print("Unknow Command!\n");
+            adec_print("Unknow Command!");
             break;
 
         }
@@ -433,7 +438,7 @@ static void *adec_message_loop(void *args)
         }
     } while (audec->state != TERMINATED);
 
-    adec_print("Exit Message Loop Thread!\n");
+    adec_print("Exit Message Loop Thread!");
     pthread_exit(NULL);
     return NULL;
 }
@@ -729,7 +734,6 @@ static int get_dectype(int id)
 	}
 }
 #endif
-
 int match_types(const char *filetypestr,const char *typesetting)
 {
 	const char * psets=typesetting;
@@ -758,15 +762,7 @@ int match_types(const char *filetypestr,const char *typesetting)
 	}
 	return 0;
 }
-
-#if 1
-static int set_audio_decoder(int audioDecoder)
-{
-	audio_decoder = AUDIO_ARC_DECODER; //set arc decoder as default
-	return 0;
-}
-
-#else
+#if 0
 static int set_audio_decoder(codec_para_t *pcodec)
 {
 	int audio_id;
@@ -815,6 +811,54 @@ static int set_audio_decoder(codec_para_t *pcodec)
 	return 0;
 }
 #endif
+static int set_audio_decoder(int codec_id)
+{
+	int audio_id;
+#if 0
+	int i;	
+    int num;
+	int ret;
+    audio_type_t *t;
+	char value[PROPERTY_VALUE_MAX];
+	
+
+	audio_id = codec_id;
+
+    num = ARRAY_SIZE(audio_type);
+    for (i = 0; i < num; i++) {
+        t = &audio_type[i];
+        if (t->audio_id == audio_id) {
+            break;
+        }
+    }
+	
+	ret = property_get("media.arm.audio.decoder",value,NULL);
+	adec_print("media.amplayer.audiocodec = %s, t->type = %s\n", value, t->type);
+	if (ret>0 && match_types(t->type,value))
+	{	
+		audio_decoder = AUDIO_ARM_DECODER;
+		return 0;
+	} 
+	
+	ret = property_get("media.arc.audio.decoder",value,NULL);
+	adec_print("media.amplayer.audiocodec = %s, t->type = %s\n", value, t->type);
+	if (ret>0 && match_types(t->type,value))
+	{	
+		audio_decoder = AUDIO_ARC_DECODER;
+		return 0;
+	} 
+	
+	ret = property_get("media.ffmpeg.audio.decoder",value,NULL);
+	adec_print("media.amplayer.audiocodec = %s, t->type = %s\n", value, t->type);
+	if (ret>0 && match_types(t->type,value))
+	{	
+		audio_decoder = AUDIO_FFMPEG_DECODER;
+		return 0;
+	} 
+#endif	
+	audio_decoder = AUDIO_ARC_DECODER; //set arc decoder as default
+	return 0;
+}
 
 int get_audio_decoder(void)
 {
@@ -847,37 +891,26 @@ int audiodec_init(aml_audio_dec_t *audec)
     int ret = 0;
     pthread_t    tid;
     adec_print("audiodec_init!");
-
-    //memset(audec, 0, sizeof(aml_audio_dec_t));
-
     adec_message_pool_init(audec);
     get_output_func(audec);
-	
-    //audec->pcodec = pcodec;
-    //audec->adsp_ops.dsp_file_fd = -1;//has been set
-    //int nCodecType=pcodec->audio_type;
     int nCodecType=audec->format;
     set_audio_decoder(nCodecType);
 
     if (get_audio_decoder() == AUDIO_ARC_DECODER) {
     		audec->adsp_ops.dsp_file_fd = -1;
-				ret = pthread_create(&tid, NULL, (void *)adec_message_loop, (void *)audec);
+		ret = pthread_create(&tid, NULL, (void *)adec_message_loop, (void *)audec);
     }
-#if 0
-    else {
-				adec_print("Start Create adec main thread !\n");
-				int codec_type=get_audio_decoder();
-				RegisterDecode(audec,codec_type);
-				ret = pthread_create(&tid, NULL, (void *)adec_armdec_loop, (void *)audec);
-		}
-#endif
+    else 
+    {
+		int codec_type=get_audio_decoder();
+		RegisterDecode(audec,codec_type);
+		ret = pthread_create(&tid, NULL, (void *)adec_armdec_loop, (void *)audec);
+    }
     if (ret != 0) {
         adec_print("Create adec main thread failed!\n");
         return ret;
     }
     adec_print("Create adec main thread success! tid = %d\n", tid);
-
     audec->thread_pid = tid;
-
     return ret;
 }

@@ -61,13 +61,13 @@ int player_thread_create(play_para_t *player)
     pthread_attr_setstacksize(&pthread_attr, 0);   //default stack size maybe better
     pthread_mutex_init(&mgt->pthread_mutex, NULL);
     pthread_cond_init(&mgt->pthread_cond, NULL);
-    log_debug("***player_para=%p,start_param=%p\n", player, player->start_param);
+    log_print("***player_para=%p,start_param=%p\n", player, player->start_param);
     ret = pthread_create(&tid, &pthread_attr, (void*)&player_thread, (void*)player);
     if (ret != 0) {
         log_print("creat player thread failed !\n");
         return ret;
     }
-    log_debug("[player_thread_create:%d]creat thread success,tid=%lu\n", __LINE__, tid);
+    log_print("[player_thread_create:%d]creat thread success,tid=%lu\n", __LINE__, tid);
 
     mgt->pthread_id = tid;
     return PLAYER_SUCCESS;
@@ -77,13 +77,13 @@ int player_thread_wait_exit(play_para_t *player)
 {
     int ret;
     player_thread_mgt_t *mgt = &player->thread_mgt;
-    log_debug("[player_thread_wait_exit:%d]pid=[%d] thead_id=%lu\n", __LINE__, player->player_id, mgt->pthread_id);
+    log_print("[player_thread_wait_exit:%d]pid=[%d] thead_id=%lu\n", __LINE__, player->player_id, mgt->pthread_id);
     if (mgt) {
         ret = pthread_join(mgt->pthread_id, NULL);
     } else {
         ret = 0;
     }
-    log_debug("[player_thread_wait_exit:%d]thead_id=%lu returning\n", __LINE__, mgt->pthread_id);
+    log_print("[player_thread_wait_exit:%d]thead_id=%lu returning\n", __LINE__, mgt->pthread_id);
     return ret;
 }
 
@@ -91,7 +91,7 @@ int player_thread_wait_exit(play_para_t *player)
 void debug_set_player_state(play_para_t *player, player_status status, const char *fn, int line)
 {
     player_thread_mgt_t *mgt = &player->thread_mgt;
-    log_debug("\n************************Changed player state to %d,At %s:%d\n", status, fn, line);
+    log_print("\n************************Changed player state to %d,At %s:%d\n", status, fn, line);
     mgt->player_state = status;
 }
 #else
