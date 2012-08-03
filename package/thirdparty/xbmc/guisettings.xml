@@ -1,7 +1,6 @@
 <settings>
     <lookandfeel>
         <enablerssfeeds>false</enablerssfeeds>
-        <skin>skin.xios</skin>
     </lookandfeel>
     <audiooutput>
         <ac3passthrough>false</ac3passthrough>
