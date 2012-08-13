@@ -48,7 +48,7 @@ define XBMC_INSTALL_ETC
 endef
 
 define XBMC_INSTALL_SPLASH
-  #cp -f package/thirdparty/xbmc/xios_splash.png $(TARGET_DIR)/usr/share/xbmc/media/Splash.png
+  cp -f package/thirdparty/xbmc/xios_splash.png $(TARGET_DIR)/usr/share/xbmc/media/Splash.png
 endef
 
 define XBMC_CLEAN_UNUSED_ADDONS
