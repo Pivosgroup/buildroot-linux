@@ -819,7 +819,7 @@ unsigned long alsa_latency(struct aml_audio_dec* audec)
     alsa_param_t *alsa_param = (alsa_param_t *)audec->aout_ops.private_data;
     buffered_data = alsa_param->buffer_size - alsa_get_space(alsa_param);
     sample_num = buffered_data / (alsa_param->channelcount * (alsa_param->bits_per_sample / 8)); /*16/2*/
-    return (sample_num * (1000 / alsa_param->rate));
+    return (sample_num * 1000) / alsa_param->rate;
 }
 
 /**
