@@ -58,6 +58,7 @@ struct aml_audio_dec {
     int avsync_threshold;
     float volume; //left or main volume
     float volume_ext; //right	
+    int audio_delay;
     //codec_para_t *pcodec;
     hw_command_t soundtrack;
     audio_out_operations_t aout_ops;

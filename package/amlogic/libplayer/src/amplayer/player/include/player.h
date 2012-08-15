@@ -51,6 +51,7 @@ int 	audio_left_mono(int pid);
 int 	audio_right_mono(int pid);
 int 	audio_stereo(int pid);
 int 	audio_set_spectrum_switch(int pid,int isStart,int interval);
+int 	audio_set_delay(int pid, int delay);
 int 	player_register_update_callback(callback_t *cb,update_state_fun_t up_fn,int interval_s);
 char 	*player_status2str(player_status status);
 int 	player_cache_system_init(int enable,const char*dir,int max_size,int block_size);

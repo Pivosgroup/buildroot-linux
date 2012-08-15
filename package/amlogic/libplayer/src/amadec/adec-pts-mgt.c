@@ -23,7 +23,9 @@
  */
 unsigned long adec_calc_pts(aml_audio_dec_t *audec)
 {
+    int audio_delay_pts;
     unsigned long pts, delay_pts;
+
     audio_out_operations_t *out_ops;
     dsp_operations_t *dsp_ops;
 
@@ -48,6 +50,12 @@ unsigned long adec_calc_pts(aml_audio_dec_t *audec)
         pts -= delay_pts;
     } else {
         pts = 0;
+    }
+
+    // audio delay (positive or negative) in pts units.
+    audio_delay_pts = audec->audio_delay * 90;
+    if (abs(audio_delay_pts) < pts) {
+        pts -= audio_delay_pts;
     }
 
     return pts;

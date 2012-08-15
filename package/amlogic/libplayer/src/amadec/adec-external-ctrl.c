@@ -586,3 +586,21 @@ int audio_get_soundtrack(void *handle, int* strack )
 
     return ret;    
 }
+
+int audio_set_av_delay(void *handle, int delay)
+{
+    aml_audio_dec_t *audec = (aml_audio_dec_t *)handle;
+    if (!handle) {
+        adec_print("audio handle is NULL !\n");
+        return -1;
+    }
+
+    if (delay > 500)
+        delay = 500;
+    else if (delay < -500)
+        delay = -500;
+
+    audec->audio_delay = delay;
+
+    return 0;
+}

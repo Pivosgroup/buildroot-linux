@@ -38,6 +38,7 @@ extern "C"
     int audio_decode_get_lrvolume(void *, float* lvol,float* rvol);	
     int audio_set_av_sync_threshold(void *, int);
     int audio_get_soundtrack(void *, int* );	
+    int audio_set_av_delay(void *, int delay);
 	int get_audio_decoder(void);
 	int get_decoder_status(void *p,struct adec_status *adec);
 

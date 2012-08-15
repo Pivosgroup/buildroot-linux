@@ -1340,6 +1340,40 @@ int audio_set_spectrum_switch(int pid, int isStart, int interval)
 
 /* --------------------------------------------------------------------------*/
 /**
+ * @function   	audio_set_delay
+ *
+ * @brief
+ *
+ * @param[in]   pid         player tag which get from player_start return value
+ * @param[in]   delay       delay in ms (-500ms to 500ms)
+ *
+ * @return  	PLAYER_SUCCESS  success
+ *          	PLAYER_FAILED   failed
+ * @details
+ */
+/* --------------------------------------------------------------------------*/
+int audio_set_delay(int pid, int delay)
+{
+    int ret = -1;
+    play_para_t *player_para;
+    codec_para_t *p;
+
+    player_para = player_open_pid_data(pid);
+    if (player_para == NULL) {
+        return 0;    /*this data is 0 for default!*/
+    }
+
+    p = get_audio_codec(player_para);
+    if (p != NULL) {
+        ret = codec_audio_set_delay(p, delay);
+    }
+    player_close_pid_data(pid);
+
+    return ret;
+}
+
+/* --------------------------------------------------------------------------*/
+/**
  * @function   	player_progress_exit
  *
  * @brief   	used for all exit,please only call at this process fatal error.
