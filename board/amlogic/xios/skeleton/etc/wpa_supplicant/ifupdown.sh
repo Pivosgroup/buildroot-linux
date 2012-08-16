@@ -147,7 +147,9 @@ case "$MODE" in
 				kill_wpa_supplicant
 				init_wpa_supplicant	|| exit 1
 				conf_wpa_supplicant 	|| { kill_wpa_supplicant; exit 1; }
-				init_wpa_cli 		|| { kill_wpa_supplicant; exit 1; }
+				;;
+			up)
+				init_wpa_cli || { kill_wpa_supplicant; exit 1; }
 				;;
 		esac
 		;;
@@ -155,8 +157,10 @@ case "$MODE" in
 	stop)
 		do_stop
 		case "$PHASE" in
-			post-down)
+			down)
 				kill_wpa_cli
+				;;
+			post-down)
 				kill_wpa_supplicant
 				;;
 		esac

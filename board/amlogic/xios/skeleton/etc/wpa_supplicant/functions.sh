@@ -334,16 +334,17 @@ reload_wpa_supplicant () {
 # -B	background process
 #
 init_wpa_cli () {
-	[ -n "$WPA_ACTION_SCRIPT" ] || return 0
+	HACK_WPA_ACTION_SCRIPT="/sbin/wpa_action"
+	[ -n "$HACK_WPA_ACTION_SCRIPT" ] || return 0
 
 	local WPA_CLI_OPTIONS
 	WPA_CLI_OPTIONS="-B -P $WPA_CLI_PIDFILE -i $WPA_IFACE"
 
-	wpa_msg verbose "$WPA_CLI_BIN $WPA_CLI_OPTIONS -p $WPA_CTRL_DIR -a $WPA_ACTION_SCRIPT"
+	wpa_msg verbose "$WPA_CLI_BIN $WPA_CLI_OPTIONS -p $WPA_CTRL_DIR -a $HACK_WPA_ACTION_SCRIPT"
 		
 	start-stop-daemon --start --oknodo $DAEMON_VERBOSITY \
 		--name $WPA_CLI_PNAME --startas $WPA_CLI_BIN --pidfile $WPA_CLI_PIDFILE \
-		-- $WPA_CLI_OPTIONS -p $WPA_CTRL_DIR -a $WPA_ACTION_SCRIPT
+		-- $WPA_CLI_OPTIONS -p $WPA_CTRL_DIR -a $HACK_WPA_ACTION_SCRIPT
 
 	if [ "$?" -ne 0 ]; then
 		wpa_msg stderr "$WPA_CLI_BIN daemon failed to start"
