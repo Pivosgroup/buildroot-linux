@@ -4,7 +4,7 @@ BR2_KERNEL_MIRROR="git@github.com:Pivosgroup/buildroot-linux-kernel.git"
 BR2_OPTIMIZE_3=y
 BR2_TOOLCHAIN_EXTERNAL=y
 BR2_TOOLCHAIN_EXTERNAL_CODESOURCERY_ARM2010Q1=y
-BR2_EXT_TOOL_DIRS_EXTRA="/usr/lib/gconv /usr/share/zoneinfo/"
+BR2_EXT_TOOL_DIRS_EXTRA="/usr/lib/gconv /usr/share/zoneinfo"
 # BR2_SOFT_FLOAT is not set
 BR2_TARGET_OPTIMIZATION="-pipe -mfloat-abi=softfp -mfpu=neon"
 BR2_TARGET_GENERIC_GETTY=y
