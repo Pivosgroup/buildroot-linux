@@ -34,7 +34,6 @@
     <setting>audiooutput.passthroughdevice</setting>
     <setting>audiooutput.custompassthrough</setting>
     <setting>input.remoteaskeyboard</setting>
-    <setting>input.enablemouse</setting>
   </hidesettings>
 
 </advancedsettings>
