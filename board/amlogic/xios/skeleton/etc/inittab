@@ -46,8 +46,12 @@ tty3::respawn:/usr/bin/tail -f /var/log/messages
 # Stuff to do for the 3-finger salute
 ::ctrlaltdel:/sbin/reboot
 
+# Stuff to do when restarting the init process
+::restart:/sbin/init
+
 # Stuff to do before rebooting
-null::shutdown:/usr/bin/killall klogd
-null::shutdown:/usr/bin/killall syslogd
-null::shutdown:/bin/umount -a -r
-null::shutdown:/sbin/swapoff -a
+::shutdown:/etc/init.d/S21hwclock stop
+::shutdown:/usr/bin/killall -q klogd
+::shutdown:/usr/bin/killall -q syslogd
+::shutdown:/bin/umount -a -r
+::shutdown:/sbin/swapoff -a
