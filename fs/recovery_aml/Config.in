@@ -5,9 +5,20 @@ config BR2_TARGET_ROOTFS_RECOVERY_AML
 	  Image ready for flashing via android's recovery partition
 
 
-config BR2_TARGET_ROOTFS_RECOVERY_AML_WIPE_USERDATA
-        bool "erase userdata partition"
-	depends on BR2_TARGET_ROOTFS_RECOVERY_AML
-	default y
+choice
+        prompt "Erase Userdata"
+        default BR2_TARGET_ROOTFS_RECOVERY_AML_WIPE_USERDATA_CONDITIONAL
+        depends on BR2_TARGET_ROOTFS_RECOVERY_AML
         help
           Whether to wipe the userdata partition
+
+config BR2_TARGET_ROOTFS_RECOVERY_AML_WIPE_USERDATA_CONDITIONAL
+       bool "yes if previous install was not linux"
+
+config BR2_TARGET_ROOTFS_RECOVERY_AML_WIPE_USERDATA
+       bool "yes"
+
+config BR2_TARGET_ROOTFS_RECOVERY_AML_WIPE_USERDATA_NEVER
+       bool "no"
+
+endchoice

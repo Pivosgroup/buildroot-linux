@@ -158,6 +158,8 @@ def main():
                       help=" don't scan usr/ dir")
   parser.add_option("-w", "--wipe-userdata", dest="wipeuserdata", action="store_true",
                       help=" wipe userdata partition during install")
+  parser.add_option("-c", "--wipe-userdata-conditional", dest="wipeuserdataconditional", action="store_true",
+                      help=" wipe userdata partition during install if previous linux install")
   (options, args) = parser.parse_args()
 
   script = edify_generator.EdifyGenerator(3, OPTIONS.info_dict)
@@ -199,11 +201,27 @@ def main():
         script.MakeSymlinks(symlinks)
         f = open(options.outputfile, 'w')
         f.write('show_progress(0.500000, 3);\n')
-        f.write('format("yaffs2", "MTD", "system");\n')
-        if options.wipeuserdata:
-          f.write('format("yaffs2", "MTD", "userdata");\n')
+        if options.wipeuserdataconditional:
+          f.write('mount("yaffs2", "MTD", "system", "/system");\n')
+          f.write('ifelse\n')
+          f.write('(\n')
+          f.write('  is_file_exist("system/etc/issue") != "file_not_exit",\n')
+          f.write('  (\n')
+          f.write('    ui_print("Keeping Userdata");\n')
+          f.write('    unmount("/system");\n')
+          f.write('  ),\n')
+          f.write('  (\n')
+          f.write('    ui_print("Wiping Userdata");\n')
+          f.write('    unmount("/system");\n')
+          f.write('    format("yaffs2", "MTD", "userdata", "0");\n')
+          f.write('  )\n')
+          f.write(');\n')
+        elif options.wipeuserdata:
+          f.write('format("yaffs2", "MTD", "userdata", "0");\n')
+        f.write('format("yaffs2", "MTD", "system", "0");\n')
         f.write('mount("yaffs2", "MTD", "system", "/system");\n')
         f.write('show_progress(0.300000, 60);\n')
+        f.write('ui_print("Copying Files");\n')
         f.write('package_extract_dir("system", "/system");\n')
         f.write("\n".join(script.script) + "\n")
         f.write('assert(package_extract_file("logo.img", "/tmp/logo.img"),\n')
