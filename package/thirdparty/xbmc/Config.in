@@ -71,6 +71,7 @@ config BR2_PACKAGE_XBMC
 	select BR2_PACKAGE_OPENGL
 	select BR2_PACKAGE_LIBUSB
 	select BR2_PACKAGE_LIBUSB_COMPAT
+        select BR2_PACKAGE_TINYXML
 	help
 	xbmc
 

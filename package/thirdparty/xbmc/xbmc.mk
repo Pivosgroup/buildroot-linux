@@ -23,7 +23,7 @@ XBMC_DEPENDENCIES += libogg flac libmad libmpeg2 libogg \
   python lzo zlib libgcrypt openssl mysql_client sqlite fontconfig \
   freetype jasper jpeg libmodplug libpng libungif tiff libcurl \
   libmicrohttpd libssh2 boost fribidi ncurses pcre libnfs afpfs-ng libplist libshairport libbluray \
-  readline expat libxml2 yajl samba30 libass opengl libusb-compat avahi udev
+  readline expat libxml2 yajl samba30 libass opengl libusb-compat avahi udev tinyxml
 
 XBMC_CONF_ENV += PYTHON_VERSION="$(PYTHON_VERSION_MAJOR)"
 XBMC_CONF_ENV += PYTHON_LDFLAGS="-L$(STAGING_DIR)/usr/lib/ -lpython$(PYTHON_VERSION_MAJOR) -lpthread -ldl -lutil -lm"
