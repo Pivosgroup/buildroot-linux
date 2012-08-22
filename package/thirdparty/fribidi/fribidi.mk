@@ -3,7 +3,7 @@
 # fribidi
 #
 #############################################################
-FRIBIDI_VERSION = 0.10.9
+FRIBIDI_VERSION = 0.19.1
 FRIBIDI_SOURCE = fribidi-$(FRIBIDI_VERSION).tar.gz
 FRIBIDI_SITE = http://fribidi.org/download
 FRIBIDI_INSTALL_STAGING = YES
