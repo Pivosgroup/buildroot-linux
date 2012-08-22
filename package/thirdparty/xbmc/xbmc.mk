@@ -14,7 +14,7 @@ XBMC_DEPENDENCIES = host-lzo host-sdl_image amplayer
 
 XBMC_CONF_OPT+= --enable-neon --enable-gles --disable-sdl --disable-x11 --disable-xrandr \
   --disable-projectm --disable-non-free --disable-dvdcss --enable-external-ffmpeg --enable-debug \
-  --with-platform=amlogic-m1
+  --with-platform=amlogic-m1 --disable-joystick
 
 XBMC_MAKE_OPT+= -j1
 
