@@ -3,10 +3,11 @@
 #librtmp
 #
 #############################################################
-LIBRTMP_VERSION=2.3
-LIBRTMP_SOURCE=rtmpdump-$(LIBRTMP_VERSION).tgz
-LIBRTMP_SITE=http://rtmpdump.mplayerhq.hu/download
-LIBRTMP_INSTALL_STAGING=YES
+LIBRTMP_VERSION = 7340f6dbc6b3c8e552baab2e5a891c2de75cddcc
+LIBRTMP_SOURCE = rtmpdump-$(LIBRTMP_VERSION).tar.gz
+LIBRTMP_SITE_METHOD = git
+LIBRTMP_SITE = git://git.ffmpeg.org/rtmpdump
+LIBRTMP_INSTALL_STAGING = YES
 
 define LIBRTMP_BUILD_CMDS
 	sed -ie "s|prefix=/usr/local|prefix=/usr|" $(@D)/librtmp/Makefile
@@ -22,4 +23,3 @@ define LIBRTMP_INSTALL_TARGET_CMDS
 endef
 
 $(eval $(call GENTARGETS,package/thirdparty,librtmp))
-
