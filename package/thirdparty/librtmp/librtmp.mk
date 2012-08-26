@@ -3,11 +3,13 @@
 #librtmp
 #
 #############################################################
-LIBRTMP_VERSION = 7340f6dbc6b3c8e552baab2e5a891c2de75cddcc
+LIBRTMP_VERSION = e0056c51cc1710c9a44d2a2c4e2f344fa9cabcf4
 LIBRTMP_SOURCE = rtmpdump-$(LIBRTMP_VERSION).tar.gz
 LIBRTMP_SITE_METHOD = git
 LIBRTMP_SITE = git://git.ffmpeg.org/rtmpdump
 LIBRTMP_INSTALL_STAGING = YES
+
+LIBRTMP_DEPENDENCIES = openssl
 
 define LIBRTMP_BUILD_CMDS
 	sed -ie "s|prefix=/usr/local|prefix=/usr|" $(@D)/librtmp/Makefile
