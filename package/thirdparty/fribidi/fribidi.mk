@@ -9,4 +9,6 @@ FRIBIDI_SITE = http://fribidi.org/download
 FRIBIDI_INSTALL_STAGING = YES
 FRIBIDI_INSTALL_TARGET = YES
 
+FRIBIDI_CONF_OPT = --disable-docs --with-glib=no
+
 $(eval $(call AUTOTARGETS,package/thirdparty,fribidi))
