@@ -8,7 +8,7 @@ AMFFMPEG_SOURCE=amffmpeg-$(AMFFMPEG_VERSION).tar.gz
 AMFFMPEG_SITE=./package/amlogic/libplayer/src/amffmpeg
 AMFFMPEG_SITE_METHOD=cp
 AMFFMPEG_INSTALL_STAGING=YES
-AMFFMPEG_DEPENDENCIES = alsa-lib librtmp
+AMFFMPEG_DEPENDENCIES = alsa-lib librtmp pkg-config
 
 AMFFMPEG_CONF_OPT= --disable-static --enable-shared \
                 --disable-ffmpeg --disable-ffplay --disable-ffserver --disable-doc \
