@@ -1,0 +1,4 @@
+config BR2_PACKAGE_V4LUTILS
+	bool "v4l-utils"
+	help
+	  Video4Linux2 Utils.
