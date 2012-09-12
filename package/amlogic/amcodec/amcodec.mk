@@ -17,6 +17,10 @@ endef
 define AMCODEC_INSTALL_STAGING_CMDS
 	install -m 644 $(@D)/libamcodec.so.0.0 $(STAGING_DIR)/usr/lib
 	cd $(STAGING_DIR)/usr/lib; ln -sf libamcodec.so.0.0 libamcodec.so
+	mkdir -p $(STAGING_DIR)/usr/include/amlplayer
+	cp -rf $(@D)/include/* $(STAGING_DIR)/usr/include/amlplayer
+
+	#temporary, until we sync with mainline xbmc
 	cp -rf $(@D)/include/* $(STAGING_DIR)/usr/include
 endef
 
