@@ -4,7 +4,7 @@
 #
 #################################################################################
 
-XBMC_VERSION = fb860020b3f1e0d3fd2fd8a610738e4bedb79021
+XBMC_VERSION = 496ccfe2223bc986e5503703eca41cbc78032ead
 XBMC_SITE_METHOD = git
 XBMC_SITE = ssh://git@github.com/Pivosgroup/xbmc.git
 XBMC_INSTALL_STAGING = YES
@@ -13,8 +13,9 @@ XBMC_INSTALL_TARGET = YES
 XBMC_DEPENDENCIES = host-lzo host-sdl_image amplayer
 
 XBMC_CONF_OPT+= --enable-neon --enable-gles --disable-sdl --disable-x11 --disable-xrandr \
-  --disable-projectm --disable-non-free --disable-dvdcss --enable-external-ffmpeg --enable-debug \
-  --with-platform=amlogic-m1 --disable-joystick
+  --disable-projectm --disable-non-free --disable-dvdcss --disable-external-ffmpeg --enable-debug \
+  --with-platform=amlogic-m1 --disable-joystick --with-cpu=cortex-a9 --with-egl=amlogic \
+  --enable-player=amlplayer
 
 XBMC_MAKE_OPT+= -j1
 
@@ -23,7 +24,7 @@ XBMC_DEPENDENCIES += libogg flac libmad libmpeg2 libogg \
   python lzo zlib libgcrypt openssl mysql_client sqlite fontconfig \
   freetype jasper jpeg libmodplug libpng libungif tiff libcurl \
   libmicrohttpd libssh2 boost fribidi ncurses pcre libnfs afpfs-ng libplist libshairport libbluray \
-  readline expat libxml2 yajl samba30 libass opengl libusb-compat avahi udev tinyxml
+  readline expat libxml2 yajl samba30 libass opengl libusb-compat avahi udev tinyxml taglib18
 
 XBMC_CONF_ENV += PYTHON_VERSION="$(PYTHON_VERSION_MAJOR)"
 XBMC_CONF_ENV += PYTHON_LDFLAGS="-L$(STAGING_DIR)/usr/lib/ -lpython$(PYTHON_VERSION_MAJOR) -lpthread -ldl -lutil -lm"
