@@ -1,0 +1,12 @@
+--- a/usbmount.conf	2012-09-06 14:56:01.975947917 -0400
++++ b/usbmount.conf	2012-09-13 13:30:44.475510215 -0400
+@@ -35,7 +35,7 @@ FILESYSTEMS="vfat ext2 ext3 ext4 exfat n
+ #############################################################################
+ # Mount options: Options passed to the mount command with the -o flag.
+ # See the warning above regarding removing "sync" from the options.
+-MOUNTOPTIONS="sync,noexec,nodev,noatime,nodiratime"
++MOUNTOPTIONS="dirsync,noexec,nodev,noatime,nodiratime"
+ 
+ # Filesystem type specific mount options: This variable contains a space
+ # separated list of strings, each which the form "-fstype=TYPE,OPTIONS".
+
