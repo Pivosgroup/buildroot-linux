@@ -173,7 +173,7 @@ $(LINUX26_DIR)/.stamp_compiled: $(LINUX26_DIR)/.stamp_configured $(LINUX26_DIR)/
 # Installation
 $(LINUX26_DIR)/.stamp_installed: $(LINUX26_DIR)/.stamp_compiled
 	@$(call MESSAGE,"Installing kernel")
-	cp $(LINUX26_IMAGE_PATH) $(BINARIES_DIR)
+	cp $(LINUX26_IMAGE_PATH) $(BINARIES_DIR)/$(LINUX26_IMAGE_NAME)-$(LINUX26_VERSION_PROBED)
 	# Install modules and remove symbolic links pointing to build
 	# directories, not relevant on the target
 	@if [ $(shell grep -c "CONFIG_MODULES=y" $(LINUX26_DIR)/.config) != 0 ] ; then 	\
