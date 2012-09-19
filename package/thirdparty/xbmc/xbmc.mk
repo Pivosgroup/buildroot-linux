@@ -4,7 +4,7 @@
 #
 #################################################################################
 
-XBMC_VERSION = 496ccfe2223bc986e5503703eca41cbc78032ead
+XBMC_VERSION = 303d4f01cb6dbc713f595646af306c506a9e87b7
 XBMC_SITE_METHOD = git
 XBMC_SITE = ssh://git@github.com/Pivosgroup/xbmc.git
 XBMC_INSTALL_STAGING = YES
@@ -16,8 +16,6 @@ XBMC_CONF_OPT+= --enable-neon --enable-gles --disable-sdl --disable-x11 --disabl
   --disable-projectm --disable-non-free --disable-dvdcss --disable-external-ffmpeg --enable-debug \
   --with-platform=amlogic-m1 --disable-joystick --with-cpu=cortex-a9 --with-egl=amlogic \
   --enable-player=amlplayer
-
-XBMC_MAKE_OPT+= -j1
 
 XBMC_DEPENDENCIES += libogg flac libmad libmpeg2 libogg \
   libsamplerate libtheora libvorbis wavpack bzip2 dbus libcdio \
