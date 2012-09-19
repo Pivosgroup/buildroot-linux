@@ -10,7 +10,7 @@ case "$1" in
         export XBMC_HOME=/usr/share/xbmc
         /usr/bin/amremote_config /etc/xbmc/remote.conf
         fbset -g 1280 720 1280 1440 32
-        until /usr/lib/xbmc/xbmc.bin; do
+        until /usr/lib/xbmc/xbmc.bin --standalone; do
             exit_value=$?
             case "$exit_value" in
               0)   echo "XBMC exit" >&2
