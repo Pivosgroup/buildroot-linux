@@ -4,7 +4,7 @@
 #
 #################################################################################
 
-XBMC_VERSION = b44b28e69162ce95dbb47ef66428ed714b9d2d4e
+XBMC_VERSION = d2d8cd4cadfc5ebbf91bf0e1af68b5fc2dabdd0b
 XBMC_SITE_METHOD = git
 XBMC_SITE = ssh://git@github.com/Pivosgroup/xbmc.git
 XBMC_INSTALL_STAGING = YES
@@ -13,7 +13,7 @@ XBMC_INSTALL_TARGET = YES
 XBMC_DEPENDENCIES = host-lzo host-sdl_image amplayer
 
 XBMC_CONF_OPT+= --enable-neon --enable-gles --disable-sdl --disable-x11 --disable-xrandr \
-  --disable-projectm --disable-non-free --disable-dvdcss --disable-external-ffmpeg --enable-debug \
+  --disable-projectm --enable-debug \
   --with-platform=amlogic-m1 --disable-joystick --with-cpu=cortex-a9 --with-egl=amlogic \
   --enable-player=amlplayer
 
