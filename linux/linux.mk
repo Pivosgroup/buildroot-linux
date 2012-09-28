@@ -73,6 +73,8 @@ endif # BR2_LINUX_KERNEL_VMLINUX
 define DOWNLOAD_GIT_KERNEL
        ( mkdir -p $(DL_DIR)/git; export GIT_DIR=$(DL_DIR)/git/linux/.git; \
        (test -d $(DL_DIR)/git/linux/.git && $(GIT) cat-file -e $(LINUX26_VERSION) || \
+       ($(GIT) remote -v show -n | grep "$(LINUX26_SITE)" > /dev/null || $(GIT) ls-remote $(LINUX26_SITE) 2>/dev/null && \
+               $(GIT) remote add -f `basename $(LINUX26_SITE)` $(LINUX26_SITE)) && \
        (test -d $(DL_DIR)/git/linux/.git && $(GIT) fetch --all && \
                $(GIT) cat-file -e $(LINUX26_VERSION)) || \
        (test ! -e $(DL_DIR)/git/linux/.git && $(GIT) clone --no-checkout $(LINUX26_SITE) $(DL_DIR)/git/linux && \
