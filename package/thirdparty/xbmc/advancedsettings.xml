@@ -1,13 +1,9 @@
 <advancedsettings>
   <video>
     <defaultplayer>amlplayer</defaultplayer>
-    <defaultdvdplayer>amlplayer</defaultdvdplayer>
   </video>
 
-  <gui>
-    <algorithmdirtyregions>3</algorithmdirtyregions>
-    <nofliptimeout>0</nofliptimeout>
-  </gui>
+  <enablenetworkmanager>1</enablenetworkmanager>
 
   <hidesettings>
     <setting>lookandfeel.soundskin</setting>
@@ -34,6 +30,7 @@
     <setting>audiooutput.passthroughdevice</setting>
     <setting>audiooutput.custompassthrough</setting>
     <setting>input.remoteaskeyboard</setting>
+    <setting>audiooutput.guisoundmode</setting>
   </hidesettings>
 
 </advancedsettings>
