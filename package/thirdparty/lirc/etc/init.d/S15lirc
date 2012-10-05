@@ -22,20 +22,24 @@ case "$1" in
 	echo -n "Starting $DESC: $NAME"
 	start-stop-daemon -S -q -x $DAEMON -- $LIRCD_OPTS
 	echo "."
-top) echo -n "Stopping $DESC: $NAME"
+	;;
+  stop) echo -n "Stopping $DESC: $NAME"
 	start-stop-daemon -K -q -n $NAME
 	echo "."
-e
-ad|force-reload) echo -n "Reloading $DESC configuration..."
+	;;
+  reload|force-reload) echo -n "Reloading $DESC configuration..."
 	start-stop-daemon -K -q -n $NAME -s 1
 	echo "done."
- tart) echo "Restarting $DESC: $NAME"
+  ;;
+  restart) echo "Restarting $DESC: $NAME"
 	$0 stop
 	sleep 1
 	$0 start
-o "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
+	;;
+  *) echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
 	exit 1
-	ac
+	;;
+esac
 
 exit 0
 
