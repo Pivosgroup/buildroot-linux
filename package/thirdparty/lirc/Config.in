@@ -2,3 +2,4 @@ config BR2_PACKAGE_LIRC
         bool "lirc"
         help
           Linux Remote Control Driver/Daemon
+

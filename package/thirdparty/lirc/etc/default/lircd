@@ -1,1 +1,2 @@
 LIRCD_OPTS="-H devinput -o /dev/lircd"
+
