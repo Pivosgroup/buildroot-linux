@@ -29,7 +29,12 @@ define LIRC_REMOVE_BROKEN_DRIVERS
 sed -i 's/lirc_wpc8769l//' $(@D)/drivers/Makefile
 endef
 
+define LIRC_INSTALL_ETC
+  cp -rf package/thirdparty/lirc/etc $(TARGET_DIR)
+endef
+
 LIRC_POST_CONFIGURE_HOOKS += LIRC_REMOVE_BROKEN_DRIVERS
 LIRC_POST_INSTALL_TARGET_HOOKS += LIRC_DEPMOD
+LIRC_POST_INSTALL_TARGET_HOOKS += LIRC_INSTALL_ETC
 
 $(eval $(call AUTOTARGETS,package/thirdparty,lirc))
