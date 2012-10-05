@@ -20,6 +20,7 @@ fi
 case "$1" in
   start)
 	echo -n "Starting $DESC: $NAME"
+	mkdir -p /var/run/lirc
 	start-stop-daemon -S -q -x $DAEMON -- $LIRCD_OPTS
 	echo "."
 	;;
