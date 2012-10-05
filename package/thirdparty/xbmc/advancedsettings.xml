@@ -4,6 +4,7 @@
   </video>
 
   <enablenetworkmanager>1</enablenetworkmanager>
+  <showexitbutton>false</showexitbutton>
 
   <hidesettings>
     <setting>lookandfeel.soundskin</setting>
