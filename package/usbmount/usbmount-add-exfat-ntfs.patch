@@ -7,7 +7,7 @@ Index: b/usbmount.conf
  # Filesystem types: removable storage devices are only mounted if they
  # contain a filesystem type which is in this list.
 -FILESYSTEMS="vfat ext2 ext3 ext4 hfsplus"
-+FILESYSTEMS="vfat ext2 ext3 ext4 exfat ntfs hfsplus"
++FILESYSTEMS="vfat ext2 ext3 ext4 xfs exfat ntfs hfsplus"
  
  #############################################################################
  # WARNING!                                                                  #
