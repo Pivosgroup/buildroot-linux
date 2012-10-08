@@ -73,6 +73,7 @@ config BR2_PACKAGE_XBMC
 	select BR2_PACKAGE_LIBUSB_COMPAT
         select BR2_PACKAGE_TINYXML
 	select BR2_PACKAGE_TAGLIB18
+	select BR2_PACKAGE_LIBSSH
 	help
 	xbmc
 
