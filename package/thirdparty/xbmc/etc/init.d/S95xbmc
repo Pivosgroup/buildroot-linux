@@ -8,7 +8,11 @@ case "$1" in
         echo "Starting XBMC..."
         export LD_LIBRARY_PATH=/usr/lib/mysql:$LD_LIBRARY_PATH
         export XBMC_HOME=/usr/share/xbmc
-        /usr/bin/amremote_config /etc/xbmc/remote.conf
+        REMOTECONF=/etc/xbmc/remote.conf
+        if [ -f /root/.xbmc/remote.conf ]; then
+            REMOTECONF=/root/.xbmc/remote.conf
+        fi
+        /usr/bin/amremote_config $REMOTECONF
         fbset -g 1280 720 1280 1440 32
         until /usr/lib/xbmc/xbmc.bin --standalone; do
             exit_value=$?
