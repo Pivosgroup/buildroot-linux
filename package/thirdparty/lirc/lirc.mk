@@ -12,6 +12,9 @@ LIRC_CONF_OPT += --with-moduledir="/lib/modules/$(LINUX26_VERSION_PROBED)/misc"
 # hack to avoid mknod (requires root). This will be populated automatically.
 LIRC_CONF_OPT += ac_cv_path_mknod=$(shell which echo)
 
+# disable X support
+LIRC_CONF_OPT += --without-x
+
 ifeq ($(BR2_TOOLCHAIN_EXTERNAL),y)
 LIRC_MAKE_ENV += PATH=$(TOOLCHAIN_EXTERNAL_DIR)/bin:$(TARGET_PATH)
 LIRC_CONF_ENV += PATH=$(TOOLCHAIN_EXTERNAL_DIR)/bin:$(TARGET_PATH)
