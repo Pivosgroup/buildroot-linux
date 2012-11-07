@@ -297,6 +297,12 @@ static void check_msg(play_para_t *para, player_cmd_t *msg)
         } else {
             log_print("pid[%d]::seek time overspill!\n", para->player_id);
             set_player_error_no(para, PLAYER_SEEK_OVERSPILL);
+	    //set playend state when seek time overspill
+	    para->playctrl_info.end_flag = 1;
+            para->playctrl_info.search_flag = 0;
+            set_player_state(para, PLAYER_PLAYEND);
+            update_playing_info(para);
+            update_player_states(para, 1);
         }
     } else if (msg->ctrl_cmd & CMD_PAUSE) {
         para->playctrl_info.pause_flag = 1;
@@ -530,7 +536,7 @@ void update_player_start_paras(play_para_t *p_para, play_control_t *c_para)
     p_para->playctrl_info.has_sub_flag  = c_para->hassub;
     p_para->playctrl_info.loop_flag     = c_para->loop_mode;
     p_para->playctrl_info.time_point    = c_para->t_pos;
-#if 0
+#ifdef ANDROID
     if(am_getconfig_bool("media.amplayer.noaudio"))
     	p_para->playctrl_info.no_audio_flag=1;
     if(am_getconfig_bool("media.amplayer.novideo"))
@@ -565,6 +571,12 @@ void update_player_start_paras(play_para_t *p_para, play_control_t *c_para)
             p_para->buffering_threshhold_middle = c_para->buffing_middle;
             p_para->buffering_threshhold_max = c_para->buffing_max;
 	     p_para->buffering_start_time_s	=  c_para->buffing_starttime_s;	
+	     if(c_para->buffing_force_delay_s>0){	  
+	     	 p_para->buffering_force_delay_s = c_para->buffing_force_delay_s;
+	        log_print("delay %d s to do buffering\n",c_para->buffing_force_delay_s);	 
+	    }else{
+		 p_para->buffering_force_delay_s  = 0;
+	    }
         } else {
             log_print("not a valid threadhold settings for buffering(must min=%f<middle=%f<max=%f)\n",
                       c_para->buffing_min,

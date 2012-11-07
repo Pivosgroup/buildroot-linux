@@ -57,6 +57,7 @@ typedef enum {
     AFORMAT_VORBIS    = 18,
     AFORMAT_AAC_LATM   = 19,
     AFORMAT_APE   = 20,
+	AFORMAT_EAC3   = 21,   
     AFORMAT_UNSUPPORT ,
     AFORMAT_MAX    
 
@@ -75,6 +76,7 @@ typedef enum {
 								 ||(afmt == AFORMAT_AMR)\
 								 ||(afmt == AFORMAT_ALAC)\
 								 ||(afmt == AFORMAT_AC3) \
+								 ||(afmt == AFORMAT_EAC3) \								 
 								 ||(afmt == AFORMAT_APE) \
 								 ||(afmt == AFORMAT_FLAC) )
 

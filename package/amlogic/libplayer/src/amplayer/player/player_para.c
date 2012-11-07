@@ -15,6 +15,9 @@
 #include "player_update.h"
 #include "player_ffmpeg_ctrl.h"
 #include "system/systemsetting.h"
+#ifdef ANDROID
+#include <cutils/properties.h>
+#endif
 
 DECLARE_ALIGNED(16, uint8_t, dec_buf[(AVCODEC_MAX_AUDIO_FRAME_SIZE * 3) / 2]);
 
@@ -516,7 +519,12 @@ static int set_decode_para(play_para_t*am_p)
 	aformat_t afmt;
 	int filter_vfmt = 0, filter_afmt = 0;
     unsigned char* buf;
-    AVIOContext *pb = am_p->pFormatCtx->pb;
+    ByteIOContext *pb = am_p->pFormatCtx->pb;
+#ifdef ANDROID
+	int prop = -1;
+	char dts_value[PROPERTY_VALUE_MAX];
+	char ac3_value[PROPERTY_VALUE_MAX];
+#endif
 
     get_stream_info(am_p);
     log_print("[%s:%d]has_video=%d vformat=%d has_audio=%d aformat=%d", __FUNCTION__, __LINE__, \
@@ -575,7 +583,16 @@ static int set_decode_para(play_para_t*am_p)
         }
     }
 
-    if (am_p->playctrl_info.no_audio_flag) {
+#ifdef ANDROID
+    property_get("media.audio.disable.dts",dts_value,NULL);
+    property_get("media.audio.disable.ac3",ac3_value,NULL);
+#endif
+    if ((am_p->playctrl_info.no_audio_flag)
+#ifdef ANDROID
+      || ((!strcmp(dts_value, "true"))&&(am_p->astream_info.audio_format == AFORMAT_DTS ))
+      || ((!strcmp(ac3_value, "true"))&&(am_p->astream_info.audio_format == AFORMAT_AC3 ))
+#endif
+      ){			
         set_player_error_no(am_p, PLAYER_SET_NOAUDIO);
         update_player_states(am_p, 1);
     } else if (!am_p->astream_info.has_audio) {
@@ -600,7 +617,12 @@ static int set_decode_para(play_para_t*am_p)
         return PLAYER_UNSUPPORT;
 	}	
 	
-    if (am_p->playctrl_info.no_audio_flag) {
+    if ((am_p->playctrl_info.no_audio_flag)
+#ifdef ANDROID
+      || ((!strcmp(dts_value, "true"))&&(am_p->astream_info.audio_format == AFORMAT_DTS ))
+      || ((!strcmp(ac3_value, "true"))&&(am_p->astream_info.audio_format == AFORMAT_AC3 ))
+#endif
+      ){		
         am_p->astream_info.has_audio = 0;
     }
 

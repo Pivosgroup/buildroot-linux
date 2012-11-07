@@ -96,10 +96,11 @@ aformat_t audio_type_convert(enum CodecID id, pfile_type File_type)
         break;
 
     case CODEC_ID_AC3:
-	case CODEC_ID_EAC3:
         format = AFORMAT_AC3;
         break;
-
+	case CODEC_ID_EAC3:
+		format = AFORMAT_EAC3;
+		break;
     case CODEC_ID_DTS:
         format = AFORMAT_DTS;
         break;
@@ -468,7 +469,7 @@ static int backup_packet(play_para_t *para, AVPacket *src, AVPacket *dst)
 static int raw_read(play_para_t *para)
 {
     int rev_byte = -1;
-    AVIOContext *pb = para->pFormatCtx->pb;
+    ByteIOContext *pb = para->pFormatCtx->pb;
 	am_packet_t *pkt = para->p_pkt;
     unsigned char *pbuf ;
     static int try_count = 0;

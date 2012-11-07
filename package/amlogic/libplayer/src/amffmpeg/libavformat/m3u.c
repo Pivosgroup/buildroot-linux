@@ -77,7 +77,7 @@ struct m3u_info
 
 
 
-static int m3u_format_get_line(AVIOContext *s,char *line,int line_size)
+static int m3u_format_get_line(ByteIOContext *s,char *line,int line_size)
 {
     int ch;
     char *q;
@@ -296,7 +296,7 @@ static int m3u_parser_line(struct list_mgt *mgt,unsigned char *line,struct list_
 }
 
 
-static int m3u_format_parser(struct list_mgt *mgt, AVIOContext *s)
+static int m3u_format_parser(struct list_mgt *mgt,ByteIOContext *s)
 { 
 	unsigned  char line[1024];
 	int ret;
@@ -503,7 +503,7 @@ static int match_ext(const char *filename, const char *extensions)//get file typ
     return 0;
 }
 
-static int m3u_probe(AVIOContext *s,const char *file)
+static int m3u_probe(ByteIOContext *s,const char *file)
 {
 	if(s)
 	{

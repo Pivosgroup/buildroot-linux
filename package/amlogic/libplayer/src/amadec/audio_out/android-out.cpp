@@ -20,6 +20,7 @@ extern "C" {
 #include <audio-dec.h>
 #include <adec-pts-mgt.h>
 #include <log-print.h>
+#include "aml_resample.h"
 }
 
 namespace android
@@ -33,12 +34,45 @@ static Mutex mLock;
  * \param user pointer to context for use by the callback receiver
  * \param info pointer to optional parameter according to event type
  */
+static void dump_pcm_bin(char *path,char *buf,int size)
+{
+	FILE *fp=fopen(path,"ab+");
+	 if(fp!= NULL){
+		   fwrite(buf,1,size,fp);
+		   fclose(fp);
+	}
+}
+
+
+/**
+ *  try to read as much data as len from dsp buffer
+ */
+static int dsp_pcm_read(aml_audio_dec_t*audec,char *data_in,int len)
+{
+   int pcm_ret=0,pcm_cnt_bytes=0;
+   while(pcm_cnt_bytes<len){
+      pcm_ret=audec->adsp_ops.dsp_read(&audec->adsp_ops, data_in+pcm_cnt_bytes, len-pcm_cnt_bytes);
+	  if(pcm_ret==0)//indicate there is no data in dsp_buf;
+	  	break;
+	  pcm_cnt_bytes+=pcm_ret;
+   }
+   return pcm_cnt_bytes/sizeof(short);
+}
+
+
 void audioCallback(int event, void* user, void *info)
 {
     int len;
     AudioTrack::Buffer *buffer = static_cast<AudioTrack::Buffer *>(info);
     aml_audio_dec_t *audec = static_cast<aml_audio_dec_t *>(user);
-
+	
+    int resample_enable;
+	af_resampe_ctl_t *paf_resampe_ctl;
+	short data_in[MAX_NUMSAMPS_PERCH*DEFALT_NUMCH], *data_out;
+	short outbuftmp16[MAX_NUMSAMPS_PERCH*DEFALT_NUMCH];
+    int NumSamp_in,NumSamp_out,NumCh,NumSampRequir=0;
+	static int print_flag=0;
+	int outbuf_offset=0;
     if (event != AudioTrack::EVENT_MORE_DATA) {
         adec_print("audioCallback: event = %d \n", event);
         return;
@@ -52,10 +86,87 @@ void audioCallback(int event, void* user, void *info)
     adec_refresh_pts(audec);
 
     if (audec->adsp_ops.dsp_on) {
-        len = audec->adsp_ops.dsp_read(&audec->adsp_ops, (char *)buffer->i16, buffer->size);
-        buffer->size = len;
+        //------------------------------------------
+        NumCh=buffer->channelCount;		
+        resample_enable= af_get_reample_enable_flag();
+		paf_resampe_ctl=af_resampler_ctx_get();
+        data_out=buffer->i16;
+		NumSamp_out = buffer->size/sizeof(short);
+		NumSampRequir=NumSamp_out;
+		//adec_print("resample_enable = %d\n",resample_enable);
+		//adec_print("REQURE_NUM-----------------------------%d\n",NumSamp_out);
+		//adec_print("PCM_IN_OUTSAMPBUF:%d\n",paf_resampe_ctl->OutSampReserveLen);
+        if(resample_enable){    
+			   int pcm_cnt=0;
+			   if (!paf_resampe_ctl->InitFlag)
+                   af_resample_set_SampsNumRatio(paf_resampe_ctl);
+			   af_get_pcm_in_resampler(paf_resampe_ctl,data_out+outbuf_offset,&NumSampRequir);
+			   
+			   //adec_print("RETURN_SIZE_1:%d    OutSampReserve=%d \n",NumSampRequir,paf_resampe_ctl->OutSampReserveLen);
+
+			   outbuf_offset += NumSampRequir;
+			   NumSamp_out   -= NumSampRequir;
+			   while(NumSamp_out >= DEFALT_NUMSAMPS_PERCH*NumCh)
+			   {   
+			       int delta_input_sampsnum=af_get_delta_inputsampnum(paf_resampe_ctl,NumCh);
+			       NumSamp_in =dsp_pcm_read(audec,(char*)data_in,delta_input_sampsnum*sizeof(short));	
+				   af_resample_process_linear_inner(paf_resampe_ctl,data_in, &NumSamp_in,data_out+outbuf_offset,&pcm_cnt,NumCh);
+
+				   //adec_print("RETURN_SIZE_2:%d    OutSampReserve=%d \n",pcm_cnt,paf_resampe_ctl->OutSampReserveLen);
+
+				   if(pcm_cnt==0)
+				   	  goto resample_out;
+				   outbuf_offset += pcm_cnt;
+				   NumSamp_out   -= pcm_cnt;
+			   }
+			   
+               if(NumSamp_out>0)
+			   {
+			       int delta_input_sampsnum=af_get_delta_inputsampnum(paf_resampe_ctl,NumCh);
+			       NumSamp_in =dsp_pcm_read(audec,(char*)data_in,delta_input_sampsnum*sizeof(short));				   
+            	   af_resample_process_linear_inner(paf_resampe_ctl,data_in, &NumSamp_in,outbuftmp16,&pcm_cnt,NumCh);
+                   if(pcm_cnt==0)
+				   	   goto resample_out;
+
+				   //adec_print("RETURN_SIZE_3:%d    OutSampReserve=%d \n",NumSamp_out,pcm_cnt-NumSamp_out);
+   
+				   memcpy(data_out+outbuf_offset,outbuftmp16,NumSamp_out*sizeof(short));
+				   outbuf_offset +=NumSamp_out;
+                   memcpy(paf_resampe_ctl->OutSampReserveBuf,outbuftmp16+NumSamp_out,(pcm_cnt-NumSamp_out)*sizeof(short));
+                   paf_resampe_ctl->OutSampReserveLen = (pcm_cnt-NumSamp_out);
+			   }
+			   
+		}else{
+              if(paf_resampe_ctl->OutSampReserveLen > 0){
+			      af_get_pcm_in_resampler(paf_resampe_ctl,data_out+outbuf_offset,&NumSampRequir);
+				  //adec_print("RETURN_SIZE_4:%d    OutSampReserve=%d \n",NumSampRequir,paf_resampe_ctl->OutSampReserveLen);
+			      outbuf_offset += NumSampRequir;
+			      NumSamp_out   -= NumSampRequir;
+				  NumSampRequir  =  NumSamp_out;
+              } 
+
+			  if(paf_resampe_ctl->ResevedSampsValid > 0){
+                  af_get_unpro_inputsampnum(paf_resampe_ctl,data_out+outbuf_offset,&NumSampRequir);
+				  //adec_print("RETURN_SIZE_5:%d    OutSampReserve=%d \n",NumSampRequir,paf_resampe_ctl->ResevedSampsValid);
+				  outbuf_offset += NumSampRequir;
+			      NumSamp_out   -= NumSampRequir;
+			  }
+			  
+              if((paf_resampe_ctl->OutSampReserveLen==0) && (paf_resampe_ctl->ResevedSampsValid==0))
+                  af_resample_stop_process(paf_resampe_ctl);
+
+			  if(NumSamp_out > 0){
+			  	  len=audec->adsp_ops.dsp_read(&audec->adsp_ops, (char*)(data_out+outbuf_offset),NumSamp_out*sizeof(short));
+                  outbuf_offset += len/sizeof(short);
+			  }
+        }
+	resample_out:
+		
+	    buffer->size=outbuf_offset*sizeof(short);
+		//adec_print("RETURN_NUM-----------------------------%d\n\n\n",outbuf_offset);
+		//---------------------------------------------
     } else {
-        adec_print("audioCallback: dsp not work!\n");
+        //adec_print("audioCallback: dsp not work!\n");
     }
 
     return;
@@ -73,7 +184,6 @@ extern "C" int android_init(struct aml_audio_dec* audec)
     status_t status;
     AudioTrack *track;
     audio_out_operations_t *out_ops = &audec->aout_ops;
-
     Mutex::Autolock _l(mLock);
 
     track = new AudioTrack();
@@ -117,7 +227,7 @@ extern "C" int android_init(struct aml_audio_dec* audec)
         return -1;
 
     }
-
+    af_resample_linear_init();
     out_ops->private_data = (void *)track;
     return 0;
 }

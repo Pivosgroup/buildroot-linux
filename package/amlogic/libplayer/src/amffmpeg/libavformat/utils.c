@@ -838,8 +838,7 @@ int av_read_packet(AVFormatContext *s, AVPacket *pkt)
 {
     int ret, i;
     AVStream *st;
-    int codec_type_bk=0;
-    int codec_id_bk=0;
+
     for(;;){
         AVPacketList *pktl = s->raw_packet_buffer;
 
@@ -879,8 +878,7 @@ int av_read_packet(AVFormatContext *s, AVPacket *pkt)
             if(s->subtitle_codec_id)st->codec->codec_id= s->subtitle_codec_id;
             break;
         }
-	codec_type_bk=st->codec->codec_type;
-	codec_id_bk=st->codec->codec_id;
+
         if(!pktl && st->request_probe <= 0)
             return ret;
 
@@ -903,12 +901,6 @@ int av_read_packet(AVFormatContext *s, AVPacket *pkt)
 
             if(end || av_log2(pd->buf_size) != av_log2(pd->buf_size - pkt->size)){
                 int score= set_codec_from_probe_data(s, st, pd);
-		if(st->codec->codec_type==1&&codec_type_bk!=st->codec->codec_type&&st->id>=0x1e0 && st->id<=0x1ef){
-			//new stream type is auido,its original stream id is (0x1e0~0x1ef video),revert codec_id and codec type   
-			st->codec->codec_id=codec_id_bk;
-			st->codec->codec_type=codec_type_bk;
-			av_log(s, AV_LOG_DEBUG, "change stream type need revert\n");
-		}
                 if(    (st->codec->codec_id != CODEC_ID_NONE && score > AVPROBE_SCORE_MAX/4)
                     || end 
                     || (st->codec->codec_id != CODEC_ID_NONE && s->pb && s->pb->fastdetectedinfo && score>0)){/*if is slowmedia do short detect.*/

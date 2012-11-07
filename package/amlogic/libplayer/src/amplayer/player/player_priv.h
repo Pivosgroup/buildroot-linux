@@ -182,6 +182,8 @@ typedef struct play_para {
     float buffering_threshhold_middle;
     float buffering_threshhold_max;
     float buffering_start_time_s;
+    float buffering_force_delay_s; 
+    long buffering_check_point;	
    
     struct am_packet *p_pkt;
 

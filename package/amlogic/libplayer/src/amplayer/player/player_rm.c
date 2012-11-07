@@ -13,7 +13,7 @@ static int stream_rm_init(play_para_t *p_para)
 {
     v_stream_info_t *vinfo = &p_para->vstream_info;
     a_stream_info_t *ainfo = &p_para->astream_info;
-    AVIOContext *pb = p_para->pFormatCtx->pb;
+    ByteIOContext *pb = p_para->pFormatCtx->pb;
     codec_para_t *codec;
     static unsigned short tbl[9];
     unsigned int i, j;

@@ -46,7 +46,7 @@ int register_list_demux(struct list_demux *demux)
 	return 0;
 }
 
-struct list_demux * probe_demux(AVIOContext *s,const char *filename)
+struct list_demux * probe_demux(ByteIOContext  *s,const char *filename)
 {
 	int ret;
 	int max=0;
@@ -152,11 +152,11 @@ static int list_del_item(struct list_mgt *mgt,struct list_item*item)
 
 
 /*=======================================================================================*/
-int url_is_file_list(AVIOContext *s,const char *filename)
+int url_is_file_list(ByteIOContext *s,const char *filename)
 {
 	int ret;
 	list_demux_t *demux;
-	AVIOContext *lio=s;
+	ByteIOContext *lio=s;
 	int64_t	   *oldpos=0;
 	//if(am_getconfig_bool("media.amplayer.usedm3udemux"))
 	//	return 0;/*if used m3u demux,always failed;*/
@@ -183,11 +183,11 @@ int url_is_file_list(AVIOContext *s,const char *filename)
 	return demux!=NULL?100:0;
 }
 
-static int list_open_internet(AVIOContext **pbio,struct list_mgt *mgt,const char *filename, int flags)
+static int list_open_internet(ByteIOContext **pbio,struct list_mgt *mgt,const char *filename, int flags)
 {
 	list_demux_t *demux;
 	int ret;
-	AVIOContext *bio;
+	ByteIOContext *bio;
 	char* url = filename; 
 reload:
 	ret=url_fopen(&bio,url,flags);
@@ -249,7 +249,7 @@ static int list_open(URLContext *h, const char *filename, int flags)
 {
 	struct list_mgt *mgt;
 	int ret;
-	AVIOContext *bio;
+	ByteIOContext *bio;
 	mgt=av_malloc(sizeof(struct list_mgt));
 	if(!mgt)
 		return AVERROR(ENOMEM);
@@ -289,7 +289,7 @@ static struct list_item * switchto_next_item(struct list_mgt *mgt)
 		return NULL;
 	if(mgt->current_item==NULL || mgt->current_item->next==NULL){
 			/*new refresh this mgtlist now*/
-			AVIOContext *bio;
+			ByteIOContext *bio;
 			
 			int ret;
 			if((ret=list_open_internet(&bio,mgt,mgt->filename,mgt->flags| URL_MINI_BUFFER | URL_NO_LP_BUFFER))!=0)
@@ -362,7 +362,7 @@ retry:
 	{
 		if(item && item->file)
 		{
-			AVIOContext *bio;
+			ByteIOContext *bio;
 			av_log(NULL, AV_LOG_INFO, "list_read switch to new file=%s\n",item->file);
 			len=url_fopen(&bio,item->file,AVIO_FLAG_READ | URL_MINI_BUFFER | URL_NO_LP_BUFFER);
 			if(len!=0)

@@ -54,8 +54,8 @@ ADEC_BEGIN_DECLS
 #define AUDIODSP_GET_PTS                        _IOR('r',4,sizeof(long))
 #define AUDIODSP_GET_DECODED_NB_FRAMES          _IOR('r',5,sizeof(long))
 #define AUDIODSP_GET_FIRST_PTS_FLAG             _IOR('r',6,sizeof(long))
-#define AUDIODSP_AUTOMUTE_ON                    _IOW('r',9,unsigned long)
-#define AUDIODSP_AUTOMUTE_OFF                   _IOW('r',10,unsigned long)
+#define AUDIODSP_AUTOMUTE_ON                    _IOW('r',9,sizeof(long))
+#define AUDIODSP_AUTOMUTE_OFF                   _IOW('r',10,sizeof(long))
 #endif
 
 
@@ -75,6 +75,7 @@ ADEC_BEGIN_DECLS
 #define MCODEC_FMT_VORBIS               (1<<13)
 #define MCODEC_FMT_AAC_LATM          (1<<14)
 #define MCODEC_FMT_APE          (1<<15)
+#define MCODEC_FMT_EAC3          (1<<16)
 
 /*********************************************************************************************/
 typedef struct dsp_operations dsp_operations_t;

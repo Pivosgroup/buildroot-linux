@@ -167,7 +167,7 @@ static int GetNumChannelsADIF(ProgConfigElement *fhPCE, int nPCE)
 	return idx;
 }
 
-int adif_header_parse(AVStream *st, AVIOContext *pb)
+int adif_header_parse(AVStream *st,ByteIOContext *pb)
 { 
 	GetBitContext gbc;
 	ADIFHeader hADIF;	

@@ -37,8 +37,7 @@ int main(int argc,char ** argv)
 			printf("play failed=%d\n",pid);
 			return -1;
 			}
-		player_start_play(pid);
-		while(!player_thread_stop(player_get_state(pid)))
+		while(!PLAYER_THREAD_IS_STOPPED(player_get_state(pid)))
 		usleep(10000);
 		player_stop(pid);
 		player_exit(pid);

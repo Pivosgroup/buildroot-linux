@@ -12,6 +12,9 @@
 #include <player_type.h>
 #include <player_set_sys.h>
 #include <linux/fb.h>
+#ifdef ANDROID
+#include <sys/system_properties.h>
+#endif
 
 static freescale_setting_t freescale_setting[] = {
     {
@@ -842,7 +845,7 @@ int enable_freescale(int cfg)
 	return 0;
 }
 
-/*
+#ifdef ANDROID
 int disable_freescale_MBX()
 {
   char mode[16];
@@ -1178,6 +1181,7 @@ int GL_2X_scale(int mSwitch)
 	}
 	return 0;
 }
+#endif
 
 /*
 int disable_freescale(int cfg)

@@ -35,7 +35,7 @@ static int adts_aac_probe(AVProbeData *p)
     uint8_t *buf2;
     uint8_t *buf;
     uint8_t *end = buf0 + p->buf_size - 7;
-
+    int totalframes=0;
 
     buf = buf0;
 	if (buf[0]=='A' && buf[1]=='D' && buf[2]=='I' && buf[3]=='F')
@@ -54,6 +54,7 @@ static int adts_aac_probe(AVProbeData *p)
                 break;
             buf2 += fsize;
         }
+	 totalframes+=frames;	
         max_frames = FFMAX(max_frames, frames);
         if(buf == buf0)
             first_frames= frames;
@@ -61,6 +62,7 @@ static int adts_aac_probe(AVProbeData *p)
     if   (first_frames>=3) return AVPROBE_SCORE_MAX/2+1;
     else if(max_frames>500)return AVPROBE_SCORE_MAX/2;
     else if(max_frames>=3) return AVPROBE_SCORE_MAX/4;
+    else if(totalframes>=100) return AVPROBE_SCORE_MAX/4+1;	
     else if(max_frames>=1) return 1;
     else                   return 0;
 }

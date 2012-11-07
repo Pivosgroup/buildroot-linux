@@ -125,7 +125,7 @@ typedef struct list_mgt
 	char* prefix; //	
 	struct encrypt_key_priv_t* key_tmp; //just for parsing using,if ended parsing,just free this pointer.
 	//end.
-	AVIOContext	*cur_uio;
+	ByteIOContext	*cur_uio;
 	struct list_demux *demux;
 	int 	have_sub_list;
 }list_mgt_t;
@@ -133,17 +133,17 @@ typedef struct list_mgt
 typedef struct list_demux
 {
 	const char * name;
-	int (*probe)(AVIOContext *s,const char *file);
-	int (*parser)(struct list_mgt *mgt,AVIOContext *s);
+	int (*probe)(ByteIOContext *s,const char *file);
+	int (*parser)(struct list_mgt *mgt,ByteIOContext *s);
 	struct list_demux *next;
 }list_demux_t;
 URLProtocol *get_file_list_protocol(void);
 int register_list_demux_all(void);
 int register_list_demux(struct list_demux *demux);
-struct list_demux * probe_demux(AVIOContext *s,const char *filename);
+struct list_demux * probe_demux(ByteIOContext  *s,const char *filename);
 int list_add_item(struct list_mgt *mgt,struct list_item*item);
 int list_test_and_add_item(struct list_mgt *mgt,struct list_item*item);
-int url_is_file_list(AVIOContext *s,const char *filename);
+int url_is_file_list(ByteIOContext *s,const char *filename);
 
 
 #endif /* AVFORMAT_FILE_LIST_H */

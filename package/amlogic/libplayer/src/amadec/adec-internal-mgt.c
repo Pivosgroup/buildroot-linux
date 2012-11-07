@@ -814,7 +814,7 @@ static int set_audio_decoder(codec_para_t *pcodec)
 static int set_audio_decoder(int codec_id)
 {
 	int audio_id;
-#if 0
+#ifdef ANDROID
 	int i;	
     int num;
 	int ret;

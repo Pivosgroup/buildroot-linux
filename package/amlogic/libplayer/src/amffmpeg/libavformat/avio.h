@@ -691,9 +691,9 @@ static inline int url_support_time_seek(AVIOContext *s)
 }
  int64_t url_fseektotime(AVIOContext *s,int totime_s,int flags);
  int url_buffering_data(AVIOContext *s,int size);
- int64_t url_ffulltime(AVIOContext *s);
- int64_t url_buffed_pos(AVIOContext *s);
- int64_t url_fbuffered_time(AVIOContext *s);
+ int64_t url_ffulltime(ByteIOContext *s);
+ int64_t url_buffed_pos(ByteIOContext *s);
+ int64_t url_fbuffered_time(ByteIOContext *s);
 #define av_read_frame_flush(s) ff_read_frame_flush(s)
 int ffio_fdopen_resetlpbuf(AVIOContext *s,int lpsize);
 
