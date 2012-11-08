@@ -244,7 +244,7 @@ typedef struct
 	int	video_index;						//video track, no assigned, please set to -1
 	int	audio_index;						//audio track, no assigned, please set to -1
 	int sub_index;							//subtitle track, no assigned, please set to -1
-	int t_pos;								//start postion, use second as unit
+	float t_pos;								//start postion, use second as unit
 	int	read_max_cnt;						//read retry maxium counts, if exceed it, return error
 	int avsync_threshold;                             //for adec av sync threshold in ms
 	union
