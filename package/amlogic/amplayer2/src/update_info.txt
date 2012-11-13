@@ -1,3 +1,0 @@
-[2010-09-20]
-1. unsupport rm audio file
-2. add pid in log_print

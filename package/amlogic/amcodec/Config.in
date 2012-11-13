@@ -1,9 +1,0 @@
-config BR2_PACKAGE_AMCODEC
-	bool "amcodec"
-	select BR2_PACKAGE_AMADEC
-	help
-	  amlogic audio dsp codec.
-
-	  http://openlinux.amlogic.com
-
-

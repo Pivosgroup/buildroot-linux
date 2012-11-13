@@ -1,1 +1,0 @@
-DIST_EXTR = pic_load_impl.h pic_base.h  vo_impl.h

@@ -1,8 +1,0 @@
-config BR2_PACKAGE_LIBBTTV
-	bool "libbttv"
-	depends on BR2_PACKAGE_LIBXFER
-	depends on BR2_PACKAGE_QT
-        help
-          bttv lib
-
-

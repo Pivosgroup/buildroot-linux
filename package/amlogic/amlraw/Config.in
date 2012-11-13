@@ -1,8 +1,0 @@
-config BR2_PACKAGE_AMLRAW
-	bool "amlraw"
-	help
-	  amlogic raw decoder
-
-	  http://openlinux.amlogic.com
-
-

@@ -1,7 +1,0 @@
-config BR2_PACKAGE_AMPICPLAYER
-	bool "picture player"
-	select BR2_PACKAGE_LIBPNG
-	select BR2_PACKAGE_JPEG
-	select BR2_PACKAGE_LIBUNGIF
-	help
-	  picture player

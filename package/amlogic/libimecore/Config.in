@@ -1,7 +1,0 @@
-config BR2_PACKAGE_LIBIMECORE
-	bool "libimecore"
-	help
-	  imeT9 cor lib
-
-	  http://openlinux.amlogic.com
-

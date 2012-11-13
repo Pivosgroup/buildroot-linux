@@ -1,8 +1,0 @@
-config BR2_PACKAGE_AMLJPEG
-	bool "amljpeg"
-	help
-	  amlogic hardware jpeg decoder
-
-	  http://openlinux.amlogic.com
-
-

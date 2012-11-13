@@ -1,8 +1,0 @@
-config BR2_PACKAGE_IF_MANAGER
-	bool "if_manager"
-	help
-	  if_manager lib
-
-	  http://openlinux.amlogic.com
-
-
