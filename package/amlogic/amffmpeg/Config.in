@@ -1,9 +1,0 @@
-config BR2_PACKAGE_AMFFMPEG
-	bool "amffmpeg"
-	select BR2_PACKAGE_ALSA_LIB
-	help
-	  amlogic porting for ffmpeg.
-
-	  http://openlinux.amlogic.com
-
-

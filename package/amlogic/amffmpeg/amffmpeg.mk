@@ -1,15 +1,3 @@
-#############################################################
-#
-# amffmpeg
-#
-#############################################################
-AMFFMPEG_VERSION:=0.9.9
-AMFFMPEG_SOURCE=amffmpeg-$(AMFFMPEG_VERSION).tar.gz
-AMFFMPEG_SITE=./package/amlogic/libplayer/src/amffmpeg
-AMFFMPEG_SITE_METHOD=cp
-AMFFMPEG_INSTALL_STAGING=YES
-AMFFMPEG_DEPENDENCIES = alsa-lib librtmp pkg-config
-
 AMFFMPEG_CONF_OPT= --disable-static --enable-shared \
                 --disable-ffmpeg --disable-ffplay --disable-ffserver --disable-doc \
                 --disable-encoders --disable-muxers --disable-altivec \
@@ -20,7 +8,7 @@ AMFFMPEG_CONF_OPT= --disable-static --enable-shared \
                 --enable-librtmp --pkg-config=pkg-config
 
 define AMFFMPEG_CONFIGURE_CMDS
-	(cd $(AMFFMPEG_SRCDIR) && rm -rf config.cache && \
+	(cd $(AMFFMPEG_DIR) && rm -rf config.cache && \
 	$(TARGET_CONFIGURE_OPTS) \
 	$(TARGET_CONFIGURE_ARGS) \
 	$(AMFFMPEG_CONF_ENV) \
@@ -36,15 +24,19 @@ define AMFFMPEG_CONFIGURE_CMDS
         )
 endef
 
+define AMFFMPEG_BUILD_CMDS
+	make -C $(AMFFMPEG_DIR)
+endef
 
 ifdef DEBUG
 AMFFMPEG_CONF_OPT+=    --enable-debug --disable-stripping
 endif  
 
-define AMFFMPEG_STAGING_AMFFMPEG_EXTRA_HEADERS
-       install $(@D)/libavformat/aviolpbuf.h $(STAGING_DIR)/usr/include/libavformat
+define AMFFMPEG_INSTALL_STAGING_CMDS
+	make -C $(AMFFMPEG_DIR) install DESTDIR="$(STAGING_DIR)"
+	install $(AMFFMPEG_DIR)/libavformat/aviolpbuf.h $(STAGING_DIR)/usr/include/libavformat/
 endef
 
-AMFFMPEG_POST_INSTALL_STAGING_HOOKS += AMFFMPEG_STAGING_AMFFMPEG_EXTRA_HEADERS
-
-$(eval $(call AUTOTARGETS,package/amlogic,amffmpeg))
+define AMFFMPEG_INSTALL_TARGET_CMDS
+	make -C $(AMFFMPEG_DIR) DESTDIR="$(TARGET_DIR)"
+endef
