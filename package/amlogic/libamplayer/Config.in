@@ -1,5 +1,5 @@
-config BR2_PACKAGE_LIBPLAYER
-        bool "libplayer"
+config BR2_PACKAGE_LIBAMPLAYER
+        bool "libamplayer"
         help
           amlogic media player library.
 

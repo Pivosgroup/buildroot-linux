@@ -2,6 +2,6 @@ menu "AMLogic libraries and programs"
 source "package/amlogic/cmem/Config.in"
 source "package/amlogic/opengl/Config.in"
 source "package/amlogic/ubootaml/Config.in"
-source "package/amlogic/libplayer/Config.in"
+source "package/amlogic/libamplayer/Config.in"
 source "package/amlogic/amremote_config/Config.in"
 endmenu

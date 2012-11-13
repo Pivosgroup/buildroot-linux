@@ -1,22 +1,23 @@
 #############################################################
 #
-# libplayer
+# libamplayer
 #
 #############################################################
-LIBPLAYER_VERSION:=0.9.9
-LIBPLAYER_SOURCE=libplayer-$(AMADEC_VERSION).tar.gz
-LIBPLAYER_SITE=./package/amlogic/libplayer/src/
-LIBPLAYER_INSTALL_STAGING=YES
-LIBPLAYER_INSTALL_TARGET=YES
-LIBPLAYER_SITE_METHOD=cp
+LIBAMPLAYER_VERSION:=0.9.9
+LIBAMPLAYER_SOURCE=libamplayer-$(LIBAMPLAYER_VERSION).tar.gz
+LIBAMPLAYER_SITE=./package/amlogic/libamplayer/LibPlayer-M1/
+LIBAMPLAYER_INSTALL_STAGING=YES
+LIBAMPLAYER_INSTALL_TARGET=YES
+LIBAMPLAYER_SITE_METHOD=cp
 
-ifeq ($(BR2_PACKAGE_LIBPLAYER),y)
-LIBPLAYER_DEPENDENCIES += alsa-lib librtmp pkg-config
+ifeq ($(BR2_PACKAGE_LIBAMPLAYER),y)
+# actually required for amffmpeg
+LIBAMPLAYER_DEPENDENCIES += alsa-lib librtmp pkg-config
 endif
 
-AMFFMPEG_DIR=$(BUILD_DIR)/libplayer-$(LIBPLAYER_VERSION)/amffmpeg
+AMFFMPEG_DIR=$(BUILD_DIR)/libamplayer-$(LIBAMPLAYER_VERSION)/amffmpeg
 
-define LIBPLAYER_BUILD_CMDS
+define LIBAMPLAYER_BUILD_CMDS
  $(call AMFFMPEG_CONFIGURE_CMDS)
  $(call AMFFMPEG_BUILD_CMDS)
  $(call AMFFMPEG_INSTALL_STAGING_CMDS)
@@ -26,19 +27,19 @@ define LIBPLAYER_BUILD_CMDS
  $(MAKE) CC="$(TARGET_CC)" LD="$(TARGET_LD)" HEADERS_DIR="$(STAGING_DIR)/usr/include/amlplayer" \
   CROSS_PREFIX="$(TARGET_CROSS)" SYSROOT="$(STAGING_DIR)" PREFIX="$(STAGING_DIR)/usr" -C $(@D)/amadec install
  $(MAKE) CC="$(TARGET_CC)" LD="$(TARGET_LD)" HEADERS_DIR="$(STAGING_DIR)/usr/include/amlplayer" CROSS_PREFIX="$(TARGET_CROSS)" \
-  SYSROOT="$(STAGING_DIR)" PREFIX="$(STAGING_DIR)/usr" SRC=$(BUILD_DIR)/libplayer-$(LIBPLAYER_VERSION)/amcodec -C $(@D)/amcodec install
+  SYSROOT="$(STAGING_DIR)" PREFIX="$(STAGING_DIR)/usr" SRC=$(BUILD_DIR)/libamplayer-$(LIBAMPLAYER_VERSION)/amcodec -C $(@D)/amcodec install
  $(MAKE) CROSS="$(TARGET_CROSS)" CC="$(TARGET_CC)" LD="$(TARGET_LD)" PREFIX="$(STAGING_DIR)/usr" \
-  SRC="$(BUILD_DIR)/libplayer-$(LIBPLAYER_VERSION)/amplayer" -C $(@D)/amplayer
+  SRC="$(BUILD_DIR)/libamplayer-$(LIBAMPLAYER_VERSION)/amplayer" -C $(@D)/amplayer
 endef
 
-define LIBPLAYER_INSTALL_STAGING_CMDS
+define LIBAMPLAYER_INSTALL_STAGING_CMDS
  $(MAKE) CC="$(TARGET_CC)" LD="$(TARGET_LD)" INSTALL_DIR="$(STAGING_DIR)/usr/lib" STAGING="$(STAGING_DIR)/usr" -C $(@D)/amplayer install
 
  #temporary, until we sync with mainline xbmc
- cp -rf $(BUILD_DIR)/libplayer-$(LIBPLAYER_VERSION)/amcodec/include/* $(STAGING_DIR)/usr/include
+ cp -rf $(BUILD_DIR)/libamplayer-$(LIBAMPLAYER_VERSION)/amcodec/include/* $(STAGING_DIR)/usr/include
 endef
 
-define LIBPLAYER_INSTALL_TARGET_CMDS
+define LIBAMPLAYER_INSTALL_TARGET_CMDS
  $(call AMFFMPEG_INSTALL_TARGET_CMDS)
 
  mkdir -p $(TARGET_DIR)/lib/firmware
@@ -50,4 +51,4 @@ define LIBPLAYER_INSTALL_TARGET_CMDS
  $(MAKE) CC="$(TARGET_CC)" LD="$(TARGET_LD)" INSTALL_DIR="$(TARGET_DIR)/usr/lib" STAGING="$(TARGET_DIR)/usr" -C $(@D)/amplayer install
 endef
 
-$(eval $(call GENTARGETS,package/amlogic,libplayer))
+$(eval $(call GENTARGETS,package/amlogic,libamplayer))
