@@ -4,6 +4,7 @@ LIRC_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/lirc
 LIRC_INSTALL_STAGING = YES
 LIRC_INSTALL_TARGET = YES
 LIRC_DEPENDENCIES = linux26
+LIRC_MAKE=$(MAKE1)
 
 LIRC_CONF_OPT += --with-kerneldir=$(LINUX26_DIR)
 LIRC_CONF_OPT += --with-driver=all
