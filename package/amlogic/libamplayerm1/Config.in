@@ -1,0 +1,8 @@
+config BR2_PACKAGE_LIBAMPLAYERM1
+	depends on BR2_BOARD_TYPE_AMLOGIC_M1
+        bool "libamplayerm1"
+        help
+          amlogic media player library for M1.
+
+          http://openlinux.amlogic.com
+
