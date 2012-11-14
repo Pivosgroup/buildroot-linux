@@ -1,3 +1,5 @@
+AMAVUTILS_HEADER_PATH = $(AMFFMPEG_DIR)/../amavutils/include
+
 AMFFMPEG_CONF_OPT= --disable-static --enable-shared \
                 --disable-ffmpeg --disable-ffplay --disable-ffserver --disable-doc \
                 --disable-encoders --disable-muxers --disable-altivec \
@@ -6,6 +8,10 @@ AMFFMPEG_CONF_OPT= --disable-static --enable-shared \
                 --enable-cross-compile --arch=arm --cpu=cortex-a9 --enable-neon --target-os=linux \
                 --enable-pthreads --enable-runtime-cpudetect --enable-pic --enable-avfilter --enable-postproc --enable-gpl \
                 --enable-librtmp --pkg-config=pkg-config
+
+ifdef DEBUG
+AMFFMPEG_CONF_OPT+= --enable-debug --disable-stripping
+endif
 
 define AMFFMPEG_CONFIGURE_CMDS
 	(cd $(AMFFMPEG_DIR) && rm -rf config.cache && \
@@ -19,7 +25,7 @@ define AMFFMPEG_CONFIGURE_CMDS
 		--host-cc="$(HOSTCC)" \
 		--arch=$(BR2_ARCH) \
 		--prefix=/usr \
-		--extra-cflags="-mfloat-abi=softfp -mfpu=neon -march=armv7-a" \
+		--extra-cflags="-mfloat-abi=softfp -mfpu=neon -march=armv7-a -I$(AMAVUTILS_HEADER_PATH)" \
 		$(AMFFMPEG_CONF_OPT) \
         )
 endef
@@ -27,10 +33,6 @@ endef
 define AMFFMPEG_BUILD_CMDS
 	make -C $(AMFFMPEG_DIR)
 endef
-
-ifdef DEBUG
-AMFFMPEG_CONF_OPT+=    --enable-debug --disable-stripping
-endif  
 
 define AMFFMPEG_INSTALL_STAGING_CMDS
 	make -C $(AMFFMPEG_DIR) install DESTDIR="$(STAGING_DIR)"
