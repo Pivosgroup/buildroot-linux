@@ -1,5 +1,19 @@
 menu "System configuration"
 
+choice
+        prompt "Board Type"
+        default BR2_BOARD_TYPE_AMLOGIC_M3
+        help
+          Set the board type
+
+config BR2_BOARD_TYPE_AMLOGIC_M3
+        bool "Amlogic M3"
+
+config BR2_BOARD_TYPE_AMLOGIC_M1
+        bool "Amlogic M1"
+
+endchoice
+
 config BR2_TARGET_GENERIC_HOSTNAME
        string "System hostname"
        default "buildroot"
