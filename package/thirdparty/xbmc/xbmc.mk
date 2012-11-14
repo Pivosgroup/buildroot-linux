@@ -10,7 +10,7 @@ XBMC_SITE = ssh://git@github.com/Pivosgroup/xbmc.git
 XBMC_INSTALL_STAGING = YES
 XBMC_INSTALL_TARGET = YES
 
-XBMC_DEPENDENCIES = host-lzo host-sdl_image libamplayer
+XBMC_DEPENDENCIES = host-lzo host-sdl_image
 
 XBMC_CONF_OPT+= --enable-neon --enable-gles --disable-sdl --disable-x11 --disable-xrandr \
   --disable-projectm --enable-debug \
@@ -23,6 +23,14 @@ XBMC_DEPENDENCIES += libogg flac libmad libmpeg2 libogg \
   freetype jasper jpeg libmodplug libpng libungif tiff libcurl \
   libmicrohttpd libssh2 boost fribidi ncurses pcre libnfs afpfs-ng libplist libshairport libbluray \
   readline expat libxml2 yajl samba30 libass opengl libusb-compat avahi udev tinyxml taglib18 libssh
+
+ifeq ($(BR2_PACKAGE_LIBAMPLAYERM1),y)
+XBMC_DEPENDENCIES += libamplayerm1
+endif
+
+ifeq ($(BR2_PACKAGE_LIBAMPLAYERM3),y)
+XBMC_DEPENDENCIES += libamplayerm3
+endif
 
 XBMC_CONF_ENV += PYTHON_VERSION="$(PYTHON_VERSION_MAJOR)"
 XBMC_CONF_ENV += PYTHON_LDFLAGS="-L$(STAGING_DIR)/usr/lib/ -lpython$(PYTHON_VERSION_MAJOR) -lpthread -ldl -lutil -lm"
