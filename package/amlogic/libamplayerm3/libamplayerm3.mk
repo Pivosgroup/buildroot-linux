@@ -3,7 +3,7 @@
 # libamplayer
 #
 #############################################################
-LIBAMPLAYERM3_VERSION:=9d7267dd001201601bd36c65db25878a686a2aee
+LIBAMPLAYERM3_VERSION:=74c3d805b4d61c91f46de8fd079ad6197be3e717
 LIBAMPLAYERM3_SITE=git://github.com/Pivosgroup/libamplayer-m3.git
 LIBAMPLAYERM3_INSTALL_STAGING=YES
 LIBAMPLAYERM3_INSTALL_TARGET=YES
@@ -25,16 +25,16 @@ define LIBAMPLAYERM3_BUILD_CMDS
  $(MAKE) CC="$(TARGET_CC)" LD="$(TARGET_LD)" HEADERS_DIR="$(STAGING_DIR)/usr/include/amlplayer" \
   CROSS_PREFIX="$(TARGET_CROSS)" SYSROOT="$(STAGING_DIR)" PREFIX="$(STAGING_DIR)/usr" -C $(@D)/amadec install
  $(MAKE) CC="$(TARGET_CC)" LD="$(TARGET_LD)" HEADERS_DIR="$(STAGING_DIR)/usr/include/amlplayer" CROSS_PREFIX="$(TARGET_CROSS)" \
-  SYSROOT="$(STAGING_DIR)" PREFIX="$(STAGING_DIR)/usr" SRC=$(LIBAMPLAYERM3_BUILD_DIR)/amcodec -C $(@D)/amcodec install
+  SYSROOT="$(STAGING_DIR)" PREFIX="$(STAGING_DIR)/usr" SRC=$(@D)/amcodec -C $(@D)/amcodec install
  $(MAKE) CROSS="$(TARGET_CROSS)" CC="$(TARGET_CC)" LD="$(TARGET_LD)" PREFIX="$(STAGING_DIR)/usr" \
-  SRC="$(LIBAMPLAYERM3_BUILD_DIR)/amplayer" -C $(@D)/amplayer
+  SRC="$(@D)/amplayer" -C $(@D)/amplayer
 endef
 
 define LIBAMPLAYERM3_INSTALL_STAGING_CMDS
  $(MAKE) CC="$(TARGET_CC)" LD="$(TARGET_LD)" INSTALL_DIR="$(STAGING_DIR)/usr/lib" STAGING="$(STAGING_DIR)/usr" -C $(@D)/amplayer install
 
  #temporary, until we sync with mainline xbmc
- cp -rf $(LIBAMPLAYERM3_BUILD_DIR)/amcodec/include/* $(STAGING_DIR)/usr/include
+ cp -rf $(@D)/amcodec/include/* $(STAGING_DIR)/usr/include
 endef
 
 define LIBAMPLAYERM3_INSTALL_TARGET_CMDS
