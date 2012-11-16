@@ -13,8 +13,7 @@ XBMC_INSTALL_TARGET = YES
 XBMC_DEPENDENCIES = host-lzo host-sdl_image
 
 XBMC_CONF_OPT+= --enable-neon --enable-gles --disable-sdl --disable-x11 --disable-xrandr \
-  --disable-projectm --enable-debug \
-  --with-platform=amlogic-m1 --disable-joystick --with-cpu=cortex-a9 --with-egl=amlogic \
+  --disable-projectm --enable-debug --disable-joystick --with-cpu=cortex-a9 \
   --enable-player=amlplayer
 
 XBMC_DEPENDENCIES += libogg flac libmad libmpeg2 libogg \
