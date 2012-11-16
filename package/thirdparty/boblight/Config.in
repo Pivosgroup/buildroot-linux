@@ -1,0 +1,6 @@
+config BR2_PACKAGE_BOBLIGHT
+	bool "boblight"
+	help
+	boblight
+
+		http://code.google.com/p/boblight/
