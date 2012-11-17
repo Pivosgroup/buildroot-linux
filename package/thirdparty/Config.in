@@ -25,4 +25,5 @@ source "package/thirdparty/v4lutils/Config.in"
 source "package/thirdparty/yajl/Config.in"
 source "package/thirdparty/xbmc/Config.in"
 source "package/thirdparty/xios-skin/Config.in"
+source "package/thirdparty/boblight/Config.in"
 endmenu
