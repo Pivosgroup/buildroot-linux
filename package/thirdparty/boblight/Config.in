@@ -4,3 +4,7 @@ config BR2_PACKAGE_BOBLIGHT
 	boblight
 
 		http://code.google.com/p/boblight/
+config BR2_PACKAGE_BOBLIGHT_LIBUSB
+	bool "Enable libusb support (iBeLight)"
+	select BR2_PACKAGE_LIBUSB
+	default y
