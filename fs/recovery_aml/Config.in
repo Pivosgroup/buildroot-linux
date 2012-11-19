@@ -1,9 +1,9 @@
 config BR2_TARGET_ROOTFS_RECOVERY_AML
 	bool "AMLogic Recovery Image"
         select BR2_TARGET_ROOTFS_TAR_AML
+        select BR2_PACKAGE_RECOVERY_REBOOT
 	help
 	  Image ready for flashing via android's recovery partition
-
 
 choice
         prompt "Erase Userdata"
