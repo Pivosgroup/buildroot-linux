@@ -1,4 +1,4 @@
-#!/bin/sh
+=#!/bin/sh
 
 if [ "X$1" = "Xstart" ]; then
   echo "S10setup: init fb0, fb1"
@@ -64,12 +64,10 @@ if [ "X$1" = "Xstart" ]; then
   mount -o remount,ro /
   #
   # we startup as performance, then switch to ondemand (kernel bug) and
-  # if m1, limit to 600Mhz instead of 200MHz to keep audio hw from stalling.
+  # if m1 or m3, limit to 600Mhz to keep audio hw from stalling.
   echo "S10setup: switching to ondemand"
   echo "ondemand" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-  if [ `grep -c -i "MESON-M1" /proc/cpuinfo` -gt 0 ]; then
-    echo "600000"   > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq ;
-  fi
+  echo "600000"   > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
   #
   echo "S10setup: done"
 fi
