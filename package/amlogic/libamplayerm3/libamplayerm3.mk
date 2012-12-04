@@ -3,19 +3,23 @@
 # libamplayer
 #
 #############################################################
-LIBAMPLAYERM3_VERSION:=3d9c828b64ccabd885601fe9cd8b0b3af2827266
-LIBAMPLAYERM3_SITE=git://github.com/Pivosgroup/libamplayer-m3.git
+LIBAMPLAYERM3_VERSION:=69a755412832f7a3aaeb8e168b128ab185913f49
+LIBAMPLAYERM3_SITE=file:///home/davilla/shared/libamplayer-m3/.git
+#LIBAMPLAYERM3_SITE=git://github.com/Pivosgroup/libamplayer-m3.git
 LIBAMPLAYERM3_INSTALL_STAGING=YES
 LIBAMPLAYERM3_INSTALL_TARGET=YES
 LIBAMPLAYERM3_SITE_METHOD=git
 
 ifeq ($(BR2_PACKAGE_LIBAMPLAYERM3),y)
-# actually required for amffmpeg
+# actually required for amavutils and amffmpeg
 LIBAMPLAYERM3_DEPENDENCIES += alsa-lib librtmp pkg-config
 AMFFMPEG_DIR=$(BUILD_DIR)/libamplayerm3-$(LIBAMPLAYERM3_VERSION)/amffmpeg
+AMAVUTILS_DIR=$(BUILD_DIR)/libamplayerm3-$(LIBAMPLAYERM3_VERSION)/amavutils
 endif
 
 define LIBAMPLAYERM3_BUILD_CMDS
+ $(call AMAVUTILS_BUILD_CMDS)
+ $(call AMAVUTILS_INSTALL_STAGING_CMDS)
  $(call AMFFMPEG_CONFIGURE_CMDS)
  $(call AMFFMPEG_BUILD_CMDS)
  $(call AMFFMPEG_INSTALL_STAGING_CMDS)
@@ -37,6 +41,7 @@ define LIBAMPLAYERM3_INSTALL_STAGING_CMDS
 endef
 
 define LIBAMPLAYERM3_INSTALL_TARGET_CMDS
+ $(call AMAVUTILS_INSTALL_TARGET_CMDS)
  $(call AMFFMPEG_INSTALL_TARGET_CMDS)
 
  mkdir -p $(TARGET_DIR)/lib/firmware
