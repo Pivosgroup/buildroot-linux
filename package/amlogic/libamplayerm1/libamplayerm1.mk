@@ -12,7 +12,8 @@ LIBAMPLAYERM1_SITE_METHOD=git
 ifeq ($(BR2_PACKAGE_LIBAMPLAYERM1),y)
 # actually required for amffmpeg
 LIBAMPLAYERM1_DEPENDENCIES += alsa-lib librtmp pkg-config
-AMFFMPEG_DIR=$(BUILD_DIR)/libamplayerm1-$(LIBAMPLAYERM1_VERSION)/amffmpeg
+AMFFMPEG_DIR = $(BUILD_DIR)/libamplayerm1-$(LIBAMPLAYERM1_VERSION)/amffmpeg
+AMFFMPEG_EXTRA_INCLUDES += -I$(AMFFMPEG_DIR)/../amavutils/include
 endif
 
 
