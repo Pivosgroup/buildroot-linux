@@ -50,7 +50,7 @@ define LIBAMPLAYERM3_INSTALL_TARGET_CMDS
  cp -f $(STAGING_DIR)/usr/lib/libamadec.so $(TARGET_DIR)/usr/lib/
 
  cp -f $(STAGING_DIR)/usr/lib/libamcodec.so.* $(TARGET_DIR)/usr/lib/
- cp -f $(STAGING_DIR)/usr/lib/libamplayer.so $(STAGING_DIR)/usr/lib/libamcontroler.so $(TARGET_DIR)/usr/lib/
+ cp -f $(STAGING_DIR)/usr/lib/libamplayer.so $(TARGET_DIR)/usr/lib/
  $(MAKE) CC="$(TARGET_CC)" LD="$(TARGET_LD)" INSTALL_DIR="$(TARGET_DIR)/usr/lib" STAGING="$(TARGET_DIR)/usr" -C $(@D)/amplayer install
 endef
 
