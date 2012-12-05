@@ -1,6 +1,6 @@
 BR2_arm=y
 BR2_cortex_a9=y
-BR2_KERNEL_MIRROR="git@github.com:j1nx/buildroot-amlogic-reff16-kernel.git"
+BR2_KERNEL_MIRROR="git@github.com:j1nx/Amlogic-reff16-kernel.git"
 BR2_OPTIMIZE_3=y
 BR2_TOOLCHAIN_EXTERNAL=y
 BR2_TOOLCHAIN_EXTERNAL_CODESOURCERY_ARM2010Q1=y
