@@ -5,7 +5,8 @@ UBOOTAML_INSTALL_STAGING=YES
 UBOOTAML_DEPENDENCIES=ubootamltoolchain
 
 define UBOOTAML_BUILD_CMDS
-	rm -rf $(@D)/tools/ucl/libucl_linux
+	rm -f $(@D)/tools/ucl/libucl_linux.lib	
+	rm -rf $(@D)/tools/ucl/ucl_cygwin_prj/ucl_linux
 	$(MAKE) -C $(@D)/tools/ucl/ucl_cygwin_prj/
         cp -f $(@D)/tools/ucl/ucl_cygwin_prj/ucl_linux/libucl_linux.a $(@D)/tools/ucl/libucl_linux.lib
         $(MAKE) -C $(@D) m3_mbox_config
