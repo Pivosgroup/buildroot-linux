@@ -1,0 +1,13 @@
+diff --git a/lib/libhts/Makefile.am b/lib/libhts/Makefile.am
+index 002dbcf..e2cb320 100644
+--- a/lib/libhts/Makefile.am
++++ b/lib/libhts/Makefile.am
+@@ -8,6 +8,7 @@ libhts_la_SOURCES = htsmsg.c \
+                     sha1.c
+ 
+ libhts_la_CPPFLAGS=-std=c99 -D_GNU_SOURCE
++libhts_la_LDFLAGS=-lgcc
+ 
+ $(LIB): libhts.la
+        cp -f .libs/libhts.a .
+
