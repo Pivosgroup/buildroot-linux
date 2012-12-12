@@ -160,6 +160,8 @@ def main():
                       help=" wipe userdata partition during install")
   parser.add_option("-c", "--wipe-userdata-conditional", dest="wipeuserdataconditional", action="store_true",
                       help=" wipe userdata partition during install if previous linux install")
+  parser.add_option("-b", "--boardname", dest="boardname",
+                      help=" check ro.product.board against boardname")
   (options, args) = parser.parse_args()
 
   script = edify_generator.EdifyGenerator(3, OPTIONS.info_dict)
@@ -200,6 +202,7 @@ def main():
         print "Creating symlinks..."
         script.MakeSymlinks(symlinks)
         f = open(options.outputfile, 'w')
+        f.write('assert(getprop("ro.product.board") == "%s");\n' % options.boardname)
         f.write('show_progress(0.500000, 3);\n')
         if options.wipeuserdataconditional:
           f.write('mount("yaffs2", "MTD", "system", "/system");\n')
@@ -228,20 +231,9 @@ def main():
         f.write('       write_raw_image("/tmp/logo.img", "logo"),\n')
         f.write('       delete("/tmp/logo.img"));\n')
         f.write('show_progress(0.180000, 20);\n')
-        f.write('ifelse\n')
-        f.write('(\n')
-        f.write('  getprop("ro.product.board") == "xiosm3",\n')
-        f.write('  (\n')
-        f.write('    assert(package_extract_file("uImage-2.6.34-m3", "/tmp/boot.img"),\n')
-        f.write('       write_raw_image("/tmp/boot.img", "boot"),\n')
-        f.write('       delete("/tmp/boot.img"));\n')
-        f.write('  ),\n')
-        f.write('  (\n')
-        f.write('    assert(package_extract_file("uImage-2.6.34-m1", "/tmp/boot.img"),\n')
-        f.write('       write_raw_image("/tmp/boot.img", "boot"),\n')
-        f.write('       delete("/tmp/boot.img"));\n')
-        f.write('  )\n')
-        f.write(');\n')
+        f.write('assert(package_extract_file("uImage-2.6.34", "/tmp/boot.img"),\n')
+        f.write('    write_raw_image("/tmp/boot.img", "boot"),\n')
+        f.write('    delete("/tmp/boot.img"));\n')
         f.write('show_progress(0.020000, 0);\n')
         f.write('unmount("/system");\n')
         f.close()
