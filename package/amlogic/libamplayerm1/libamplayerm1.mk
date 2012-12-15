@@ -3,7 +3,7 @@
 # libamplayer
 #
 #############################################################
-LIBAMPLAYERM1_VERSION:=3ab85f1ae8f89db78d8c32b39c47fbee13a67b73
+LIBAMPLAYERM1_VERSION:=2d38b22b16c90189695242267c6b8dab31a5ec72
 LIBAMPLAYERM1_SITE=git://github.com/Pivosgroup/libamplayer-m1.git
 LIBAMPLAYERM1_INSTALL_STAGING=YES
 LIBAMPLAYERM1_INSTALL_TARGET=YES
@@ -12,7 +12,8 @@ LIBAMPLAYERM1_SITE_METHOD=git
 ifeq ($(BR2_PACKAGE_LIBAMPLAYERM1),y)
 # actually required for amffmpeg
 LIBAMPLAYERM1_DEPENDENCIES += alsa-lib librtmp pkg-config
-AMFFMPEG_DIR=$(BUILD_DIR)/libamplayerm1-$(LIBAMPLAYERM1_VERSION)/amffmpeg
+AMFFMPEG_DIR = $(BUILD_DIR)/libamplayerm1-$(LIBAMPLAYERM1_VERSION)/amffmpeg
+AMFFMPEG_EXTRA_INCLUDES += -I$(AMFFMPEG_DIR)/../amavutils/include
 endif
 
 

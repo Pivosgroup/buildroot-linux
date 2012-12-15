@@ -1,5 +1,3 @@
-AMAVUTILS_HEADER_PATH = $(AMFFMPEG_DIR)/../amavutils/include
-
 AMFFMPEG_CONF_OPT= --disable-static --enable-shared \
                 --disable-ffmpeg --disable-ffplay --disable-ffserver --disable-doc \
                 --disable-encoders --disable-muxers --disable-altivec \
@@ -25,9 +23,10 @@ define AMFFMPEG_CONFIGURE_CMDS
 		--host-cc="$(HOSTCC)" \
 		--arch=$(BR2_ARCH) \
 		--prefix=/usr \
-		--extra-cflags="-mfloat-abi=softfp -mfpu=neon -march=armv7-a -I$(AMAVUTILS_HEADER_PATH)" \
+		--extra-cflags="-mfloat-abi=softfp -mfpu=neon -march=armv7-a $(AMFFMPEG_EXTRA_INCLUDES)" \
+		$(AMFFMPEG_EXTRA_LDFLAGS) \
 		$(AMFFMPEG_CONF_OPT) \
-        )
+  )
 endef
 
 define AMFFMPEG_BUILD_CMDS

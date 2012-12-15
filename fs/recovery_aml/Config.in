@@ -5,6 +5,12 @@ config BR2_TARGET_ROOTFS_RECOVERY_AML
 	help
 	  Image ready for flashing via android's recovery partition
 
+config BR2_TARGET_ROOTFS_RECOVERY_AML_BOARDNAME
+	string "default_name"
+	depends on BR2_TARGET_ROOTFS_RECOVERY_AML
+	help
+	 Name of the Android board (ro.product.board)
+
 choice
         prompt "Erase Userdata"
         default BR2_TARGET_ROOTFS_RECOVERY_AML_WIPE_USERDATA_CONDITIONAL

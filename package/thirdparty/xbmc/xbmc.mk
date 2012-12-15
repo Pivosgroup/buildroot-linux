@@ -4,7 +4,7 @@
 #
 #################################################################################
 
-XBMC_VERSION = 0c2edbd0f94ac56472212adf035642cc05268c75
+XBMC_VERSION = 7329e9ea3b9dbca6ff995be6fd0299783aa8be09
 XBMC_SITE_METHOD = git
 XBMC_SITE = ssh://git@github.com/Pivosgroup/xbmc.git
 XBMC_INSTALL_STAGING = YES
@@ -14,7 +14,7 @@ XBMC_DEPENDENCIES = host-lzo host-sdl_image
 
 XBMC_CONF_OPT+= --enable-neon --enable-gles --disable-sdl --disable-x11 --disable-xrandr \
   --disable-projectm --enable-debug --disable-joystick --with-cpu=cortex-a9 \
-  --enable-codec=amcodec
+  --enable-codec=amcodec --enable-player=amlplayer
 
 XBMC_DEPENDENCIES += libogg flac libmad libmpeg2 libogg \
   libsamplerate libtheora libvorbis wavpack bzip2 dbus libcdio \
