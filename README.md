@@ -17,6 +17,30 @@ In a fresh minimal Debian Unstable install,
 Note that as of current (2012-10-10) Debian Unstable, python defaults
 to python 2.7. Earlier pythons (or python3) will not work.
 
+For the f16ref uboot sources to compile, you need the ARC toolchain as well. I will create a buildroot package for that later, (The initial commit is already there) but let's get whole system to work first before making it nice.
+
+The easiest thing for now is to compile it manually and add the binaries to your PATH variable.
+
+```shell
+wget http://sourceforge.net/projects/arc-linux/files/ARC%20GNU%20Toolchain/ARC%20GNU%204.4/arc_gcc_rel4.4.tar.gz/download -O arc_gcc_rel4.4.tar.gz
+tar xzvf arc_gcc_rel4.4.tar.gz
+cd arc_gcc_rel4.4
+
+export ARC_GNU=/<path to unpacked sources>/arc_gcc_rel4.4
+export INSTALLDIR=<path to where you want to have the binaries>/arc-4.4-elf32   (<- just gave it the same path)
+export DISABLE_MULTILIB=--enable-multilib
+
+./build-elf32.sh --force
+```
+
+Now it will fail this way with the GDB part, but that is fine for now as all we need are the arc elf32 bins. 
+
+Then make the bins available to your environment by extending the PATH variable;
+
+```shell
+export PATH=$PATH:<path to where you had it installed>/arc-4.4-elf32/bin
+```
+
 # Set up a key to sign the image
 
 ```shell
