@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if [ "X$1" = "Xstart" ]; then
+  if [ -f /root/.xbmc/S94xbmc-pre ]; then
+    echo "S94xbmc-pre:"
+    /root/.xbmc/S94xbmc-pre
+    echo "S94xbmc-pre: done"
+  fi
+fi

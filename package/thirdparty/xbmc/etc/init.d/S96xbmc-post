@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if [ "X$1" = "Xstart" ]; then
+  if [ -f /root/.xbmc/S96xbmc-post ]; then
+    echo "S96xbmc-post:"
+    /root/.xbmc/S96xbmc-post
+    echo "S96xbmc-post: done"
+  fi
+fi
