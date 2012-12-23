@@ -1,4 +1,4 @@
-=#!/bin/sh
+#!/bin/sh
 
 if [ "X$1" = "Xstart" ]; then
   echo "S10setup: init fb0, fb1"

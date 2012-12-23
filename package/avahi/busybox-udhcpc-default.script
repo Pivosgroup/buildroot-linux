@@ -46,12 +46,17 @@ case "$1" in
 			done
 		fi
 
-		echo -n > $RESOLV_CONF
-		[ -n "$domain" ] && echo search $domain >> $RESOLV_CONF
-		for i in $dns ; do
-			echo adding dns $i
-			echo nameserver $i >> $RESOLV_CONF
-		done
+		if [ -f /root/.xbmc/myResolv.conf ] ; then
+			echo overriding dns with myResolv.conf
+			cp -f /root/.xbmc/myResolv.conf $RESOLV_CONF
+                else
+			echo -n > $RESOLV_CONF
+			[ -n "$domain" ] && echo search $domain >> $RESOLV_CONF
+			for i in $dns ; do
+				echo adding dns $i
+				echo nameserver $i >> $RESOLV_CONF
+			done
+		fi
 		;;
 esac
 
