@@ -1,2 +1,2 @@
-LIRCD_OPTS="-H devinput -o /dev/lircd"
+LIRCD_OPTS="-d /dev/lirc0 -o /dev/lircd /etc/lirc/lircd.conf"
 

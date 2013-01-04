@@ -34,7 +34,8 @@ define LIBAMPLAYERM3_BUILD_CMDS
 endef
 
 define LIBAMPLAYERM3_INSTALL_STAGING_CMDS
- $(MAKE) CC="$(TARGET_CC)" LD="$(TARGET_LD)" INSTALL_DIR="$(STAGING_DIR)/usr/lib" STAGING="$(STAGING_DIR)/usr" -C $(@D)/amplayer install
+ $(MAKE) CC="$(TARGET_CC)" LD="$(TARGET_LD)" INSTALL_DIR="$(STAGING_DIR)/usr/lib" \
+  STAGING="$(STAGING_DIR)/usr" PREFIX="$(STAGING_DIR)/usr" -C $(@D)/amplayer install
 
  #temporary, until we sync with mainline xbmc
  cp -rf $(@D)/amcodec/include/* $(STAGING_DIR)/usr/include
@@ -50,7 +51,8 @@ define LIBAMPLAYERM3_INSTALL_TARGET_CMDS
 
  cp -f $(STAGING_DIR)/usr/lib/libamcodec.so.* $(TARGET_DIR)/usr/lib/
  cp -f $(STAGING_DIR)/usr/lib/libamplayer.so $(TARGET_DIR)/usr/lib/
- $(MAKE) CC="$(TARGET_CC)" LD="$(TARGET_LD)" INSTALL_DIR="$(TARGET_DIR)/usr/lib" STAGING="$(TARGET_DIR)/usr" -C $(@D)/amplayer install
+ $(MAKE) CC="$(TARGET_CC)" LD="$(TARGET_LD)" INSTALL_DIR="$(TARGET_DIR)/usr/lib" \
+  STAGING="$(TARGET_DIR)/usr" PREFIX="$(STAGING_DIR)/usr" -C $(@D)/amplayer install
 endef
 
 $(eval $(call GENTARGETS,package/amlogic,libamplayerm3))

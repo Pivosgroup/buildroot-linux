@@ -204,4 +204,8 @@ $(STAMP_DIR)/ext-toolchain-installed: $(TOOLCHAIN_EXTERNAL_DEPENDENCIES)
 	if [ -L $${ARCH_SYSROOT_DIR}/lib64 ] ; then \
 		$(call create_lib64_symlinks) ; \
 	fi ; \
+	if test x$(BR2_TOOLCHAIN_EXTERNAL_CODESOURCERY_ARM2010Q1) == x"y" ; then \
+	mkdir -p "${TARGET_DIR}/usr/lib/locale"; \
+	localedef --quiet --prefix="${TARGET_DIR}" --add-to-archive "$${ARCH_SYSROOT_DIR}"/usr/lib/locale/*.utf8; \
+	fi ; \
 	touch $@
