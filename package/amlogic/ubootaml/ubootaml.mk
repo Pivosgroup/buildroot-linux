@@ -1,5 +1,5 @@
 UBOOTAML_VERSION:=50dba3182b40ff71a68ddae1ba88a53cdab93935
-UBOOTAML_SITE=git@github.com:Pivosgroup/buildroot-uboot.git
+UBOOTAML_SITE=git://github.com/Pivosgroup/buildroot-uboot.git
 UBOOTAML_SITE_METHOD=git
 UBOOTAML_INSTALL_STAGING=YES
 UBOOTAML_DEPENDENCIES=ubootamltoolchain

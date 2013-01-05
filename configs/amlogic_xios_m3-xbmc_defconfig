@@ -1,6 +1,6 @@
 BR2_arm=y
 BR2_cortex_a9=y
-BR2_KERNEL_MIRROR="git@github.com:Pivosgroup/buildroot-linux-kernel-m3.git"
+BR2_KERNEL_MIRROR="git://github.com/Pivosgroup/buildroot-linux-kernel-m3.git"
 BR2_OPTIMIZE_3=y
 BR2_TOOLCHAIN_EXTERNAL=y
 BR2_TOOLCHAIN_EXTERNAL_CODESOURCERY_ARM2010Q1=y

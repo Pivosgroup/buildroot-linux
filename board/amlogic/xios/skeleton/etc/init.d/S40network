@@ -6,6 +6,13 @@
 case "$1" in
   start)
     echo "Starting network..."
+
+    # bump up the default udp/tcp buffersizes
+    sysctl -w net.core.rmem_max=33554432
+    sysctl -w net.core.netdev_max_backlog=2000
+    sysctl -w net.ipv4.udp_mem='262144 327680 393216'
+    sysctl -w net.ipv4.tcp_mem='262144 327680 393216'
+
     # make sure eth0 and wlan0 interfaces are up
     # xbmc will take care of actually configuring them
     # do it this way to keep from triggering

@@ -4,7 +4,7 @@
 #
 #############################################################
 
-ROOTFS_RECOVERY_AML_DEPENDENCIES = linux26 rootfs-tar_aml
+ROOTFS_RECOVERY_AML_DEPENDENCIES = linux26 rootfs-tar_aml host-python
 
 RECOVERY_AML_ARGS = -b $(BR2_TARGET_ROOTFS_RECOVERY_AML_BOARDNAME)
 ifeq ($(BR2_TARGET_ROOTFS_RECOVERY_AML_WIPE_USERDATA),y)
@@ -18,7 +18,7 @@ define ROOTFS_RECOVERY_AML_CMD
  mkdir -p $(BINARIES_DIR)/aml_recovery/system && \
  tar -C $(BINARIES_DIR)/aml_recovery/system -xf $(BINARIES_DIR)/rootfs.tar && \
  mkdir -p $(BINARIES_DIR)/aml_recovery/META-INF/com/google/android/ && \
- PYTHONDONTWRITEBYTECODE=1 fs/recovery_aml/android_scriptgen $(RECOVERY_AML_ARGS) -i -p $(BINARIES_DIR)/aml_recovery/system -o \
+ PYTHONDONTWRITEBYTECODE=1 $(HOST_DIR)/usr/bin/python fs/recovery_aml/android_scriptgen $(RECOVERY_AML_ARGS) -i -p $(BINARIES_DIR)/aml_recovery/system -o \
    $(BINARIES_DIR)/aml_recovery/META-INF/com/google/android/updater-script && \
  cp -f fs/recovery_aml/update-binary $(BINARIES_DIR)/aml_recovery/META-INF/com/google/android/ && \
  cp -f fs/recovery_aml/aml_logo.img $(BINARIES_DIR)/aml_recovery/ && \

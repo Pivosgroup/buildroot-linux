@@ -1,6 +1,6 @@
 XIOS_VERSION = 78e564bc2d8411a328459b9957741cd3e3493074
 XIOS_SITE_METHOD = git
-XIOS_SITE = git@github.com:Pivosgroup/skin.pivos.git
+XIOS_SITE = git://github.com/Pivosgroup/skin.pivos.git
 XIOS_INSTALL_STAGING = YES
 XIOS_INSTALL_TARGET = YES
 XIOS_DEPENDENCIES = xbmc

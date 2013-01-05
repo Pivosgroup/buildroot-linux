@@ -237,6 +237,18 @@ def main():
         f.write('    delete("/tmp/boot.img"));\n')
         f.write('show_progress(0.020000, 0);\n')
         f.write('unmount("/system");\n')
+        if options.boardname == "xiosm3":
+          f.write('ifelse\n')
+          f.write('(\n')
+          f.write('  mount("vfat","none","/dev/block/avnftl4p1","/data"),\n')
+          f.write('  (\n')
+          f.write('    unmount("/data");\n')
+          f.write('  ),\n')
+          f.write('  (\n')
+          f.write('    run_program("/sbin/sh","-c","/sbin/busybox fdisk /dev/block/avnftl4 < /etc/fdisk.media.cmd");\n')
+          f.write('    run_program("/sbin/busybox","mkfs.vfat","-n","Extra","/dev/block/avnftl4p1");\n')
+          f.write('  )\n')
+          f.write(');\n')
         f.close()
         print "Done!"
 
