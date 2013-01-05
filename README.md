@@ -50,8 +50,37 @@ export PATH=$PATH:<path to where you had it installed>/arc-4.4-elf32/bin
 ```
 
 # Build
+First configure the source tree for the device you want to compile the image for. 
+The following devices are supported at this moment;
+      Pivos XIOS DS M1 == amlogic_xios-xbmc_defconfig
+      Pivos XIOS DS M3 == amlogic_xios_m3-xbmc_defconfig
+      Refee/OE Smart TV Box == amlogic_f16ref-xbmc_defconfig
+      GBox Midnight == amlogic_f16ref-xbmc_defconfig
+      Sumvision Nano M1 (non slim) == amlogic_stvmc-xbmc_defconfig (Actually the same s the xios M1)
+      Sumvision Nano M3 (slim) == amlogic_stvmc-xbmc_defconfig
+      Geniatech/MyGica Enjoy TV 510b == amlogic_stvmc-xbmc_defconfig
 
 ```shell
 % make amlogic_xios-xbmc_defconfig
+```
+or
+```shell
+% make amlogic_xios_m3-xbmc_defconfig
+```
+or
+```shell
+% make amlogic_f16ref-xbmc_defconfig
+```
+or
+```shell
+% make amlogic_stvm3-xbmc_defconfig
+```
+or
+```shell
+% make amlogic_stvmc-xbmc_defconfig
+```
+
+Then build the update file
+```shell
 % make
 ```
