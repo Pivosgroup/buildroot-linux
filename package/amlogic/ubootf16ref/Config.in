@@ -1,0 +1,8 @@
+config BR2_PACKAGE_UBOOTF16REF
+	bool "ubootf16ref"
+	help
+	  uBoot from AMLogic's latest repo
+
+	  http://openlinux.amlogic.com
+
+
