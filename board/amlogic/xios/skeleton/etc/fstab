@@ -12,4 +12,5 @@ tmpfs           /var/run        tmpfs   defaults,noatime  0       0
 tmpfs           /var/tmp        tmpfs   defaults,noatime  0       0
 tmpfs           /var/lock       tmpfs   defaults,noatime  0       0
 tmpfs           /var/cache      tmpfs   defaults,noatime  0       0
+tmpfs		/opt		tmpfs	defaults,noatime  0       0
 /usr.sqsh       /usr            squashfs ro,defaults,noatime 0    0
