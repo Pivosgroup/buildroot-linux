@@ -11,7 +11,8 @@ In a fresh minimal Debian Unstable install,
 % sudo apt-get install git build-essential zip gawk libtool gettext  \
       automake autoconf  nasm unzip gettext flex bison libsdl-image1.2 \
       liblzo2-2 lzma python openjdk-7-jre-headless \
-      texinfo libxml-parser-perl wget pkg-config swig cpio zlib1g-dev
+      texinfo libxml-parser-perl wget pkg-config swig cpio zlib1g-dev \
+      libgmp-dev libmpfr-dev
 ```
 
 Note that as of current (2012-10-10) Debian Unstable, python defaults
