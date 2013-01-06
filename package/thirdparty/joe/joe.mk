@@ -14,7 +14,7 @@ JOE_DEPENDENCIES = ncurses
 JOE_CONF_OPT += --program-transform-name=''
 
 define JOE_INSTALL_ETC
-  cp -rf package/joe/joerc $(TARGET_DIR)/etc/joe/.
+  cp -rf package/thirdparty/joe/joerc $(TARGET_DIR)/etc/joe/.
 endef
 
 JOE_POST_INSTALL_TARGET_HOOKS += JOE_INSTALL_ETC
