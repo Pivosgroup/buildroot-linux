@@ -229,15 +229,18 @@ def main():
         f.write('package_extract_dir("system", "/system");\n')
         f.write("\n".join(script.script) + "\n")
         f.write('assert(package_extract_file("aml_logo.img", "/tmp/aml_logo.img"),\n')
-        f.write('       write_raw_image("/tmp/aml_logo.img", "aml_logo"),\n')
-        f.write('       delete("/tmp/aml_logo.img"));\n')
+        if options.boardname == "f16ref":
+	  f.write('       write_raw_image("/tmp/aml_logo.img", "aml_logo"),\n')
+        else:
+	  f.write('       write_raw_image("/tmp/aml_logo.img", "logo"),\n')
+	f.write('       delete("/tmp/aml_logo.img"));\n')
         f.write('show_progress(0.180000, 20);\n')
         f.write('assert(package_extract_file("uImage-2.6.34", "/tmp/boot.img"),\n')
         f.write('    write_raw_image("/tmp/boot.img", "boot"),\n')
         f.write('    delete("/tmp/boot.img"));\n')
         f.write('show_progress(0.020000, 0);\n')
         f.write('unmount("/system");\n')
-        if options.boardname == "xiosm3":
+        if options.boardname == "xiosm3" or options.boardname == "stvmc" or options.boardname == "f16ref":
           f.write('ifelse\n')
           f.write('(\n')
           f.write('  mount("vfat","none","/dev/block/avnftl4p1","/data"),\n')
