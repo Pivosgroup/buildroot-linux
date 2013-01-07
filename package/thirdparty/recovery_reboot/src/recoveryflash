@@ -1,0 +1,23 @@
+#!/bin/sh
+
+IMAGE="$1"
+
+if [ -z "${IMAGE}" ]; then
+  echo "Usage: $0 <file>"
+  exit 1
+fi
+
+if [ ! -f "${IMAGE}" ]; then
+  echo "Error: ${IMAGE} not found"
+  exit 1
+fi
+
+echo "Caching ${IMAGE}. Please wait..."
+cp -f "${IMAGE}" /recovery/update.img || exit 1
+echo "Done."
+
+echo "--update_package=/cache/update.img" > /recovery/recovery/command || exit 1
+
+echo "Rebooting into flash utility."
+reboot recovery
+
