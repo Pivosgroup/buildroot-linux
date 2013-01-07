@@ -22,6 +22,7 @@ TAR_AML_CLEANUP = rm -f $(TARGET_DIR)/usr.sqsh
 endif
 
 define ROOTFS_TAR_AML_CMD
+ ln -sf ../usr/sbin/reboot $(TARGET_DIR)/sbin/reboot && \
  $(HOST_DIR)/usr/bin/mksquashfs $(TARGET_DIR)/usr $(TARGET_DIR)/usr.sqsh $(TAR_AML_SQUASHFS_ARGS) -noappend -all-root && \
  tar --anchored --exclude=\"./usr/*\" -cf $(BINARIES_DIR)/rootfs.tar -C $(TARGET_DIR) . && $(TAR_AML_CLEANUP)
 endef
