@@ -15,6 +15,7 @@ endef
 
 define RECOVERY_REBOOT_INSTALL_TARGET_CMDS
 	DESTDIR="$(TARGET_DIR)" $(MAKE) -C $(@D) install
+        install $(@D)/recoveryflash $(TARGET_DIR)/usr/sbin
 endef
 
 $(eval $(call GENTARGETS,package/thirdparty,recovery_reboot))
