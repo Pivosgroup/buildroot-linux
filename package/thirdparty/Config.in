@@ -5,6 +5,7 @@ source "package/thirdparty/fribidi/Config.in"
 source "package/thirdparty/jasper/Config.in"
 source "package/thirdparty/libass/Config.in"
 source "package/thirdparty/libcdio/Config.in"
+source "package/thirdparty/libcec/Config.in"
 source "package/thirdparty/libenca/Config.in"
 source "package/thirdparty/libmodplug/Config.in"
 source "package/thirdparty/libnfs/Config.in"
@@ -27,4 +28,5 @@ source "package/thirdparty/xbmc/Config.in"
 source "package/thirdparty/xbmcpvr/Config.in"
 source "package/thirdparty/xios-skin/Config.in"
 source "package/thirdparty/boblight/Config.in"
+
 endmenu
