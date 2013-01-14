@@ -9,8 +9,6 @@ XBMC_SITE_METHOD = git
 XBMC_SITE = git://github.com/Pivosgroup/xbmc.git
 XBMC_INSTALL_STAGING = YES
 XBMC_INSTALL_TARGET = YES
-# udev.pc installs in a strange place
-XBMC_CONF_ENV = PKG_CONFIG_PATH=$PKG_CONFIG_PATH:"$(STAGING)/usr/share/pkgconfig"
 
 XBMC_DEPENDENCIES = host-lzo host-sdl_image
 
