@@ -1,0 +1,4 @@
+# use UTC
+UTC=yes
+# Can we use hwclock on this system?
+HWCLOCKACCESS=yes

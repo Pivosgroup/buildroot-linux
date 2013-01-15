@@ -1,0 +1,6 @@
+flash_erase  只擦写某一区间的部分地址
+flash_eraseall  擦写某一区间的全部
+但他们不支持大于4GB的区间
+所以增加了另外后缀为64bit的flash_erase_64bit工具；
+如果要全部擦写即完成flash_eraseall的功能,现在的格式是flash_eraseall_64bit /dev/mtdx 0 0 
+nandwrite_lp是增加了对micron芯片的支持，他的命令行参数必须加-a;

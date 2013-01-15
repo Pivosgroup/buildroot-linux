@@ -1,0 +1,35 @@
+#!/bin/sh
+
+# network interface
+WPA_IFACE="$1"
+# [CONNECTED|DISCONNECTED]
+WPA_ACTION="$2"
+
+if [ -f /etc/wpa_supplicant/functions.sh ]; then
+	. /etc/wpa_supplicant/functions.sh
+else
+	exit 0
+fi
+
+case "$WPA_ACTION" in
+	"CONNECTED")
+		wpa_log_env
+		wpa_hysteresis_check || exit 1
+		wpa_hysteresis_event
+		[ -f /var/run/udhcpc.$WPA_IFACE.pid] && killall udhcpc
+		/sbin/udhcpc -b -i $WPA_IFACE -p /var/run/udhcpc.$WPA_IFACE.pid
+		;;
+
+	"DISCONNECTED")
+		wpa_log_env
+		wpa_hysteresis_check || exit 1
+		/sbin/udhcpc -b -i $WPA_IFACE -p /var/run/udhcpc.$WPA_IFACE.pid
+		;;
+
+	*)
+		echo "Unknown action: \"$WPA_ACTION\""
+		exit 1
+		;;
+esac
+
+exit 0

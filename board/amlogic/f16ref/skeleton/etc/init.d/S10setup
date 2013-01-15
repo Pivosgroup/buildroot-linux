@@ -1,0 +1,73 @@
+#!/bin/sh
+
+if [ "X$1" = "Xstart" ]; then
+  echo "S10setup: init fb0, fb1"
+  # blank the fb's
+  echo 1 > /sys/class/graphics/fb0/blank
+  echo 1 > /sys/class/graphics/fb1/blank
+  # clear them
+  dd if=/dev/zero of=/dev/fb0 bs=1280 count=2880
+  dd if=/dev/zero of=/dev/fb1 bs=1280 count=2880
+  # bugfix for m3 kernel, init fb0 to 24 bpp first
+  #  or the init to 32 bpp will not work
+  fbset -fb /dev/fb0 -g 1280 720 1280 1440 24
+  # setup the default fb sizes, bbp and buffering
+  fbset -fb /dev/fb0 -g 1280 720 1280 1440 32
+  fbset -fb /dev/fb1 -g 1280 720 1280 1440 32
+  #
+  echo "S10setup: remount / rw"
+  mount -o remount,rw /
+  #
+  echo "S10setup: checking keys"
+  # Make sure dropbear directory exists
+  if [ ! -d /etc/dropbear ] ; then
+    mkdir -p /etc/dropbear
+  fi
+  # Check for the Dropbear RSA key
+  if [ ! -f /etc/dropbear/dropbear_rsa_host_key ] ; then
+    echo -n "generating rsa key... "
+    /usr/bin/dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key > /dev/null 2>&1
+  fi
+  # Check for the Dropbear DSS key
+  if [ ! -f /etc/dropbear/dropbear_dss_host_key ] ; then
+    echo -n "generating dsa key... "
+    /usr/bin/dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key > /dev/null 2>&1
+  fi
+  #
+  echo "S10setup: moving /etc"
+  # /etc must be rw, move it to /tmp and bind
+  mkdir -p /tmp/etc
+  cp -a /etc /tmp/
+  mount -o bind /tmp/etc /etc
+  #
+  echo "S10setup: moving /media"
+  # /media is where usb drives mount, move it to /tmp and bind
+  mkdir -p /tmp/media
+  cp -a /media /tmp/
+  mount -o bind /tmp/media /media
+  #
+  echo "S10setup: mounting /tmp/userdata"
+  # find userdata via mtd partition name, mount it and bind to /root
+  for i in `ls /dev/mtd* | grep -o "mtd[0-9]$"`; do
+    if [[ "`cat /sys/devices/virtual/mtd/$i/name`" == "userdata" ]]; then
+      USERDATA="/dev/"`ls /sys/devices/virtual/mtd/$i | grep -o mtdblock[0-9]`
+      break
+    fi
+  done
+
+  mkdir -p /tmp/userdata
+  mount -t yaffs2 $USERDATA /tmp/userdata
+  mkdir -p /tmp/userdata/xios/root
+  mount -o bind /tmp/userdata/xios/root /root
+  #
+  echo "S10setup: remount / ro"
+  mount -o remount,ro /
+  #
+  # we startup as performance, then switch to ondemand (kernel bug) and
+  # if m1 or m3, limit to 600Mhz to keep audio hw from stalling.
+  echo "S10setup: switching to ondemand"
+  echo "ondemand" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+  echo "600000"   > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+  #
+  echo "S10setup: done"
+fi
