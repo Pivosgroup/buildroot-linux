@@ -13,8 +13,9 @@ define AMREMOTE_CONFIG_BUILD_CMDS
 endef
 
 define AMREMOTE_CONFIG_INSTALL_TARGET_CMDS
-        install -m 755 $(@D)/keytest $(TARGET_DIR)/usr/bin
-        install -m 755 $(@D)/amremote_config $(TARGET_DIR)/usr/bin
+        install -d $(TARGET_DIR)/usr/bin
+        install -m 755 -t $(TARGET_DIR)/usr/bin $(@D)/keytest
+        install -m 755 -t $(TARGET_DIR)/usr/bin $(@D)/amremote_config
 endef
 
 $(eval $(call GENTARGETS,package/amlogic,amremote_config))
