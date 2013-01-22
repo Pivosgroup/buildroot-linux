@@ -10,7 +10,6 @@
     <setting>videoplayer.usedisplayasclock</setting>
     <setting>videoplayer.synctype</setting>
     <setting>audiocds</setting>
-    <setting>karaoke</setting>
     <setting>videoscreen.screenmode</setting>
     <setting>videoscreen.screen</setting>
     <setting>videoscreen.vsync</setting>
