@@ -55,10 +55,6 @@ define XBMC_INSTALL_ETC
 
 endef
 
-define XBMC_INSTALL_SPLASH
-  cp -f package/thirdparty/xbmc/xios_splash.png $(TARGET_DIR)/usr/share/xbmc/media/Splash.png
-endef
-
 define XBMC_CLEAN_UNUSED_ADDONS
   rm -rf $(TARGET_DIR)/usr/share/xbmc/addons/screensaver.rsxs.plasma
   rm -rf $(TARGET_DIR)/usr/share/xbmc/addons/visualization.milkdrop
@@ -78,7 +74,6 @@ endef
 
 XBMC_PRE_CONFIGURE_HOOKS += XBMC_BOOTSTRAP
 XBMC_POST_INSTALL_TARGET_HOOKS += XBMC_INSTALL_ETC
-XBMC_POST_INSTALL_TARGET_HOOKS += XBMC_INSTALL_SPLASH
 XBMC_POST_INSTALL_TARGET_HOOKS += XBMC_CLEAN_UNUSED_ADDONS
 XBMC_POST_INSTALL_TARGET_HOOKS += XBMC_CLEAN_CONFLUENCE_SKIN
 ifneq ($(BR2_ENABLE_DEBUG),y)

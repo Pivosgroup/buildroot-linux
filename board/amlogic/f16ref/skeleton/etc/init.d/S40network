@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# Start the network....
+#
+
+case "$1" in
+  start)
+    echo "Starting network..."
+
+    # bump up the default udp/tcp buffersizes
+    sysctl -w net.core.rmem_max=33554432
+    sysctl -w net.core.netdev_max_backlog=2000
+    sysctl -w net.ipv4.udp_mem='262144 327680 393216'
+    sysctl -w net.ipv4.tcp_mem='262144 327680 393216'
+
+    # make sure eth0 and wlan0 interfaces are up
+    # xbmc will take care of actually configuring them
+    # do it this way to keep from triggering
+    # a lengthy dhcp probe at boot.
+    ifconfig eth0 up
+    ifconfig wlan0 up
+  ;;
+  stop)
+    echo -n "Stopping network..."
+    ifconfig eth0 down
+    ifconfig wlan0 down
+	;;
+  restart|reload)
+	"$0" stop
+	"$0" start
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit $?
+
