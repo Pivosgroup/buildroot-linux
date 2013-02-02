@@ -2,7 +2,7 @@ Index: b/usbmount.rules
 ===================================================================
 --- a/usbmount.rules
 +++ b/usbmount.rules
-@@ -1,7 +1,9 @@
+@@ -1,7 +1,12 @@
  # Rules for USBmount -*- conf -*-
 
  KERNEL=="sd*", DRIVERS=="sbp2",		ACTION=="add",	RUN+="/usr/share/usbmount/usbmount add"
@@ -11,6 +11,9 @@ Index: b/usbmount.rules
 +KERNEL=="sd*", SUBSYSTEM=="block",	ACTION=="add",	RUN+="/usr/share/usbmount/usbmount add"
 +KERNEL=="ub*", SUBSYSTEM=="block",	ACTION=="add",	RUN+="/usr/share/usbmount/usbmount add"
 +KERNEL=="cardblk*", SUBSYSTEM=="block", ACTION=="add",  RUN+="/usr/share/usbmount/usbmount add"
++KERNEL=="sd*", SUBSYSTEM=="block",     ACTION=="add",  RUN+="/usr/bin/diag.sh"
++KERNEL=="ub*", SUBSYSTEM=="block",     ACTION=="add",  RUN+="/usr/bin/diag.sh"
++KERNEL=="cardblk*", SUBSYSTEM=="block", ACTION=="add",  RUN+="/usr/bin/diag.sh"
  KERNEL=="sd*",				ACTION=="remove",	RUN+="/usr/share/usbmount/usbmount remove"
  KERNEL=="ub*",				ACTION=="remove",	RUN+="/usr/share/usbmount/usbmount remove"
 +KERNEL=="cardblk*",			ACTION=="remove",	RUN+="/usr/share/usbmount/usbmount remove"
