@@ -4,7 +4,7 @@ if [ "$ACTION" == "add" ] ; then
   # get device name from udev variable
   DRIVE=$DEVNAME
   # check mounted drive for this drive
-  MOUNTSTRING=`fgrep $DRIVE /proc/mounts`
+  MOUNTSTRING=`fgrep "$DRIVE " /proc/mounts`
   MOUNTDEV=`echo $MOUNTSTRING | awk '{print $1}'`
   MOUNTPOINT=`echo $MOUNTSTRING | awk '{print $2}'`
   OUTDIR="$MOUNTPOINT/getlogs"
