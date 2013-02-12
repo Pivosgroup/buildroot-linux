@@ -25,9 +25,16 @@ to python 2.7. Earlier pythons (or python3) will not work.
       android -storepass android -keyalg RSA -keysize 2048 -validity 10000
 ```
 
-# Build
+# Build for M1
 
 ```shell
 % make amlogic_xios-xbmc_defconfig
+% make
+```
+
+# Build for M3
+
+```shell
+% make amlogic_xios_m3-xbmc_defconfig
 % make
 ```
