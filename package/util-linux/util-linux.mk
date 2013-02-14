@@ -23,6 +23,17 @@ ifeq ($(BR2_PACKAGE_BUSYBOX),y)
 UTIL_LINUX_DEPENDENCIES += busybox
 endif
 
+# If we want to use busybox cifs/nfs mounts
+# we need to create some helpers to have busybox handle those mounts
+ifeq ($(BR2_PACKAGE_BUSYBOX),y)
+define UTIL_LINUX_TARGET_HELPERS
+        $(INSTALL) -m 0755 package/util-linux/mount.nfs $(TARGET_DIR)/sbin
+        $(INSTALL) -m 0755 package/util-linux/mount.cifs $(TARGET_DIR)/sbin
+endef
+endif
+UTIL_LINUX_POST_INSTALL_TARGET_HOOKS += UTIL_LINUX_TARGET_HELPERS
+
+
 ifeq ($(BR2_PACKAGE_NCURSES),y)
 UTIL_LINUX_DEPENDENCIES += ncurses
 else
