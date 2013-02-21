@@ -23,8 +23,18 @@ start() {
 		echo -n "generating dsa key... "
 		/usr/bin/dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key > /dev/null 2>&1
 	fi
+
+        # If one or more keys exist on SDCard, use that instead
+	 HOSTKEYS=""
+        if [ -f /media/sdcard/xbmc-data/etc/dropbear/dropbear_dss_host_key ]; then
+	 HOSTKEYS=" -d /media/sdcard/xbmc-data/etc/dropbear/dropbear_dss_host_key"
+	fi
+        if [ -f /media/sdcard/xbmc-data/etc/dropbear/dropbear_rsa_host_key ]; then
+         HOSTKEYS="$HOSTKEYS -r /media/sdcard/xbmc-data/etc/dropbear/dropbear_rsa_host_key"
+        fi
+	
 	umask 077
-	start-stop-daemon -S -q -p /var/run/dropbear.pid --exec /usr/sbin/dropbear
+	start-stop-daemon -S -q -p /var/run/dropbear.pid --exec /usr/sbin/dropbear -- $HOSTKEYS
 	echo "OK"
 }
 stop() {
