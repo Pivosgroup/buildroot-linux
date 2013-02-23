@@ -1,6 +1,13 @@
 #!/bin/sh
 exec 1>/tmp/init.log
 exec 2>>/tmp/init.log
+#  Variables 
+#    SDCARD_MOUNTED  	 1 = sdcard mounted, 0  = failed
+#    SDCARD_XBMC_DATA 	 1 = found /medis/sdacard/xbmc-data, 0 = doesn't exist
+#    SDCARD_USERDATA     1 if  XBMC_USERDATA_PATH directory exists, 0 if it doesn't
+#    XBMC_DATA_PATH      if SDCARD_XBMC_DATA ==1, then contains path to xbmc-data folder on sdcard
+#    XBMC_USERDATA_PATH  if SDCARD_XMBC_DATA ==1, contains location of userdata folder on sdcard
+#
 if [ "X$1" = "Xstart" ]; then
   echo "S10setup: init fb0, fb1"
   # blank the fb's
@@ -26,6 +33,7 @@ if [ "X$1" = "Xstart" ]; then
     cp -a /media /tmp/
     mount -o bind /tmp/media /media
   fi
+
   #
   echo "S10setup: moving /etc"
   # /etc must be rw, move it to /tmp and bind
@@ -53,12 +61,13 @@ if [ "X$1" = "Xstart" ]; then
     echo "S10setup:  No SDCard found"
    fi
   fi
+
   # Test if SDCard is mounted
   if grep -qs '/media/sdcard' /proc/mounts; then
      # Check if we should keep running S94xbmc-pre mount scripts
-       SDCARD_MOUNTED=1
+        SDCARD_MOUNTED=1
   else
-     SDCARD_MOUNTED=0
+	SDCARD_MOUNTED=0
   fi
 
   echo "S10setup: mounting /tmp/userdata"
@@ -74,15 +83,25 @@ if [ "X$1" = "Xstart" ]; then
   mkdir -p /tmp/userdata
 
   echo "S10Setup: checking for xbmc-data"
-  # Check if we have xbmc-data exists on sdcard
-  if [[ $SDCARD_MOUNTED && -d "/media/sdcard/xbmc-data" ]]; then
-       SDCARD_XBMC_DATA=1
-  else 
-       SDCARD_XBMC_DATA=0
-  fi
+  # Check if xbmc-data exists on sdcard
+  # this is an horrible way to this, but only way to do case insensitve match in this shell
+	if [ $SDCARD_MOUNTED -eq 1 ]; then
+         # do directory list to see if it exists
+	 XBMC_DATA_PATH="`ls -dp /media/sdcard/* | fgrep -i "/media/sdcard/xbmc-data/"`"
+         # if not equal zero then set userdata path variable
+	 if [[ ! -z $XBMC_DATA_PATH ]]; then
+	   SDCARD_XBMC_DATA=1
+	   XBMC_USERDATA_PATH=$XBMC_DATA_PATH"userdata"
+	 else
+	   SDCARD_XBMC_DATA=0
+	 fi
+	else
+	 SDCARD_XBMC_DATA=0
+	fi
 
   # Check if user-data on sdcard
-  if [[ $SDCARD_MOUNTED && -d "/media/sdcard/xbmc-data/userdata" ]]; then
+  if [[ $SDCARD_XBMC_DATA -eq 1 && -d $XBMC_USERDATA_PATH ]]; then
+       echo "S10Setup: Found userdata directory on sdcard"
        SDCARD_USERDATA=1
   else 
        SDCARD_USERDATA=0
@@ -95,7 +114,7 @@ if [ "X$1" = "Xstart" ]; then
       # Temporarily mount userdata
       mount -t yaffs2 $USERDATA /tmp/userdata
       echo "S10Setup: Copying userdata"
-      cp -rp /tmp/userdata /media/sdcard/xbmc-data/userdata
+      cp -rp /tmp/userdata $XBMC_USERDATA_PATH
       if [ $? -neq 0 ] ; then
         echo "S10setup: Copying Error"
       else  
@@ -125,7 +144,7 @@ if [ "X$1" = "Xstart" ]; then
 
   if [ $SDCARD_USERDATA -eq 1 ]; then
     echo "S10setup: Found userdata on sdcard, mounting"
-    mount -o bind /media/sdcard/xbmc-data/userdata /tmp/userdata
+    mount -o bind $XBMC_USERDATA_PATH /tmp/userdata
     mkdir -p /tmp/userdata.internal
     mount -t yaffs2 $USERDATA /tmp/userdata.internal
     # fix tmp directory, needs to be on ext for sockets
