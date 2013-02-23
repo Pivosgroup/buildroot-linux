@@ -114,6 +114,8 @@ if [ "X$1" = "Xstart" ]; then
       # Temporarily mount userdata
       mount -t yaffs2 $USERDATA /tmp/userdata
       echo "S10Setup: Copying userdata"
+      # turn cache back on speed this up
+      mount -o remount,async /media/sdcard
       cp -rp /tmp/userdata $XBMC_USERDATA_PATH
       if [ $? -neq 0 ] ; then
         echo "S10setup: Copying Error"
@@ -121,6 +123,9 @@ if [ "X$1" = "Xstart" ]; then
         echo "S10setup: Data Copied to card"
         SDCARD_USERDATA=1
       fi
+      sync
+      # turn cache back off for safety
+      mount -o remount,sync /media/sdcard
       umount /tmp/userdata 
   fi
 
