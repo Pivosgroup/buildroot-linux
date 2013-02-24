@@ -113,6 +113,9 @@ if [ "X$1" = "Xstart" ]; then
   if [[ $SDCARD_XBMC_DATA -eq 1 && $SDCARD_USERDATA -eq 0 ]]; then
       # Temporarily mount userdata
       mount -t yaffs2 $USERDATA /tmp/userdata
+      if [ -f /usr/share/splash/copying.fb.lzo ]; then
+         lzopcat /usr/share/splash/copying.fb.lzo > /dev/fb0
+      fi
       echo "S10Setup: Copying userdata"
       # turn cache back on speed this up
       mount -o remount,async /media/sdcard
