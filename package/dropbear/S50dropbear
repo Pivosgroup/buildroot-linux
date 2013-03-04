@@ -9,22 +9,32 @@
 start() {
  	echo -n "Starting dropbear sshd: "
 	# Make sure dropbear directory exists
-	if [ ! -d /etc/dropbear ] ; then
-		mkdir -p /etc/dropbear
+	if [ ! -d /tmp/userdata/etc/dropbear ] ; then
+		mkdir -p /tmp/userdata/etc/dropbear
 	fi
 	# Check for the Dropbear RSA key
-	if [ ! -f /etc/dropbear/dropbear_rsa_host_key ] ; then
+	if [ ! -f /tmp/userdata/etc/dropbear/dropbear_rsa_host_key ] ; then
 		echo -n "generating rsa key... "
-		/usr/bin/dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key > /dev/null 2>&1
+		/usr/bin/dropbearkey -t rsa -f /tmp/userdata/etc/dropbear/dropbear_rsa_host_key > /dev/null 2>&1
 	fi
 
 	# Check for the Dropbear DSS key
-	if [ ! -f /etc/dropbear/dropbear_dss_host_key ] ; then
+	if [ ! -f /tmp/userdata/etc/dropbear/dropbear_dss_host_key ] ; then
 		echo -n "generating dsa key... "
-		/usr/bin/dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key > /dev/null 2>&1
+		/usr/bin/dropbearkey -t dss -f /tmp/userdata/etc/dropbear/dropbear_dss_host_key > /dev/null 2>&1
 	fi
+
+        # If one or more keys exist on SDCard, use that instead
+	 HOSTKEYS=""
+        if [ -f /tmp/userdata/etc/dropbear/dropbear_dss_host_key ]; then
+	 HOSTKEYS=" -d /tmp/userdata/etc/dropbear/dropbear_dss_host_key"
+	fi
+        if [ -f /tmp/userdata/etc/dropbear/dropbear_rsa_host_key ]; then
+         HOSTKEYS="$HOSTKEYS -r /tmp/userdata/etc/dropbear/dropbear_rsa_host_key"
+        fi
+	
 	umask 077
-	start-stop-daemon -S -q -p /var/run/dropbear.pid --exec /usr/sbin/dropbear
+	start-stop-daemon -S -q -p /var/run/dropbear.pid --exec /usr/sbin/dropbear -- $HOSTKEYS
 	echo "OK"
 }
 stop() {
