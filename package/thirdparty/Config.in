@@ -28,6 +28,7 @@ source "package/thirdparty/xbmc/Config.in"
 source "package/thirdparty/xbmcpvr/Config.in"
 source "package/thirdparty/xios-skin/Config.in"
 source "package/thirdparty/boblight/Config.in"
+source "package/thirdparty/gphotofs/Config.in"
 source "package/thirdparty/libgphoto2/Config.in"
 
 endmenu
