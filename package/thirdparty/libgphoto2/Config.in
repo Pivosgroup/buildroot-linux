@@ -1,0 +1,7 @@
+config BR2_PACKAGE_LIBGPHOTO2
+	bool "libgphoto2"
+        select BR2_PACKAGE_LIBUSB-COMPAT
+	help
+	  libgphoto2   
+
+	  http://www.gphoto.org
