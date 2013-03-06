@@ -1,0 +1,26 @@
+--- old/usbmount	2011-08-08 08:57:49.000000000 -0700
++++ new/usbmount	2013-03-05 10:58:14.873144016 -0800
+@@ -138,6 +138,23 @@ if [ "$1" = add ]; then
+ 		log info "executing command: mount -t$fstype ${options:+-o$options} $DEVNAME $mountpoint"
+ 		mount "-t$fstype" "${options:+-o$options}" "$DEVNAME" "$mountpoint"
+ 
++		# Move mountpoint to desired location
++               if [ -f $mountpoint"/.mountpoint" ]; then 
++                  # Read desired directory name from .mountpoint file on device
++                  destination=$(head -n 1 $mountpoint"/.mountpoint")
++                  if [ ${#destination} -gt 0 ]; then
++                    if [ ! -d "/media/$destination" ]; then
++                      mkdir /media/$destination
++                    fi
++                    # Make sure something isn't already mounted here
++                    if ! fgrep -qs " /media/$destination " /proc/mounts ; then
++                       # move mounted device to desired location
++                       mount --move $mountpoint /media/$destination
++                       mountpoint="/media/$destination"
++                    fi
++                  fi
++               fi
++
+ 		# Determine vendor and model.
+ 		vendor=
+ 		if [ -r "/sys$DEVPATH/device/vendor" ]; then
