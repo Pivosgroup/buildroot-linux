@@ -20,7 +20,7 @@ config BR2_PACKAGE_GDB_HOST
 	bool "Build gdb for the Host"
 	# cross-gdb is supposed to be part of the external
 	# toolchain. And the build currently fails.
-	depends on !BR2_TOOLCHAIN_EXTERNAL
+	#depends on !BR2_TOOLCHAIN_EXTERNAL
 	help
 	    Build gdb to run on the host to debug programs run on the target.
 
