@@ -3,7 +3,7 @@
 # libamplayer
 #
 #############################################################
-LIBAMPLAYERM1_VERSION:=740a9daddd07d33e7f68ca5b2cfd991f1b9d5d99
+LIBAMPLAYERM1_VERSION:=e7ba30082fcf17874d1091a455ddaf9f4070a4fa
 LIBAMPLAYERM1_SITE=git://github.com/Pivosgroup/libamplayer-m1.git
 LIBAMPLAYERM1_INSTALL_STAGING=YES
 LIBAMPLAYERM1_INSTALL_TARGET=YES
