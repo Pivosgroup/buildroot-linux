@@ -5,6 +5,13 @@
 
 case "$1" in
   start)
+        # setup logging
+        if [ -f /root/.xbmc/temp/xbmcstart.log ]; then
+            mv /root/.xbmc/temp/xbmcstart.log /root/.xbmc/temp/xbmcstart.old.log
+        fi
+        exec 1>/root/.xbmc/temp/xbmcstart.log
+        exec 2>&1
+
         echo "Starting XBMC..."
         export LD_LIBRARY_PATH=/usr/lib/mysql:$LD_LIBRARY_PATH
         export XBMC_HOME=/usr/share/xbmc
