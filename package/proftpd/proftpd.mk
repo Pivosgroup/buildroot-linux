@@ -3,8 +3,8 @@
 # proftpd
 #
 #############################################################
-PROFTPD_VERSION = 1.3.3b
-PROFTPD_SOURCE = proftpd-$(PROFTPD_VERSION).tar.bz2
+PROFTPD_VERSION = 1.3.4b
+PROFTPD_SOURCE = proftpd-$(PROFTPD_VERSION).tar.gz
 PROFTPD_SITE = ftp://ftp.proftpd.org/distrib/source/
 
 PROFTPD_CONF_ENV = ac_cv_func_setpgrp_void=yes \
