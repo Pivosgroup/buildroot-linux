@@ -145,19 +145,23 @@ if [ "X$1" = "Xstart" ]; then
     if [ ! -d "/tmp/userdata.internal/xios/root/.xbmc/temp" ]; then
       mkdir -p /tmp/userdata.internal/xios/root/.xbmc/temp
     fi
-    if [ ! -d "/tmp/userdata/xios/root/.xbmc/temp" ]; then
-      mkdir -p /tmp/userdata/xios/root/.xbmc/temp
-    fi
     # bind tmp on mtd to temp on sdcard to accout for sockets on fs
     mount -o bind /tmp/userdata.internal/xios/root/.xbmc/temp /tmp/userdata/xios/root/.xbmc/temp
   else
     echo "S10setup: mounting userdata from mtd"
     mount -t yaffs2 $USERDATA /tmp/userdata
   fi
+
   # if root dir doesn't exist then make it
   if [ ! -d "/tmp/userdata/xios/root" ]; then
     mkdir -p /tmp/userdata/xios/root
   fi
+
+  # Make sure temp directory is created
+  if [ ! -d "/tmp/userdata/xios/root/.xbmc/temp" ]; then
+      mkdir -p /tmp/userdata/xios/root/.xbmc/temp
+  fi
+
   # setup root dir
   mount -o bind /tmp/userdata/xios/root /root
 
