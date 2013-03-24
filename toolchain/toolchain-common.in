@@ -5,6 +5,22 @@
 # so put it here instead
 source "toolchain/gdb/Config.in"
 
+config BR2_ENABLE_EXTERNAL_LDCONFIG
+	bool "Enable external ldconfig support"
+    default n
+    depends on BR2_TOOLCHAIN_EXTERNAL
+	help
+	  Helpful, if "rolling release" distributions (e.g. ArchLinux) are
+	  used as host build system and the distributed ldconfig has no
+	  support for the target architecture.
+
+config BR2_EXTERNAL_LDCONFIG_PATH
+	string "Path to the external ldconfig"
+	default "~/"
+	depends on BR2_ENABLE_EXTERNAL_LDCONFIG
+	help
+	  Specify the path to the external ldconfig binary.
+
 config BR2_LARGEFILE
 	bool
 
