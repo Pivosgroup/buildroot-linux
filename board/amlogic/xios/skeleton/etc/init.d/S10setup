@@ -1,7 +1,7 @@
 #!/bin/sh
 exec 1>/tmp/init.log
 exec 2>>/tmp/init.log
-#  Variables 
+#  Variables
 #    SDCARD_MOUNTED  	 1 = sdcard mounted, 0  = failed
 #    SDCARD_XBMC_DATA 	 1 = found /medis/sdacard/xbmc-data, 0 = doesn't exist
 #    SDCARD_USERDATA     1 if  XBMC_USERDATA_PATH directory exists, 0 if it doesn't
@@ -35,25 +35,25 @@ if [ "X$1" = "Xstart" ]; then
   fi
   # Check if sdcard mounted, if not try to mount it
   if ! grep -qs '/media/sdcard/' /proc/mounts; then
-   if [ -e "/dev/cardblksd1" ]; then
-     echo "S10setup: SDCard /dev/cardblksd1 mounted as /media/sdcard"
-     /bin/mount -o rw,sync,noatime /dev/cardblksd1 /media/sdcard
-     echo "/dev/cardblksd1	/media/sdcard	vfat	rw,sync	0	0" >> /etc/fstab
-   elif [ -e "/dev/cardblksd" ]; then
-     echo "S10setup: SDCard /dev/cardblksd mounted as /media/sdcard"
-     /bin/mount -o rw,sync,noatime /dev/cardblksd /media/sdcard
-     echo "/dev/cardblksd	/media/sdcard	vfat	rw,sync	0	0" >> /etc/fstab
-   else
-    echo "S10setup:  No SDCard found"
-   fi
+    if [ -e "/dev/cardblksd1" ]; then
+      echo "S10setup: SDCard /dev/cardblksd1 mounted as /media/sdcard"
+      /bin/mount -o rw,sync,noatime /dev/cardblksd1 /media/sdcard
+      echo "/dev/cardblksd1	/media/sdcard	vfat	rw,sync	0	0" >> /etc/fstab
+    elif [ -e "/dev/cardblksd" ]; then
+      echo "S10setup: SDCard /dev/cardblksd mounted as /media/sdcard"
+      /bin/mount -o rw,sync,noatime /dev/cardblksd /media/sdcard
+      echo "/dev/cardblksd	/media/sdcard	vfat	rw,sync	0	0" >> /etc/fstab
+    else
+      echo "S10setup:  No SDCard found"
+    fi
   fi
 
   # Test if SDCard is mounted
   if grep -qs '/media/sdcard' /proc/mounts; then
-     # Check if we should keep running S94xbmc-pre mount scripts
-        SDCARD_MOUNTED=1
+    # Check if we should keep running S94xbmc-pre mount scripts
+    SDCARD_MOUNTED=1
   else
-	SDCARD_MOUNTED=0
+    SDCARD_MOUNTED=0
   fi
 
   echo "S10setup: mounting /tmp/userdata"
@@ -71,51 +71,51 @@ if [ "X$1" = "Xstart" ]; then
   echo "S10Setup: checking for xbmc-data"
   # Check if xbmc-data exists on sdcard
   # this is an horrible way to this, but only way to do case insensitve match in this shell
-	if [ $SDCARD_MOUNTED -eq 1 ]; then
-         # do directory list to see if it exists
-	 XBMC_DATA_PATH="`ls -dp /media/sdcard/* | fgrep -i "/media/sdcard/xbmc-data/"`"
-         # if not equal zero then set userdata path variable
-	 if [[ ! -z $XBMC_DATA_PATH ]]; then
-	   SDCARD_XBMC_DATA=1
-	   XBMC_USERDATA_PATH=$XBMC_DATA_PATH"userdata"
-	 else
-	   SDCARD_XBMC_DATA=0
-	 fi
-	else
-	 SDCARD_XBMC_DATA=0
-	fi
+  if [ $SDCARD_MOUNTED -eq 1 ]; then
+    # do directory list to see if it exists
+    XBMC_DATA_PATH="`ls -dp /media/sdcard/* | fgrep -i "/media/sdcard/xbmc-data/"`"
+    # if not equal zero then set userdata path variable
+    if [[ ! -z $XBMC_DATA_PATH ]]; then
+      SDCARD_XBMC_DATA=1
+      XBMC_USERDATA_PATH=$XBMC_DATA_PATH"userdata"
+    else
+      SDCARD_XBMC_DATA=0
+    fi
+  else
+    SDCARD_XBMC_DATA=0
+  fi
 
   # Check if user-data on sdcard
   if [[ $SDCARD_XBMC_DATA -eq 1 && -d $XBMC_USERDATA_PATH ]]; then
-       echo "S10Setup: Found userdata directory on sdcard"
-       SDCARD_USERDATA=1
-  else 
-       SDCARD_USERDATA=0
+    echo "S10Setup: Found userdata directory on sdcard"
+    SDCARD_USERDATA=1
+  else
+    SDCARD_USERDATA=0
   fi
-  
+
   # if xbmc-data exists on sdcard
   # but userdata doesn't exist, then copy data to sdcard
   echo "S10Setup: Checking if should copy userdata"
   if [[ $SDCARD_XBMC_DATA -eq 1 && $SDCARD_USERDATA -eq 0 ]]; then
-      # Temporarily mount userdata
-      mount -t yaffs2 $USERDATA /tmp/userdata
-      if [ -f /usr/share/splash/copying.fb.lzo ]; then
-         lzopcat /usr/share/splash/copying.fb.lzo > /dev/fb0
-      fi
-      echo "S10Setup: Copying userdata"
-      # turn cache back on speed this up
-      mount -o remount,async /media/sdcard
-      cp -rp /tmp/userdata $XBMC_USERDATA_PATH
-      if [ $? -neq 0 ] ; then
-        echo "S10setup: Copying Error"
-      else  
-        echo "S10setup: Data Copied to card"
-        SDCARD_USERDATA=1
-      fi
-      sync
-      # turn cache back off for safety
-      mount -o remount,sync /media/sdcard
-      umount /tmp/userdata 
+    # Temporarily mount userdata
+    mount -t yaffs2 $USERDATA /tmp/userdata
+    if [ -f /usr/share/splash/copying.fb.lzo ]; then
+      lzopcat /usr/share/splash/copying.fb.lzo > /dev/fb0
+    fi
+    echo "S10Setup: Copying userdata"
+    # turn cache back on speed this up
+    mount -o remount,async /media/sdcard
+    cp -rp /tmp/userdata $XBMC_USERDATA_PATH
+    if [ $? -neq 0 ] ; then
+      echo "S10setup: Copying Error"
+    else
+      echo "S10setup: Data Copied to card"
+      SDCARD_USERDATA=1
+    fi
+    sync
+    # turn cache back off for safety
+    mount -o remount,sync /media/sdcard
+    umount /tmp/userdata
   fi
 
   #
@@ -159,7 +159,7 @@ if [ "X$1" = "Xstart" ]; then
 
   # Make sure temp directory is created
   if [ ! -d "/tmp/userdata/xios/root/.xbmc/temp" ]; then
-      mkdir -p /tmp/userdata/xios/root/.xbmc/temp
+    mkdir -p /tmp/userdata/xios/root/.xbmc/temp
   fi
 
   # setup root dir
@@ -182,11 +182,10 @@ if [ "X$1" = "Xstart" ]; then
   # Safety section, rename S94xbmc-pre if it was designed to move userdata
   if [ $SDCARD_USERDATA -eq 1 ]; then
     if grep -qs 'mount -o bind /media/sdcard' /tmp/userdata/xios/root/.xbmc/S94xbmc-pre; then
-     # Found S94xbmc script that manipulates userdata so rename it
-     echo "S10setup:  Found dangerous S94xbmc-pre, renaming it"
-     mv  /tmp/userdata/xios/root/.xbmc/S94xbmc-pre /tmp/userdata/xios/root/.xbmc/S94xbmc-pre.disabled
+      # Found S94xbmc script that manipulates userdata so rename it
+      echo "S10setup:  Found dangerous S94xbmc-pre, renaming it"
+      mv  /tmp/userdata/xios/root/.xbmc/S94xbmc-pre /tmp/userdata/xios/root/.xbmc/S94xbmc-pre.disabled
     fi
   fi
   echo "S10setup: done"
 fi
-
