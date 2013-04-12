@@ -1,0 +1,12 @@
+#!/bin/sh
+exec 1>/tmp/init.log
+exec 2>>/tmp/init.log
+
+if [ "X$1" = "Xstart" ]; then
+  if [ `grep -c -i "MESON3" /proc/cpuinfo` -gt 0 ]; then
+    # turn on 'power' led (right blue)
+    echo "w:o:10:0" > /sys/class/gpio/cmd
+    # turn off 'status' led (middle red)
+    echo "w:o:11:0" > /sys/class/gpio/cmd
+  fi
+fi
