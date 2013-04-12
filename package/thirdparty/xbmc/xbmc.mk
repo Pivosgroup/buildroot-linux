@@ -4,7 +4,7 @@
 #
 #################################################################################
 
-XBMC_VERSION = 99812418d0a83c57716d18c6edd84b707fda47e1
+XBMC_VERSION = c660cadfa08ead978682aa93030c68c84350424f
 XBMC_SITE_METHOD = git
 XBMC_SITE = git://github.com/Pivosgroup/xbmc.git
 XBMC_INSTALL_STAGING = YES
