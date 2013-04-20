@@ -2,6 +2,11 @@
   <enablenetworkmanager>1</enablenetworkmanager>
   <showexitbutton>false</showexitbutton>
 
+  <pvr>
+    <minvideocachelevel>50</minvideocachelevel>
+    <minaudiocachelevel>50</minaudiocachelevel>
+  </pvr>
+
   <hidesettings>
     <setting>lookandfeel.soundskin</setting>
     <setting>videoplayer.rendermethod</setting>
@@ -21,5 +26,4 @@
     <setting>input.remoteaskeyboard</setting>
     <setting>audiooutput.guisoundmode</setting>
   </hidesettings>
-
 </advancedsettings>
