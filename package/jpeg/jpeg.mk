@@ -3,7 +3,7 @@
 # jpeg (libraries needed by some apps)
 #
 #############################################################
-JPEG_VERSION = 1.1.90
+JPEG_VERSION = 1.2.1
 JPEG_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/libjpeg-turbo
 JPEG_SOURCE = libjpeg-turbo-$(JPEG_VERSION).tar.gz
 JPEG_INSTALL_STAGING = YES
