@@ -1,6 +1,6 @@
 LIRC_VERSION = 0.8.7
 LIRC_SOURCE = lirc-$(LIRC_VERSION).tar.gz
-LIRC_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/lirc
+LIRC_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/project/lirc/LIRC/$(LIRC_VERSION)
 LIRC_INSTALL_STAGING = YES
 LIRC_INSTALL_TARGET = YES
 LIRC_DEPENDENCIES = linux26
