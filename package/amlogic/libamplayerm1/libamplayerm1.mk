@@ -35,6 +35,7 @@ define LIBAMPLAYERM1_INSTALL_STAGING_CMDS
 	install -m 644 $(@D)/usr/include/amlplayer/ppmgr/*.h $(STAGING_DIR)/usr/include/amlplayer/ppmgr
 	mkdir -p $(STAGING_DIR)/usr/lib
 	install -m 755 $(@D)/usr/lib/*.so* $(STAGING_DIR)/usr/lib
+	ln -s $(STAGING_DIR)/usr/lib/libamcodec.so.0.0 $(STAGING_DIR)/usr/lib/libamcodec.so
 
 	#temporary, until we sync with mainline xbmc
 	cp -rf $(@D)/usr/include/amlplayer/* $(STAGING_DIR)/usr/include
@@ -47,6 +48,7 @@ define LIBAMPLAYERM1_INSTALL_TARGET_CMDS
 	install -m 644 $(@D)/lib/firmware/*.bin $(TARGET_DIR)/lib/firmware
 	mkdir -p $(TARGET_DIR)/usr/lib
 	install -m 755 $(@D)/usr/lib/*.so* $(TARGET_DIR)/usr/lib
+	ln -s $(TARGET_DIR)/usr/lib/libamcodec.so.0.0 $(TARGET_DIR)/usr/lib/libamcodec.so
 endef
 
 $(eval $(call GENTARGETS,package/amlogic,libamplayerm1))
