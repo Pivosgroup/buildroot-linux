@@ -1,0 +1,109 @@
+From a0dc617831006fd351cdd988599c5ff10c11763b Mon Sep 17 00:00:00 2001
+From: Trent Nelson <trent.nelson@pivosgroup.com>
+Date: Fri, 18 Oct 2013 18:25:40 -0400
+Subject: [PATCH 3/4] usbmount use fs label as mount point
+
+---
+ usbmount      | 42 +++++++++++++++++++++++++++++-------------
+ usbmount.conf |  3 +--
+ 2 files changed, 30 insertions(+), 15 deletions(-)
+
+diff --git a/usbmount b/usbmount
+index d51c68a..4521aa5 100755
+--- a/usbmount
++++ b/usbmount
+@@ -49,6 +49,7 @@ FILESYSTEMS=
+ MOUNTOPTIONS=
+ FS_MOUNTOPTIONS=
+ VERBOSE=no
++MOUNT_BASE=/media
+ 
+ if [ -r /etc/usbmount/usbmount.conf ]; then
+     . /etc/usbmount/usbmount.conf
+@@ -91,6 +92,7 @@ if [ "$1" = add ]; then
+     FSTYPE=$(echo "$DEVINFO" | sed -ne 's/.*[[:blank:]]TYPE="\([^"]*\)".*/\1/pg; s/[[:blank:]]*//g;')
+     UUID=$(echo "$DEVINFO"   | sed -ne 's/.*[[:blank:]]UUID="\([^"]*\)".*/\1/pg; s/[[:blank:]]*//g;')
+     USAGE=$(echo "$DEVINFO"  | sed -ne 's/.*[[:blank:]]USAGE="\([^"]*\)".*/\1/pg; s/[[:blank:]]*//g;')
++    LABEL=$(echo "$DEVINFO"  | sed -ne 's/.*[[:blank:]]LABEL="\([^"]*\)".*/\1/pg; s/[[:blank:]]*//g;')
+ 
+     if ! echo $USAGE | egrep -q "(filesystem|disklabel)"; then
+ 	log info "$DEVNAME does not contain a filesystem or disklabel"
+@@ -113,14 +115,20 @@ if [ "$1" = add ]; then
+ 	# Test if the filesystem type is in the list of filesystem
+ 	# types to mount.
+ 	if in_list "$fstype" "$FILESYSTEMS"; then
+-	    # Search an available mountpoint.
+-	    for v in $MOUNTPOINTS; do
+-		if [ -d "$v" ] && ! grep -q "^[^ ][^ ]*  *$v " /proc/mounts; then
+-		    mountpoint="$v"
+-		    log debug "mountpoint $mountpoint is available for $DEVNAME"
+-		    break
+-		fi
+-	    done
++            if [ -n "${LABEL}" ]; then
++              mountpoint="${MOUNT_BASE}/${LABEL}"
++            elif [ -n "$DEVNAME" ]; then
++              mountpoint="${MOUNT_BASE}/`basename ${DEVNAME}`"
++            else
++              # Search an available mountpoint.
++              for v in $MOUNTPOINTS; do
++                  if [ -d "$v" ] && ! grep -q "^[^ ][^ ]*  *$v " /proc/mounts; then
++                      mountpoint="$v"
++                      log debug "mountpoint $mountpoint is available for $DEVNAME"
++                      break
++                  fi
++              done
++            fi
+ 	    if [ -n "$mountpoint" ]; then
+ 		# Determine mount options.
+ 		options=
+@@ -134,6 +142,10 @@ if [ "$1" = add ]; then
+ 		    options="$MOUNTOPTIONS${options:+,$options}"
+ 		fi
+ 
++                if ! [ -d "$mountpoint" ]; then
++                  mkdir -p "$mountpoint"
++                fi
++
+ 		# Mount the filesystem.
+ 		log info "executing command: mount -t$fstype ${options:+-o$options} $DEVNAME $mountpoint"
+ 		mount "-t$fstype" "${options:+-o$options}" "$DEVNAME" "$mountpoint"
+@@ -187,8 +299,7 @@ elif [ "$1" = remove ]; then
+ 	if [ "$DEVNAME" = "$device" ]; then
+ 	    # If the mountpoint and filesystem type are maintained by
+ 	    # this script, unmount the filesystem.
+-	    if in_list "$mountpoint" "$MOUNTPOINTS" &&
+-		in_list "$fstype" "$FILESYSTEMS"; then
++	    if in_list "$fstype" "$FILESYSTEMS"; then
+ 		log info "executing command: umount -l ${DEVNAME}"
+ 		umount -l "${DEVNAME}"
+ 
+@@ -198,6 +209,11 @@ elif [ "$1" = remove ]; then
+ 		export UM_FILESYSTEM="$fstype"
+ 		log info "executing command: run-parts /etc/usbmount/umount.d"
+ 		run-parts /etc/usbmount/umount.d || :
++                
++                #remove the mountpoint if it's empty and not mounted
++                if ! [ "$(ls -A $mountpoint 2>&1)" ] && ! grep -q $mountpoint /proc/mounts; then
++                  rm -f $mountpoint
++                fi
+ 	    fi
+ 	    break
+ 	fi
+diff --git a/usbmount.conf b/usbmount.conf
+index c85bd61..90c82d3 100644
+--- a/usbmount.conf
++++ b/usbmount.conf
+@@ -9,8 +9,7 @@ ENABLED=1
+ # removable storage devices.  A newly plugged in device is mounted on
+ # the first directory in this list that exists and on which nothing is
+ # mounted yet.
+-MOUNTPOINTS="/media/usb0 /media/usb1 /media/usb2 /media/usb3
+-             /media/usb4 /media/usb5 /media/usb6 /media/usb7"
++MOUNTPOINTS=""
+ 
+ # Filesystem types: removable storage devices are only mounted if they
+ # contain a filesystem type which is in this list.
+-- 
+1.8.1.2
+

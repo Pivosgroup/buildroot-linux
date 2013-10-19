@@ -1,0 +1,28 @@
+From 0c8a174f1fb63a791228ea8b00989e18be7f4c96 Mon Sep 17 00:00:00 2001
+From: Trent Nelson <trent.nelson@pivosgroup.com>
+Date: Fri, 18 Oct 2013 23:45:59 -0400
+Subject: [PATCH 2/4] Umount the dev node, not the mountpoint.
+
+The mountpoint may have been mounted over.
+---
+ usbmount | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/usbmount b/usbmount
+index f887f68..d51c68a 100755
+--- a/usbmount
++++ b/usbmount
+@@ -189,8 +189,8 @@ elif [ "$1" = remove ]; then
+ 	    # this script, unmount the filesystem.
+ 	    if in_list "$mountpoint" "$MOUNTPOINTS" &&
+ 		in_list "$fstype" "$FILESYSTEMS"; then
+-		log info "executing command: umount -l $mountpoint"
+-		umount -l "$mountpoint"
++		log info "executing command: umount -l ${DEVNAME}"
++		umount -l "${DEVNAME}"
+ 
+ 		# Run hook scripts; ignore errors.
+ 		export UM_DEVICE="$DEVNAME"
+-- 
+1.8.1.2
+

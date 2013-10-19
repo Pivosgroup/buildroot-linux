@@ -1,0 +1,39 @@
+From f943f84bec48074ef3aa25cd323234dbcfcc944e Mon Sep 17 00:00:00 2001
+From: Trent Nelson <trent.nelson@pivosgroup.com>
+Date: Fri, 18 Oct 2013 23:51:46 -0400
+Subject: [PATCH 4/4] Make umount safe from whitespace in the mountpoint
+
+---
+ usbmount | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/usbmount b/usbmount
+index 4521aa5..daf4d78 100755
+--- a/usbmount
++++ b/usbmount
+@@ -195,7 +195,7 @@ elif [ "$1" = remove ]; then
+ 
+     # A block or partition device has been removed.
+     # Test if it is mounted.
+-    while read device mountpoint fstype remainder; do
++    while read -r device mountpoint fstype remainder; do
+ 	if [ "$DEVNAME" = "$device" ]; then
+ 	    # If the mountpoint and filesystem type are maintained by
+ 	    # this script, unmount the filesystem.
+@@ -211,8 +211,11 @@ elif [ "$1" = remove ]; then
+ 		run-parts /etc/usbmount/umount.d || :
+                 
+                 #remove the mountpoint if it's empty and not mounted
+-                if ! [ "$(ls -A $mountpoint 2>&1)" ] && ! grep -q $mountpoint /proc/mounts; then
+-                  rm -f $mountpoint
++                mp=$(echo "$mountpoint" | awk '{gsub("\\\\011", "\t", $0) || gsub("\\\\012", "\n", $0) || gsub("\\\\040", " ", $0) || gsub("\\\\134", "\\", $0); print}')
++                if ! grep -q "$(echo $mountpoint | sed -e 's/\\/\\\\/g')" /proc/mounts; then
++                  if ! [ "$(ls -A \"$mp\" &> /dev/null)" ]; then
++                    rm -r "$mp"
++                  fi
+                 fi
+ 	    fi
+ 	    break
+-- 
+1.8.1.2
+
