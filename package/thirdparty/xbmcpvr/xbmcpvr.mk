@@ -1,5 +1,5 @@
-XBMCPVR_VERSION = d37ec1d7c536654fd4ffc3e40d116586d2a57283
-XBMCPVR_SITE = git://github.com/opdenkamp/xbmc-pvr-addons.git
+XBMCPVR_VERSION = 0c0ed7de451a1e61938eb125e01a8d1a972ec79c
+XBMCPVR_SITE = git://github.com/Pivosgroup/pivos-pvr-addons.git
 XBMCPVR_AUTORECONF = YES
 XBMCPVR_INSTALL_STAGING = YES
 XBMCPVR_INSTALL_TARGET = YES
