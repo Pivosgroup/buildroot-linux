@@ -15,19 +15,12 @@ else
 LIBXSLT_XTRA_CONF_OPT = --without-crypto
 endif
 
-LIBXSLT_CONF_OPT = --with-gnu-ld --enable-shared \
-		--enable-static $(LIBXSLT_XTRA_CONF_OPT) \
-		--without-debugging --without-python \
-		--without-threads \
-		--with-libxml-prefix=$(STAGING_DIR)/usr/
+LIBXSLT_CONF_OPT = --with-gnu-ld $(LIBXSLT_XTRA_CONF_OPT) --without-debug \
+		--without-python --with-libxml-prefix=$(STAGING_DIR)/usr/
 
 LIBXSLT_DEPENDENCIES = libxml2 $(LIBXSLT_DEPENDENCIES_EXTRA)
 
-HOST_LIBXSLT_CONF_OPT = --enable-shared \
-			--without-debugging \
-			--without-python \
-			--without-threads \
-			--without-crypto
+HOST_LIBXSLT_CONF_OPT = --without-debug --without-python --without-crypto
 
 HOST_LIBXSLT_DEPENDENCIES = host-libxml2
 
@@ -39,5 +32,13 @@ endef
 
 LIBXSLT_POST_INSTALL_STAGING_HOOKS += LIBXSLT_XSLT_CONFIG_FIXUP
 
-$(eval $(call AUTOTARGETS,package,libxslt))
-$(eval $(call AUTOTARGETS,package,libxslt,host))
+define LIBXSLT_REMOVE_CONFIG_SCRIPTS
+	$(RM) -f $(TARGET_DIR)/usr/bin/xslt-config
+endef
+
+ifneq ($(BR2_HAVE_DEVFILES),y)
+LIBXSLT_POST_INSTALL_TARGET_HOOKS += LIBXSLT_REMOVE_CONFIG_SCRIPTS
+endif
+
+$(eval $(call AUTOTARGETS))
+$(eval $(call AUTOTARGETS,host))

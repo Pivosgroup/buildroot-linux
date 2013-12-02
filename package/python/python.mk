@@ -4,7 +4,7 @@
 #
 #############################################################
 PYTHON_VERSION_MAJOR = 2.7
-PYTHON_VERSION       = $(PYTHON_VERSION_MAJOR).1
+PYTHON_VERSION       = $(PYTHON_VERSION_MAJOR).2
 PYTHON_SOURCE        = Python-$(PYTHON_VERSION).tar.bz2
 PYTHON_SITE          = http://python.org/ftp/python/$(PYTHON_VERSION)
 
@@ -36,6 +36,19 @@ HOST_PYTHON_MAKE_ENV = \
 	PYTHON_MODULES_LIB="$(HOST_DIR)/lib $(HOST_DIR)/usr/lib"
 
 HOST_PYTHON_AUTORECONF = YES
+
+define HOST_PYTHON_CONFIGURE_CMDS
+	(cd $(@D) && rm -rf config.cache; \
+	        $(HOST_CONFIGURE_OPTS) \
+		CFLAGS="$(HOST_CFLAGS)" \
+		LDFLAGS="$(HOST_LDFLAGS)" \
+                $(HOST_PYTHON_CONF_ENV) \
+		./configure \
+		--prefix="$(HOST_DIR)/usr" \
+		--sysconfdir="$(HOST_DIR)/etc" \
+		$(HOST_PYTHON_CONF_OPT) \
+	)
+endef
 
 PYTHON_DEPENDENCIES  = host-python libffi
 
@@ -147,5 +160,5 @@ PYTHON_POST_INSTALL_TARGET_HOOKS += PYTHON_REMOVE_USELESS_FILES
 
 PYTHON_AUTORECONF = YES
 
-$(eval $(call AUTOTARGETS,package,python))
-$(eval $(call AUTOTARGETS,package,python,host))
+$(eval $(call AUTOTARGETS))
+$(eval $(call AUTOTARGETS,host))

@@ -4,14 +4,20 @@
 #
 #############################################################
 
-USBUTILS_VERSION = 0.91
+USBUTILS_VERSION = 004
 USBUTILS_SITE = $(BR2_KERNEL_MIRROR)/linux/utils/usb/usbutils
-USBUTILS_DEPENDENCIES = host-pkg-config libusb-compat
+USBUTILS_DEPENDENCIES = host-pkg-config libusb
+USBUTILS_INSTALL_STAGING = YES
 
 ifeq ($(BR2_PACKAGE_USBUTILS_ZLIB),y)
 	USBUTILS_DEPENDENCIES += zlib
 else
 	USBUTILS_CONF_OPT = --disable-zlib
+endif
+
+# Build after busybox since it's got a lightweight lsusb
+ifeq ($(BR2_PACKAGE_BUSYBOX),y)
+	USBUTILS_DEPENDENCIES += busybox
 endif
 
 define USBUTILS_TARGET_CLEANUP
@@ -44,4 +50,4 @@ ifneq ($(BR2_HAVE_DEVFILES),y)
 USBUTILS_POST_INSTALL_TARGET_HOOKS += USBUTILS_REMOVE_DEVFILES
 endif
 
-$(eval $(call AUTOTARGETS,package,usbutils))
+$(eval $(call AUTOTARGETS))

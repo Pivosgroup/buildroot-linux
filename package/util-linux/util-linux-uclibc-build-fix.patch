@@ -13,3 +13,4 @@ Index: util-linux-2.19.1/configure.ac
                 [program_invocation_short_name = "test";],
                 AC_DEFINE(HAVE_PROGRAM_INVOCATION_SHORT_NAME, 1,
                           [Define if program_invocation_short_name is defined])
+

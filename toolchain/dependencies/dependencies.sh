@@ -40,6 +40,14 @@ if test -n "$PATH" ; then
 	fi
 fi;
 
+if test -n "$PERL_MM_OPT" ; then
+    /bin/echo -e "\nYou have PERL_MM_OPT defined because Perl local::lib"
+    /bin/echo -e "is installed on your system. Please unset this variable"
+    /bin/echo -e "before starting Buildroot, otherwise the compilation of"
+    /bin/echo -e "Perl related packages will fail"
+    exit 1
+fi
+
 # Verify that which is installed
 if ! which which > /dev/null ; then
 	/bin/echo -e "\nYou must install 'which' on your build machine\n";
@@ -123,7 +131,7 @@ if ! $SHELL --version 2>&1 | grep -q '^GNU bash'; then
 fi;
 
 # Check that a few mandatory programs are installed
-for prog in awk bison flex msgfmt makeinfo patch gzip bzip2 perl tar wget cpio python unzip ${DL_TOOLS} ; do
+for prog in awk bison flex msgfmt makeinfo patch gzip bzip2 perl tar wget cpio python unzip rsync ${DL_TOOLS} ; do
     if ! which $prog > /dev/null ; then
 	/bin/echo -e "\nYou must install '$prog' on your build machine";
 	if test $prog = "makeinfo" ; then

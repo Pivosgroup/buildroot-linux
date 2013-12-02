@@ -3,9 +3,9 @@
 # mtd provides jffs2 utilities
 #
 #############################################################
-MTD_VERSION:=1.4.2
-MTD_SOURCE:=mtd-utils-$(MTD_VERSION).tar.bz2
-MTD_SITE:=ftp://ftp.infradead.org/pub/mtd-utils
+MTD_VERSION = 1.4.6
+MTD_SOURCE = mtd-utils-$(MTD_VERSION).tar.bz2
+MTD_SITE = ftp://ftp.infradead.org/pub/mtd-utils
 ifeq ($(BR2_PACKAGE_MTD_MKFSJFFS2),y)
 MTD_DEPENDENCIES = zlib lzo
 endif
@@ -22,8 +22,8 @@ define HOST_MTD_INSTALL_CMDS
 	$(MAKE1) BUILDDIR=$(@D) DESTDIR=$(HOST_DIR) -C $(@D) install
 endef
 
-MKFS_JFFS2=$(HOST_DIR)/usr/sbin/mkfs.jffs2
-SUMTOOL=$(HOST_DIR)/usr/sbin/sumtool
+MKFS_JFFS2 = $(HOST_DIR)/usr/sbin/mkfs.jffs2
+SUMTOOL = $(HOST_DIR)/usr/sbin/sumtool
 
 MTD_TARGETS_$(BR2_PACKAGE_MTD_DOCFDISK)		+= docfdisk
 MTD_TARGETS_$(BR2_PACKAGE_MTD_DOC_LOADBIOS)	+= doc_loadbios
@@ -91,12 +91,12 @@ endef
 
 define MTD_INSTALL_TARGET_CMDS
  for f in $(MTD_TARGETS_y) ; do \
-  install -m 0755 $(@D)/$$f $(TARGET_DIR)/usr/sbin/$$f ; \
+  install -D -m 0755 $(@D)/$$f $(TARGET_DIR)/usr/sbin/$$f ; \
  done ; \
  for f in $(MTD_TARGETS_UBI_y) ; do \
-  install -m 0755 $(@D)/ubi-utils/$$f $(TARGET_DIR)/usr/sbin/$$f ; \
+  install -D -m 0755 $(@D)/ubi-utils/$$f $(TARGET_DIR)/usr/sbin/$$f ; \
  done
 endef
 
-$(eval $(call GENTARGETS,package,mtd))
-$(eval $(call GENTARGETS,package,mtd,host))
+$(eval $(call GENTARGETS))
+$(eval $(call GENTARGETS,host))

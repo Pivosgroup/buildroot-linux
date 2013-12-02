@@ -24,7 +24,7 @@ xfsprogs-source: $(DL_DIR)/$(XFSPROGS_SOURCE)
 
 $(XFSPROGS_DIR)/.unpacked: $(DL_DIR)/$(XFSPROGS_SOURCE)
 	$(XFSPROGS_CAT) $(DL_DIR)/$(XFSPROGS_SOURCE) | tar -C $(BUILD_DIR) $(TAR_OPTIONS) -
-	toolchain/patch-kernel.sh $(XFSPROGS_DIR) package/xfsprogs/ xfsprogs\*.patch
+	support/scripts/apply-patches.sh $(XFSPROGS_DIR) package/xfsprogs/ xfsprogs\*.patch
 	touch $(XFSPROGS_DIR)/.unpacked
 
 #XFSPROGS_CONFIG_SHARED:=--disable-shared
@@ -77,7 +77,7 @@ $(TARGET_DIR)/$(XFSPROGS_TARGET_BINARY): $(XFSPROGS_DIR)/$(XFSPROGS_BINARY)
 	rm -rf $(TARGET_DIR)/usr/man $(TARGET_DIR)/usr/share/doc
 	touch -c $(TARGET_DIR)/$(XFSPROGS_TARGET_BINARY)
 
-xfsprogs: e2fsprogs $(TARGET_DIR)/$(XFSPROGS_TARGET_BINARY)
+xfsprogs: util-linux $(TARGET_DIR)/$(XFSPROGS_TARGET_BINARY)
 
 xfsprogs-clean:
 	rm -f $(TARGET_DIR)/bin/xfs_* $(TARGET_DIR)/sbin/xfs_* $(TARGET_DIR)/sbin/*.xfs

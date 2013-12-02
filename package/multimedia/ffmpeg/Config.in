@@ -1,9 +1,10 @@
-comment "ffmpeg requires a toolchain with LARGEFILE support"
-	depends on !BR2_LARGEFILE
+comment "ffmpeg requires a toolchain with LARGEFILE and IPV6 support"
+	depends on !(BR2_LARGEFILE && BR2_INET_IPV6)
 
 menuconfig BR2_PACKAGE_FFMPEG
 	bool "ffmpeg"
 	depends on BR2_LARGEFILE
+	depends on BR2_INET_IPV6
 	help
          FFmpeg is a complete, cross-platform solution to record, convert
          and stream audio and video.
@@ -26,6 +27,7 @@ config BR2_PACKAGE_FFMPEG_NONFREE
 
 config BR2_PACKAGE_FFMPEG_FFMPEG
 	bool "Build ffmpeg (the command line application)"
+	select BR2_PACKAGE_FFMPEG_SWSCALE
 	default y
 	help
          FFmpeg is a very fast video and audio converter.

@@ -4,7 +4,7 @@
 #
 #############################################################
 
-OPENSSL_VERSION = 1.0.0d
+OPENSSL_VERSION = 1.0.0e
 OPENSSL_SITE = http://www.openssl.org/source
 OPENSSL_INSTALL_STAGING = YES
 OPENSSL_DEPENDENCIES = zlib
@@ -37,6 +37,11 @@ ifeq ($(ARCH),powerpc)
 endif
 ifeq ($(ARCH),x86_64)
 	OPENSSL_TARGET_ARCH = x86_64
+endif
+
+# Workaround for bug #3445
+ifeq ($(BR2_x86_i386),y)
+	OPENSSL_TARGET_ARCH = generic32 386
 endif
 
 define OPENSSL_CONFIGURE_CMDS
@@ -115,4 +120,4 @@ define OPENSSL_UNINSTALL_CMDS
 	rm -rf $(addprefix $(STAGING_DIR)/usr/lib/,ssl engines libcrypto* libssl* pkgconfig/libcrypto.pc)
 endef
 
-$(eval $(call GENTARGETS,package,openssl))
+$(eval $(call GENTARGETS))

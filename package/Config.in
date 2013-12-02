@@ -3,12 +3,6 @@ menu "Package Selection for the target"
 source "package/busybox/Config.in"
 source "package/customize/Config.in"
 
-# AMLogic libs and programs
-source "package/amlogic/Config.in"
-
-#Non-buildroot libs and programs
-source "package/thirdparty/Config.in"
-
 # Audio and video applications
 source "package/multimedia/Config.in"
 
@@ -23,6 +17,7 @@ source "package/xz/Config.in"
 endmenu
 
 menu "Debugging, profiling and benchmark"
+source "package/bonnie/Config.in"
 source "package/dhrystone/Config.in"
 source "package/dmalloc/Config.in"
 source "package/kexec/Config.in"
@@ -36,6 +31,7 @@ source "package/oprofile/Config.in"
 source "package/strace/Config.in"
 source "package/whetstone/Config.in"
 source "package/valgrind/Config.in"
+source "package/pv/Config.in"
 endmenu
 
 menu "Development tools"
@@ -53,7 +49,6 @@ if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
 source "package/diffutils/Config.in"
 endif
 source "package/distcc/Config.in"
-source "package/fakeroot/Config.in"
 if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
 source "package/findutils/Config.in"
 endif
@@ -133,6 +128,7 @@ comment "X Window managers"
 source "package/matchbox/Config.in"
 source "package/metacity/Config.in"
 source "package/blackbox/Config.in"
+source "package/fluxbox/Config.in"
 
 comment "X applications"
 source "package/alsamixergui/Config.in"
@@ -148,6 +144,7 @@ source "package/rdesktop/Config.in"
 source "package/sylpheed/Config.in"
 source "package/synergy/Config.in"
 source "package/torsmo/Config.in"
+source "package/vala/Config.in"
 source "package/x11vnc/Config.in"
 source "package/xstroke/Config.in"
 source "package/xterm/Config.in"
@@ -171,20 +168,22 @@ source "package/eeprog/Config.in"
 source "package/fconfig/Config.in"
 source "package/fis/Config.in"
 source "package/gadgetfs-test/Config.in"
+source "package/gdisk/Config.in"
 source "package/genext2fs/Config.in"
 source "package/genromfs/Config.in"
 source "package/gpsd/Config.in"
 source "package/gvfs/Config.in"
-source "package/hal/Config.in"
 if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
 source "package/hdparm/Config.in"
 endif
 source "package/hwdata/Config.in"
 source "package/i2c-tools/Config.in"
+source "package/input-event-daemon/Config.in"
 source "package/input-tools/Config.in"
 source "package/iostat/Config.in"
 source "package/irda-utils/Config.in"
 source "package/kbd/Config.in"
+source "package/libv4l/Config.in"
 source "package/lm-sensors/Config.in"
 source "package/lsuio/Config.in"
 source "package/lvm2/Config.in"
@@ -194,19 +193,21 @@ source "package/memtester/Config.in"
 source "package/mtd/Config.in"
 source "package/ntfs-3g/Config.in"
 source "package/ntfsprogs/Config.in"
+source "package/openocd/Config.in"
 source "package/pciutils/Config.in"
+source "package/picocom/Config.in"
 source "package/rng-tools/Config.in"
 source "package/sdparm/Config.in"
 source "package/setserial/Config.in"
-if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
-# busybox has fdisk
-source "package/sfdisk/Config.in"
-endif
 source "package/smartmontools/Config.in"
 source "package/squashfs/Config.in"
 source "package/squashfs3/Config.in"
+source "package/sredird/Config.in"
 source "package/sshfs/Config.in"
+source "package/statserial/Config.in"
 source "package/sysstat/Config.in"
+source "package/ti-utils/Config.in"
+source "package/uboot-tools/Config.in"
 source "package/udev/Config.in"
 source "package/usb_modeswitch/Config.in"
 source "package/usbmount/Config.in"
@@ -248,8 +249,10 @@ endmenu
 
 menu "Crypto"
 source "package/beecrypt/Config.in"
+source "package/gnutls/Config.in"
 source "package/libgcrypt/Config.in"
 source "package/libgpg-error/Config.in"
+source "package/libnss/Config.in"
 source "package/openssl/Config.in"
 endmenu
 
@@ -263,7 +266,7 @@ menu "Filesystem"
 source "package/gamin/Config.in"
 source "package/libconfig/Config.in"
 source "package/libconfuse/Config.in"
-source "package/fuse/Config.in"
+source "package/libfuse/Config.in"
 source "package/liblockfile/Config.in"
 source "package/libsysfs/Config.in"
 endmenu
@@ -279,14 +282,18 @@ source "package/gtk2-themes/Config.in"
 source "package/jpeg/Config.in"
 source "package/libart/Config.in"
 source "package/libdrm/Config.in"
+source "package/libexif/Config.in"
 source "package/libgail/Config.in"
+source "package/libgeotiff/Config.in"
 source "package/libglade/Config.in"
 source "package/gdk-pixbuf/Config.in"
 source "package/libgtk2/Config.in"
 source "package/libpng/Config.in"
+source "package/libraw/Config.in"
 source "package/librsvg/Config.in"
 source "package/libsvgtiny/Config.in"
 source "package/libungif/Config.in"
+source "package/opencv/Config.in"
 source "package/pango/Config.in"
 source "package/pixman/Config.in"
 source "package/tiff/Config.in"
@@ -297,7 +304,9 @@ menu "Hardware handling"
 source "package/libaio/Config.in"
 source "package/libraw1394/Config.in"
 source "package/tslib/Config.in"
+source "package/libftdi/Config.in"
 source "package/libhid/Config.in"
+source "package/libiqrf/Config.in"
 source "package/libusb/Config.in"
 source "package/libusb-compat/Config.in"
 source "package/python-serial/Config.in"
@@ -319,6 +328,8 @@ source "package/libeXosip2/Config.in"
 source "package/libidn/Config.in"
 source "package/libmicrohttpd/Config.in"
 source "package/neon/Config.in"
+source "package/libmnl/Config.in"
+source "package/libmodbus/Config.in"
 source "package/libnl/Config.in"
 source "package/libpcap/Config.in"
 source "package/libosip2/Config.in"
@@ -328,16 +339,21 @@ source "package/libupnp/Config.in"
 endmenu
 
 menu "Other"
+source "package/fftw/Config.in"
+source "package/libargtable2/Config.in"
 source "package/argp-standalone/Config.in"
 source "package/libatomic_ops/Config.in"
 source "package/libcap/Config.in"
 source "package/libdaemon/Config.in"
 source "package/libelf/Config.in"
 source "package/libevent/Config.in"
+source "package/libev/Config.in"
 source "package/libffi/Config.in"
 source "package/libglib2/Config.in"
-source "package/liboil/Config.in"
+source "package/libnspr/Config.in"
 source "package/libsigc/Config.in"
+source "package/orc/Config.in"
+source "package/poco/Config.in"
 source "package/startup-notification/Config.in"
 endmenu
 
@@ -353,13 +369,18 @@ source "package/readline/Config.in"
 source "package/slang/Config.in"
 endmenu
 
-menu "XML"
+menu "JSON/XML"
 source "package/expat/Config.in"
 source "package/ezxml/Config.in"
+source "package/json-c/Config.in"
+source "package/libroxml/Config.in"
 source "package/libxml-parser-perl/Config.in"
 source "package/libxml2/Config.in"
 source "package/libxslt/Config.in"
+source "package/libyaml/Config.in"
+source "package/mxml/Config.in"
 source "package/xerces/Config.in"
+source "package/yajl/Config.in"
 endmenu
 
 endmenu
@@ -372,30 +393,37 @@ menu "Networking applications"
 source "package/argus/Config.in"
 source "package/avahi/Config.in"
 source "package/axel/Config.in"
+source "package/bluez_utils/Config.in"
 if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
 source "package/boa/Config.in"
 endif
 source "package/bind/Config.in"
 source "package/bmon/Config.in"
 source "package/bridge-utils/Config.in"
-source "package/connman/Config.in"
+source "package/bwm-ng/Config.in"
+source "package/can-utils/Config.in"
 source "package/ctorrent/Config.in"
+source "package/cifs-utils/Config.in"
 source "package/cups/Config.in"
 if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
 source "package/dhcp/Config.in"
 endif
+source "package/dhcpdump/Config.in"
 source "package/dnsmasq/Config.in"
 source "package/dropbear/Config.in"
+source "package/ebtables/Config.in"
 source "package/ethtool/Config.in"
 source "package/hostapd/Config.in"
+if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
 source "package/ifplugd/Config.in"
+endif
 source "package/iperf/Config.in"
 source "package/iproute2/Config.in"
 source "package/ipsec-tools/Config.in"
+source "package/ipset/Config.in"
 source "package/iptables/Config.in"
 source "package/iw/Config.in"
 source "package/kismet/Config.in"
-source "package/xl2tp/Config.in"
 if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
 source "package/lighttpd/Config.in"
 endif
@@ -414,7 +442,10 @@ endif
 source "package/netplug/Config.in"
 source "package/netsnmp/Config.in"
 source "package/netstat-nat/Config.in"
+source "package/noip/Config.in"
 source "package/nfs-utils/Config.in"
+source "package/ngircd/Config.in"
+source "package/ngrep/Config.in"
 source "package/ntp/Config.in"
 source "package/nuttcp/Config.in"
 source "package/olsr/Config.in"
@@ -423,11 +454,11 @@ source "package/openssh/Config.in"
 source "package/openvpn/Config.in"
 source "package/portmap/Config.in"
 source "package/pppd/Config.in"
-source "package/radvd/Config.in"
-source "package/rp-pppoe/Config.in"
 source "package/pptp-linux/Config.in"
 source "package/proftpd/Config.in"
 source "package/quagga/Config.in"
+source "package/radvd/Config.in"
+source "package/rp-pppoe/Config.in"
 source "package/rsh-redone/Config.in"
 source "package/rsync/Config.in"
 source "package/samba/Config.in"
@@ -435,6 +466,7 @@ source "package/ser2net/Config.in"
 source "package/socat/Config.in"
 source "package/spawn-fcgi/Config.in"
 source "package/squid/Config.in"
+source "package/stunnel/Config.in"
 source "package/tcpdump/Config.in"
 source "package/tcpreplay/Config.in"
 if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
@@ -448,12 +480,12 @@ source "package/udpcast/Config.in"
 source "package/vpnc/Config.in"
 source "package/vsftpd/Config.in"
 source "package/vtun/Config.in"
-source "package/webif/Config.in"
 if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
 source "package/wget/Config.in"
 endif
 source "package/wireless_tools/Config.in"
 source "package/wpa_supplicant/Config.in"
+source "package/xl2tp/Config.in"
 
 endmenu
 
@@ -464,6 +496,11 @@ source "package/rpm/Config.in"
 endif
 endmenu
 
+menu "Real-Time"
+source "package/xenomai/Config.in"
+source "package/rtai/Config.in"
+endmenu
+
 menu "Shell and utilities"
 source "package/at/Config.in"
 if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
@@ -472,24 +509,33 @@ source "package/dash/Config.in"
 endif
 source "package/dialog/Config.in"
 source "package/file/Config.in"
+source "package/inotify-tools/Config.in"
 source "package/lockfile-progs/Config.in"
 source "package/logrotate/Config.in"
 source "package/screen/Config.in"
 source "package/sudo/Config.in"
+if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
 source "package/which/Config.in"
+endif
 source "package/xmlstarlet/Config.in"
 endmenu
 
 menu "System tools"
+source "package/acl/Config.in"
+source "package/attr/Config.in"
 if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
 source "package/bootutils/Config.in"
+endif
+source "package/htop/Config.in"
+if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
 source "package/module-init-tools/Config.in"
 source "package/procps/Config.in"
 source "package/psmisc/Config.in"
+source "package/rsyslog/Config.in"
 source "package/sysklogd/Config.in"
 source "package/sysvinit/Config.in"
-source "package/util-linux/Config.in"
 endif
+source "package/util-linux/Config.in"
 source "package/dsp-tools/Config.in"
 endmenu
 
@@ -500,7 +546,6 @@ source "package/less/Config.in"
 endif
 source "package/nano/Config.in"
 source "package/uemacs/Config.in"
-source "package/thirdparty/joe/Config.in"
 if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
 source "package/vim/Config.in"
 endif

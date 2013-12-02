@@ -8,7 +8,6 @@ TCL_SOURCE:=tcl$(TCL_VERSION)-src.tar.gz
 TCL_SITE:=http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/tcl
 TCL_SUBDIR = unix
 TCL_CONF_OPT = \
-		--enable-shared \
 		--disable-symbols \
 		--disable-langinfo \
 		--disable-framework
@@ -25,4 +24,4 @@ endef
 
 TCL_POST_INSTALL_TARGET_HOOKS += TCL_POST_INSTALL_CLEANUP
 
-$(eval $(call AUTOTARGETS,package,tcl))
+$(eval $(call AUTOTARGETS))

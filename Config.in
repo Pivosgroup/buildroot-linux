@@ -32,6 +32,10 @@ config BR2_GIT
 	string "Git command"
 	default "git"
 
+config BR2_LOCALFILES
+	string "Local files retrieval command"
+	default "cp"
+
 config BR2_ZCAT
 	string "zcat command"
 	default "gzip -d -c"
@@ -51,6 +55,13 @@ config BR2_BZCAT
 	  not be available on your system.
 	  Default is "bzcat"
 	  Other possible values include "bunzip2 -c" or "bzip2 -d -c".
+
+config BR2_XZCAT
+	string "xzcat command"
+	default "xzcat"
+	help
+	  Command to be used to extract a xz'ed file to stdout.
+	  Default is "xzcat"
 
 config BR2_TAR_OPTIONS
 	string "Tar options"
@@ -326,6 +337,16 @@ config BR2_HAVE_DEVFILES
 	help
 	  Install headers and static libraries in the
 	  target filesystem
+
+config BR2_PACKAGE_OVERRIDE_FILE
+	string "location of a package override file"
+	default "$(TOPDIR)/local.mk"
+	help
+	  A package override file is a short makefile that contains
+	  variable definitions of the form <pkg>_OVERRIDE_SRCDIR,
+	  which allows to tell Buildroot to use an existing directory
+	  as the source directory for a particular package. See the
+	  Buildroot documentation for more details on this feature.
 
 endmenu
 

@@ -20,13 +20,15 @@ define USBMOUNT_INSTALL_TARGET_CMDS
 	@if [ ! -f $(TARGET_DIR)/etc/usbmount/usbmount.conf ]; then \
 	        $(INSTALL) -m 0644 -D $(@D)/usbmount.conf $(TARGET_DIR)/etc/usbmount/usbmount.conf; \
 	fi
+
+	mkdir -p $(addprefix $(TARGET_DIR)/media/usb,0 1 2 3 4 5 6 7)
 endef
 
 define USBMOUNT_UNINSTALL_TARGET_CMDS
-	rm -rf $(TARGET_DIR)/etc/usbmount.d			\
-	       $(TARGET_DIR)/etc/usbmount.conf			\
+	rm -rf $(TARGET_DIR)/etc/usbmount			\
 		$(TARGET_DIR)/usr/share/usbmount/usbmount	\
-		$(TARGET_DIR)/lib/udev/rules.d/usbmount.rules
+		$(TARGET_DIR)/lib/udev/rules.d/usbmount.rules	\
+		$(TARGET_DIR)/media/usb?
 endef
 
-$(eval $(call GENTARGETS,package,usbmount))
+$(eval $(call GENTARGETS))

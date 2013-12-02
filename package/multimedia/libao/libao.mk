@@ -4,7 +4,7 @@
 #
 #############################################################
 
-LIBAO_VERSION = 1.0.0
+LIBAO_VERSION = 1.1.0
 LIBAO_SITE = http://downloads.xiph.org/releases/ao
 LIBAO_DEPENDENCIES = host-pkg-config
 LIBAO_INSTALL_STAGING = YES
@@ -18,4 +18,4 @@ else
 LIBAO_CONF_OPT += --disable-alsa
 endif
 
-$(eval $(call AUTOTARGETS,package/multimedia,libao))
+$(eval $(call AUTOTARGETS))

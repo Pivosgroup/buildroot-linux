@@ -19,10 +19,10 @@ if BR2_LINUX_KERNEL
 #
 choice
 	prompt "Kernel version"
-	default BR2_LINUX_KERNEL_2_6_37
+	default BR2_LINUX_KERNEL_3_1
 
-config BR2_LINUX_KERNEL_2_6_37
-	bool "2.6.37.2"
+config BR2_LINUX_KERNEL_3_1
+	bool "3.1.4"
 
 config BR2_LINUX_KERNEL_SAME_AS_HEADERS
 	bool "Same as toolchain kernel headers"
@@ -47,23 +47,38 @@ config BR2_LINUX_KERNEL_CUSTOM_TARBALL
 	  This option allows to specify the http or ftp location of a
 	  specific kernel source tarball
 
+config BR2_LINUX_KERNEL_CUSTOM_GIT
+	bool "Custom Git tree"
+	help
+	  This option allows Buildroot to get the Linux kernel source
+	  code from a Git repository.
+
 endchoice
 
 config BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE
 	string "Kernel version"
 	depends on BR2_LINUX_KERNEL_CUSTOM_VERSION
-	default "2.6.37.2"
+	default "3.1.4"
 
 config BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION
 	string "URL of custom kernel tarball"
 	depends on BR2_LINUX_KERNEL_CUSTOM_TARBALL
 
+config BR2_LINUX_KERNEL_CUSTOM_GIT_REPO_URL
+	string "URL of custom Git repository"
+	depends on BR2_LINUX_KERNEL_CUSTOM_GIT
+
+config BR2_LINUX_KERNEL_CUSTOM_GIT_VERSION
+	string "Custom Git version"
+	depends on BR2_LINUX_KERNEL_CUSTOM_GIT
+
 config BR2_LINUX_KERNEL_VERSION
 	string
-	default "2.6.37" if BR2_LINUX_KERNEL_2_6_37
+	default "3.1.4" if BR2_LINUX_KERNEL_3_1
 	default BR2_DEFAULT_KERNEL_HEADERS if BR2_LINUX_KERNEL_SAME_AS_HEADERS
 	default BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE if BR2_LINUX_KERNEL_CUSTOM_VERSION
 	default "custom" if BR2_LINUX_KERNEL_CUSTOM_TARBALL
+	default $BR2_LINUX_KERNEL_CUSTOM_GIT_VERSION if BR2_LINUX_KERNEL_CUSTOM_GIT
 
 #
 # Patch selection
@@ -131,9 +146,42 @@ config BR2_LINUX_KERNEL_VMLINUX_BIN
 
 config BR2_LINUX_KERNEL_VMLINUX
 	bool "vmlinux"
+
+config BR2_LINUX_KERNEL_VMLINUZ
+	bool "vmlinuz"
 	depends on BR2_mips || BR2_mipsel
 
+config BR2_LINUX_KERNEL_IMAGE_TARGET_CUSTOM
+	bool "custom target"
+	help
+	  For certain cases a board-specific target image must be
+	  used.  For example, on powerPC where the OpenFirmware
+	  description is attached in a board-specific kernel image
+	  target like 'cuImage.mpc8379_rdb'.
+
+	  Select this option and specify the make target in "Kernel
+	  image target name".
+
 endchoice
+
+config BR2_LINUX_KERNEL_IMAGE_TARGET_NAME
+	string "Kernel image target name"
+	depends on BR2_LINUX_KERNEL_IMAGE_TARGET_CUSTOM
+	help
+	  Specify the kernel make target to build the kernel that you
+	  need.
+
+config BR2_LINUX_KERNEL_INSTALL_TARGET
+	bool "Install kernel image to /boot in target"
+	depends on !BR2_TARGET_ROOTFS_INITRAMFS
+	help
+	  Select this option to have the kernel image installed to
+	  /boot in the target root filesystem, as is typically done on
+	  x86/x86_64 systems.
+
+
+# Linux extensions
+source "linux/Config.ext.in"
 
 endif # BR2_LINUX_KERNEL
 

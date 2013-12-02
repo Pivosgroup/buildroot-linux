@@ -5,7 +5,7 @@
 #############################################################
 UDEV_VERSION = 173
 UDEV_SOURCE = udev-$(UDEV_VERSION).tar.bz2
-UDEV_SITE = http://linuxfromscratch.pl/pub/LFS/lfs-packages/7.0
+UDEV_SITE = $(BR2_KERNEL_MIRROR)/linux/utils/kernel/hotplug/
 UDEV_INSTALL_STAGING = YES
 
 UDEV_CONF_OPT =			\
@@ -28,11 +28,11 @@ UDEV_POST_INSTALL_TARGET_HOOKS += UDEV_REMOVE_MTD_PROBE_RULE
 endif
 
 ifeq ($(BR2_PACKAGE_UDEV_ALL_EXTRAS),y)
-UDEV_DEPENDENCIES += libusb libusb-compat usbutils hwdata libglib2
+UDEV_DEPENDENCIES += libusb libusb-compat acl usbutils hwdata libglib2
 UDEV_CONF_OPT +=							\
-	--with-pci-ids-path=/usr/share/hwdata/pci.ids	\
-	--with-usb-ids-path=/usr/share/hwdata/usb.ids	\
-
+	--with-pci-ids-path=$(TARGET_DIR)/usr/share/hwdata/pci.ids	\
+	--with-usb-ids-path=$(TARGET_DIR)/usr/share/hwdata/usb.ids	\
+	--enable-udev_acl
 else
 UDEV_CONF_OPT +=		\
 	--disable-hwdb		\
@@ -45,4 +45,4 @@ endef
 
 UDEV_POST_INSTALL_TARGET_HOOKS += UDEV_INSTALL_INITSCRIPT
 
-$(eval $(call AUTOTARGETS,package,udev))
+$(eval $(call AUTOTARGETS))

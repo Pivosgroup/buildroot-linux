@@ -6,43 +6,46 @@
 # except that it is not pre-built.
 
 #-----------------------------------------------------------------------------
-# 'uclibc' is the target to depend on to get the toolchain and prepare
-# the staging directory and co.
-uclibc: dependencies $(STAMP_DIR)/ct-ng-toolchain-installed
-
-#-----------------------------------------------------------------------------
 # Internal variables
 
-# Crostool-NG hard-coded configuration options
-CTNG_VERSION:=1.10.0
-CTNG_SITE:=http://ymorin.is-a-geek.org/download/crosstool-ng/
-CTNG_SOURCE:=crosstool-ng-$(CTNG_VERSION).tar.bz2
-CTNG_DIR:=$(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION)
-CTNG_CAT:=bzcat
-CTNG_PATCH_DIR:=toolchain/toolchain-crosstool-ng
-CTNG_CONFIG_FILE:=$(call qstrip,$(BR2_TOOLCHAIN_CTNG_CONFIG))
+CTNG_DIR := $(BUILD_DIR)/build-toolchain
+
 CTNG_UCLIBC_CONFIG_FILE := $(TOPDIR)/toolchain/toolchain-crosstool-ng/uClibc.config
+CTNG_CONFIG_FILE:=$(call qstrip,$(BR2_TOOLCHAIN_CTNG_CONFIG))
 
 # Hack! ct-ng is in fact a Makefile script. As such, it accepts all
 # make options, such as -C, which makes it uneeded to chdir prior
 # to calling ct-ng.
 # $1: the set of arguments to pass to ct-ng
 define ctng
-PATH=$(HOST_PATH) $(CTNG_DIR)/ct-ng -C $(CTNG_DIR) --no-print-directory $(1)
+PATH=$(HOST_PATH) ct-ng -C $(CTNG_DIR) --no-print-directory $(1)
 endef
+
+#-----------------------------------------------------------------------------
+# 'uclibc' is the target to depend on to get the toolchain and prepare
+# the staging directory and co.
+uclibc: dependencies $(STAMP_DIR)/ct-ng-toolchain-installed
+
+# 'uclibc-source' is the target used by the infra structure to mean
+# "we just want to download the toolchain's sources, not build it"
+# For crosstool-NG, we need it to be configured before we can download;
+# then we have to override a config option to just do the download
+uclibc-source: $(CTNG_DIR)/.config
+	$(Q)$(call ctng,build CT_ONLY_DOWNLOAD=y)
 
 #-----------------------------------------------------------------------------
 # Installing the libs to target/ and staging/
 
 #--------------
 # The generic system libraries (in /lib)
-CTNG_LIBS_LIB := libc.so libcrypt.so libdl.so libgcc_s.so libm.so libnsl.so libpthread.so libresolv.so librt.so libutil.so
+CTNG_LIBS_LIB := ld*.so libc.so libcrypt.so libdl.so libgcc_s.so libm.so    \
+                 libnsl.so libpthread.so libresolv.so librt.so libutil.so
 
 #--------------
 # The libc-specific system libraries (in /lib)
 # Note: it may be needed to tweak the NSS libs in the glibc and eglibc cases...
-CTNG_LIBS_uClibc := ld-uClibc.so
-CTNG_LIBS_glibc  := ld-linux.so libnss_files.so libnss_dns.so
+CTNG_LIBS_uClibc :=
+CTNG_LIBS_glibc  := libnss_files.so libnss_dns.so
 CTNG_LIBS_eglibc := $(CTNG_LIBS_glibc)
 
 #--------------
@@ -60,7 +63,7 @@ endif
 $(STAMP_DIR)/ct-ng-toolchain-installed: $(STAMP_DIR)/ct-ng-toolchain-built
 	$(Q)mkdir -p $(TARGET_DIR)/lib
 	$(Q)CTNG_TUPLE="$$( $(call ctng,show-tuple) )";                     \
-	    CTNG_SYSROOT="$(HOST_DIR)/usr/$${CTNG_TUPLE}/sys-root";        \
+	    CTNG_SYSROOT="$(HOST_DIR)/usr/$${CTNG_TUPLE}/sysroot";          \
 	    echo "CTNG_TUPLE='$${CTNG_TUPLE}'";                             \
 	    echo "CTNG_SYSROOT='$${CTNG_SYSROOT}'";                         \
 	    echo "Copy external toolchain libraries to target...";          \
@@ -200,7 +203,7 @@ CTNG_FIX_DOT_CONFIG_SED += s:^(|\# )(CT_ARCH_(32|64)).*:\# \2 is not set:;
 CTNG_FIX_DOT_CONFIG_SED += s:^\# (CT_ARCH_$(CTNG_BIT)) is not set:\1=y:;
 CTNG_FIX_DOT_CONFIG_SED += s:^(CT_TARGET_VENDOR)=.*:\1="unknown":;
 CTNG_FIX_DOT_CONFIG_SED += s:^(CT_TARGET_ALIAS)=.*:\1="$(GNU_TARGET_NAME)":;
-CTNG_FIX_DOT_CONFIG_SED += s:^(CT_CC_PKGVERSION)="(.*)":\1="crosstool-NG $(CTNG_VERSION) - buildroot $(BR2_VERSION_FULL)":;
+CTNG_FIX_DOT_CONFIG_SED += s:^(CT_TOOLCHAIN_PKGVERSION)="(.*)":\1="buildroot $(BR2_VERSION_FULL)":;
 ifneq ($(call qstrip,$(BR2_USE_MMU)),)
 CTNG_FIX_DOT_CONFIG_SED += s:^\# (CT_ARCH_USE_MMU) is not set:\1=y:;
 else
@@ -257,6 +260,7 @@ endif
 # And the specials for paths
 CTNG_FIX_DOT_CONFIG_PATHS_SED += s:^(CT_PREFIX_DIR)=.*:\1="$(HOST_DIR)/usr":;
 CTNG_FIX_DOT_CONFIG_PATHS_SED += s:^(CT_LOCAL_TARBALLS_DIR)=.*:\1="$(DL_DIR)":;
+CTNG_FIX_DOT_CONFIG_PATHS_SED += s:^(CT_SYSROOT_NAME)=.*:\1="sysroot":;
 CTNG_FIX_DOT_CONFIG_PATHS_SED += s:^(CT_SYSROOT_DIR_PREFIX)=.*:\1="":;
 
 #--------------
@@ -301,13 +305,6 @@ else
 CTNG_FIX_DOT_CONFIG_LIBC_SED += s:^(UCLIBC_HAS_RPC)=.*:\# \1 is not set:;
 endif
 
-# Handle the program_invocation_name option
-ifneq ($(call qstrip,$(BR2_PROGRAM_INVOCATION)),)
-CTNG_FIX_DOT_CONFIG_LIBC_SED += s:^\# (UCLIBC_HAS_PROGRAM_INVOCATION_NAME) is not set:\1=y:;
-else
-CTNG_FIX_DOT_CONFIG_LIBC_SED += s:^(UCLIBC_HAS_PROGRAM_INVOCATION_NAME)=y:\# \1 is not set:;
-endif
-
 # Instruct CT-NG's .config where to find the uClibc's .config
 CTNG_FIX_DOT_CONFIG_PATHS_SED += s:^(CT_LIBC_UCLIBC_CONFIG_FILE)=.*:\1="$(CTNG_DIR)/libc.config":;
 
@@ -323,6 +320,18 @@ $(CTNG_DIR)/libc.config: $(CTNG_UCLIBC_CONFIG_FILE) $(CONFIG_DIR)/.config
 	$(Q)rm -f $@.timestamp
 
 endif # LIBC is uClibc
+
+#--------------
+# glibc/eglibc specific options
+ifeq ($(BR2_TOOLCHAIN_CTNG_glibc)$(BR2_TOOLCHAIN_CTNG_eglibc),y)
+
+# Force unwind support
+CTNG_FIX_DOT_CONFIG_SED += s:^\# (CT_LIBC_GLIBC_FORCE_UNWIND) is not set:\1=y:;
+
+# Force non-fortified build
+CTNG_FIX_DOT_CONFIG_SED += s:^(CT_LIBC_ENABLE_FORTIFIED_BUILD)=y:\# \1 is not set:;
+
+endif # LIBC is glibc or eglibc
 
 #--------------
 # Small functions to shoe-horn the above into crosstool-NG's .config
@@ -344,16 +353,34 @@ define ctng-oldconfig
 	$(call ctng-fix-dot-config,$(1),$(CTNG_FIX_DOT_CONFIG_PATHS_SED))
 endef
 
+# We need the host crosstool-NG before we can even begin working
+# on the toolchain. Using order-only dependency, as we do not want
+# to rebuild the toolchain for every run...
+$(CTNG_DIR)/.config: | host-crosstool-ng
+
 # Default configuration
 # Depends on top-level .config because it has options we have to shoe-horn
 # into crosstool-NG's .config
-# Only copy the original .config file if we don't have one already
+# Only copy the original .config file if we don't have one already.
+# Check that given config file matches selected C library.
 # We need to call oldconfig twice in a row to ensure the options
 # are correctly set ( eg. if an option is new, then the initial sed
 # can't do anything about it ) Ideally, this should go in oldconfig
 # itself, but it's much easier to handle here.
-$(CTNG_DIR)/.config: $(CTNG_CONFIG_FILE) $(CTNG_DIR)/ct-ng $(CONFIG_DIR)/.config
-	$(Q)[ -f $@ ] && cp -a $@ $@.timestamp || cp -f $< $@
+
+$(CTNG_DIR)/.config: $(CTNG_CONFIG_FILE) $(CONFIG_DIR)/.config
+	$(Q)if [ ! -f $@ ]; then                                                        \
+	        mkdir -p "$(CTNG_DIR)";                                                 \
+	        libc="$$(awk -F '"' '$$1=="CT_LIBC=" { print $$2; }' "$<")";            \
+	        if [ "$${libc}" != "$(BR2_TOOLCHAIN_CTNG_LIBC)" ]; then                 \
+	            echo "* Inconsistency in crosstool-NG config file '$<'";            \
+	            echo "* - buildroot configured for '$(BR2_TOOLCHAIN_CTNG_LIBC)'";   \
+	            echo "* - given config file for '$${libc}'";                        \
+	            exit 1;                                                             \
+	        fi;                                                                     \
+	        cp -f $< $@;                                                            \
+	    fi
+	$(Q)cp -a $@ $@.timestamp
 	$(call ctng-oldconfig,$@)
 	$(call ctng-oldconfig,$@)
 	$(call ctng-check-config-changed,$@,$@.timestamp)
@@ -370,39 +397,3 @@ ctng-menuconfig: $(CTNG_DIR)/.config
 	$(call ctng-oldconfig,$<)
 	$(call ctng-check-config-changed,$<,$<.timestamp)
 	$(Q)rm -f $<.timestamp
-
-#-----------------------------------------------------------------------------
-# Retrieving, configuring and building crosstool-NG (as a package)
-
-$(DL_DIR)/$(CTNG_SOURCE):
-	$(Q)$(call DOWNLOAD,$(CTNG_SITE),$(CTNG_SOURCE))
-
-$(CTNG_DIR)/.unpacked: $(DL_DIR)/$(CTNG_SOURCE)
-	$(Q)rm -rf $(CTNG_DIR)
-	$(Q)mkdir -p $(BUILD_DIR)
-	$(Q)$(CTNG_CAT) $(DL_DIR)/$(CTNG_SOURCE) |tar -C $(BUILD_DIR) $(TAR_OPTIONS) -
-	$(Q)touch $@
-
-$(CTNG_DIR)/.patched: $(CTNG_DIR)/.unpacked
-	$(Q)toolchain/patch-kernel.sh $(CTNG_DIR)       \
-	                              $(CTNG_PATCH_DIR) \
-	                              \*.patch          \
-	                              \*.patch.$(ARCH)
-	$(Q)touch $@
-
-# Use order-only dependencies on host-* as they
-# are virtual targets with no rules, and so are
-# considered always remade. But we do not want
-# to reconfigure and rebuild ct-ng every time
-# we need to run it...
-$(CTNG_DIR)/.configured: | $(if $(BR2_CCACHE),host-ccache) \
-                           host-gawk        \
-                           host-automake
-
-$(CTNG_DIR)/.configured: $(CTNG_DIR)/.patched
-	$(Q)cd $(CTNG_DIR) && PATH=$(HOST_PATH) ./configure --local
-	$(Q)touch $@
-
-$(CTNG_DIR)/ct-ng: $(CTNG_DIR)/.configured
-	$(Q)$(MAKE) -C $(CTNG_DIR) --no-print-directory
-	$(Q)touch $@

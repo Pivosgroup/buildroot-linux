@@ -3,17 +3,15 @@
 # dbus
 #
 #############################################################
-DBUS_VERSION = 1.4.10
+DBUS_VERSION = 1.4.16
 DBUS_SOURCE = dbus-$(DBUS_VERSION).tar.gz
 DBUS_SITE = http://dbus.freedesktop.org/releases/dbus/
 DBUS_INSTALL_STAGING = YES
-DBUS_INSTALL_TARGET = YES
 
 DBUS_DEPENDENCIES = host-pkg-config
 
 DBUS_CONF_ENV = ac_cv_have_abstract_sockets=yes
-DBUS_CONF_OPT = --program-prefix="" \
-		--with-dbus-user=dbus \
+DBUS_CONF_OPT = --with-dbus-user=dbus \
 		--disable-tests \
 		--disable-asserts \
 		--enable-abstract-sockets \
@@ -86,5 +84,5 @@ HOST_DBUS_GEN_INTROSPECT = \
 
 HOST_DBUS_POST_INSTALL_HOOKS += HOST_DBUS_GEN_INTROSPECT
 
-$(eval $(call AUTOTARGETS,package,dbus))
-$(eval $(call AUTOTARGETS,package,dbus,host))
+$(eval $(call AUTOTARGETS))
+$(eval $(call AUTOTARGETS,host))

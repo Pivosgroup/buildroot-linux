@@ -25,7 +25,7 @@ endif
 QT_CONFIG_FILE=$(call qstrip,$(BR2_PACKAGE_QT_CONFIG_FILE))
 
 ifneq ($(QT_CONFIG_FILE),)
-QT_CONFIGURE_OPTS += -qconfig buildroot
+QT_CONFIGURE_OPTS += -config buildroot
 endif
 
 QT_CFLAGS = $(TARGET_CFLAGS)
@@ -649,4 +649,4 @@ define QT_UNINSTALL_TARGET_CMDS
 	-rm $(TARGET_DIR)/usr/lib/libphonon.so.*
 endef
 
-$(eval $(call GENTARGETS,package,qt))
+$(eval $(call GENTARGETS))
