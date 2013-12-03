@@ -93,6 +93,7 @@ SVN:=$(call qstrip,$(BR2_SVN))
 BZR:=$(call qstrip,$(BR2_BZR))
 GIT:=$(call qstrip,$(BR2_GIT))
 LOCALFILES:=$(call qstrip,$(BR2_LOCALFILES))
+CP:=$(call qstrip,$(BR2_CP)) $(QUIET)
 
 # Default spider mode is 'DOWNLOAD'. Other possible values are 'SOURCE_CHECK'
 # used by the _source-check target and 'SHOW_EXTERNAL_DEPS', used by the
@@ -176,6 +177,10 @@ define SHOW_EXTERNAL_DEPS_SVN
   echo $($(PKG)_SOURCE)
 endef
 
+define DOWNLOAD_CP
+	(test -e $(DL_DIR)/$($(PKG)_SOURCE) && test -z `find $($(PKG)_SITE) -newer $(DL_DIR)/$($(PKG)_SOURCE)`) || \
+	tar -C $($(PKG)_SITE) . -czf $(DL_DIR)/$($(PKG)_SOURCE)
+endef
 
 define DOWNLOAD_WGET
 	test -e $(DL_DIR)/$(2) || \
@@ -226,6 +231,7 @@ define DOWNLOAD
 			svn) $($(DL_MODE)_SVN) && exit ;; \
 			bzr) $($(DL_MODE)_BZR) && exit ;; \
 			file) $($(DL_MODE)_LOCALFILES) && exit ;; \
+			cp) $($(DL_MODE)_CP) && exit ;; \
 			*) $(call $(DL_MODE)_WGET,$(1),$(2)) && exit ;; \
 		esac ; \
 	fi ; \

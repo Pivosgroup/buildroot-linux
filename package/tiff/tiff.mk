@@ -20,3 +20,4 @@ define TIFF_INSTALL_TARGET_CMDS
 endef
 
 $(eval $(call AUTOTARGETS))
+$(eval $(call AUTOTARGETS,host))

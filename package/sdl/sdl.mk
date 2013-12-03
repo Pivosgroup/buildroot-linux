@@ -68,3 +68,4 @@ define SDL_INSTALL_TARGET_CMDS
 endef
 
 $(eval $(call AUTOTARGETS))
+$(eval $(call AUTOTARGETS,host))

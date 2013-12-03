@@ -36,5 +36,5 @@ endef
 CONNMAN_POST_INSTALL_TARGET_HOOKS += CONNMAN_INSTALL_CM
 endif
 
-$(eval $(call AUTOTARGETS,package,connman))
+$(eval $(call AUTOTARGETS))
 
