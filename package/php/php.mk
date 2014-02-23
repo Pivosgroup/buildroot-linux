@@ -70,7 +70,7 @@ ifeq ($(BR2_PACKAGE_PHP_EXT_SIMPLEXML),y)
 	PHP_CONF_OPT += --enable-simplexml
 endif
 
-ifeq ($(BR2_PACKAGE_PHP_EXT_ZLIB),y)
+ifneq ($(BR2_PACKAGE_PHP_EXT_ZLIB)$(BR2_PACKAGE_PHP_EXT_ZIP),)
 	PHP_CONF_OPT += --with-zlib=$(STAGING_DIR)/usr
 	PHP_DEPENDENCIES += zlib
 endif
@@ -195,4 +195,4 @@ endef
 
 PHP_CONF_ENV += CFLAGS="$(PHP_CFLAGS)"
 
-$(eval $(call AUTOTARGETS,package,php))
+$(eval $(call AUTOTARGETS))

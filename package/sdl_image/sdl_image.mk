@@ -44,5 +44,5 @@ SDL_IMAGE_DEPENDENCIES:=sdl \
 
 HOST_SDL_IMAGE_DEPENDENCIES:=host-jpeg host-libpng host-tiff host-sdl
 
-$(eval $(call AUTOTARGETS,package,sdl_image))
-$(eval $(call AUTOTARGETS,package,sdl_image,host))
+$(eval $(call AUTOTARGETS))
+$(eval $(call AUTOTARGETS,host))

@@ -22,9 +22,8 @@ copy_toolchain_lib_root = \
 	DESTDIR="$(strip $3)" ; \
  \
 	LIBS=`(cd $${ARCH_SYSROOT_DIR}; \
-		find -L . -path "./lib/$${LIB}.*"     -o \
-			  -path "./usr/lib/$${LIB}.*" -o \
-			  -path "./usr/$(TOOLCHAIN_EXTERNAL_PREFIX)/lib*/$${LIB}.*" \
+		find -L lib* usr/lib* usr/$(TOOLCHAIN_EXTERNAL_PREFIX)/lib* \
+			-maxdepth 1 -name "$${LIB}.*" 2>/dev/null \
 		)` ; \
 	for FILE in $${LIBS} ; do \
 		LIB=`basename $${FILE}`; \
@@ -79,6 +78,9 @@ copy_toolchain_lib_root = \
 #    non-default architecture variant is used. Without this, the
 #    compiler fails to find libraries and headers.
 #
+# Note that the 'locale' directories are not copied. They are huge
+# (400+MB) in CodeSourcery toolchains, and they are not really useful.
+#
 # $1: main sysroot directory of the toolchain
 # $2: arch specific sysroot directory of the toolchain
 # $3: arch specific subdirectory in the sysroot
@@ -89,7 +91,7 @@ copy_toolchain_sysroot = \
 	ARCH_SUBDIR="$(strip $3)"; \
 	for i in etc lib sbin usr ; do \
 		if [ -d $${ARCH_SYSROOT_DIR}/$$i ] ; then \
-			cp -a $${ARCH_SYSROOT_DIR}/$$i $(STAGING_DIR)/ ; \
+			rsync -au --chmod=Du+w --exclude 'usr/lib/locale' $${ARCH_SYSROOT_DIR}/$$i $(STAGING_DIR)/ ; \
 		fi ; \
 	done ; \
 	if [ `readlink -f $${SYSROOT_DIR}` != `readlink -f $${ARCH_SYSROOT_DIR}` ] ; then \
@@ -147,8 +149,7 @@ check_glibc = \
 	$(call check_glibc_feature,BR2_INET_RPC,RPC support) ;\
 	$(call check_glibc_feature,BR2_ENABLE_LOCALE,Locale support) ;\
 	$(call check_glibc_feature,BR2_USE_MMU,MMU support) ;\
-	$(call check_glibc_feature,BR2_USE_WCHAR,Wide char support) ;\
-	$(call check_glibc_feature,BR2_PROGRAM_INVOCATION,Program invocation support)
+	$(call check_glibc_feature,BR2_USE_WCHAR,Wide char support)
 
 #
 # Check the conformity of Buildroot configuration with regard to the
@@ -194,15 +195,18 @@ check_uclibc = \
 	$(call check_uclibc_feature,__UCLIBC_HAS_RPC__,BR2_INET_RPC,$${UCLIBC_CONFIG_FILE},RPC support) ;\
 	$(call check_uclibc_feature,__UCLIBC_HAS_LOCALE__,BR2_ENABLE_LOCALE,$${UCLIBC_CONFIG_FILE},Locale support) ;\
 	$(call check_uclibc_feature,__UCLIBC_HAS_WCHAR__,BR2_USE_WCHAR,$${UCLIBC_CONFIG_FILE},Wide char support) ;\
-	$(call check_uclibc_feature,__UCLIBC_HAS_PROGRAM_INVOCATION_NAME__,BR2_PROGRAM_INVOCATION,$${UCLIBC_CONFIG_FILE},Program invocation support) ;\
-	$(call check_uclibc_feature,__UCLIBC_HAS_THREADS__,BR2_TOOLCHAIN_HAS_THREADS,$${UCLIBC_CONFIG_FILE},Thread support)
+	$(call check_uclibc_feature,__UCLIBC_HAS_THREADS__,BR2_TOOLCHAIN_HAS_THREADS,$${UCLIBC_CONFIG_FILE},Thread support) ;\
+	$(call check_uclibc_feature,__PTHREADS_DEBUG_SUPPORT__,BR2_TOOLCHAIN_HAS_THREADS_DEBUG,$${UCLIBC_CONFIG_FILE},Thread debugging support)
 
 #
 # Check that the Buildroot configuration of the ABI matches the
 # configuration of the external toolchain.
 #
+# $1: cross-gcc path
+#
 check_arm_abi = \
-	EXT_TOOLCHAIN_TARGET=$(shell LANG=C $(TARGET_CC) -v 2>&1 | grep ^Target | cut -f2 -d ' ') ; \
+	__CROSS_CC=$(strip $1) ; \
+	EXT_TOOLCHAIN_TARGET=`LANG=C $${__CROSS_CC} -v 2>&1 | grep ^Target | cut -f2 -d ' '` ; \
 	if echo $${EXT_TOOLCHAIN_TARGET} | grep -q 'eabi$$' ; then \
 		EXT_TOOLCHAIN_ABI="eabi" ; \
 	else \
@@ -220,8 +224,11 @@ check_arm_abi = \
 #
 # Check that the external toolchain supports C++
 #
+# $1: cross-g++ path
+#
 check_cplusplus = \
-	$(TARGET_CXX) -v > /dev/null 2>&1 ; \
+	__CROSS_CXX=$(strip $1) ; \
+	$${__CROSS_CXX} -v > /dev/null 2>&1 ; \
 	if test $$? -ne 0 ; then \
 		echo "C++ support is selected but is not available in external toolchain" ; \
 		exit 1 ; \
@@ -230,9 +237,12 @@ check_cplusplus = \
 #
 # Check that the cross-compiler given in the configuration exists
 #
+# $1: cross-gcc path
+#
 check_cross_compiler_exists = \
-	$(TARGET_CC) -v > /dev/null 2>&1 ; \
+	__CROSS_CC=$(strip $1) ; \
+	$${__CROSS_CC} -v > /dev/null 2>&1 ; \
 	if test $$? -ne 0 ; then \
-		echo "Cannot execute cross-compiler '$(TARGET_CC)'" ; \
+		echo "Cannot execute cross-compiler '$${__CROSS_CC}'" ; \
 		exit 1 ; \
 	fi

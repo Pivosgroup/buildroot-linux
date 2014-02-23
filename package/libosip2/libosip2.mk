@@ -16,11 +16,11 @@ define LIBOSIP2_DEBIAN_PATCHES
 		 do $(SED) 's,^\+\+\+ .*cvs-$(LIBOSIP2_VERSION)/,+++ cvs-$(LIBOSIP2_VERSION)/,' $$i; \
 		 done; \
 		); \
-		toolchain/patch-kernel.sh $(@D) $(@D)/debian/patches \*; \
+		support/scripts/apply-patches.sh $(@D) $(@D)/debian/patches \*; \
 	fi
 endef
 endif
 
 LIBOSIP2_POST_PATCH_HOOKS += LIBOSIP2_DEBIAN_PATCHES
 
-$(eval $(call AUTOTARGETS,package,libosip2))
+$(eval $(call AUTOTARGETS))

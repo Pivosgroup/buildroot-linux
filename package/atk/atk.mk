@@ -3,8 +3,8 @@
 # atk
 #
 #############################################################
-ATK_VERSION_MAJOR = 1.30
-ATK_VERSION = $(ATK_VERSION_MAJOR).0
+ATK_VERSION_MAJOR = 1.33
+ATK_VERSION = $(ATK_VERSION_MAJOR).6
 ATK_SOURCE = atk-$(ATK_VERSION).tar.bz2
 ATK_SITE = http://ftp.gnome.org/pub/gnome/sources/atk/$(ATK_VERSION_MAJOR)/
 ATK_INSTALL_STAGING = YES
@@ -39,9 +39,7 @@ ATK_CONF_ENV = ac_cv_func_posix_getpwuid_r=yes \
 		jm_cv_func_working_re_compile_pattern=yes ac_use_included_regex=no \
 		gl_cv_c_restrict=no ac_cv_prog_F77=no
 
-ATK_CONF_OPT =  --enable-shared \
-		--enable-static \
-		--disable-glibtest --enable-explicit-deps=no \
+ATK_CONF_OPT =  --disable-glibtest --enable-explicit-deps=no \
 		--disable-debug
 
 ifeq ($(BR2_PACKAGE_XORG7),y)
@@ -57,9 +55,7 @@ ATK_DEPENDENCIES = libglib2 host-pkg-config
 HOST_ATK_DEPENDENCIES = host-libglib2 host-pkg-config
 
 HOST_ATK_CONF_OPT = \
-		--enable-shared \
-		--disable-static \
 		--disable-glibtest
 
-$(eval $(call AUTOTARGETS,package,atk))
-$(eval $(call AUTOTARGETS,package,atk,host))
+$(eval $(call AUTOTARGETS))
+$(eval $(call AUTOTARGETS,host))

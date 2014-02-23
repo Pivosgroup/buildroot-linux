@@ -44,13 +44,18 @@ EXTRA_GCC_CONFIG_OPTIONS+=--with-pkgversion="Buildroot $(BR2_VERSION_FULL)" \
 endif
 
 # http://gcc.gnu.org/bugzilla/show_bug.cgi?id=43810
-# Workaround until it's fixed in 4.5.2 or later
+# Workaround until it's fixed in 4.5.4 or later
 ifeq ($(ARCH),powerpc)
 ifeq ($(findstring x4.5.,x$(GCC_VERSION)),x4.5.)
 GCC_OPTSPACE=--disable-target-optspace
 endif
 else
 GCC_OPTSPACE=--enable-target-optspace
+endif
+
+# gcc 4.6.x quadmath requires wchar
+ifneq ($(BR2_TOOLCHAIN_BUILDROOT_WCHAR),y)
+GCC_QUADMATH=--disable-libquadmath
 endif
 
 #############################################################
@@ -107,30 +112,56 @@ ifeq ($(BR2_INSTALL_FORTRAN),y)
 GCC_TARGET_LANGUAGES:=$(GCC_TARGET_LANGUAGES),fortran
 endif
 
+# GCC 4.x prerequisites
 GCC_WITH_HOST_GMP = --with-gmp=$(HOST_DIR)/usr
 GCC_WITH_HOST_MPFR = --with-mpfr=$(HOST_DIR)/usr
 ifeq ($(BR2_TOOLCHAIN_BUILDROOT),y)
 HOST_SOURCE += host-gmp-source host-mpfr-source
 endif
 GCC_HOST_PREREQ = host-gmp host-mpfr
+GCC_TARGET_PREREQ += mpfr gmp
 
+# GCC 4.5.x prerequisites
 ifeq ($(findstring x4.5.,x$(GCC_VERSION)),x4.5.)
 GCC_WITH_HOST_MPC = --with-mpc=$(HOST_DIR)/usr
+GCC_TARGET_PREREQ += mpc
 ifeq ($(BR2_TOOLCHAIN_BUILDROOT),y)
 HOST_SOURCE += host-mpc-source
 endif
 GCC_HOST_PREREQ += host-mpc
 endif
 
-GCC_TARGET_PREREQ += mpfr gmp
-ifeq ($(findstring x4.5.,x$(GCC_VERSION)),x4.5.)
+# GCC 4.6.x prerequisites
+ifeq ($(findstring x4.6.,x$(GCC_VERSION)),x4.6.)
+GCC_WITH_HOST_MPC = --with-mpc=$(HOST_DIR)/usr
 GCC_TARGET_PREREQ += mpc
+ifeq ($(BR2_TOOLCHAIN_BUILDROOT),y)
+HOST_SOURCE += host-mpc-source
+endif
+GCC_HOST_PREREQ += host-mpc
+endif
+
+# GCC snapshot prerequisites
+# Since we don't know and it can be quite new just ask for everything known
+ifneq ($(GCC_SNAP_DATE),)
+GCC_WITH_HOST_MPC = --with-mpc=$(HOST_DIR)/usr
+GCC_TARGET_PREREQ += mpc
+ifeq ($(BR2_TOOLCHAIN_BUILDROOT),y)
+HOST_SOURCE += host-mpc-source
+endif
+GCC_HOST_PREREQ += host-mpc
 endif
 
 ifeq ($(BR2_GCC_SHARED_LIBGCC),y)
 GCC_SHARED_LIBGCC:=--enable-shared
 else
 GCC_SHARED_LIBGCC:=--disable-shared
+endif
+
+ifeq ($(BR2_GCC_ENABLE_OPENMP),y)
+GCC_ENABLE_OPENMP:=--enable-libgomp
+else
+GCC_ENABLE_OPENMP:=--disable-libgomp
 endif
 
 ifeq ($(BR2_GCC_ENABLE_TLS),y)
@@ -140,7 +171,7 @@ GCC_TLS:=--disable-tls
 endif
 
 ifeq ($(BR2_PTHREADS_NONE),y)
-THREADS:=--disable-threads --disable-libgomp
+THREADS:=--disable-threads
 else
 THREADS:=--enable-threads
 endif
@@ -169,32 +200,19 @@ $(GCC_DIR)/.unpacked: $(DL_DIR)/$(GCC_SOURCE)
 	mkdir -p $(TOOLCHAIN_DIR)
 	rm -rf $(GCC_DIR)
 	$(GCC_CAT) $(DL_DIR)/$(GCC_SOURCE) | tar -C $(TOOLCHAIN_DIR) $(TAR_OPTIONS) -
-	$(CONFIG_UPDATE) $(@D)
+	$(call CONFIG_UPDATE,$(@D))
 	touch $@
 
 gcc-patched: $(GCC_DIR)/.patched
 $(GCC_DIR)/.patched: $(GCC_DIR)/.unpacked
 	# Apply any files named gcc-*.patch from the source directory to gcc
 ifneq ($(wildcard $(GCC_PATCH_DIR)),)
-	toolchain/patch-kernel.sh $(GCC_DIR) $(GCC_PATCH_DIR) \*.patch $(GCC_PATCH_EXTRA)
+	support/scripts/apply-patches.sh $(GCC_DIR) $(GCC_PATCH_DIR) \*.patch $(GCC_PATCH_EXTRA)
 endif
 
-	# Note: The soft float situation has improved considerably with gcc 3.4.x.
-	# We can dispense with the custom spec files, as well as libfloat for the arm case.
-	# However, we still need a patch for arm. There's a similar patch for gcc 3.3.x
-	# which needs to be integrated so we can kill of libfloat for good, except for
-	# anyone (?) who might still be using gcc 2.95. mjn3
-ifeq ($(BR2_SOFT_FLOAT),y)
-ifeq ("$(strip $(ARCH))","arm")
-	toolchain/patch-kernel.sh $(GCC_DIR) toolchain/gcc/$(GCC_VERSION) arm-softfloat.patch.conditional
-endif
-ifeq ("$(strip $(ARCH))","armeb")
-	toolchain/patch-kernel.sh $(GCC_DIR) toolchain/gcc/$(GCC_VERSION) arm-softfloat.patch.conditional
-endif
-endif
 ifeq ($(ARCH)-$(BR2_GCC_SHARED_LIBGCC),powerpc-y)
 ifneq ($(BR2_SOFT_FLOAT),)
-	toolchain/patch-kernel.sh $(GCC_DIR) toolchain/gcc/$(GCC_VERSION) powerpc-link-with-math-lib.patch.conditional
+	support/scripts/apply-patches.sh $(GCC_DIR) toolchain/gcc/$(GCC_VERSION) powerpc-link-with-math-lib.patch.conditional
 endif
 endif
 	touch $@
@@ -219,6 +237,8 @@ $(GCC_BUILD_DIR1)/.configured: $(GCC_DIR)/.patched
 		$(BR2_CONFIGURE_DEVEL_SYSROOT) \
 		--disable-__cxa_atexit \
 		$(GCC_OPTSPACE) \
+		$(GCC_QUADMATH) \
+		$(GCC_ENABLE_OPENMP) \
 		--with-gnu-ld \
 		--disable-shared \
 		--disable-libssp \
@@ -285,6 +305,8 @@ $(GCC_BUILD_DIR2)/.configured: $(GCC_DIR)/.patched
 		$(BR2_CONFIGURE_DEVEL_SYSROOT) \
 		--disable-__cxa_atexit \
 		$(GCC_OPTSPACE) \
+		$(GCC_QUADMATH) \
+		$(GCC_ENABLE_OPENMP) \
 		--with-gnu-ld \
 		--enable-shared \
 		--disable-libssp \
@@ -362,6 +384,8 @@ $(GCC_BUILD_DIR3)/.configured: $(GCC_SRC_DIR)/.patched $(GCC_STAGING_PREREQ)
 		$(BR2_CONFIGURE_BUILD_TOOLS) \
 		--disable-__cxa_atexit \
 		$(GCC_OPTSPACE) \
+		$(GCC_QUADMATH) \
+		$(GCC_ENABLE_OPENMP) \
 		--with-gnu-ld \
 		--disable-libssp \
 		--disable-multilib \
@@ -453,6 +477,11 @@ ifeq ($(BR2_INSTALL_LIBGCJ),y)
 		$(TARGET_DIR)/usr/lib/security/
 	-$(STRIPCMD) $(STRIP_STRIP_UNNEEDED) $(TARGET_DIR)/usr/lib/libgcj.so*
 endif
+ifeq ($(BR2_GCC_ENABLE_OPENMP),y)
+	cp -dpf $(HOST_DIR)/usr/$(REAL_GNU_TARGET_NAME)/lib*/libgomp.so* $(STAGING_DIR)/usr/lib/
+	cp -dpf $(HOST_DIR)/usr/$(REAL_GNU_TARGET_NAME)/lib*/libgomp.so* $(TARGET_DIR)/usr/lib/
+	-$(STRIPCMD) $(STRIP_STRIP_UNNEEDED) $(TARGET_DIR)/usr/lib/libgomp.so*
+endif
 	mkdir -p $(@D)
 	touch $@
 
@@ -504,6 +533,9 @@ $(GCC_BUILD_DIR4)/.configured: $(GCC_BUILD_DIR4)/.prepared
 		--enable-languages=$(GCC_TARGET_LANGUAGES) \
 		--with-gxx-include-dir=/usr/include/c++ \
 		--disable-__cxa_atexit \
+		$(GCC_OPTSPACE) \
+		$(GCC_QUADMATH) \
+		$(GCC_ENABLE_OPENMP) \
 		--with-gnu-ld \
 		--disable-libssp \
 		--disable-multilib \
@@ -550,12 +582,17 @@ $(TARGET_DIR)/usr/bin/gcc: $(GCC_BUILD_DIR4)/.compiled
 		cp -f $(HOST_DIR)/$(GCC_LIB_SUBDIR)/$(GCC_INCLUDE_DIR)/syslimits.h \
 			$(TARGET_DIR)/usr/$(GCC_LIB_SUBDIR)/$(GCC_INCLUDE_DIR)/; \
 	fi
+
 	# Make sure we have 'cc'.
 	if [ ! -e $(TARGET_DIR)/usr/bin/cc ]; then \
 		ln -snf gcc $(TARGET_DIR)/usr/bin/cc; \
 	fi
+
+	# Copy C runtime initialization object files
+	cp -f $(STAGING_DIR)/usr/lib/*crt*.o $(TARGET_DIR)/usr/lib
+
 	# These are in /lib, so...
-	#rm -rf $(TARGET_DIR)/usr/lib/libgcc_s*.so*
+	rm -rf $(TARGET_DIR)/usr/lib/libgcc_s*.so*
 	touch -c $@
 
 gcc_target: $(STAMP_DIR)/gcc_libs_target_installed $(GCC_TARGET_PREREQ) binutils $(TARGET_DIR)/usr/bin/gcc

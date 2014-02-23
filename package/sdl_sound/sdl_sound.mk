@@ -31,8 +31,7 @@ SDL_SOUND_CONF_OPT = \
 	--with-sdl-prefix=$(STAGING_DIR)/usr \
 	--with-sdl-exec-prefix=$(STAGING_DIR)/usr \
 	--disable-sdltest \
-	--enable-static \
-	--program-prefix=''
+	--enable-static
 
 # enable mmx for newer x86's
 ifeq ($(BR2_i386)$(BR2_x86_i386)$(BR2_x86_i486)$(BR2_x86_i586)$(BR2_x86_pentiumpro)$(BR2_x86_geode),y)
@@ -56,4 +55,4 @@ define SDL_SOUND_UNINSTALL_TARGET_CMDS
 	rm -f $(TARGET_DIR)/usr/lib/libSDL_sound*so*
 endef
 
-$(eval $(call AUTOTARGETS,package,sdl_sound))
+$(eval $(call AUTOTARGETS))

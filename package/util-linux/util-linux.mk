@@ -33,7 +33,6 @@ endef
 endif
 UTIL_LINUX_POST_INSTALL_TARGET_HOOKS += UTIL_LINUX_TARGET_HELPERS
 
-
 ifeq ($(BR2_PACKAGE_NCURSES),y)
 UTIL_LINUX_DEPENDENCIES += ncurses
 else
@@ -92,8 +91,7 @@ HOST_UTIL_LINUX_CONF_OPT += \
 	--disable-fallocate --disable-unshare --disable-rename \
 	--disable-schedutils --disable-wall --disable-partx
 
-$(eval $(call AUTOTARGETS,package,util-linux))
-$(eval $(call AUTOTARGETS,package,util-linux,host))
+$(eval $(call AUTOTARGETS))
 
 # MKINSTALLDIRS comes from tweaked m4/nls.m4, but autoreconf uses staging
 # one, so it disappears

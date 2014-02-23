@@ -3,27 +3,33 @@
 # ntp
 #
 #############################################################
-NTP_VERSION = 4.2.6p5
-NTP_SOURCE = ntp-$(NTP_VERSION).tar.gz
-NTP_SITE = http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2
 
+NTP_VERSION = 4.2.6p5
+NTP_SITE = http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2
 NTP_CONF_ENV = ac_cv_lib_md5_MD5Init=no
 
 ifneq ($(BR2_INET_IPV6),y)
-NTP_CONF_ENV += isc_cv_have_in6addr_any=no
+	NTP_CONF_ENV += isc_cv_have_in6addr_any=no
 endif
 
 NTP_CONF_OPT = --with-shared \
 		--program-transform-name=s,,, \
 		--enable-clockctl \
-		--disable-tickadj \
-		--without-ntpsnmpd
+		--disable-tickadj
 
 ifeq ($(BR2_PACKAGE_OPENSSL),y)
-NTP_CONF_OPT += --with-crypto
-NTP_DEPENDENCIES += openssl
+	NTP_CONF_OPT += --with-crypto
+	NTP_DEPENDENCIES += openssl
 else
-NTP_CONF_OPT += --without-crypto
+	NTP_CONF_OPT += --without-crypto
+endif
+
+ifeq ($(BR2_PACKAGE_NTP_NTPSNMPD),y)
+	NTP_CONF_OPT += \
+		--with-net-snmp-config=$(STAGING_DIR)/usr/bin/net-snmp-config
+	NTP_DEPENDENCIES += netsnmp
+else
+	NTP_CONF_OPT += --without-ntpsnmpd
 endif
 
 define NTP_PATCH_FIXUPS
@@ -36,6 +42,7 @@ NTP_INSTALL_FILES_$(BR2_PACKAGE_NTP_NTP_WAIT) += scripts/ntp-wait
 NTP_INSTALL_FILES_$(BR2_PACKAGE_NTP_NTPDATE) += ntpdate/ntpdate
 NTP_INSTALL_FILES_$(BR2_PACKAGE_NTP_NTPDC) += ntpdc/ntpdc
 NTP_INSTALL_FILES_$(BR2_PACKAGE_NTP_NTPQ) += ntpq/ntpq
+NTP_INSTALL_FILES_$(BR2_PACKAGE_NTP_NTPSNMPD) += ntpsnmpd/ntpsnmpd
 NTP_INSTALL_FILES_$(BR2_PACKAGE_NTP_NTPTRACE) += scripts/ntptrace
 NTP_INSTALL_FILES_$(BR2_PACKAGE_NTP_SNTP) += sntp/sntp
 NTP_INSTALL_FILES_$(BR2_PACKAGE_NTP_TICKADJ) += util/tickadj
@@ -59,4 +66,4 @@ endef
 
 NTP_POST_PATCH_HOOKS += NTP_PATCH_FIXUPS
 
-$(eval $(call AUTOTARGETS,package,ntp))
+$(eval $(call AUTOTARGETS))

@@ -3,7 +3,8 @@
 # libcurl
 #
 #############################################################
-LIBCURL_VERSION = 7.21.2
+
+LIBCURL_VERSION = 7.21.7
 LIBCURL_SOURCE = curl-$(LIBCURL_VERSION).tar.bz2
 LIBCURL_SITE = http://curl.haxx.se/download/
 LIBCURL_INSTALL_STAGING = YES
@@ -29,7 +30,7 @@ endef
 
 LIBCURL_POST_INSTALL_TARGET_HOOKS += LIBCURL_TARGET_CLEANUP
 
-$(eval $(call AUTOTARGETS,package,libcurl))
+$(eval $(call AUTOTARGETS))
 
 curl: libcurl
 curl-clean: libcurl-clean

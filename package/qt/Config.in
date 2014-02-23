@@ -280,9 +280,12 @@ config BR2_PACKAGE_QT_PHONON_BACKEND
 	  If unsure, say n.
 endif
 
+comment "Qt Dbus module not available (needs dbus)"
+	depends on !BR2_PACKAGE_DBUS
+
 config BR2_PACKAGE_QT_DBUS
 	bool "DBus Module"
-	select BR2_PACKAGE_DBUS
+	depends on BR2_PACKAGE_DBUS
 	help
 	  Build the Qt DBus module.
 

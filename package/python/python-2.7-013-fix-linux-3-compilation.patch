@@ -1,7 +1,7 @@
-Index: Python-2.7.1/configure
+Index: Python-2.7.2/configure
 ===================================================================
---- Python-2.7.1.orig/configure
-+++ Python-2.7.1/configure
+--- Python-2.7.2.orig/configure
++++ Python-2.7.2/configure
 @@ -3007,6 +3007,7 @@
  	darwin*) MACHDEP="darwin";;
  	atheos*) MACHDEP="atheos";;
@@ -10,10 +10,10 @@ Index: Python-2.7.1/configure
  	'')	MACHDEP="unknown";;
  	esac
  fi
-Index: Python-2.7.1/configure.in
+Index: Python-2.7.2/configure.in
 ===================================================================
---- Python-2.7.1.orig/configure.in
-+++ Python-2.7.1/configure.in
+--- Python-2.7.2.orig/configure.in
++++ Python-2.7.2/configure.in
 @@ -297,6 +297,7 @@
  	darwin*) MACHDEP="darwin";;
  	atheos*) MACHDEP="atheos";;

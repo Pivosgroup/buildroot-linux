@@ -3,11 +3,11 @@
 # freetype
 #
 #############################################################
-FREETYPE_VERSION = 2.4.4
+
+FREETYPE_VERSION = 2.4.8
 FREETYPE_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/freetype
 FREETYPE_SOURCE = freetype-$(FREETYPE_VERSION).tar.bz2
 FREETYPE_INSTALL_STAGING = YES
-FREETYPE_INSTALL_TARGET = YES
 FREETYPE_MAKE_OPT = CCexe="$(HOSTCC)"
 FREETYPE_DEPENDENCIES = host-pkg-config $(if $(BR2_PACKAGE_ZLIB),zlib)
 
@@ -31,5 +31,5 @@ ifneq ($(BR2_HAVE_DEVFILES),y)
 FREETYPE_POST_INSTALL_TARGET_HOOKS += FREETYPE_FREETYPE_CONFIG_TARGET_REMOVE
 endif
 
-$(eval $(call AUTOTARGETS,package,freetype))
-$(eval $(call AUTOTARGETS,package,freetype,host))
+$(eval $(call AUTOTARGETS))
+$(eval $(call AUTOTARGETS,host))

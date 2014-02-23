@@ -40,8 +40,7 @@ JAMVM_CONF_ENV = ac_cv_func_posix_getpwuid_r=yes glib_cv_stack_grows=no \
 
 JAMVM_CONF_OPT = \
 		--libexecdir=/usr/lib --localstatedir=/var --mandir=/usr/man \
-		--infodir=/usr/info --enable-shared \
-		--enable-static \
+		--infodir=/usr/info \
 		--disable-glibtest --enable-explicit-deps=no \
 		--disable-debug --with-classpath-install-dir=/usr
 
@@ -91,4 +90,4 @@ ifeq ($(BR2_avr32),y)
 		CC="$(STAGING_DIR)/usr/bin/avr32-linux-gcc"
 endif
 
-$(eval $(call AUTOTARGETS,package/java,jamvm))
+$(eval $(call AUTOTARGETS))

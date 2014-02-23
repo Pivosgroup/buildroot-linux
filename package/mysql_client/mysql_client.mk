@@ -21,7 +21,6 @@ MYSQL_CLIENT_CONF_ENV = \
 	mysql_cv_new_rl_interface=yes
 
 MYSQL_CLIENT_CONF_OPT = \
-	--program-prefix="" \
 	--without-ndb-binlog \
 	--without-server \
 	--without-docs \
@@ -60,4 +59,4 @@ MYSQL_CLIENT_INSTALL_STAGING_CMDS = $(if $(BR2_PACKAGE_MYSQL_CLIENT_LIB_ONLY), $
 MYSQL_CLIENT_POST_INSTALL_TARGET_HOOKS += MYSQL_CLIENT_REMOVE_TEST_PROGS
 MYSQL_CLIENT_POST_INSTALL_TARGET_HOOKS += MYSQL_CLIENT_ADD_MYSQL_LIB_PATH
 
-$(eval $(call AUTOTARGETS,package,mysql_client))
+$(eval $(call AUTOTARGETS))

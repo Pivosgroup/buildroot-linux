@@ -10,7 +10,7 @@ In a fresh minimal Debian Unstable install,
 ```shell
 % sudo apt-get install git build-essential zip gawk libtool gettext  \
       automake autoconf  nasm unzip gettext flex bison libsdl-image1.2 \
-      liblzo2-2 lzma python openjdk-7-jre-headless \
+      subversion liblzo2-2 lzma python openjdk-7-jre-headless \
       texinfo libxml-parser-perl wget pkg-config swig cpio zlib1g-dev \
       libncurses5-dev autopoint
 ```

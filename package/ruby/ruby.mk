@@ -10,9 +10,8 @@ RUBY_AUTORECONF = YES
 HOST_RUBY_AUTORECONF = YES
 RUBY_DEPENDENCIES = host-ruby
 RUBY_MAKE_ENV = $(TARGET_MAKE_ENV)
-RUBY_CONF_OPT = --disable-install-doc
-
-HOST_RUBY_CONF_OPT = --disable-install-doc
+RUBY_CONF_OPT = --disable-install-doc --disable-rpath
+HOST_RUBY_CONF_OPT = --disable-install-doc --with-out-ext=curses,readline
 
 # Force optionals to build before we do
 ifeq ($(BR2_PACKAGE_BERKELEYDB),y)
@@ -31,5 +30,5 @@ ifeq ($(BR2_PACKAGE_ZLIB),y)
 	RUBY_DEPENDENCIES += zlib
 endif
 
-$(eval $(call AUTOTARGETS,package,ruby))
-$(eval $(call AUTOTARGETS,package,ruby,host))
+$(eval $(call AUTOTARGETS))
+$(eval $(call AUTOTARGETS,host))

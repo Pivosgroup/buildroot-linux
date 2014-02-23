@@ -79,8 +79,8 @@ AVAHI_CONF_OPT = --localstatedir=/var \
 		--with-distro=none \
 		$(if $(BR2_HAVE_DOCUMENTATION),--enable,--disable)-manpages \
 		$(if $(BR2_PACKAGE_AVAHI_AUTOIPD),--enable,--disable)-autoipd \
-		--with-avahi-user=root \
-		--with-avahi-group=root \
+		--with-avahi-user=default \
+		--with-avahi-group=default \
 		--with-autoipd-user=default \
 		--with-autoipd-group=default
 
@@ -162,7 +162,6 @@ endef
 
 ifeq ($(BR2_PACKAGE_AVAHI_DAEMON),y)
 AVAHI_POST_INSTALL_TARGET_HOOKS += AVAHI_INSTALL_DAEMON_INITSCRIPT
-
 endif
 
-$(eval $(call AUTOTARGETS,package,avahi))
+$(eval $(call AUTOTARGETS))

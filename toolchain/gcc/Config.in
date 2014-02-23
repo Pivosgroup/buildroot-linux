@@ -30,6 +30,10 @@ choice
 		depends on !BR2_avr32 && !BR2_sparc_sparchfleon && !BR2_sparc_sparchfleonv8 && !BR2_sparc_sparcsfleon && !BR2_sparc_sparcsfleonv8
 		bool "gcc 4.5.x"
 
+	config BR2_GCC_VERSION_4_6_X
+		depends on !BR2_avr32 && !BR2_sparc_sparchfleon && !BR2_sparc_sparchfleonv8 && !BR2_sparc_sparcsfleon && !BR2_sparc_sparcsfleonv8
+		bool "gcc 4.6.x"
+
 	config BR2_GCC_VERSION_SNAP
 		depends on !BR2_avr32 && !BR2_sparc_sparchfleon && !BR2_sparc_sparchfleonv8 && !BR2_sparc_sparcsfleon && !BR2_sparc_sparcsfleonv8
 		bool "gcc snapshot"
@@ -37,23 +41,30 @@ endchoice
 
 config BR2_GCC_SUPPORTS_FINEGRAINEDMTUNE
 	bool
-	default y if !BR2_GCC_VERSION_4_2_1 && !BR2_GCC_VERSION_4_2_2 && !BR2_GCC_VERSION_4_2_3 && !BR2_GCC_VERSION_4_2_4 && !BR2_GCC_VERSION_4_2_2_AVR32_2_1_5
+	default y if !BR2_GCC_VERSION_4_2_4 && !BR2_GCC_VERSION_4_2_2_AVR32_2_1_5
 
 config BR2_GCC_SNAP_DATE
 	string "GCC snapshot date"
-	default "20070921"
+	default "4.7-20110430"
 	depends on BR2_GCC_VERSION_SNAP
 	help
-	  Enter snapshot date to use for gcc.  Format is:
-	  YYYYMMDD
+	  Enter snapshot date to use for gcc.
+	  Format is: A.B-YYYYMMDD
+
+	  A is GCC major version, for example 4.
+	  B is GCC minor version, for example 7.
+	  YYYYMMDD is snapshot date, for example 20110430.
+
+	  This way we'd get version 4.7-20110430
 
 config BR2_GCC_VERSION
 	string
 	default "4.2.2-avr32-2.1.5" if BR2_GCC_VERSION_4_2_2_AVR32_2_1_5
 	default "4.2.4"     if BR2_GCC_VERSION_4_2_4
-	default "4.3.5"     if BR2_GCC_VERSION_4_3_X
-	default "4.4.5"     if BR2_GCC_VERSION_4_4_X
-	default "4.5.2"     if BR2_GCC_VERSION_4_5_X
+	default "4.3.6"     if BR2_GCC_VERSION_4_3_X
+	default "4.4.6"     if BR2_GCC_VERSION_4_4_X
+	default "4.5.3"     if BR2_GCC_VERSION_4_5_X
+	default "4.6.2"     if BR2_GCC_VERSION_4_6_X
 	default $BR2_GCC_SNAP_DATE if BR2_GCC_VERSION_SNAP
 
 config BR2_EXTRA_GCC_CONFIG_OPTIONS
@@ -61,18 +72,6 @@ config BR2_EXTRA_GCC_CONFIG_OPTIONS
 	default ""
 	help
 	  Any additional gcc configure options you may want to include....
-
-config BR2_GCC_CROSS_OBJC
-	bool "Objective-C cross-compiler support"
-	depends on !BR2_avr32
-	help
-	  Build an Objective-C cross-compiler
-
-config BR2_GCC_CROSS_FORTRAN
-	bool "Fortran cross-compiler support"
-	depends on !BR2_avr32
-	help
-	  Build a Fortran cross-compiler
 
 config BR2_GCC_CROSS_JAVA
        bool
@@ -116,3 +115,9 @@ config BR2_GCC_ENABLE_TLS
 	help
 	  Enable the compiler to generate code for accessing
 	  thread local storage variables
+
+config BR2_GCC_ENABLE_OPENMP
+	bool "Enable compiler OpenMP support"
+	depends on !BR2_PTHREADS_NONE && !BR2_avr32
+	help
+	  Enable OpenMP support for the compiler
