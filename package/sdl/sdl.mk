@@ -46,6 +46,13 @@ SDL_CONF_OPT += --enable-pulseaudio=no \
 		--disable-nasm \
 		--disable-video-ps3
 
+define HOST_SDL_AUTOGEN
+	cd $(@D) && ./autogen.sh
+endef
+
+HOST_SDL_PRE_CONFIGURE_HOOKS += HOST_SDL_AUTOGEN
+
+
 # Fixup prefix= and exec_prefix= in sdl-config, and remove the
 # -Wl,-rpath option.
 define SDL_FIXUP_SDL_CONFIG
