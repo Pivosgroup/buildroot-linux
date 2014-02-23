@@ -22,7 +22,7 @@ XBMC_DEPENDENCIES += libogg flac libmad libmpeg2 libogg \
   freetype jasper jpeg libmodplug libpng libungif tiff libcurl \
   libmicrohttpd libssh2 boost fribidi ncurses pcre libnfs afpfs-ng \
   libplist libshairport libbluray libcec \
-  readline expat libxml2 yajl samba30 libass opengl libusb-compat \
+  readline expat libxml2 yajl samba libass opengl libusb-compat \
   avahi udev tinyxml taglib18 libssh
 
 ifeq ($(BR2_PACKAGE_LIBAMPLAYERM1),y)
