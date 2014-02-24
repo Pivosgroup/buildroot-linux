@@ -10,7 +10,7 @@
 
 CTNG_DIR := $(BUILD_DIR)/build-toolchain
 
-CTNG_UCLIBC_CONFIG_FILE := $(TOPDIR)/toolchain/toolchain-crosstool-ng/uClibc.config
+CTNG_UCLIBC_CONFIG_FILE := $(TOPDIR)/toolchain/uClibc/uClibc-0.9.33.config
 CTNG_CONFIG_FILE:=$(call qstrip,$(BR2_TOOLCHAIN_CTNG_CONFIG))
 
 # Hack! ct-ng is in fact a Makefile script. As such, it accepts all
@@ -68,10 +68,10 @@ $(STAMP_DIR)/ct-ng-toolchain-installed: $(STAMP_DIR)/ct-ng-toolchain-built
 	    echo "CTNG_SYSROOT='$${CTNG_SYSROOT}'";                         \
 	    echo "Copy external toolchain libraries to target...";          \
 	    for libs in $(CTNG_LIBS_LIB); do                                \
-	        $(call copy_toolchain_lib_root,$${CTNG_SYSROOT},$$libs,/lib); \
+	        $(call copy_toolchain_lib_root,$${CTNG_SYSROOT},,lib,$$libs,/lib); \
 	    done;                                                           \
 	    for libs in $(CTNG_LIBS_USR_LIB); do                            \
-	        $(call copy_toolchain_lib_root,$${CTNG_SYSROOT},$$libs,/usr/lib); \
+	        $(call copy_toolchain_lib_root,$${CTNG_SYSROOT},,lib,$$libs,/usr/lib); \
 	    done;
 	$(Q)touch $@
 

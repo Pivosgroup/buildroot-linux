@@ -3,9 +3,8 @@
 # OpenCV (Open Source Computer Vision)
 #
 #############################################################
-OPENCV_SERIES  = 2.3
-OPENCV_VERSION = $(OPENCV_SERIES).0
-OPENCV_SITE    = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/project/opencvlibrary/opencv-unix/$(OPENCV_SERIES)
+OPENCV_VERSION = 2.3.1a
+OPENCV_SITE    = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/project/opencvlibrary/opencv-unix/2.3.1
 OPENCV_SOURCE  = OpenCV-$(OPENCV_VERSION).tar.bz2
 OPENCV_INSTALL_STAGING = YES
 
@@ -35,6 +34,8 @@ OPENCV_CONF_OPT = \
 	-DWITH_TBB=OFF \
 	-DWITH_UNICAP=OFF \
 	-DWITH_XINE=OFF
+
+OPENCV_DEPENDENCIES += zlib
 
 ifeq ($(BR2_PACKAGE_OPENCV_WITH_PYTHON),y)
 OPENCV_CONF_OPT += -DBUILD_NEW_PYTHON_SUPPORT=ON

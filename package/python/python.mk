@@ -28,7 +28,6 @@ HOST_PYTHON_CONF_OPT += 	\
 	--disable-bsddb		\
 	--disable-test-modules	\
 	--disable-bz2		\
-	--disable-zlib		\
 	--disable-ssl
 
 HOST_PYTHON_MAKE_ENV = \
@@ -52,7 +51,7 @@ endef
 
 PYTHON_DEPENDENCIES  = host-python libffi
 
-HOST_PYTHON_DEPENDENCIES = host-expat
+HOST_PYTHON_DEPENDENCIES = host-expat host-zlib
 
 PYTHON_INSTALL_STAGING = YES
 
@@ -132,6 +131,15 @@ PYTHON_CONF_OPT += \
 PYTHON_MAKE_ENV = \
 	PYTHON_MODULES_INCLUDE=$(STAGING_DIR)/usr/include \
 	PYTHON_MODULES_LIB="$(STAGING_DIR)/lib $(STAGING_DIR)/usr/lib"
+
+# python distutils adds -L$LIBDIR when linking binary extensions, causing
+# trouble for cross compilation
+define PYTHON_FIXUP_LIBDIR
+	$(SED) 's|^LIBDIR=.*|LIBDIR= $(STAGING_DIR)/usr/lib|' \
+	   $(STAGING_DIR)/usr/lib/python$(PYTHON_VERSION_MAJOR)/config/Makefile
+endef
+
+PYTHON_POST_INSTALL_STAGING_HOOKS += PYTHON_FIXUP_LIBDIR
 
 #
 # Development files removal

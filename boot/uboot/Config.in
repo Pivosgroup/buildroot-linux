@@ -12,24 +12,26 @@ config BR2_TARGET_UBOOT_BOARDNAME
 
 choice
 	prompt "U-Boot Version"
-	default BR2_TARGET_UBOOT_2011_06
+	default BR2_TARGET_UBOOT_2012_04
 	help
 	  Select the specific U-Boot version you want to use
 
+config BR2_TARGET_UBOOT_2012_04
+	bool "2012.04.01"
+
+config BR2_TARGET_UBOOT_2011_12
+	bool "2011.12"
+
+config BR2_TARGET_UBOOT_2011_09
+	bool "2011.09"
+
 config BR2_TARGET_UBOOT_2011_06
 	bool "2011.06"
+	depends on BR2_DEPRECATED
 
 config BR2_TARGET_UBOOT_2011_03
 	bool "2011.03"
-
-config BR2_TARGET_UBOOT_2010_12
-	bool "2010.12"
-
-config BR2_TARGET_UBOOT_2010_09
-	bool "2010.09"
-
-config BR2_TARGET_UBOOT_2010_06
-	bool "2010.06"
+	depends on BR2_DEPRECATED
 
 config BR2_TARGET_UBOOT_CUSTOM_TARBALL
 	bool "Custom tarball"
@@ -48,11 +50,11 @@ endif
 
 config BR2_TARGET_UBOOT_VERSION
 	string
+	default "2012.04.01"	if BR2_TARGET_UBOOT_2012_04
+	default "2011.12"	if BR2_TARGET_UBOOT_2011_12
+	default "2011.09"	if BR2_TARGET_UBOOT_2011_09
 	default "2011.06"	if BR2_TARGET_UBOOT_2011_06
 	default "2011.03"	if BR2_TARGET_UBOOT_2011_03
-	default "2010.12"	if BR2_TARGET_UBOOT_2010_12
-	default "2010.09"	if BR2_TARGET_UBOOT_2010_09
-	default "2010.06"	if BR2_TARGET_UBOOT_2010_06
 	default "custom"	if BR2_TARGET_UBOOT_CUSTOM_TARBALL
 	default $BR2_TARGET_UBOOT_CUSTOM_GIT_VERSION if BR2_TARGET_UBOOT_CUSTOM_GIT
 
@@ -80,6 +82,12 @@ choice
 
 config BR2_TARGET_UBOOT_FORMAT_BIN
 	bool "u-boot.bin"
+
+config BR2_TARGET_UBOOT_FORMAT_IMG
+	bool "u-boot.img"
+
+config BR2_TARGET_UBOOT_FORMAT_NAND_BIN
+	bool "u-boot-nand.bin"
 
 config BR2_TARGET_UBOOT_FORMAT_KWB
 	depends on BR2_arm
@@ -135,5 +143,23 @@ config BR2_TARGET_UBOOT_ETH1ADDR
 	  Target MAC address for the second ethernet interface.
 
 endif # BR2_TARGET_UBOOT_NETWORK
+
+config BR2_TARGET_UBOOT_SPL
+	bool "U-Boot SPL support"
+	depends on !BR2_TARGET_XLOADER
+	help
+	  Enable the U-Boot SPL support. SPL is a first stage
+	  bootloader loaded into internal memory in charge of
+	  enabling and configuring the external memory (DDR),
+	  and load the u-boot program into DDR.
+
+config BR2_TARGET_UBOOT_SPL_NAME
+	string "U-Boot SPL target name"
+	default "u-boot-spl.bin"
+	depends on BR2_TARGET_UBOOT_SPL
+	help
+	  This is the name of the SPL binary, generated during
+	  u-boot build. For most platform it is u-boot-spl.bin
+	  but not always. It is MLO on OMAP for example.
 
 endif # BR2_TARGET_UBOOT
