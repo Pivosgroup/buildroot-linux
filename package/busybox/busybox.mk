@@ -28,6 +28,11 @@ ifndef BUSYBOX_CONFIG_FILE
 	BUSYBOX_CONFIG_FILE = $(call qstrip,$(BR2_PACKAGE_BUSYBOX_CONFIG))
 endif
 
+define BUSYBOX_PERMISSIONS
+/bin/busybox			 f 4755	0 0 - - - - -
+/usr/share/udhcpc/default.script f 755  0 0 - - - - -
+endef
+
 # If mdev will be used for device creation enable it and copy S10mdev to /etc/init.d
 ifeq ($(BR2_ROOTFS_DEVICE_CREATION_DYNAMIC_MDEV),y)
 define BUSYBOX_INSTALL_MDEV_SCRIPT
@@ -137,6 +142,19 @@ define BUSYBOX_INSTALL_LOGGING_SCRIPT
 	else rm -f $(TARGET_DIR)/etc/init.d/S01logging; fi
 endef
 
+ifeq ($(BR2_PACKAGE_BUSYBOX_WATCHDOG),y)
+define BUSYBOX_SET_WATCHDOG
+        $(call KCONFIG_ENABLE_OPT,CONFIG_WATCHDOG,$(BUSYBOX_BUILD_CONFIG))
+endef
+define BUSYBOX_INSTALL_WATCHDOG_SCRIPT
+	[ -f $(TARGET_DIR)/etc/init.d/S15watchdog ] || \
+		install -D -m 0755 package/busybox/S15watchdog \
+			$(TARGET_DIR)/etc/init.d/S15watchdog && \
+		sed -i s/PERIOD/$(BR2_PACKAGE_BUSYBOX_WATCHDOG_PERIOD)/ \
+			$(TARGET_DIR)/etc/init.d/S15watchdog
+endef
+endif
+
 # We do this here to avoid busting a modified .config in configure
 BUSYBOX_POST_EXTRACT_HOOKS += BUSYBOX_COPY_CONFIG
 
@@ -150,6 +168,7 @@ define BUSYBOX_CONFIGURE_CMDS
 	$(BUSYBOX_NETKITTELNET)
 	$(BUSYBOX_INTERNAL_SHADOW_PASSWORDS)
 	$(BUSYBOX_DISABLE_MMU_APPLETS)
+	$(BUSYBOX_SET_WATCHDOG)
 	@yes "" | $(MAKE) ARCH=$(KERNEL_ARCH) CROSS_COMPILE="$(TARGET_CROSS)" \
 		-C $(@D) oldconfig
 endef
@@ -167,6 +186,7 @@ define BUSYBOX_INSTALL_TARGET_CMDS
 	$(BUSYBOX_INSTALL_MDEV_SCRIPT)
 	$(BUSYBOX_INSTALL_MDEV_CONF)
 	$(BUSYBOX_INSTALL_LOGGING_SCRIPT)
+	$(BUSYBOX_INSTALL_WATCHDOG_SCRIPT)
 endef
 
 define BUSYBOX_UNINSTALL_TARGET_CMDS

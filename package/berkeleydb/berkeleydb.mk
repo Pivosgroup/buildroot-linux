@@ -3,13 +3,16 @@
 # berkeley db
 #
 #############################################################
-BERKELEYDB_VERSION:=4.4.20
-BERKELEYDB_SITE:=http://download.oracle.com/berkeley-db
-BERKELEYDB_SOURCE:=db-$(BERKELEYDB_VERSION).NC.tar.gz
-BERKELEYDB_SUBDIR=build_unix
+BERKELEYDB_VERSION = 5.3.15
+BERKELEYDB_SITE = http://download.oracle.com/berkeley-db
+BERKELEYDB_SOURCE = db-$(BERKELEYDB_VERSION).NC.tar.gz
+BERKELEYDB_SUBDIR = build_unix
 BERKELEYDB_INSTALL_STAGING = YES
+BERKELEYDB_BINARIES = db_archive db_checkpoint db_deadlock db_dump \
+	db_hotbackup db_load db_log_verify db_printlog db_recover db_replicate \
+	db_stat db_tuner db_upgrade db_verify
 
-#build directory can't be the directory where configure are there, so..
+# build directory can't be the directory where configure are there, so..
 define BERKELEYDB_CONFIGURE_CMDS
 	(cd $(@D)/build_unix; rm -rf config.cache; \
 		$(TARGET_CONFIGURE_OPTS) \
@@ -20,27 +23,28 @@ define BERKELEYDB_CONFIGURE_CMDS
 		--build=$(GNU_HOST_NAME) \
 		--prefix=/usr \
 		--exec-prefix=/usr \
-		--bindir=/usr/bin \
-		--sbindir=/usr/sbin \
-		--libdir=/usr/lib \
-		--libexecdir=/usr/lib \
 		--sysconfdir=/etc \
-		--datadir=/usr/share \
-		--localstatedir=/var \
-		--includedir=/usr/include \
-		--mandir=/usr/share/man \
-		--infodir=/usr/share/info \
 		--with-gnu-ld \
-		--disable-cxx \
+		$(if $(BR2_INSTALL_LIBSTDCPP),--enable-cxx,--disable-cxx) \
 		--disable-java \
-		--disable-rpc \
 		--disable-tcl \
 		--disable-compat185 \
 		$(SHARED_STATIC_LIBS_OPTS) \
 		--with-pic \
+		--enable-o_direct \
 	)
 	$(SED) 's/\.lo/.o/g' $(@D)/build_unix/Makefile
 endef
+
+ifneq ($(BR2_PACKAGE_BERKELEYDB_TOOLS),y)
+
+define BERKELEYDB_REMOVE_TOOLS
+	rm -f $(addprefix $(TARGET_DIR)/usr/bin/, $(BERKELEYDB_BINARIES))
+endef
+
+BERKELEYDB_POST_INSTALL_TARGET_HOOKS += BERKELEYDB_REMOVE_TOOLS
+
+endif
 
 ifneq ($(BR2_HAVE_DOCUMENTATION),y)
 

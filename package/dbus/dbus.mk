@@ -3,8 +3,7 @@
 # dbus
 #
 #############################################################
-DBUS_VERSION = 1.4.16
-DBUS_SOURCE = dbus-$(DBUS_VERSION).tar.gz
+DBUS_VERSION = 1.4.20
 DBUS_SITE = http://dbus.freedesktop.org/releases/dbus/
 DBUS_INSTALL_STAGING = YES
 
@@ -37,6 +36,10 @@ DBUS_CONF_OPT += --with-x
 DBUS_DEPENDENCIES += xlib_libX11
 else
 DBUS_CONF_OPT += --without-x
+endif
+
+ifeq ($(BR2_PACKAGE_SYSTEMD),y)
+DBUS_CONF_OPT += --with-systemdsystemunitdir=/lib/systemd/system
 endif
 
 # fix rebuild (dbus makefile errors out if /var/lib/dbus is a symlink)

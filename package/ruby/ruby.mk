@@ -4,11 +4,12 @@
 #
 #############################################################
 
-RUBY_VERSION = 1.9.2-p0
+RUBY_VERSION = 1.9.2-p320
 RUBY_SITE = ftp://ftp.ruby-lang.org/pub/ruby/1.9
 RUBY_AUTORECONF = YES
 HOST_RUBY_AUTORECONF = YES
 RUBY_DEPENDENCIES = host-ruby
+HOST_RUBY_DEPENDENCIES =
 RUBY_MAKE_ENV = $(TARGET_MAKE_ENV)
 RUBY_CONF_OPT = --disable-install-doc --disable-rpath
 HOST_RUBY_CONF_OPT = --disable-install-doc --with-out-ext=curses,readline

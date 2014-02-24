@@ -3,9 +3,10 @@
 # SDL
 #
 #############################################################
-SDL_VERSION:=1.2.14
-SDL_SOURCE:=SDL-$(SDL_VERSION).tar.gz
-SDL_SITE:=http://www.libsdl.org/release
+
+SDL_VERSION = 1.2.15
+SDL_SOURCE = SDL-$(SDL_VERSION).tar.gz
+SDL_SITE = http://www.libsdl.org/release
 SDL_INSTALL_STAGING = YES
 SDL_CONF_ENV = ac_cv_path_DIRECTFBCONFIG=$(STAGING_DIR)/usr/bin/directfb-config
 
@@ -31,7 +32,9 @@ endif
 
 ifeq ($(BR2_PACKAGE_SDL_X11),y)
 SDL_CONF_OPT+=--enable-video-x11=yes
-SDL_DEPENDENCIES += xserver_xorg-server
+SDL_DEPENDENCIES += xlib_libX11 xlib_libXext \
+	$(if $(BR2_PACKAGE_XLIB_LIBXRENDER), xlib_libXrender) \
+	$(if $(BR2_PACKAGE_XLIB_LIBXRANDR), xlib_libXrandr)
 else
 SDL_CONF_OPT+=--enable-video-x11=no
 endif
@@ -42,6 +45,10 @@ endif
 
 ifeq ($(BR2_PACKAGE_ALSA_LIB),y)
 SDL_DEPENDENCIES += alsa-lib
+endif
+
+ifeq ($(BR2_PACKAGE_MESA3D),y)
+SDL_DEPENDENCIES += mesa3d
 endif
 
 SDL_CONF_OPT += --enable-pulseaudio=no \

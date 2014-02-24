@@ -19,10 +19,10 @@ if BR2_LINUX_KERNEL
 #
 choice
 	prompt "Kernel version"
-	default BR2_LINUX_KERNEL_3_1
+	default BR2_LINUX_KERNEL_3_3
 
-config BR2_LINUX_KERNEL_3_1
-	bool "3.1.4"
+config BR2_LINUX_KERNEL_3_3
+	bool "3.3.7"
 
 config BR2_LINUX_KERNEL_SAME_AS_HEADERS
 	bool "Same as toolchain kernel headers"
@@ -58,7 +58,6 @@ endchoice
 config BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE
 	string "Kernel version"
 	depends on BR2_LINUX_KERNEL_CUSTOM_VERSION
-	default "3.1.4"
 
 config BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION
 	string "URL of custom kernel tarball"
@@ -70,11 +69,15 @@ config BR2_LINUX_KERNEL_CUSTOM_GIT_REPO_URL
 
 config BR2_LINUX_KERNEL_CUSTOM_GIT_VERSION
 	string "Custom Git version"
+	default "HEAD"
 	depends on BR2_LINUX_KERNEL_CUSTOM_GIT
+	help
+	  Git revision to use in the format used by git rev-parse,
+	  E.G. a sha id, a tag, branch, ..
 
 config BR2_LINUX_KERNEL_VERSION
 	string
-	default "3.1.4" if BR2_LINUX_KERNEL_3_1
+	default "3.3.7" if BR2_LINUX_KERNEL_3_3
 	default BR2_DEFAULT_KERNEL_HEADERS if BR2_LINUX_KERNEL_SAME_AS_HEADERS
 	default BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE if BR2_LINUX_KERNEL_CUSTOM_VERSION
 	default "custom" if BR2_LINUX_KERNEL_CUSTOM_TARBALL
@@ -121,6 +124,14 @@ config BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE
 	help
 	  Path to the kernel configuration file
 
+config BR2_LINUX_KERNEL_DTS_FILE
+    string "Device Tree dts file location"
+    depends on BR2_microblaze
+    help
+      Path from where the dts file has to be copied
+      The final "custom target" name depends on the
+      dts file name:
+          <name>.dts --> simpleImage.<name>
 #
 # Binary format
 #

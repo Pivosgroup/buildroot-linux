@@ -3,15 +3,11 @@
 # samba
 #
 #############################################################
-SAMBA_VERSION = 3.5.11
-SAMBA_SOURCE = samba-$(SAMBA_VERSION).tar.gz
-SAMBA_SITE = http://ftp.samba.org/pub/samba/stable/
 
+SAMBA_VERSION = 3.5.15
+SAMBA_SITE = http://ftp.samba.org/pub/samba/stable
 SAMBA_SUBDIR = source3
-SAMBA_AUTORECONF = NO
-
 SAMBA_INSTALL_STAGING = YES
-SAMBA_INSTALL_TARGET = YES
 
 
 SAMBA_DEPENDENCIES = \

@@ -7,22 +7,13 @@
 
 XENOMAI_VERSION = $(call qstrip,$(BR2_PACKAGE_XENOMAI_VERSION))
 ifeq ($(XENOMAI_VERSION),)
-XENOMAI_VERSION = 2.5.6
+XENOMAI_VERSION = 2.6.0
 endif
 
 XENOMAI_SITE = http://download.gna.org/xenomai/stable/
 XENOMAI_SOURCE = xenomai-$(XENOMAI_VERSION).tar.bz2
 
 XENOMAI_INSTALL_STAGING = YES
-
-ifeq ($(BR2_arm),y)
-XENOMAI_CPU_TYPE = $(call qstrip,$(BR2_PACKAGE_XENOMAI_CPU_TYPE))
-# Set "generic" if not defined
-ifeq ($(XENOMAI_CPU_TYPE),)
-XENOMAI_CPU_TYPE = generic
-endif
-XENOMAI_CONF_OPT += --enable-arm-mach=$(XENOMAI_CPU_TYPE)
-endif #BR2_arm
 
 ifeq ($(BR2_PACKAGE_XENOMAI_SMP),y)
 XENOMAI_CONF_OPT += --enable-smp
@@ -98,8 +89,12 @@ endef
 
 XENOMAI_POST_INSTALL_TARGET_HOOKS += XENOMAI_REMOVE_SKINS
 
-# If you use static /dev creation don't forget to update your
-#  device_table_dev.txt
+define XENOMAI_DEVICES
+/dev/rtheap  c  666  0  0  10  254  0  0  -
+/dev/rtscope c  666  0  0  10  253  0  0  -
+/dev/rtp     c  666  0  0  150 0    0  1  32
+endef
+
 ifeq ($(BR2_ROOTFS_DEVICE_CREATION_DYNAMIC_UDEV),y)
 XENOMAI_DEPENDENCIES += udev
 

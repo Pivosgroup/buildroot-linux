@@ -4,18 +4,18 @@
 #
 #######################################################
 
-CONNMAN_VERSION = 0.77
+CONNMAN_VERSION = 0.78
 CONNMAN_SITE = git://git.kernel.org/pub/scm/network/connman/connman.git
 CONNMAN_DEPENDENCIES = libglib2 dbus iptables
 CONNMAN_INSTALL_STAGING = YES
 CONNMAN_CONF_OPT += --localstatedir=/var \
 	$(if $(BR2_PACKAGE_CONNMAN_THREADS),--enable-threads,--disable-threads)		\
 	$(if $(BR2_PACKAGE_CONNMAN_DEBUG),--enable-debug,--disable-debug)		\
-	$(if $(BR2_PACKAGE_CONNMAN_ETHERNET),--enable-ethernet=builtin,--disable-ethernet)	\
-	$(if $(BR2_PACKAGE_CONNMAN_WIFI),--enable-wifi=builtin,--disable-wifi)			\
+	$(if $(BR2_PACKAGE_CONNMAN_ETHERNET),--enable-ethernet,--disable-ethernet)	\
+	$(if $(BR2_PACKAGE_CONNMAN_WIFI),--enable-wifi,--disable-wifi)			\
 	$(if $(BR2_PACKAGE_CONNMAN_BLUETOOTH),--enable-bluetooth,--disable-bluetooth)	\
-	$(if $(BR2_PACKAGE_CONNMAN_LOOPBACK),--enable-loopback=builtin,--disable-loopback)	\
-	$(if $(BR2_PACKAGE_CONNMAN_NTPD),--enable-ntpd=builtin,--disable-ntpd)
+	$(if $(BR2_PACKAGE_CONNMAN_LOOPBACK),--enable-loopback,--disable-loopback)	\
+	$(if $(BR2_PACKAGE_CONNMAN_NTPD),--enable-ntpd,--disable-ntpd)
 
 # as long as sources are obtained from git, we need to generate the autofoo stuff
 CONNMAN_AUTORECONF = YES
@@ -37,4 +37,3 @@ CONNMAN_POST_INSTALL_TARGET_HOOKS += CONNMAN_INSTALL_CM
 endif
 
 $(eval $(call AUTOTARGETS))
-
