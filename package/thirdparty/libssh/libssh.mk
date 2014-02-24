@@ -13,10 +13,11 @@ LIBSSH_CONFIGURE_CMDS = \
         (mkdir -p $(LIBSSH_TEMP_BUILDDIR) && rm -rf $(LIBSSH_TEMP_BUILDDIR)/* && \
          cd $(LIBSSH_TEMP_BUILDDIR) && \
         $(LIBSSH_CONF_ENV) $(HOST_DIR)/usr/bin/cmake $(LIBSSH_SRCDIR) \
-                -DCMAKE_TOOLCHAIN_FILE="$(BASE_DIR)/toolchainfile.cmake" \
+                -DCMAKE_TOOLCHAIN_FILE="$(HOST_DIR)/usr/share/buildroot/toolchainfile.cmake" \
                 -DCMAKE_INSTALL_PREFIX="/usr" \
                 $(LIBSSH_CONF_OPT) \
         )
+LIBSSH_DEPENDENCIES += zlib
 
 LIBSSH_BUILD_CMDS = \
         $(HOST_MAKE_ENV) $(LIBSSH_MAKE_ENV) $(LIBSSH_MAKE) $(LIBSSH_MAKE_OPT) -C $(LIBSSH_TEMP_BUILDDIR)

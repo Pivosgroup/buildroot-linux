@@ -84,3 +84,4 @@ define ALSA_LIB_UNINSTALL_STAGING_CMDS
 endef
 
 $(eval $(call AUTOTARGETS))
+$(eval $(call AUTOTARGETS,host))

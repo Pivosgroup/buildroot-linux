@@ -1,9 +1,9 @@
-diff -ruN udev-173/extras/input_id/input_id.c udev-173-good//extras/input_id/input_id.c
---- udev-173/extras/input_id/input_id.c	2011-07-18 14:00:25.747859817 -0400
-+++ udev-173-good//extras/input_id/input_id.c	2012-04-05 23:11:19.677562254 -0400
+diff -ruN udev.orig/src/udev-builtin-input_id.c udev.new/src/udev-builtin-input_id.c
+--- udev.orig/src/udev-builtin-input_id.c	2012-01-29 01:15:46.000000000 +0100
++++ udev.new/src/udev-builtin-input_id.c	2013-12-03 15:48:39.000000000 +0100
 @@ -30,6 +30,10 @@
- #include "libudev.h"
- #include "libudev-private.h"
+ 
+ #include "udev.h"
  
 +#ifndef BTN_TRIGGER_HAPPY
 +#define BTN_TRIGGER_HAPPY 0x2c0
