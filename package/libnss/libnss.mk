@@ -28,6 +28,10 @@ LIBNSS_BUILD_VARS = MOZILLA_CLIENT=1 \
 		OS_RELEASE="2.6" \
 		OS_TEST="$(ARCH)"
 
+ifeq ($(BR2_ARCH_IS_64),y)
+LIBNSS_BUILD_VARS += USE_64=1
+endif
+
 
 define LIBNSS_BUILD_CMDS
 	$(MAKE1) -C $(@D)/$(LIBNSS_SUBDIR)/nss build_coreconf build_dbm all \
@@ -45,6 +49,10 @@ define LIBNSS_INSTALL_STAGING_CMDS
 		$(@D)/$(LIBNSS_DISTDIR)/public/nss/*
 	$(INSTALL) -m 755 -t $(STAGING_DIR)/usr/lib/ \
 		$(@D)/$(LIBNSS_DISTDIR)/lib/*.a
+	$(INSTALL) -D -m 0644 $(TOPDIR)/package/libnss/nss.pc.in \
+		$(STAGING_DIR)/usr/lib/pkgconfig/nss.pc
+	$(SED) 's/@VERSION@/$(LIBNSS_VERSION)/g;' \
+		$(STAGING_DIR)/usr/lib/pkgconfig/nss.pc
 endef
 
 define LIBNSS_INSTALL_TARGET_CMDS
@@ -55,6 +63,10 @@ define LIBNSS_INSTALL_TARGET_CMDS
 		$(@D)/$(LIBNSS_DISTDIR)/public/nss/*
 	$(INSTALL) -m 755 -t $(TARGET_DIR)/usr/lib/ \
 		$(@D)/$(LIBNSS_DISTDIR)/lib/*.a
+	$(INSTALL) -D -m 0644 $(TOPDIR)/package/libnss/nss.pc.in \
+		$(TARGET_DIR)/usr/lib/pkgconfig/nss.pc
+	$(SED) 's/@VERSION@/$(LIBNSS_VERSION)/g;' \
+		$(TARGET_DIR)/usr/lib/pkgconfig/nss.pc
 endef
 
 define LIBNSS_CLEAN_CMDS
@@ -64,4 +76,4 @@ define LIBNSS_CLEAN_CMDS
 					BUILD_OPT=1
 endef
 
-$(eval $(call GENTARGETS))
+$(eval $(generic-package))

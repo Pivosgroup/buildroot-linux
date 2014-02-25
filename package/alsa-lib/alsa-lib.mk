@@ -4,9 +4,11 @@
 #
 #############################################################
 
-ALSA_LIB_VERSION = 1.0.25
+ALSA_LIB_VERSION = 1.0.26
 ALSA_LIB_SOURCE = alsa-lib-$(ALSA_LIB_VERSION).tar.bz2
-ALSA_LIB_SITE = ftp://ftp.alsa-project.org/pub/lib
+ALSA_LIB_SITE = http://alsa.cybermirror.org/lib
+ALSA_LIB_LICENSE = LGPLv2.1+
+ALSA_LIB_LICENSE_FILES = COPYING
 ALSA_LIB_INSTALL_STAGING = YES
 ALSA_LIB_CFLAGS=$(TARGET_CFLAGS)
 ALSA_LIB_CONF_OPT = --with-alsa-devdir=$(call qstrip,$(BR2_PACKAGE_ALSA_LIB_DEVDIR)) \
@@ -15,7 +17,7 @@ ALSA_LIB_CONF_OPT = --with-alsa-devdir=$(call qstrip,$(BR2_PACKAGE_ALSA_LIB_DEVD
 		    --without-versioned
 
 # Can't build with static & shared at the same time (1.0.25+)
-ifeq ($(BR2_PREFER_STATIC),y)
+ifeq ($(BR2_PREFER_STATIC_LIB),y)
 ALSA_LIB_CONF_OPT += --enable-shared=no
 else
 ALSA_LIB_CONF_OPT += --enable-static=no
@@ -83,5 +85,5 @@ define ALSA_LIB_UNINSTALL_STAGING_CMDS
 	-rm -rf $(STAGING_DIR)/usr/share/alsa
 endef
 
-$(eval $(call AUTOTARGETS))
-$(eval $(call AUTOTARGETS,host))
+$(eval $(autotools-package))
+$(eval $(autotools-package-host))

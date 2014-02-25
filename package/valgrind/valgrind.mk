@@ -7,6 +7,9 @@
 VALGRIND_VERSION = 3.7.0
 VALGRIND_SITE    = http://valgrind.org/downloads/
 VALGRIND_SOURCE  = valgrind-$(VALGRIND_VERSION).tar.bz2
+VALGRIND_LICENSE = GPLv2 GFDLv1.2
+VALGRIND_LICENSE_FILES = COPYING COPYING.DOCS
+
 VALGRIND_CONF_OPT = --disable-tls
 
 # On ARM, Valgrind only supports ARMv7, and uses the arch part of the
@@ -16,7 +19,7 @@ VALGRIND_CONF_OPT = --disable-tls
 # only be selected on Cortex A8 and Cortex A9 platforms.
 ifeq ($(BR2_cortex_a8)$(BR2_cortex_a9),y)
 VALGRIND_CONF_OPT += \
-	--host=$(patsubst arm-%,armv7-unknown-%,$(GNU_TARGET_NAME))
+	--host=$(patsubst arm-%,armv7-%,$(GNU_TARGET_NAME))
 endif
 
 define VALGRIND_INSTALL_UCLIBC_SUPP
@@ -120,4 +123,4 @@ endef
 VALGRIND_POST_INSTALL_TARGET_HOOKS += VALGRIND_REMOVE_NULGRIND
 endif
 
-$(eval $(call AUTOTARGETS))
+$(eval $(autotools-package))

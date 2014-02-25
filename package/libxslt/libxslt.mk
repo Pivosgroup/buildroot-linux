@@ -4,9 +4,11 @@
 #
 #############################################################
 
-LIBXSLT_VERSION = 1.1.26
+LIBXSLT_VERSION = 1.1.27
 LIBXSLT_SITE = ftp://xmlsoft.org/libxslt
 LIBXSLT_INSTALL_STAGING = YES
+LIBXSLT_LICENSE = MIT
+LIBXSLT_LICENSE_FILES = COPYING
 
 LIBXSLT_CONF_OPT = --with-gnu-ld --without-debug \
 		--without-python --with-libxml-prefix=$(STAGING_DIR)/usr/
@@ -16,6 +18,7 @@ LIBXSLT_DEPENDENCIES = libxml2
 # If we have enabled libgcrypt then use it, else disable crypto support.
 ifeq ($(BR2_PACKAGE_LIBGCRYPT),y)
 LIBXSLT_DEPENDENCIES += libgcrypt
+LIBXSLT_CONF_ENV += LIBGCRYPT_CONFIG=$(STAGING_DIR)/usr/bin/libgcrypt-config
 else
 LIBXSLT_CONF_OPT += --without-crypto
 endif
@@ -40,5 +43,5 @@ ifneq ($(BR2_HAVE_DEVFILES),y)
 LIBXSLT_POST_INSTALL_TARGET_HOOKS += LIBXSLT_REMOVE_CONFIG_SCRIPTS
 endif
 
-$(eval $(call AUTOTARGETS))
-$(eval $(call AUTOTARGETS,host))
+$(eval $(autotools-package))
+$(eval $(host-autotools-package))

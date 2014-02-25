@@ -4,21 +4,21 @@
 #
 #############################################################
 
-SAMBA_VERSION = 3.5.15
+SAMBA_VERSION = 3.6.9
 SAMBA_SITE = http://ftp.samba.org/pub/samba/stable
 SAMBA_SUBDIR = source3
 SAMBA_INSTALL_STAGING = YES
+SAMBA_LICENSE = GPLv3+
+SAMBA_LICENSE_FILES = COPYING
 
-
-SAMBA_DEPENDENCIES = \
-	$(if $(BR2_ENABLE_LOCALE),,libiconv) \
+SAMBA_DEPENDENCIES = popt \
 	$(if $(BR2_PACKAGE_SAMBA_RPCCLIENT),readline) \
 	$(if $(BR2_PACKAGE_SAMBA_SMBCLIENT),readline) \
 	$(if $(BR2_PACKAGE_SAMBA_AVAHI),avahi) \
 	$(if $(BR2_PACKAGE_SAMBA_GAMIN),gamin)
 
-
 SAMBA_CONF_ENV = \
+	ac_cv_file__proc_sys_kernel_core_pattern=yes \
 	samba_cv_HAVE_GETTIMEOFDAY_TZ=yes \
 	samba_cv_USE_SETREUID=yes \
 	samba_cv_HAVE_KERNEL_OPLOCKS_LINUX=yes \
@@ -30,7 +30,6 @@ SAMBA_CONF_ENV = \
 	samba_cv_fpie=no \
 	libreplace_cv_HAVE_IPV6=$(if $(BR2_INET_IPV6),yes,no) \
 	$(if $(BR2_PACKAGE_SAMBA_AVAHI),AVAHI_LIBS=-pthread)
-
 
 SAMBA_CONF_OPT = \
 	--localstatedir=/var \
@@ -51,32 +50,25 @@ SAMBA_CONF_OPT = \
 	$(if $(BR2_PACKAGE_SAMBA_SWAT),--enable-swat,--disable-swat) \
 	\
 	--without-cluster-support \
-	--without-cifsupcall \
+	--without-dnsupdate \
+	--with-sys-quotas \
 	--without-ads \
 	--without-ldap \
-	--with-included-popt \
 	--with-included-iniparser \
-	--with-libiconv=$(STAGING_DIR) \
 	\
-	$(if $(BR2_PACKAGE_SAMBA_CIFS),--with-cifsmount,--without-cifsmount) \
 	$(if $(BR2_PACKAGE_SAMBA_RPCCLIENT),--with-readline=$(STAGING_DIR)) \
 	$(if $(BR2_PACKAGE_SAMBA_SMBCLIENT),--with-readline=$(STAGING_DIR)) \
 	$(if $(BR2_PACKAGE_SAMBA_WINBINDD),--with-winbind,--without-winbind)
 
-
 SAMBA_INSTALL_TARGET_OPT = \
 	DESTDIR=$(TARGET_DIR) -C $(SAMBA_DIR)/$(SAMBA_SUBDIR) \
 	installlibs installservers installbin installscripts \
-	$(if $(BR2_PACKAGE_SAMBA_CIFS),installcifsmount) \
 	$(if $(BR2_PACKAGE_SAMBA_SWAT),installswat)
-
 
 SAMBA_UNINSTALL_TARGET_OPT = \
 	DESTDIR=$(TARGET_DIR) -C $(SAMBA_DIR)/$(SAMBA_SUBDIR) \
 	uninstalllibs uninstallservers uninstallbin uninstallscripts \
-	$(if $(BR2_PACKAGE_SAMBA_CIFS),uninstallcifsmount) \
 	$(if $(BR2_PACKAGE_SAMBA_SWAT),uninstallswat)
-
 
 # binaries to keep
 SAMBA_BINTARGETS_y = \
@@ -84,16 +76,12 @@ SAMBA_BINTARGETS_y = \
 	usr/lib/libtalloc.so \
 	usr/lib/libtdb.so
 
-
 # binaries to remove
 SAMBA_BINTARGETS_ = \
 	usr/lib/libnetapi.so* \
 	usr/lib/libsmbsharemodes.so*
 
-
 # binaries to keep or remove
-SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_CIFS) += usr/sbin/mount.cifs
-SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_CIFS) += usr/sbin/umount.cifs
 SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_EVENTLOGADM) += usr/bin/eventlogadm
 SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_NET) += usr/bin/net
 SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_NMBD) += usr/sbin/nmbd
@@ -118,6 +106,7 @@ SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_SMBPASSWD) += usr/bin/smbpasswd
 SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_SMBSHARESEC) += usr/bin/sharesec
 SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_SMBSPOOL) += usr/bin/smbspool
 SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_SMBSTATUS) += usr/bin/smbstatus
+SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_SMBTA_UTIL) += usr/bin/smbta-util
 SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_SMBTREE) += usr/bin/smbtree
 SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_SWAT) += usr/sbin/swat
 SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_TDB) += usr/bin/tdbbackup
@@ -131,7 +120,6 @@ SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_WBINFO) += usr/bin/wbinfo
 SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_WINBINDD) += usr/lib/libwbclient.so*
 SAMBA_BINTARGETS_$(BR2_PACKAGE_SAMBA_LIBSMBCLIENT) += usr/lib/libsmbclient.so*
 
-
 # non-binaries to remove
 SAMBA_TXTTARGETS_ = \
 	usr/include/libsmbclient.h \
@@ -140,7 +128,6 @@ SAMBA_TXTTARGETS_ = \
 	usr/include/talloc.h \
 	usr/include/tdb.h \
 	usr/include/wbclient.h
-
 
 # non-binaries to keep or remove
 SAMBA_TXTTARGETS_$(BR2_PACKAGE_SAMBA_FINDSMB) += usr/bin/findsmb
@@ -163,6 +150,14 @@ define SAMBA_REMOVE_SWAT_DOCUMENTATION
 	rm -rf $(TARGET_DIR)/usr/swat/help/welcome.html
 endef
 
+# --with-libiconv="" is to avoid detecting host libiconv and build failure
+ifeq ($(BR2_PACKAGE_SAMBA_LIBICONV),y)
+SAMBA_DEPENDENCIES += libiconv
+SAMBA_CONF_OPT += --with-libiconv=$(STAGING_DIR)
+else
+SAMBA_CONF_OPT += --with-libiconv=""
+endif
+
 ifeq ($(BR2_PACKAGE_SAMBA_SWAT),y)
 ifneq ($(BR2_HAVE_DOCUMENTATION),y)
 SAMBA_POST_INSTALL_TARGET_HOOKS += SAMBA_REMOVE_SWAT_DOCUMENTATION
@@ -182,4 +177,4 @@ endef
 
 SAMBA_POST_INSTALL_TARGET_HOOKS += SAMBA_INSTALL_INITSCRIPTS_CONFIG
 
-$(eval $(call AUTOTARGETS))
+$(eval $(autotools-package))

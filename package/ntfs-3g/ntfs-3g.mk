@@ -9,7 +9,7 @@ NTFS_3G_SOURCE = ntfs-3g_ntfsprogs-$(NTFS_3G_VERSION).tgz
 NTFS_3G_SITE = http://tuxera.com/opensource
 NTFS_3G_CONF_OPT = --disable-ldconfig
 NTFS_3G_INSTALL_STAGING = YES
-NTFS_3G_DEPENDENCIES = host-pkg-config
+NTFS_3G_DEPENDENCIES = host-pkgconf
 
 define NTFS_3G_TARGET_SYMLINK_CREATE
 	cd $(TARGET_DIR)/sbin; ln -fs mount.ntfs-3g mount.ntfs
@@ -33,4 +33,4 @@ ifneq ($(BR2_PACKAGE_NTFS_3G_NTFSPROGS),y)
 	NTFS_3G_CONF_OPT += --disable-ntfsprogs
 endif
 
-$(eval $(call AUTOTARGETS))
+$(eval $(autotools-package))

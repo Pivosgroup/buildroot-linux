@@ -5,6 +5,7 @@
 #############################################################
 
 OPROFILE_VERSION = 0.9.7
+OPROFILE_SITE = http://downloads.sourceforge.net/project/oprofile/oprofile/oprofile-$(OPROFILE_VERSION)
 OPROFILE_CONF_OPT = --localstatedir=/var --with-kernel-support
 OPROFILE_BINARIES = utils/ophelp pp/opannotate pp/oparchive pp/opgprof
 OPROFILE_BINARIES += pp/opreport opjitconv/opjitconv daemon/oprofiled
@@ -45,4 +46,4 @@ define OPROFILE_UNINSTALL_TARGET_CMDS
 	rm -rf $(TARGET_DIR)/usr/share/oprofile
 endef
 
-$(eval $(call AUTOTARGETS))
+$(eval $(autotools-package))

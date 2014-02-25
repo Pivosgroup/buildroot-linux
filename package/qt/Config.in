@@ -285,8 +285,13 @@ endif
 config BR2_PACKAGE_QT_DBUS
 	bool "DBus Module"
 	select BR2_PACKAGE_DBUS
+	depends on BR2_TOOLCHAIN_HAS_THREADS # dbus
+	depends on BR2_USE_MMU # dbus
 	help
 	  Build the Qt DBus module.
+
+comment "DBus Module requires a toolchain with thread support"
+	depends on !BR2_TOOLCHAIN_HAS_THREADS
 
 config BR2_PACKAGE_QT_XML
 	bool "XML Module"
@@ -311,6 +316,7 @@ config BR2_PACKAGE_QT_AUDIO_BACKEND
 	bool "QtMultimedia Audio backend"
 	depends on BR2_PACKAGE_QT_MULTIMEDIA
 	select BR2_PACKAGE_ALSA_LIB
+	depends on BR2_TOOLCHAIN_HAS_THREADS # alsa-lib
 	help
 	  Build the ALSA audio backend into QtMultimedia
 

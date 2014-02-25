@@ -27,9 +27,10 @@ test -r $UDEV_CONFIG || exit 6
 
 case "$1" in
     start)
-        echo -n "Populating $udev_root using udev: "
+        echo -n "Populating ${udev_root:-/dev} using udev: "
         echo -e '\000\000\000\000' > /proc/sys/kernel/hotplug
         $UDEV_BIN -d || (echo "FAIL" && exit 1)
+        udevadm trigger
         echo "done"
         echo "Initializing coldplug devices"
         /sbin/udevadm trigger --action=add --type=subsystems 2>/dev/null
@@ -38,7 +39,7 @@ case "$1" in
         ;;
     stop)
         # Stop execution of events
-        udevadm control --stop_exec_queue
+        udevadm control --stop-exec-queue
         killall udevd
         ;;
     *)

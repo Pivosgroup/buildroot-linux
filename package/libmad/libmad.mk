@@ -5,9 +5,11 @@
 #############################################################
 
 LIBMAD_VERSION = 0.15.1b
-LIBMAD_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/mad/
+LIBMAD_SITE = http://downloads.sourceforge.net/project/mad/libmad/$(LIBMAD_VERSION)
 LIBMAD_INSTALL_STAGING = YES
 LIBMAD_LIBTOOL_PATCH = NO
+LIBMAD_LICENSE = GPLv2+
+LIBMAD_LICENSE_FILES = COPYING
 
 define LIBMAD_PREVENT_AUTOMAKE
 	# Prevent automake from running.
@@ -30,6 +32,10 @@ LIBMAD_POST_INSTALL_TARGET_HOOKS += LIBMAD_INSTALL_TARGET_PC
 
 LIBMAD_CONF_OPT = \
 		--disable-debugging \
-		--enable-speed
+		$(if $(BR2_PACKAGE_LIBMAD_OPTIMIZATION_SPEED),--enable-speed) \
+		$(if $(BR2_PACKAGE_LIBMAD_OPTIMIZATION_ACCURACY),--enable-accuracy) \
+		--$(if $(BR2_PACKAGE_LIBMAD_SSO),enable,disable)-sso \
+		--$(if $(BR2_PACKAGE_LIBMAD_ASO),enable,disable)-aso \
+		--$(if $(BR2_PACKAGE_LIBMAD_STRICT_ISO),enable,disable)-strict-iso
 
-$(eval $(call AUTOTARGETS))
+$(eval $(autotools-package))

@@ -4,8 +4,10 @@
 #
 #############################################################
 
-WGET_VERSION = 1.13.4
+WGET_VERSION = 1.14
 WGET_SITE = $(BR2_GNU_MIRROR)/wget
+WGET_LICENSE = GPLv3+
+WGET_LICENSE_FILES = COPYING
 
 # Prefer full-blown wget over busybox
 ifeq ($(BR2_PACKAGE_BUSYBOX),y)
@@ -30,4 +32,4 @@ ifneq ($(BR2_PACKAGE_OPENSSL),y)
 endif
 endif
 
-$(eval $(call AUTOTARGETS))
+$(eval $(autotools-package))

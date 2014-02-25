@@ -3,9 +3,12 @@
 # mtd provides jffs2 utilities
 #
 #############################################################
-MTD_VERSION = 1.4.9
+MTD_VERSION = 1.5.0
 MTD_SOURCE = mtd-utils-$(MTD_VERSION).tar.bz2
 MTD_SITE = ftp://ftp.infradead.org/pub/mtd-utils
+MTD_LICENSE = GPLv2
+MTD_LICENSE_FILES = COPYING
+
 ifeq ($(BR2_PACKAGE_MTD_MKFSJFFS2),y)
 MTD_DEPENDENCIES = zlib lzo
 endif
@@ -17,9 +20,8 @@ endif
 HOST_MTD_DEPENDENCIES = host-zlib host-lzo host-e2fsprogs
 
 define HOST_MTD_BUILD_CMDS
-	CC="$(HOSTCC)" CFLAGS="$(HOST_CFLAGS)" LDFLAGS="$(HOST_LDFLAGS)" \
-		CROSS= $(MAKE1) BUILDDIR=$(@D) \
-		WITHOUT_XATTR=1 -C $(@D)
+	$(HOST_CONFIGURE_OPTS) $(MAKE1) \
+		CROSS= BUILDDIR=$(@D) WITHOUT_XATTR=1 -C $(@D)
 endef
 
 define HOST_MTD_INSTALL_CMDS
@@ -72,7 +74,7 @@ MTD_TARGETS_y += $(addprefix ubi-utils/,$(MTD_TARGETS_UBI_y))
 ifneq ($(MTD_TARGETS_y),)
 
 define MTD_BUILD_CMDS
-	$(MAKE1) $(TARGET_CONFIGURE_OPTS) CROSS=$(TARGET_CROSS) \
+	$(TARGET_CONFIGURE_OPTS) $(MAKE1) CROSS=$(TARGET_CROSS) \
 		BUILDDIR=$(@D) WITHOUT_XATTR=1 WITHOUT_LARGEFILE=1 -C $(@D) \
 		$(addprefix $(@D)/,$(MTD_TARGETS_y))
 endef
@@ -85,5 +87,5 @@ define MTD_INSTALL_TARGET_CMDS
  done
 endef
 
-$(eval $(call GENTARGETS))
-$(eval $(call GENTARGETS,host))
+$(eval $(generic-package))
+$(eval $(host-generic-package))

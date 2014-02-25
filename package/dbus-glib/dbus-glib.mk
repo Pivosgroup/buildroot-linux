@@ -21,7 +21,7 @@ DBUS_GLIB_CONF_OPT = --localstatedir=/var \
 		--disable-doxygen-docs \
 		--enable-asserts=yes
 
-DBUS_GLIB_DEPENDENCIES = host-pkg-config dbus host-dbus host-dbus-glib libglib2 expat
+DBUS_GLIB_DEPENDENCIES = host-pkgconf dbus host-dbus host-dbus-glib libglib2 expat
 
 HOST_DBUS_GLIB_DEPENDENCIES = host-dbus host-expat host-libglib2
 
@@ -32,8 +32,8 @@ HOST_DBUS_GLIB_CONF_OPT = \
 		--disable-doxygen-docs \
 		--enable-asserts=yes
 
-$(eval $(call AUTOTARGETS))
-$(eval $(call AUTOTARGETS,host))
+$(eval $(autotools-package))
+$(eval $(host-autotools-package))
 
 # dbus-glib for the host
 DBUS_GLIB_HOST_BINARY:=$(HOST_DIR)/usr/bin/dbus-binding-tool

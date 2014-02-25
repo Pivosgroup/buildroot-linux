@@ -34,10 +34,15 @@ else
 GDK_PIXBUF_DEPENDENCIES += tiff
 endif
 
+ifeq ($(BR2_PACKAGE_XLIB_LIBX11),y)
+GDK_PIXBUF_CONF_OPT += --with-x11
+GDK_PIXBUF_DEPENDENCIES += xlib_libX11
+endif
+
 GDK_PIXBUF_DEPENDENCIES += \
-	$(if $(BR2_NEEDS_GETTEXT_IF_LOCALE),gettext libintl) \
+	$(if $(BR2_NEEDS_GETTEXT_IF_LOCALE),gettext) \
 	$(if $(BR2_ENABLE_LOCALE),,libiconv) \
-	host-pkg-config libglib2
+	host-pkgconf libglib2
 
 define GDK_PIXBUF_POST_INSTALL_TWEAKS
 	$(INSTALL) -m 755 -D package/gdk-pixbuf/S26gdk-pixbuf \
@@ -46,7 +51,7 @@ endef
 
 GDK_PIXBUF_POST_INSTALL_TARGET_HOOKS += GDK_PIXBUF_POST_INSTALL_TWEAKS
 
-$(eval $(call AUTOTARGETS))
+$(eval $(autotools-package))
 
 HOST_GDK_PIXBUF_CONF_OPT = \
 	--without-libjpeg \
@@ -54,4 +59,4 @@ HOST_GDK_PIXBUF_CONF_OPT = \
 
 HOST_GDK_PIXBUF_DEPENDENCIES = host-libpng
 
-$(eval $(call AUTOTARGETS,host))
+$(eval $(host-autotools-package))

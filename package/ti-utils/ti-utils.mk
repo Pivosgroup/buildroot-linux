@@ -4,8 +4,8 @@
 #
 #############################################################
 
-TI_UTILS_VERSION = 06dbdb2727354b5f3ad7c723897f40051fddee49
-TI_UTILS_SITE = git://github.com/gxk/ti-utils.git
+TI_UTILS_VERSION = 06dbdb2
+TI_UTILS_SITE = http://github.com/gxk/ti-utils/tarball/master
 TI_UTILS_DEPENDENCIES = libnl
 
 define TI_UTILS_BUILD_CMDS
@@ -28,4 +28,4 @@ define TI_UTILS_UNINSTALL_TARGET_CMDS
 	rm -fr $(TARGET_DIR)/usr/share/ti-utils
 endef
 
-$(eval $(call GENTARGETS))
+$(eval $(generic-package))

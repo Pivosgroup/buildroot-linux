@@ -23,13 +23,15 @@
 # USA
 
 # TARGETS
-NCURSES_VERSION = 5.7
+NCURSES_VERSION = 5.9
 NCURSES_SITE = $(BR2_GNU_MIRROR)/ncurses
 NCURSES_INSTALL_STAGING = YES
 NCURSES_DEPENDENCIES = host-ncurses
+NCURSES_LICENSE = MIT with advertising clause
+NCURSES_LICENSE_FILES = README
 
 NCURSES_CONF_OPT = \
-	--with-shared \
+	$(if $(BR2_PREFER_STATIC_LIB),--without-shared,--with-shared) \
 	--without-cxx \
 	--without-cxx-binding \
 	--without-ada \
@@ -38,11 +40,11 @@ NCURSES_CONF_OPT = \
 	--disable-big-core \
 	--without-profile \
 	--disable-rpath \
+	--disable-rpath-hack \
 	--enable-echo \
 	--enable-const \
 	--enable-overwrite \
-	--enable-broken_linker \
-	--disable-static
+	--enable-pc-files
 
 ifneq ($(BR2_ENABLE_DEBUG),y)
 NCURSES_CONF_OPT += --without-debug
@@ -58,7 +60,7 @@ define NCURSES_PATCH_NCURSES_CONFIG
 		$(STAGING_DIR)/usr/bin/ncurses5-config
 endef
 
-NCURSES_POST_STAGING_INSTALL_HOOKS += NCURSES_PATCH_NCURSES_CONFIG
+NCURSES_POST_INSTALL_STAGING_HOOKS += NCURSES_PATCH_NCURSES_CONFIG
 
 ifeq ($(BR2_HAVE_DEVFILES),y)
 define NCURSES_INSTALL_TARGET_DEVFILES
@@ -79,6 +81,8 @@ define NCURSES_INSTALL_TARGET_DEVFILES
 endef
 endif
 
+ifneq ($(BR2_PREFER_STATIC_LIB),y)
+
 ifeq ($(BR2_PACKAGE_NCURSES_TARGET_PANEL),y)
 define NCURSES_INSTALL_TARGET_PANEL
 	cp -dpf $(NCURSES_DIR)/lib/libpanel.so* $(TARGET_DIR)/usr/lib/
@@ -97,9 +101,11 @@ define NCURSES_INSTALL_TARGET_MENU
 endef
 endif
 
+endif
+
 define NCURSES_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/lib
-	cp -dpf $(NCURSES_DIR)/lib/libncurses.so* $(TARGET_DIR)/usr/lib/
+	$(if $(BR2_PREFER_STATIC_LIB),,cp -dpf $(NCURSES_DIR)/lib/libncurses.so* $(TARGET_DIR)/usr/lib/)
 	$(NCURSES_INSTALL_TARGET_PANEL)
 	$(NCURSES_INSTALL_TARGET_FORM)
 	$(NCURSES_INSTALL_TARGET_MENU)
@@ -132,10 +138,8 @@ define HOST_NCURSES_BUILD_CMDS
 	$(MAKE) -C $(@D)/progs tic
 endef
 
-HOST_NCURSES_DEPENDENCIES =
-
 HOST_NCURSES_CONF_OPT = \
 	--without-shared --without-gpm
 
-$(eval $(call AUTOTARGETS))
-$(eval $(call AUTOTARGETS,host))
+$(eval $(autotools-package))
+$(eval $(host-autotools-package))

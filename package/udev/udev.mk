@@ -20,7 +20,7 @@ UDEV_CONF_OPT =			\
 	--with-firmware-path=/lib/firmware		\
 	--disable-introspection
 
-UDEV_DEPENDENCIES = host-gperf host-pkg-config util-linux kmod
+UDEV_DEPENDENCIES = host-gperf host-pkgconf util-linux kmod
 
 define UDEV_REMOVE_MTD_PROBE_RULE
     rm -f $(TARGET_DIR)/lib/udev/rules.d/75-probe_mtd.rules
@@ -55,4 +55,4 @@ endef
 
 UDEV_POST_INSTALL_TARGET_HOOKS += UDEV_INSTALL_INITSCRIPT
 
-$(eval $(call AUTOTARGETS))
+$(eval $(autotools-package))

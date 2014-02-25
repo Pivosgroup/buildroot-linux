@@ -23,10 +23,19 @@ CP:=$(call qstrip,$(BR2_CP)) $(QUIET)
 # external-deps target.
 DL_MODE=DOWNLOAD
 
-DL_DIR=$(call qstrip,$(BR2_DL_DIR))
+# Override BR2_DL_DIR if shell variable defined
+ifneq ($(BUILDROOT_DL_DIR),)
+DL_DIR:=$(BUILDROOT_DL_DIR)
+else
+DL_DIR:=$(call qstrip,$(BR2_DL_DIR))
+endif
+
 ifeq ($(DL_DIR),)
 DL_DIR:=$(TOPDIR)/dl
 endif
+
+# ensure it exists and a absolute path
+DL_DIR:=$(shell mkdir -p $(DL_DIR) && cd $(DL_DIR) >/dev/null && pwd)
 
 #
 # URI scheme helper functions
@@ -65,10 +74,20 @@ domainseparator=$(if $(1),$(1),/)
 # "external dependencies" of a given build configuration.
 ################################################################################
 
+# Try a shallow clone - but that only works if the version is a ref (tag or
+# branch). Before trying to do a shallow clone we check if $($(PKG)_DL_VERSION)
+# is in the list provided by git ls-remote. If not we fall back on a full clone.
+#
+# Messages for the type of clone used are provided to ease debugging in case of
+# problems
 define DOWNLOAD_GIT
 	test -e $(DL_DIR)/$($(PKG)_SOURCE) || \
 	(pushd $(DL_DIR) > /dev/null && \
-	$(GIT) clone --bare $($(PKG)_SITE) $($(PKG)_BASE_NAME) && \
+	 ((test `git ls-remote  $($(PKG)_SITE) | cut -f 2- | grep $($(PKG)_DL_VERSION)` && \
+	   echo "Doing shallow clone" && \
+	   $(GIT) clone --depth 1 -b $($(PKG)_DL_VERSION) --bare $($(PKG)_SITE) $($(PKG)_BASE_NAME)) || \
+	  (echo "Doing full clone" && \
+	   $(GIT) clone --bare $($(PKG)_SITE) $($(PKG)_BASE_NAME))) && \
 	pushd $($(PKG)_BASE_NAME) > /dev/null && \
 	$(GIT) archive --format=tar --prefix=$($(PKG)_BASE_NAME)/ $($(PKG)_DL_VERSION) | \
 		gzip -c > $(DL_DIR)/$($(PKG)_SOURCE) && \
@@ -159,11 +178,14 @@ endef
 # Download a file using wget. Only download the file if it doesn't
 # already exist in the download directory. If the download fails,
 # remove the file (because wget -O creates a 0-byte file even if the
-# download fails).
+# download fails).  To handle an interrupted download as well, download
+# to a temporary file first.  The temporary file will be overwritten
+# the next time the download is tried.
 define DOWNLOAD_WGET
 	test -e $(DL_DIR)/$(2) || \
-	$(WGET) -O $(DL_DIR)/$(2) '$(call qstrip,$(1))' || \
-	(rm -f $(DL_DIR)/$(2) ; exit 1)
+	($(WGET) -O $(DL_DIR)/$(2).tmp '$(call qstrip,$(1))' && \
+	 mv $(DL_DIR)/$(2).tmp $(DL_DIR)/$(2)) || \
+	(rm -f $(DL_DIR)/$(2).tmp ; exit 1)
 endef
 
 define SOURCE_CHECK_WGET
@@ -175,16 +197,16 @@ define SHOW_EXTERNAL_DEPS_WGET
 endef
 
 define DOWNLOAD_LOCALFILES
-	test -e $(DL_DIR)/$($(PKG)_SOURCE) || \
-		$(LOCALFILES) $(call qstrip,$(subst file://,,$($(PKG)_SITE)))/$($(PKG)_SOURCE) $(DL_DIR)
+	test -e $(DL_DIR)/$(2) || \
+		$(LOCALFILES) $(call stripurischeme,$(call qstrip,$(1))) $(DL_DIR)
 endef
 
 define SOURCE_CHECK_LOCALFILES
-  test -e $(call qstrip,$(subst file://,,$($(PKG)_SITE)))/$($(PKG)_SOURCE)
+  test -e $(call stripurischeme,$(call qstrip,$(1)))
 endef
 
 define SHOW_EXTERNAL_DEPS_LOCALFILES
-  echo $($(PKG)_SITE)/$($(PKG)_SOURCE)
+  echo $(2)
 endef
 
 define DOWNLOAD_CP
@@ -195,8 +217,8 @@ endef
 ################################################################################
 # DOWNLOAD -- Download helper. Will try to download source from:
 # 1) BR2_PRIMARY_SITE if enabled
-# 2) Download site
-# 3) BR2_BACKUP_SITE if enabled
+# 2) Download site, unless BR2_PRIMARY_SITE_ONLY is set
+# 3) BR2_BACKUP_SITE if enabled, unless BR2_PRIMARY_SITE_ONLY is set
 #
 # Argument 1 is the source location
 # Argument 2 is the source filename
@@ -216,8 +238,16 @@ define DOWNLOAD_INNER
 			*) $(call $(DL_MODE)_WGET,$(BR2_PRIMARY_SITE)/$(2),$(2)) && exit ;; \
 		esac ; \
 	fi ; \
+	if test "$(BR2_PRIMARY_SITE_ONLY)" = "y" ; then \
+		exit 1 ; \
+	fi ; \
 	if test -n "$(1)" ; then \
-		case "$($(PKG)_SITE_METHOD)" in \
+		if test -z "$($(PKG)_SITE_METHOD)" ; then \
+			scheme="$(call geturischeme,$(1))" ; \
+		else \
+			scheme="$($(PKG)_SITE_METHOD)" ; \
+		fi ; \
+		case "$$scheme" in \
 			git) $($(DL_MODE)_GIT) && exit ;; \
 			svn) $($(DL_MODE)_SVN) && exit ;; \
 			bzr) $($(DL_MODE)_BZR) && exit ;; \

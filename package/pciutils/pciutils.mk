@@ -4,8 +4,12 @@
 #
 #############################################################
 
-PCIUTILS_VERSION = 3.1.9
+PCIUTILS_VERSION = 3.1.10
 PCIUTILS_SITE = ftp://atrey.karlin.mff.cuni.cz/pub/linux/pci
+PCIUTILS_INSTALL_STAGING = YES
+PCIUTILS_LICENSE = GPLv2+
+PCIUTILS_LICENSE_FILES = COPYING
+
 ifeq ($(BR2_PACKAGE_ZLIB),y)
 	PCIUTILS_ZLIB=yes
 	PCIUTILS_DEPENDENCIES += zlib
@@ -45,9 +49,12 @@ endef
 # Ditch install-lib if SHARED is an option in the future
 define PCIUTILS_INSTALL_TARGET_CMDS
 	$(MAKE) BUILDDIR=$(@D) -C $(@D) PREFIX=$(TARGET_DIR)/usr \
-		SHARED=$(PCIUTILS_SHARED) install
-	$(MAKE) BUILDDIR=$(@D) -C $(@D) PREFIX=$(TARGET_DIR)/usr \
-		SHARED=$(PCIUTILS_SHARED) install-lib
+		SHARED=$(PCIUTILS_SHARED) install install-lib
 endef
 
-$(eval $(call GENTARGETS))
+define PCIUTILS_INSTALL_STAGING_CMDS
+	$(MAKE) BUILDDIR=$(@D) -C $(@D) PREFIX=$(STAGING_DIR)/usr \
+		SHARED=$(PCIUTILS_SHARED) install install-lib
+endef
+
+$(eval $(generic-package))

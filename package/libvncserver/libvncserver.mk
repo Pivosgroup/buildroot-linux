@@ -6,7 +6,7 @@
 
 LIBVNCSERVER_VERSION = 0.9.8.2
 LIBVNCSERVER_SOURCE = LibVNCServer-$(LIBVNCSERVER_VERSION).tar.gz
-LIBVNCSERVER_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/libvncserver/$(LIBVNCSERVER_VERSION)
+LIBVNCSERVER_SITE = http://downloads.sourceforge.net/project/libvncserver/libvncserver/$(LIBVNCSERVER_VERSION)
 
 LIBVNCSERVER_INSTALL_STAGING = YES
 
@@ -31,7 +31,7 @@ LIBVNCSERVER_CONF_OPT += --without-gcrypt
 endif
 
 ifeq ($(BR2_PACKAGE_GNUTLS),y)
-LIBVNCSERVER_DEPENDENCIES += gnutls host-pkg-config
+LIBVNCSERVER_DEPENDENCIES += gnutls host-pkgconf
 else
 LIBVNCSERVER_CONF_OPT += --without-gnutls
 endif
@@ -48,4 +48,4 @@ else
 LIBVNCSERVER_CONF_OPT += --without-zlib
 endif
 
-$(eval $(call AUTOTARGETS))
+$(eval $(autotools-package))

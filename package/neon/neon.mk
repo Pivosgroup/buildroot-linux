@@ -8,7 +8,7 @@ NEON_SITE = http://www.webdav.org/neon/
 NEON_INSTALL_STAGING = YES
 NEON_CONF_OPT = --without-gssapi --disable-rpath
 
-NEON_DEPENDENCIES = host-pkg-config
+NEON_DEPENDENCIES = host-pkgconf
 
 ifeq ($(BR2_PACKAGE_NEON_ZLIB),y)
 NEON_CONF_OPT += --with-zlib=$(STAGING_DIR)
@@ -52,4 +52,4 @@ ifneq ($(BR2_HAVE_DEVFILES),y)
 NEON_POST_INSTALL_TARGET_HOOKS += NEON_REMOVE_CONFIG_SCRIPTS
 endif
 
-$(eval $(call AUTOTARGETS))
+$(eval $(autotools-package))

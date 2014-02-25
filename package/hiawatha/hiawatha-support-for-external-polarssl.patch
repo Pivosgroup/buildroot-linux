@@ -9,21 +9,22 @@ This patch adds a ENABLE_SSL_EXTERNAL option, which, when used in
 addition to ENABLE_SSL, tells Hiawatha's build system to link against
 the already existing PolarSSL library instead of building its own.
 
+[Gustavo]: Update for version 8.5
 Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Gustavo Zacarias <gustavo@zacarias.com.ar>
 
-Index: hiawatha-8.1/CMakeLists.txt
-===================================================================
---- hiawatha-8.1.orig/CMakeLists.txt
-+++ hiawatha-8.1/CMakeLists.txt
+diff -Nura hiawatha-8.5.orig/CMakeLists.txt hiawatha-8.5/CMakeLists.txt
+--- hiawatha-8.5.orig/CMakeLists.txt	2012-09-12 09:29:34.347994799 -0300
++++ hiawatha-8.5/CMakeLists.txt	2012-09-12 09:33:15.983118183 -0300
 @@ -9,6 +9,7 @@
- option(ENABLE_IPV6    "Enable IPv6 support in Hiawatha." ON)
- option(ENABLE_MONITOR "Enable support for the Hiawatha Monitor." OFF)
- option(ENABLE_SSL     "Enable SSL (PolarSSL) support in Hiawatha." ON)
-+option(ENABLE_SSL_EXTERNAL "Enable SSL (PolarSSL) as an external library." OFF)
- option(ENABLE_TOOLKIT "Enable the URL toolkit in Hiawatha" ON)
- option(ENABLE_XSLT    "Enable XSLT support in Hiawatha." ON)
- 
-@@ -86,19 +87,23 @@
+ option(ENABLE_MONITOR  "Enable support for the Hiawatha Monitor." off)
+ option(ENABLE_RPROXY   "Enable reverse proxy support in Hiawatha." on)
+ option(ENABLE_SSL      "Enable SSL (PolarSSL) support in Hiawatha." on)
++option(ENABLE_SSL_EXTERNAL "Enable SSL (PolarSSL) as an external library." off)
+ option(ENABLE_TOMAHAWK "Enable Tomahawk in Hiawatha" off)
+ option(ENABLE_TOOLKIT  "Enable the URL toolkit in Hiawatha" on)
+ option(ENABLE_XSLT     "Enable XSLT support in Hiawatha." on)
+@@ -88,19 +89,23 @@
  
  # PolarSSL
  if(ENABLE_SSL)
@@ -48,7 +49,7 @@ Index: hiawatha-8.1/CMakeLists.txt
  # Configure files
  configure_file(config.h.in config.h)
  foreach (configfile ${config_files_in})
-@@ -119,7 +124,9 @@
+@@ -121,7 +126,9 @@
  target_link_libraries(hiawatha ${CRYPT_LIBRARY} pthread ${Z_LIBRARY})
  if(ENABLE_SSL)
  	target_link_libraries(hiawatha ${POLARSSL_LIBRARY})

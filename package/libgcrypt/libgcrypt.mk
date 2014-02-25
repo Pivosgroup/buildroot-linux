@@ -6,6 +6,8 @@
 
 LIBGCRYPT_VERSION = 1.5.0
 LIBGCRYPT_SOURCE = libgcrypt-$(LIBGCRYPT_VERSION).tar.bz2
+LIBGCRYPT_LICENSE = LGPLv2.1+
+LIBGCRYPT_LICENSE_FILES = COPYING.LIB
 LIBGCRYPT_SITE = ftp://ftp.gnupg.org/gcrypt/libgcrypt
 LIBGCRYPT_INSTALL_STAGING = YES
 
@@ -17,4 +19,4 @@ LIBGCRYPT_CONF_OPT = \
 
 LIBGCRYPT_DEPENDENCIES = libgpg-error
 
-$(eval $(call AUTOTARGETS))
+$(eval $(autotools-package))

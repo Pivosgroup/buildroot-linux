@@ -24,13 +24,23 @@
 #--------------------------------------------------------------
 
 # Set and export the version string
-export BR2_VERSION:=2012.05
+export BR2_VERSION:=2012.11
 
 # Check for minimal make version (note: this check will break at make 10.x)
 MIN_MAKE_VERSION=3.81
 ifneq ($(firstword $(sort $(MAKE_VERSION) $(MIN_MAKE_VERSION))),$(MIN_MAKE_VERSION))
 $(error You have make '$(MAKE_VERSION)' installed. GNU make >= $(MIN_MAKE_VERSION) is required)
 endif
+
+export HOSTARCH := $(shell uname -m | \
+	sed -e s/i.86/x86/ \
+	    -e s/sun4u/sparc64/ \
+	    -e s/arm.*/arm/ \
+	    -e s/sa110/arm/ \
+	    -e s/ppc64/powerpc/ \
+	    -e s/ppc/powerpc/ \
+	    -e s/macppc/powerpc/\
+	    -e s/sh.*/sh/)
 
 # This top-level Makefile can *not* be executed in parallel
 .NOTPARALLEL:
@@ -84,11 +94,6 @@ endif
 # Pull in the user's configuration file
 ifeq ($(filter $(noconfig_targets),$(MAKECMDGOALS)),)
 -include $(CONFIG_DIR)/.config
-endif
-
-# Override BR2_DL_DIR if shell variable defined
-ifneq ($(BUILDROOT_DL_DIR),)
-BR2_DL_DIR:=$(BUILDROOT_DL_DIR)
 endif
 
 # To put more focus on warnings, be less verbose as default
@@ -165,6 +170,14 @@ HOSTNM:=$(shell which $(HOSTNM) || type -p $(HOSTNM) || echo nm)
 export HOSTAR HOSTAS HOSTCC HOSTCXX HOSTFC HOSTLD
 export HOSTCC_NOCCACHE HOSTCXX_NOCCACHE
 
+# Make sure pkg-config doesn't look outside the buildroot tree
+unexport PKG_CONFIG_PATH
+unexport PKG_CONFIG_SYSROOT_DIR
+
+# Having DESTDIR set in the environment confuses the installation
+# steps of some packages.
+unexport DESTDIR
+
 # bash prints the name of the directory on 'cd <dir>' if CDPATH is
 # set, so unset it here to not cause problems. Notice that the export
 # line doesn't affect the environment of $(shell ..) calls, so
@@ -192,6 +205,7 @@ unexport CFLAGS
 unexport CXXFLAGS
 unexport GREP_OPTIONS
 unexport CONFIG_SITE
+unexport QMAKESPEC
 
 GNU_HOST_NAME:=$(shell support/gnuconfig/config.guess)
 
@@ -218,13 +232,11 @@ QUIET:=$(if $(findstring s,$(MAKEFLAGS)),-q)
 
 # Strip off the annoying quoting
 ARCH:=$(call qstrip,$(BR2_ARCH))
-ifeq ($(ARCH),xtensa)
-ARCH:=$(ARCH)_$(call qstrip,$(BR2_xtensa_core_name))
-endif
 
 KERNEL_ARCH:=$(shell echo "$(ARCH)" | sed -e "s/-.*//" \
 	-e s/i.86/i386/ -e s/sun4u/sparc64/ \
 	-e s/arm.*/arm/ -e s/sa110/arm/ \
+	-e s/aarch64/arm64/ \
 	-e s/bfin/blackfin/ \
 	-e s/parisc64/parisc/ \
 	-e s/powerpc64/powerpc/ \
@@ -248,7 +260,19 @@ STAMP_DIR:=$(BASE_DIR)/stamps
 BINARIES_DIR:=$(BASE_DIR)/images
 TARGET_DIR:=$(BASE_DIR)/target
 TOOLCHAIN_DIR=$(BASE_DIR)/toolchain
-TARGET_SKELETON=$(TOPDIR)/fs/skeleton
+TARGET_SKELETON=$(TOPDIR)/system/skeleton
+
+LEGAL_INFO_DIR=$(BASE_DIR)/legal-info
+REDIST_SOURCES_DIR=$(LEGAL_INFO_DIR)/sources
+LICENSE_FILES_DIR=$(LEGAL_INFO_DIR)/licenses
+LEGAL_MANIFEST_CSV=$(LEGAL_INFO_DIR)/manifest.csv
+LEGAL_LICENSES_TXT=$(LEGAL_INFO_DIR)/licenses.txt
+LEGAL_WARNINGS=$(LEGAL_INFO_DIR)/.warnings
+LEGAL_REPORT=$(LEGAL_INFO_DIR)/README
+
+# Location of a file giving a big fat warning that output/target
+# should not be used as the root filesystem.
+TARGET_DIR_WARNING_FILE=$(TARGET_DIR)/THIS_IS_NOT_YOUR_ROOT_FILESYSTEM
 
 ifeq ($(BR2_CCACHE),y)
 CCACHE:=$(HOST_DIR)/usr/bin/ccache
@@ -266,6 +290,12 @@ endif
 #############################################################
 
 all: world
+
+# Include legacy before the other things, because package .mk files
+# may rely on it.
+ifneq ($(BR2_DEPRECATED),y)
+include Makefile.legacy
+endif
 
 include package/Makefile.in
 include support/dependencies/dependencies.mk
@@ -291,7 +321,6 @@ endif
 include package/*/*.mk
 
 include boot/common.mk
-include target/Makefile.in
 include linux/linux.mk
 
 TARGETS+=target-finalize
@@ -306,6 +335,7 @@ TARGETS+=target-generatelocales
 endif
 endif
 
+include system/system.mk
 include fs/common.mk
 
 TARGETS_CLEAN:=$(patsubst %,%-clean,$(TARGETS))
@@ -331,10 +361,13 @@ HOST_DEPS = $(sort $(foreach dep,\
 		$($(dep))))
 HOST_SOURCE += $(addsuffix -source,$(sort $(TARGETS_HOST_DEPS) $(HOST_DEPS)))
 
+TARGETS_LEGAL_INFO:=$(patsubst %,%-legal-info,\
+		$(TARGETS) $(BASE_TARGETS) $(TARGETS_HOST_DEPS) $(HOST_DEPS))))
+
 # all targets depend on the crosscompiler and it's prerequisites
 $(TARGETS_ALL): __real_tgt_%: $(BASE_TARGETS) %
 
-dirs: $(DL_DIR) $(TOOLCHAIN_DIR) $(BUILD_DIR) $(STAGING_DIR) $(TARGET_DIR) \
+dirs: $(TOOLCHAIN_DIR) $(BUILD_DIR) $(STAGING_DIR) $(TARGET_DIR) \
 	$(HOST_DIR) $(BINARIES_DIR) $(STAMP_DIR)
 
 $(BASE_TARGETS): dirs $(HOST_DIR)/usr/share/buildroot/toolchainfile.cmake
@@ -347,9 +380,10 @@ prepare: $(BUILD_DIR)/buildroot-config/auto.conf
 world: prepare dirs dependencies $(BASE_TARGETS) $(TARGETS_ALL)
 
 .PHONY: all world dirs clean distclean source outputmakefile \
+	legal-info legal-info-prepare legal-info-clean \
 	$(BASE_TARGETS) $(TARGETS) $(TARGETS_ALL) \
-	$(TARGETS_CLEAN) $(TARGETS_DIRCLEAN) $(TARGETS_SOURCE) \
-	$(DL_DIR) $(TOOLCHAIN_DIR) $(BUILD_DIR) $(STAGING_DIR) $(TARGET_DIR) \
+	$(TARGETS_CLEAN) $(TARGETS_DIRCLEAN) $(TARGETS_SOURCE) $(TARGETS_LEGAL_INFO) \
+	$(TOOLCHAIN_DIR) $(BUILD_DIR) $(STAGING_DIR) $(TARGET_DIR) \
 	$(HOST_DIR) $(BINARIES_DIR) $(STAMP_DIR)
 
 #############################################################
@@ -358,7 +392,7 @@ world: prepare dirs dependencies $(BASE_TARGETS) $(TARGETS_ALL)
 # dependencies anywhere else
 #
 #############################################################
-$(DL_DIR) $(TOOLCHAIN_DIR) $(BUILD_DIR) $(HOST_DIR) $(BINARIES_DIR) $(STAMP_DIR):
+$(TOOLCHAIN_DIR) $(BUILD_DIR) $(HOST_DIR) $(BINARIES_DIR) $(STAMP_DIR) $(LEGAL_INFO_DIR) $(REDIST_SOURCES_DIR):
 	@mkdir -p $@
 
 $(STAGING_DIR):
@@ -380,17 +414,26 @@ $(BUILD_DIR)/.root:
 			cp -fa $(TARGET_SKELETON)/* $(TARGET_DIR)/; \
 		fi; \
 	fi
+	cp support/misc/target-dir-warning.txt $(TARGET_DIR_WARNING_FILE)
 	-find $(TARGET_DIR) -type d -name CVS -print0 -o -name .svn -print0 | xargs -0 rm -rf
 	-find $(TARGET_DIR) -type f \( -name .empty -o -name '*~' \) -print0 | xargs -0 rm -rf
 	touch $@
 
 $(TARGET_DIR): $(BUILD_DIR)/.root
 
+STRIP_FIND_CMD = find $(TARGET_DIR)
+ifneq (,$(call qstrip,$(BR2_STRIP_EXCLUDE_DIRS)))
+STRIP_FIND_CMD += \( $(call finddirclauses,$(TARGET_DIR),$(call qstrip,$(BR2_STRIP_EXCLUDE_DIRS))) \) -prune -o
+endif
+STRIP_FIND_CMD += -type f -perm +111
+STRIP_FIND_CMD += -not \( $(call findfileclauses,libpthread*.so* $(call qstrip,$(BR2_STRIP_EXCLUDE_FILES))) \) -print
+
 target-finalize:
 ifeq ($(BR2_HAVE_DEVFILES),y)
 	( support/scripts/copy.sh $(STAGING_DIR) $(TARGET_DIR) )
 else
-	rm -rf $(TARGET_DIR)/usr/include $(TARGET_DIR)/usr/lib/pkgconfig $(TARGET_DIR)/usr/share/aclocal
+	rm -rf $(TARGET_DIR)/usr/include $(TARGET_DIR)/usr/share/aclocal \
+		$(TARGET_DIR)/usr/lib/pkgconfig $(TARGET_DIR)/usr/share/pkgconfig
 	find $(TARGET_DIR)/lib \( -name '*.a' -o -name '*.la' \) -print0 | xargs -0 rm -f
 	find $(TARGET_DIR)/usr/lib \( -name '*.a' -o -name '*.la' \) -print0 | xargs -0 rm -f
 endif
@@ -410,10 +453,17 @@ endif
 ifeq ($(BR2_PACKAGE_PYTHON_PYC_ONLY),y)
 	find $(TARGET_DIR)/usr/lib/ -name '*.py' -print0 | xargs -0 rm -f
 endif
-	find $(TARGET_DIR) -type f -perm +111 '!' -name 'libthread_db*.so*' -a '!' -name 'libpthread*' \
-		xargs $(STRIPCMD) 2>/dev/null || true
+	$(STRIP_FIND_CMD) | xargs $(STRIPCMD) 2>/dev/null || true
 	find $(TARGET_DIR)/lib/modules -type f -name '*.ko' | \
 		xargs -r $(KSTRIPCMD) || true
+
+# See http://sourceware.org/gdb/wiki/FAQ, "GDB does not see any threads
+# besides the one in which crash occurred; or SIGTRAP kills my program when
+# I set a breakpoint"
+ifeq ($(BR2_TOOLCHAIN_HAS_THREADS),y)
+	find $(TARGET_DIR)/lib -type f -name 'libpthread*.so*' | \
+		xargs $(STRIPCMD) $(STRIP_STRIP_DEBUG) || true
+endif
 
 	mkdir -p $(TARGET_DIR)/etc
 	# Mandatory configuration file and auxilliary cache directory
@@ -435,8 +485,9 @@ endif
 	) >  $(TARGET_DIR)/etc/os-release
 
 ifneq ($(BR2_ROOTFS_POST_BUILD_SCRIPT),"")
-	@$(call MESSAGE,"Executing post-build script")
-	$(BR2_ROOTFS_POST_BUILD_SCRIPT) $(TARGET_DIR)
+	@$(call MESSAGE,"Executing post-build script\(s\)")
+	@$(foreach s, $(call qstrip,$(BR2_ROOTFS_POST_BUILD_SCRIPT)), \
+		$(s) $(TARGET_DIR)$(sep))
 endif
 
 ifeq ($(BR2_ENABLE_LOCALE_PURGE),y)
@@ -484,6 +535,28 @@ source: dirs $(TARGETS_SOURCE) $(HOST_SOURCE)
 
 external-deps:
 	@$(MAKE) -Bs DL_MODE=SHOW_EXTERNAL_DEPS $(EXTRAMAKEARGS) source | sort -u
+
+legal-info-clean:
+	@rm -fr $(LEGAL_INFO_DIR)
+
+legal-info-prepare: $(LEGAL_INFO_DIR)
+	@$(call MESSAGE,"Collecting legal info")
+	@$(call legal-license-file,buildroot,COPYING,COPYING)
+	@$(call legal-manifest,PACKAGE,VERSION,LICENSE,LICENSE FILES,SOURCE ARCHIVE)
+	@$(call legal-manifest,buildroot,$(BR2_VERSION_FULL),GPLv2+,COPYING,not saved)
+	@$(call legal-warning,the Buildroot source code has not been saved)
+	@$(call legal-warning,the toolchain has not been saved)
+	@cp $(CONFIG_DIR)/.config $(LEGAL_INFO_DIR)/buildroot.config
+
+legal-info: dirs legal-info-clean legal-info-prepare $(REDIST_SOURCES_DIR) \
+		$(TARGETS_LEGAL_INFO)
+	@cat support/legal-info/README.header >>$(LEGAL_REPORT)
+	@if [ -r $(LEGAL_WARNINGS) ]; then \
+		cat support/legal-info/README.warnings-header \
+			$(LEGAL_WARNINGS) >>$(LEGAL_REPORT); \
+		cat $(LEGAL_WARNINGS); fi
+	@echo "Legal info produced in $(LEGAL_INFO_DIR)"
+	@rm -f $(LEGAL_WARNINGS)
 
 show-targets:
 	@echo $(TARGETS)
@@ -547,6 +620,9 @@ allnoconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 randpackageconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
 	@grep -v BR2_PACKAGE_ $(CONFIG_DIR)/.config > $(CONFIG_DIR)/.config.nopkg
+	@grep '^config BR2_PACKAGE_' Config.in.legacy | \
+		while read config pkg; do \
+		echo "# $$pkg is not set" >> $(CONFIG_DIR)/.config.nopkg; done
 	@$(COMMON_CONFIG_ENV) \
 		KCONFIG_ALLCONFIG=$(CONFIG_DIR)/.config.nopkg \
 		$< --randconfig $(CONFIG_CONFIG_IN)
@@ -555,6 +631,9 @@ randpackageconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 allyespackageconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
 	@grep -v BR2_PACKAGE_ $(CONFIG_DIR)/.config > $(CONFIG_DIR)/.config.nopkg
+	@grep '^config BR2_PACKAGE_' Config.in.legacy | \
+		while read config pkg; do \
+		echo "# $$pkg is not set" >> $(CONFIG_DIR)/.config.nopkg; done
 	@$(COMMON_CONFIG_ENV) \
 		KCONFIG_ALLCONFIG=$(CONFIG_DIR)/.config.nopkg \
 		$< --allyesconfig $(CONFIG_CONFIG_IN)
@@ -585,7 +664,7 @@ savedefconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@$(COMMON_CONFIG_ENV) $< --savedefconfig=$(CONFIG_DIR)/defconfig $(CONFIG_CONFIG_IN)
 
 # check if download URLs are outdated
-source-check: allyesconfig
+source-check:
 	$(MAKE) DL_MODE=SOURCE_CHECK $(EXTRAMAKEARGS) source
 
 endif # ifeq ($(BR2_HAVE_DOT_CONFIG),y)
@@ -606,7 +685,8 @@ endif
 
 clean:
 	rm -rf $(STAGING_DIR) $(TARGET_DIR) $(BINARIES_DIR) $(HOST_DIR) \
-		$(STAMP_DIR) $(BUILD_DIR) $(TOOLCHAIN_DIR) $(BASE_DIR)/staging
+		$(STAMP_DIR) $(BUILD_DIR) $(TOOLCHAIN_DIR) $(BASE_DIR)/staging \
+		$(LEGAL_INFO_DIR)
 
 distclean: clean
 ifeq ($(DL_DIR),$(TOPDIR)/dl)
@@ -672,8 +752,9 @@ endif
 	@echo
 	@echo 'Miscellaneous:'
 	@echo '  source                 - download all sources needed for offline-build'
-	@echo '  source-check           - check all packages for valid download URLs'
+	@echo '  source-check           - check selected packages for valid download URLs'
 	@echo '  external-deps          - list external packages used'
+	@echo '  legal-info             - generate info about license compliance'
 	@echo
 	@echo '  make V=0|1             - 0 => quiet build (default), 1 => verbose build'
 	@echo '  make O=dir             - Locate all output files in "dir", including .config'
@@ -702,4 +783,3 @@ print-version:
 include docs/manual/manual.mk
 
 .PHONY: $(noconfig_targets)
-

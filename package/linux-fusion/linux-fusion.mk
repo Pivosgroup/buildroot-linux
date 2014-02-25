@@ -3,7 +3,7 @@
 # linux-fusion
 #
 #############################################################
-LINUX_FUSION_VERSION = 8.8.1
+LINUX_FUSION_VERSION = 8.10.4
 LINUX_FUSION_SOURCE = linux-fusion-$(LINUX_FUSION_VERSION).tar.gz
 LINUX_FUSION_SITE = http://directfb.org/downloads/Core/linux-fusion
 LINUX_FUSION_INSTALL_STAGING = YES
@@ -48,4 +48,4 @@ define LINUX_FUSION_UNINSTALL_TARGET_CMDS
 	rm -f $(LINUX_FUSION_ETC_DIR)/40-fusion.rules
 endef
 
-$(eval $(call GENTARGETS))
+$(eval $(generic-package))

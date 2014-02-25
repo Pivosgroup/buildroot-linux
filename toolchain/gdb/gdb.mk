@@ -16,11 +16,6 @@ else
  GDB_PATCH_DIR:=toolchain/gdb/$(GDB_VERSION)
 endif
 
-ifneq ($(filter xtensa%,$(ARCH)),)
-include target/xtensa/patch.in
-GDB_PATCH_EXTRA:=$(call XTENSA_PATCH,gdb,$(GDB_PATCH_DIR),. ..)
-endif
-
 GDB_DIR:=$(TOOLCHAIN_DIR)/gdb-$(GDB_VERSION)
 
 $(DL_DIR)/$(GDB_SOURCE):
@@ -30,8 +25,12 @@ gdb-unpacked: $(GDB_DIR)/.unpacked
 $(GDB_DIR)/.unpacked: $(DL_DIR)/$(GDB_SOURCE)
 	mkdir -p $(GDB_DIR)
 	$(GDB_CAT) $(DL_DIR)/$(GDB_SOURCE) | tar -C $(GDB_DIR) $(TAR_STRIP_COMPONENTS)=1 $(TAR_OPTIONS) -
+ifneq ($(call qstrip, $(BR2_XTENSA_CORE_NAME)),)
+	tar xf $(BR2_XTENSA_OVERLAY_DIR)/xtensa_$(call qstrip, \
+		$(BR2_XTENSA_CORE_NAME)).tar -C $(@D) --strip-components=1 gdb
+endif
 ifneq ($(wildcard $(GDB_PATCH_DIR)),)
-	support/scripts/apply-patches.sh $(GDB_DIR) $(GDB_PATCH_DIR) \*.patch $(GDB_PATCH_EXTRA)
+	support/scripts/apply-patches.sh $(GDB_DIR) $(GDB_PATCH_DIR) \*.patch
 endif
 	$(call CONFIG_UPDATE,$(@D))
 	touch $@
@@ -71,8 +70,8 @@ $(GDB_TARGET_DIR)/.configured: $(GDB_DIR)/.unpacked
 		$(GDB_DIR)/configure $(QUIET) \
 		--cache-file=/dev/null \
 		--build=$(GNU_HOST_NAME) \
-		--host=$(REAL_GNU_TARGET_NAME) \
-		--target=$(REAL_GNU_TARGET_NAME) \
+		--host=$(GNU_TARGET_NAME) \
+		--target=$(GNU_TARGET_NAME) \
 		--prefix=/usr \
 		$(DISABLE_NLS) \
 		--without-uiout $(DISABLE_GDBMI) \
@@ -124,8 +123,8 @@ $(GDB_SERVER_DIR)/.configured: $(GDB_DIR)/.unpacked
 		$(GDB_DIR)/gdb/gdbserver/configure $(QUIET) \
 		--cache-file=/dev/null \
 		--build=$(GNU_HOST_NAME) \
-		--host=$(REAL_GNU_TARGET_NAME) \
-		--target=$(REAL_GNU_TARGET_NAME) \
+		--host=$(GNU_TARGET_NAME) \
+		--target=$(GNU_TARGET_NAME) \
 		--prefix=/usr \
 		--exec-prefix=/usr \
 		--bindir=/usr/bin \
@@ -150,9 +149,9 @@ $(GDB_SERVER_DIR)/gdbserver: $(GDB_SERVER_DIR)/.configured
 
 $(TARGET_DIR)/usr/bin/gdbserver: $(GDB_SERVER_DIR)/gdbserver
 ifeq ($(BR2_CROSS_TOOLCHAIN_TARGET_UTILS),y)
-	mkdir -p $(STAGING_DIR)/usr/$(REAL_GNU_TARGET_NAME)/target_utils
+	mkdir -p $(STAGING_DIR)/usr/$(GNU_TARGET_NAME)/target_utils
 	install -c $(GDB_SERVER_DIR)/gdbserver \
-		$(STAGING_DIR)/usr/$(REAL_GNU_TARGET_NAME)/target_utils/gdbserver
+		$(STAGING_DIR)/usr/$(GNU_TARGET_NAME)/target_utils/gdbserver
 endif
 	install -c -D $(GDB_SERVER_DIR)/gdbserver $(TARGET_DIR)/usr/bin/gdbserver
 
@@ -185,7 +184,7 @@ $(GDB_HOST_DIR)/.configured: $(GDB_DIR)/.unpacked
 		--prefix=$(STAGING_DIR) \
 		--build=$(GNU_HOST_NAME) \
 		--host=$(GNU_HOST_NAME) \
-		--target=$(REAL_GNU_TARGET_NAME) \
+		--target=$(GNU_TARGET_NAME) \
 		$(DISABLE_NLS) \
 		--without-uiout $(DISABLE_GDBMI) \
 		--disable-tui --disable-gdbtk --without-x \
@@ -197,14 +196,14 @@ $(GDB_HOST_DIR)/.configured: $(GDB_DIR)/.unpacked
 
 $(GDB_HOST_DIR)/gdb/gdb: $(GDB_HOST_DIR)/.configured
 	# force ELF support since it fails due to BFD linking problems
+	$(HOST_MAKE_ENV) \
 	gdb_cv_var_elf=yes \
 	$(MAKE) -C $(GDB_HOST_DIR)
 	strip $(GDB_HOST_DIR)/gdb/gdb
 
 $(TARGET_CROSS)gdb: $(GDB_HOST_DIR)/gdb/gdb
 	install -c $(GDB_HOST_DIR)/gdb/gdb $(TARGET_CROSS)gdb
-	ln -snf $(REAL_GNU_TARGET_NAME)-gdb \
-		$(HOST_DIR)/usr/bin/$(GNU_TARGET_NAME)-gdb
+	ln -snf $(@F) $(HOST_DIR)/usr/bin/$(ARCH)-linux-gdb
 
 gdbhost: host-expat $(TARGET_CROSS)gdb
 

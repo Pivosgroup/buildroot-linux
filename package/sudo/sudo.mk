@@ -4,8 +4,10 @@
 #
 #############################################################
 
-SUDO_VERSION = 1.8.4p4
+SUDO_VERSION = 1.8.6
 SUDO_SITE    = http://www.sudo.ws/sudo/dist
+SUDO_LICENSE = ICS BSD-3c
+SUDO_LICENSE_FILES = doc/LICENSE
 SUDO_CONF_OPT = \
 		--without-lecture \
 		--without-sendmail \
@@ -14,12 +16,17 @@ SUDO_CONF_OPT = \
 		--without-interfaces \
 		--without-pam
 
-define SUDO_INSTALL_TARGET_CMDS
-	install -m 4555 -D $(@D)/src/sudo $(TARGET_DIR)/usr/bin/sudo
-	install -m 0555 -D $(@D)/plugins/sudoers/visudo  \
-		$(TARGET_DIR)/usr/sbin/visudo
-	install -m 0440 -D $(@D)/plugins/sudoers/sudoers \
-		$(TARGET_DIR)/etc/sudoers
+# mksigname/mksiglist needs to run on build host to generate source files
+define SUDO_BUILD_MKSIGNAME_MKSIGLIST_HOST
+	$(MAKE) $(HOST_CONFIGURE_OPTS) \
+		CPPFLAGS="$(HOST_CPPFLAGS) -I../include -I.." \
+		-C $(@D)/compat mksigname mksiglist
 endef
 
-$(eval $(call AUTOTARGETS))
+SUDO_POST_CONFIGURE_HOOKS += SUDO_BUILD_MKSIGNAME_MKSIGLIST_HOST
+
+define SUDO_PERMISSIONS
+/usr/bin/sudo			 f 4755	0 0 - - - - -
+endef
+
+$(eval $(autotools-package))

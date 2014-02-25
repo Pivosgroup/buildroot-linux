@@ -49,10 +49,10 @@ else
 ATK_CONF_OPT += --without-x
 endif
 
-ATK_DEPENDENCIES = libglib2 host-pkg-config
+ATK_DEPENDENCIES = libglib2 host-pkgconf
 
 HOST_ATK_CONF_OPT = \
 		--disable-glibtest
 
-$(eval $(call AUTOTARGETS))
-$(eval $(call AUTOTARGETS,host))
+$(eval $(autotools-package))
+$(eval $(host-autotools-package))

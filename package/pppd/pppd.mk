@@ -23,10 +23,19 @@ ifeq ($(BR2_INET_IPV6),y)
 	PPPD_MAKE_OPT += HAVE_INET6=y
 endif
 
+# pppd bundles some but not all of the needed kernel headers. The embedded
+# if_pppol2tp.h is unfortunately not compatible with kernel headers > 2.6.34,
+# and has been part of the kernel headers since 2.6.23, so drop it
+define PPPD_DROP_INTERNAL_IF_PPOL2TP_H
+	$(RM) $(@D)/include/linux/if_pppol2tp.h
+endef
+
+PPPD_POST_EXTRACT_HOOKS += PPPD_DROP_INTERNAL_IF_PPOL2TP_H
+
 define PPPD_CONFIGURE_CMDS
 	$(SED) 's/FILTER=y/#FILTER=y/' $(PPPD_DIR)/pppd/Makefile.linux
 	$(SED) 's/ifneq ($$(wildcard \/usr\/include\/pcap-bpf.h),)/ifdef FILTER/' $(PPPD_DIR)/*/Makefile.linux
-	( cd $(@D); ./configure )
+	( cd $(@D); ./configure --prefix=/usr )
 endef
 
 define PPPD_BUILD_CMDS
@@ -102,4 +111,4 @@ define PPPD_INSTALL_TARGET_CMDS
 	done
 endef
 
-$(eval $(call GENTARGETS))
+$(eval $(generic-package))

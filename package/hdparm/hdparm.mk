@@ -4,8 +4,10 @@
 #
 #############################################################
 
-HDPARM_VERSION = 9.39
-HDPARM_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/hdparm
+HDPARM_VERSION = 9.42
+HDPARM_SITE = http://downloads.sourceforge.net/project/hdparm/hdparm
+HDPARM_LICENSE = BSD-Style
+HDPARM_LICENSE_FILES = LICENSE.TXT
 
 define HDPARM_BUILD_CMDS
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) \
@@ -33,4 +35,4 @@ define HDPARM_CLEAN_CMDS
 	-$(MAKE) -C $(@D) clean
 endef
 
-$(eval $(call GENTARGETS))
+$(eval $(generic-package))

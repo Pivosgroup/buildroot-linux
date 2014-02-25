@@ -4,11 +4,13 @@
 #
 #############################################################
 
-LIBFUSE_VERSION = 2.8.7
+LIBFUSE_VERSION = 2.9.2
 LIBFUSE_SOURCE = fuse-$(LIBFUSE_VERSION).tar.gz
-LIBFUSE_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/project/fuse/fuse-2.X/$(LIBFUSE_VERSION)
-
+LIBFUSE_SITE = http://downloads.sourceforge.net/project/fuse/fuse-2.X/$(LIBFUSE_VERSION)
+LIBFUSE_LICENSE = GPLv2 LGPLv2.1
+LIBFUSE_LICENSE_FILES = COPYING COPYING.LIB
 LIBFUSE_INSTALL_STAGING = YES
+LIBFUSE_DEPENDENCIES = $(if $(BR2_PACKAGE_LIBICONV),libiconv)
 LIBFUSE_CONF_OPT= --disable-nls \
 		--disable-example \
 		--disable-kernel-module \
@@ -26,4 +28,4 @@ define LIBFUSE_CLEAN_CMDS
 	rm -f $(TARGET_DIR)/usr/bin/fusermount $(TARGET_DIR)/usr/lib/libfuse.so*
 endef
 
-$(eval $(call AUTOTARGETS))
+$(eval $(autotools-package))
