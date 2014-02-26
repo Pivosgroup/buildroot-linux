@@ -11,4 +11,4 @@ LIBCEC_AUTORECONF = YES
 LIBCEC_DEPENDENCIES += udev
 LIBCEC_MAKE=$(MAKE1)
 
-$(eval $(call AUTOTARGETS,package/thirdparty,libcec))
+$(eval $(autotools-package))

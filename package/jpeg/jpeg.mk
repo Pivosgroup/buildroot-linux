@@ -4,7 +4,7 @@
 #
 #############################################################
 JPEG_VERSION = 1.2.1
-JPEG_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/libjpeg-turbo
+JPEG_SITE = http://downloads.sourceforge.net/sourceforge/libjpeg-turbo
 JPEG_SOURCE = libjpeg-turbo-$(JPEG_VERSION).tar.gz
 JPEG_INSTALL_STAGING = YES
 JPEG_INSTALL_TARGET = YES

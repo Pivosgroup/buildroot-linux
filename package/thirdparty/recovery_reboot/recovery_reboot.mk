@@ -18,4 +18,4 @@ define RECOVERY_REBOOT_INSTALL_TARGET_CMDS
         install $(@D)/recoveryflash $(TARGET_DIR)/usr/sbin
 endef
 
-$(eval $(call GENTARGETS,package/thirdparty,recovery_reboot))
+$(eval $(generic-package))

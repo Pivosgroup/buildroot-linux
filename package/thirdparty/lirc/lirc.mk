@@ -1,6 +1,6 @@
 LIRC_VERSION = 0.8.7
 LIRC_SOURCE = lirc-$(LIRC_VERSION).tar.gz
-LIRC_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/project/lirc/LIRC/$(LIRC_VERSION)
+LIRC_SITE = http://downloads.sourceforge.net/project/lirc/LIRC/$(LIRC_VERSION)
 LIRC_INSTALL_STAGING = YES
 LIRC_INSTALL_TARGET = YES
 LIRC_DEPENDENCIES = linux
@@ -41,5 +41,4 @@ LIRC_POST_CONFIGURE_HOOKS += LIRC_REMOVE_BROKEN_DRIVERS
 LIRC_POST_INSTALL_TARGET_HOOKS += LIRC_DEPMOD
 LIRC_POST_INSTALL_TARGET_HOOKS += LIRC_INSTALL_ETC
 
-$(eval $(call AUTOTARGETS,package/thirdparty,lirc))
-
+$(eval $(autotools-package))

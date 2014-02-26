@@ -20,4 +20,4 @@ cd $(LIBENCA_DIR)/tools && $(HOSTCC) -o make_hash make_hash.c
 endef
 
 LIBENCA_POST_CONFIGURE_HOOKS += LIBENCA_MAKE_FIX
-$(eval $(call AUTOTARGETS,package/thirdparty,libenca))
+$(eval $(autotools-package))

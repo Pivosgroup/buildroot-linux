@@ -10,4 +10,4 @@ LIBNFS_INSTALL_TARGET = YES
 LIBNFS_AUTORECONF = YES
 LIBNFS_MAKE=$(MAKE1)
 
-$(eval $(call AUTOTARGETS,package/thirdparty,libnfs))
+$(eval $(autotools-package))

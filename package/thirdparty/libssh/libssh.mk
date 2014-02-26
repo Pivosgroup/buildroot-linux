@@ -29,4 +29,4 @@ LIBSSH_INSTALL_TARGET_CMDS = \
         $(TARGET_MAKE_ENV) $(LIBSSH_MAKE_ENV) $(LIBSSH_MAKE) $(LIBSSH_MAKE_OPT) $(LIBSSH_INSTALL_TARGET_OPT) -C $(LIBSSH_TEMP_BUILDDIR) && \
         rm -rf $(LIBSSH_TEMP_BUILDDIR)
 
-$(eval $(call CMAKETARGETS,package/thirdparty,libssh))
+$(eval $(cmake-package))

@@ -20,4 +20,4 @@ else
   BOBLIGHT_CONF_OPT += --without-libusb
 endif
 
-$(eval $(call AUTOTARGETS,package/thirdparty,boblight))
+$(eval $(autotools-package))

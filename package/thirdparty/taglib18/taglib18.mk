@@ -17,4 +17,4 @@ ifneq ($(BR2_HAVE_DEVFILES),y)
 TAGLIB18_POST_INSTALL_TARGET_HOOKS += TAGLIB18_REMOVE_DEVFILE
 endif
 
-$(eval $(call CMAKETARGETS,package/thirdparty,taglib18))
+$(eval $(cmake-package))

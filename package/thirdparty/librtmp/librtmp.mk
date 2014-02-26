@@ -24,4 +24,4 @@ define LIBRTMP_INSTALL_TARGET_CMDS
 	install -m 644 $(@D)/librtmp/librtmp.so.0 $(TARGET_DIR)/usr/lib
 endef
 
-$(eval $(call GENTARGETS,package/thirdparty,librtmp))
+$(eval $(generic-package))

@@ -23,4 +23,4 @@ ifeq ($(BR2_PACKAGE_LIBGCRYPT)$(BR2_PACKAGE_OPENSSL),n)
 LIBSSH2_CONF_OPT = --without-openssl --without-libgcrypt
 endif
 
-$(eval $(call AUTOTARGETS,package/thirdparty,libssh2))
+$(eval $(autotools-package))

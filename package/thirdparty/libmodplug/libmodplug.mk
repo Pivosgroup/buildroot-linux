@@ -9,4 +9,4 @@ LIBMODPLUG_SOURCE = libmodplug-$(LIBMODPLUG_VERSION).tar.gz
 LIBMODPLUG_INSTALL_STAGING = YES
 LIBMODPLUG_INSTALL_TARGET = YES
 
-$(eval $(call AUTOTARGETS,package/thirdparty,libmodplug))
+$(eval $(autotools-package))

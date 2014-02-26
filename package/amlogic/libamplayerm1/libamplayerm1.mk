@@ -51,4 +51,4 @@ define LIBAMPLAYERM1_INSTALL_TARGET_CMDS
 	ln -s $(TARGET_DIR)/usr/lib/libamcodec.so.0.0 $(TARGET_DIR)/usr/lib/libamcodec.so
 endef
 
-$(eval $(call GENTARGETS,package/amlogic,libamplayerm1))
+$(eval $(generic-package))

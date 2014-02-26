@@ -11,4 +11,4 @@ LIBSHAIRPORT_INSTALL_TARGET = YES
 LIBSHAIRPORT_AUTORECONF = YES
 LIBSHAIRPORT_DEPENDENCIES += openssl
 
-$(eval $(call AUTOTARGETS,package/thirdparty,libshairport))
+$(eval $(autotools-package))

@@ -82,4 +82,4 @@ define SDL_INSTALL_TARGET_CMDS
 endef
 
 $(eval $(autotools-package))
-$(eval $(autotools-package-host))
+$(eval $(host-autotools-package))

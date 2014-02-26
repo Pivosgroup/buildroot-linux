@@ -18,4 +18,4 @@ define UBOOTAML_INSTALL_STAGING_CMDS
 	install $(@D)/build/tools/mkimage $(HOST_DIR)/usr/bin/mkimage
 endef
 
-$(eval $(call GENTARGETS,package/amlogic,ubootaml))
+$(eval $(generic-package))

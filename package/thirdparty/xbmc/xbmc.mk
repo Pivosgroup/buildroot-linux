@@ -85,4 +85,4 @@ ifneq ($(BR2_ENABLE_DEBUG),y)
 XBMC_POST_INSTALL_TARGET_HOOKS += XBMC_STRIP_BINARIES
 endif
 
-$(eval $(call AUTOTARGETS,package/thirdparty,xbmc))
+$(eval $(autotools-package))

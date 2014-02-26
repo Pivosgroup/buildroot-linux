@@ -11,4 +11,4 @@ LIBPLIST_INSTALL_STAGING = YES
 LIBPLIST_INSTALL_TARGET = YES
 LIBPLIST_MAKE=$(MAKE1)
 
-$(eval $(call CMAKETARGETS,package/thirdparty,libplist))
+$(eval $(cmake-package))

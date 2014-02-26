@@ -19,4 +19,4 @@ define V4LUTILS_INSTALL_TARGET_CMDS
         make DESTDIR="$(TARGET_DIR)" PREFIX="/usr" -C $(@D) install
 endef
 
-$(eval $(call GENTARGETS,package/thirdparty,v4lutils))
+$(eval $(generic-package))

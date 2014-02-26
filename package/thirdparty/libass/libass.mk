@@ -10,4 +10,4 @@ LIBASS_INSTALL_STAGING = YES
 LIBASS_INSTALL_TARGET = YES
 LIBASS_DEPENDENCIES += libenca
 
-$(eval $(call AUTOTARGETS,package/thirdparty,libass))
+$(eval $(autotools-package))

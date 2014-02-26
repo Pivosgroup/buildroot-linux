@@ -57,4 +57,4 @@ define LIBAMPLAYERM3_INSTALL_TARGET_CMDS
 #	find $(@D)/usr/lib -type f -exec install -m 644 {} $(TARGET_DIR)/usr/lib \;
 endef
 
-$(eval $(call GENTARGETS,package/amlogic,libamplayerm3))
+$(eval $(generic-package))

@@ -21,4 +21,4 @@ define XIOS_SKIN_INSTALL_TARGET_CMDS
 	cp -f $(@D)/media/Textures.xbt $(TARGET_DIR)/usr/share/xbmc/addons/skin.xios/media
 endef
 
-$(eval $(call GENTARGETS,package/thirdparty,xios))
+$(eval $(generic-package))

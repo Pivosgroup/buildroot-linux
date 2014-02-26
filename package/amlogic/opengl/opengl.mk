@@ -24,4 +24,4 @@ define OPENGL_INSTALL_TARGET_CMDS
 	cd $(TARGET_DIR)/usr/lib; mv libGLESv2.so.2.0 libGLESv2.so
 endef
 
-$(eval $(call GENTARGETS,package/amlogic,opengl))
+$(eval $(generic-package))
