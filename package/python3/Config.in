@@ -1,13 +1,16 @@
 config BR2_PACKAGE_PYTHON3
 	bool "python3"
 	depends on BR2_USE_WCHAR
+	# uses fork()
+	depends on BR2_USE_MMU
 	select BR2_PACKAGE_LIBFFI
 	help
 	  The python language interpreter.
 
 	  http://www.python.org/
 
-comment "python3 requires a toolchain with WCHAR support"
+comment "python3 needs a toolchain w/ wchar"
+	depends on BR2_USE_MMU
 	depends on !BR2_USE_WCHAR
 
 if BR2_PACKAGE_PYTHON3
@@ -39,6 +42,11 @@ config BR2_PACKAGE_PYTHON3_BZIP2
 	help
 	  bzip2 module for Python3
 
+config BR2_PACKAGE_PYTHON3_CODECSCJK
+	bool "codecscjk module"
+	help
+	  Chinese/Japanese/Korean codecs module for Python (large).
+
 config BR2_PACKAGE_PYTHON3_CURSES
 	select BR2_PACKAGE_NCURSES
 	bool "curses module"
@@ -63,6 +71,12 @@ config BR2_PACKAGE_PYTHON3_SSL
 	bool "ssl"
 	help
 	  _ssl module for Python3 (required for https in urllib etc).
+
+config BR2_PACKAGE_PYTHON3_UNICODEDATA
+	bool "unicodedata module"
+	default y
+	help
+	  Unicode character database (used by stringprep module) (large).
 
 config BR2_PACKAGE_PYTHON3_SQLITE
 	bool "sqlite module"

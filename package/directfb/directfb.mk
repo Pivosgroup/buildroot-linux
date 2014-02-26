@@ -1,16 +1,18 @@
-#############################################################
+################################################################################
 #
 # directfb
 #
-#############################################################
-DIRECTFB_VERSION_MAJOR = 1.4
-DIRECTFB_VERSION = $(DIRECTFB_VERSION_MAJOR).17
+################################################################################
+
+DIRECTFB_VERSION_MAJOR = 1.6
+DIRECTFB_VERSION = $(DIRECTFB_VERSION_MAJOR).3
 DIRECTFB_SITE = http://www.directfb.org/downloads/Core/DirectFB-$(DIRECTFB_VERSION_MAJOR)
 DIRECTFB_SOURCE = DirectFB-$(DIRECTFB_VERSION).tar.gz
 DIRECTFB_LICENSE = LGPLv2.1+
 DIRECTFB_LICENSE_FILES = COPYING
-DIRECTFB_AUTORECONF = YES
 DIRECTFB_INSTALL_STAGING = YES
+DIRECTFB_AUTORECONF = YES
+
 DIRECTFB_CONF_OPT = \
 	--localstatedir=/var \
 	--disable-explicit-deps \
@@ -24,6 +26,7 @@ DIRECTFB_CONF_OPT = \
 	--disable-video4linux \
 	--disable-video4linux2 \
 	--without-tools
+DIRECTFB_CONFIG_SCRIPTS = directfb-config
 
 DIRECTFB_DEPENDENCIES = freetype zlib
 
@@ -43,7 +46,7 @@ endif
 ifeq ($(BR2_PACKAGE_XSERVER),y)
 DIRECTFB_CONF_OPT += --enable-x11
 else
-DIRECTFB_CONF_OPT += -disable-x11
+DIRECTFB_CONF_OPT += --disable-x11
 endif
 
 ifeq ($(BR2_PACKAGE_DIRECTFB_UNIQUE),y)
@@ -52,7 +55,7 @@ else
 DIRECTFB_CONF_OPT += --disable-unique
 endif
 
-DIRECTFB_GFX := \
+DIRECTFB_GFX = \
 	$(if $(BR2_PACKAGE_DIRECTFB_ATI128),ati128) \
 	$(if $(BR2_PACKAGE_DIRECTFB_CLE266),cle266) \
 	$(if $(BR2_PACKAGE_DIRECTFB_CYBER5K),cyber5k) \
@@ -63,14 +66,13 @@ DIRECTFB_GFX := \
 	$(if $(BR2_PACKAGE_DIRECTFB_EP9X),ep9x)
 
 ifeq ($(strip $(DIRECTFB_GFX)),)
-DIRECTFB_GFX:=none
+DIRECTFB_CONF_OPT += --with-gfxdrivers=none
 else
-DIRECTFB_GFX:=$(subst $(space),$(comma),$(strip $(DIRECTFB_GFX)))
+DIRECTFB_CONF_OPT += \
+	--with-gfxdrivers=$(subst $(space),$(comma),$(strip $(DIRECTFB_GFX)))
 endif
 
-DIRECTFB_CONF_OPT += --with-gfxdrivers=$(DIRECTFB_GFX)
-
-DIRECTFB_INPUT := \
+DIRECTFB_INPUT = \
 	$(if $(BR2_PACKAGE_DIRECTFB_LINUXINPUT),linuxinput) \
 	$(if $(BR2_PACKAGE_DIRECTFB_KEYBOARD),keyboard) \
 	$(if $(BR2_PACKAGE_DIRECTFB_PS2MOUSE),ps2mouse) \
@@ -82,12 +84,11 @@ DIRECTFB_DEPENDENCIES += tslib
 endif
 
 ifeq ($(strip $(DIRECTFB_INPUT)),)
-DIRECTFB_INPUT:=none
+DIRECTFB_CONF_OPT += --with-inputdrivers=none
 else
-DIRECTFB_INPUT:=$(subst $(space),$(comma),$(strip $(DIRECTFB_INPUT)))
+DIRECTFB_CONF_OPT += \
+	--with-inputdrivers=$(subst $(space),$(comma),$(strip $(DIRECTFB_INPUT)))
 endif
-
-DIRECTFB_CONF_OPT += --with-inputdrivers=$(DIRECTFB_INPUT)
 
 ifeq ($(BR2_PACKAGE_DIRECTFB_GIF),y)
 DIRECTFB_CONF_OPT += --enable-gif
@@ -110,13 +111,21 @@ else
 DIRECTFB_CONF_OPT += --disable-jpeg
 endif
 
-ifeq ($(BR2_PACKAGE_DIRECTB_DITHER_RGB16),y)
+ifeq ($(BR2_PACKAGE_DIRECTFB_IMLIB2),y)
+DIRECTFB_CONF_OPT += --enable-imlib2
+DIRECTFB_DEPENDENCIES += imlib2
+DIRECTFB_CONF_ENV += ac_cv_path_IMLIB2_CONFIG=$(STAGING_DIR)/usr/bin/imlib2-config
+else
+DIRECTFB_CONF_OPT += --disable-imlib2
+endif
+
+ifeq ($(BR2_PACKAGE_DIRECTFB_DITHER_RGB16),y)
 DIRECTFB_CONF_OPT += --with-dither-rgb16=advanced
 else
 DIRECTFB_CONF_OPT += --with-dither-rgb16=none
 endif
 
-ifeq ($(BR2_PACKAGE_DIRECTB_TESTS),y)
+ifeq ($(BR2_PACKAGE_DIRECTFB_TESTS),y)
 DIRECTFB_CONF_OPT += --with-tests
 endif
 
@@ -134,16 +143,8 @@ HOST_DIRECTFB_BUILD_CMDS = \
 HOST_DIRECTFB_INSTALL_CMDS = \
 	$(INSTALL) -m 0755 $(@D)/tools/directfb-csource $(HOST_DIR)/usr/bin
 
-define DIRECTFB_STAGING_CONFIG_FIXUP
-	$(SED) "s,^prefix=.*,prefix=\'$(STAGING_DIR)/usr\',g" \
-		-e "s,^exec_prefix=.*,exec_prefix=\'$(STAGING_DIR)/usr\',g" \
-		$(STAGING_DIR)/usr/bin/directfb-config
-endef
-
-DIRECTFB_POST_INSTALL_STAGING_HOOKS += DIRECTFB_STAGING_CONFIG_FIXUP
-
 $(eval $(autotools-package))
 $(eval $(host-autotools-package))
 
 # directfb-csource for the host
-DIRECTFB_HOST_BINARY:=$(HOST_DIR)/usr/bin/directfb-csource
+DIRECTFB_HOST_BINARY = $(HOST_DIR)/usr/bin/directfb-csource

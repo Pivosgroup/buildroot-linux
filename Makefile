@@ -1,7 +1,7 @@
-# Makefile for buildroot2
+# Makefile for buildroot
 #
 # Copyright (C) 1999-2005 by Erik Andersen <andersen@codepoet.org>
-# Copyright (C) 2006-2012 by the Buildroot developers <buildroot@uclibc.org>
+# Copyright (C) 2006-2013 by the Buildroot developers <buildroot@uclibc.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 #--------------------------------------------------------------
 
 # Set and export the version string
-export BR2_VERSION:=2012.11
+export BR2_VERSION:=2013.11
 
 # Check for minimal make version (note: this check will break at make 10.x)
 MIN_MAKE_VERSION=3.81
@@ -56,9 +56,9 @@ DATE:=$(shell date +%Y%m%d)
 export BR2_VERSION_FULL:=$(BR2_VERSION)$(shell $(TOPDIR)/support/scripts/setlocalversion)
 
 noconfig_targets:=menuconfig nconfig gconfig xconfig config oldconfig randconfig \
-	defconfig %_defconfig savedefconfig allyesconfig allnoconfig silentoldconfig release \
+	%_defconfig allyesconfig allnoconfig silentoldconfig release \
 	randpackageconfig allyespackageconfig allnopackageconfig \
-	source-check print-version
+	source-check print-version olddefconfig
 
 # Strip quotes and then whitespaces
 qstrip=$(strip $(subst ",,$(1)))
@@ -91,9 +91,35 @@ EXTRAMAKEARGS = O=$(O)
 NEED_WRAPPER=y
 endif
 
+# bash prints the name of the directory on 'cd <dir>' if CDPATH is
+# set, so unset it here to not cause problems. Notice that the export
+# line doesn't affect the environment of $(shell ..) calls, so
+# explictly throw away any output from 'cd' here.
+export CDPATH:=
+BASE_DIR := $(shell mkdir -p $(O) && cd $(O) >/dev/null && pwd)
+$(if $(BASE_DIR),, $(error output directory "$(O)" does not exist))
+
+BUILD_DIR:=$(BASE_DIR)/build
+STAMP_DIR:=$(BASE_DIR)/stamps
+BINARIES_DIR:=$(BASE_DIR)/images
+TARGET_DIR:=$(BASE_DIR)/target
+# initial definition so that 'make clean' works for most users, even without
+# .config. HOST_DIR will be overwritten later when .config is included.
+HOST_DIR:=$(BASE_DIR)/host
+
+LEGAL_INFO_DIR=$(BASE_DIR)/legal-info
+REDIST_SOURCES_DIR=$(LEGAL_INFO_DIR)/sources
+LICENSE_FILES_DIR=$(LEGAL_INFO_DIR)/licenses
+LEGAL_MANIFEST_CSV=$(LEGAL_INFO_DIR)/manifest.csv
+LEGAL_LICENSES_TXT=$(LEGAL_INFO_DIR)/licenses.txt
+LEGAL_WARNINGS=$(LEGAL_INFO_DIR)/.warnings
+LEGAL_REPORT=$(LEGAL_INFO_DIR)/README
+
+BUILDROOT_CONFIG=$(CONFIG_DIR)/.config
+
 # Pull in the user's configuration file
 ifeq ($(filter $(noconfig_targets),$(MAKECMDGOALS)),)
--include $(CONFIG_DIR)/.config
+-include $(BUILDROOT_CONFIG)
 endif
 
 # To put more focus on warnings, be less verbose as default
@@ -173,29 +199,22 @@ export HOSTCC_NOCCACHE HOSTCXX_NOCCACHE
 # Make sure pkg-config doesn't look outside the buildroot tree
 unexport PKG_CONFIG_PATH
 unexport PKG_CONFIG_SYSROOT_DIR
+unexport PKG_CONFIG_LIBDIR
 
 # Having DESTDIR set in the environment confuses the installation
 # steps of some packages.
 unexport DESTDIR
 
-# bash prints the name of the directory on 'cd <dir>' if CDPATH is
-# set, so unset it here to not cause problems. Notice that the export
-# line doesn't affect the environment of $(shell ..) calls, so
-# explictly throw away any output from 'cd' here.
-export CDPATH:=
-BASE_DIR := $(shell mkdir -p $(O) && cd $(O) >/dev/null && pwd)
-$(if $(BASE_DIR),, $(error output directory "$(O)" does not exist))
-
-BUILD_DIR:=$(BASE_DIR)/build
-
+# Causes breakage with packages that needs host-ruby
+unexport RUBYOPT
 
 ifeq ($(BR2_HAVE_DOT_CONFIG),y)
 
-#############################################################
+################################################################################
 #
 # Hide troublesome environment variables from sub processes
 #
-#############################################################
+################################################################################
 unexport CROSS_COMPILE
 unexport ARCH
 unexport CC
@@ -206,25 +225,19 @@ unexport CXXFLAGS
 unexport GREP_OPTIONS
 unexport CONFIG_SITE
 unexport QMAKESPEC
+unexport TERMINFO
 
 GNU_HOST_NAME:=$(shell support/gnuconfig/config.guess)
 
-##############################################################
+################################################################################
 #
 # The list of stuff to build for the target toolchain
 # along with the packages to build for the target.
 #
-##############################################################
+################################################################################
 
-ifeq ($(BR2_CCACHE),y)
-BASE_TARGETS += host-ccache
-endif
+BASE_TARGETS = toolchain
 
-ifeq ($(BR2_TOOLCHAIN_BUILDROOT),y)
-BASE_TARGETS += uclibc-configured host-binutils cross_compiler uclibc-target-utils kernel-headers
-else
-BASE_TARGETS += uclibc
-endif
 TARGETS:=
 
 # silent mode requested?
@@ -235,6 +248,8 @@ ARCH:=$(call qstrip,$(BR2_ARCH))
 
 KERNEL_ARCH:=$(shell echo "$(ARCH)" | sed -e "s/-.*//" \
 	-e s/i.86/i386/ -e s/sun4u/sparc64/ \
+	-e s/arcle/arc/ \
+	-e s/arceb/arc/ \
 	-e s/arm.*/arm/ -e s/sa110/arm/ \
 	-e s/aarch64/arm64/ \
 	-e s/bfin/blackfin/ \
@@ -254,21 +269,7 @@ HOST_DIR:=$(call qstrip,$(BR2_HOST_DIR))
 # locales to generate
 GENERATE_LOCALE=$(call qstrip,$(BR2_GENERATE_LOCALE))
 
-# stamp (dependency) files go here
-STAMP_DIR:=$(BASE_DIR)/stamps
-
-BINARIES_DIR:=$(BASE_DIR)/images
-TARGET_DIR:=$(BASE_DIR)/target
-TOOLCHAIN_DIR=$(BASE_DIR)/toolchain
 TARGET_SKELETON=$(TOPDIR)/system/skeleton
-
-LEGAL_INFO_DIR=$(BASE_DIR)/legal-info
-REDIST_SOURCES_DIR=$(LEGAL_INFO_DIR)/sources
-LICENSE_FILES_DIR=$(LEGAL_INFO_DIR)/licenses
-LEGAL_MANIFEST_CSV=$(LEGAL_INFO_DIR)/manifest.csv
-LEGAL_LICENSES_TXT=$(LEGAL_INFO_DIR)/licenses.txt
-LEGAL_WARNINGS=$(LEGAL_INFO_DIR)/.warnings
-LEGAL_REPORT=$(LEGAL_INFO_DIR)/README
 
 # Location of a file giving a big fat warning that output/target
 # should not be used as the root filesystem.
@@ -282,12 +283,21 @@ HOSTCC  := $(CCACHE) $(HOSTCC)
 HOSTCXX := $(CCACHE) $(HOSTCXX)
 endif
 
-#############################################################
+# Scripts in support/ or post-build scripts may need to reference
+# these locations, so export them so it is easier to use
+export BUILDROOT_CONFIG
+export TARGET_DIR
+export STAGING_DIR
+export HOST_DIR
+export BINARIES_DIR
+export BASE_DIR
+
+################################################################################
 #
 # You should probably leave this stuff alone unless you know
 # what you are doing.
 #
-#############################################################
+################################################################################
 
 all: world
 
@@ -303,13 +313,8 @@ include support/dependencies/dependencies.mk
 # We also need the various per-package makefiles, which also add
 # each selected package to TARGETS if that package was selected
 # in the .config file.
-ifeq ($(BR2_TOOLCHAIN_BUILDROOT),y)
-include toolchain/toolchain-buildroot.mk
-else ifeq ($(BR2_TOOLCHAIN_EXTERNAL),y)
-include toolchain/toolchain-external.mk
-else ifeq ($(BR2_TOOLCHAIN_CTNG),y)
-include toolchain/toolchain-crosstool-ng.mk
-endif
+include toolchain/helpers.mk
+include toolchain/*/*.mk
 
 # Include the package override file if one has been provided in the
 # configuration.
@@ -318,10 +323,11 @@ ifneq ($(PACKAGE_OVERRIDE_FILE),)
 -include $(PACKAGE_OVERRIDE_FILE)
 endif
 
-include package/*/*.mk
+include $(sort $(wildcard package/*/*.mk))
 
 include boot/common.mk
 include linux/linux.mk
+include system/system.mk
 
 TARGETS+=target-finalize
 
@@ -329,14 +335,19 @@ ifeq ($(BR2_ENABLE_LOCALE_PURGE),y)
 TARGETS+=target-purgelocales
 endif
 
-ifneq ($(BR2_TOOLCHAIN_EXTERNAL_GLIBC)$(BR2_TOOLCHAIN_CTNG_eglibc)$(BR2_TOOLCHAIN_CTNG_glibc),)
+ifeq ($(BR2_TOOLCHAIN_USES_GLIBC),y)
 ifneq ($(GENERATE_LOCALE),)
 TARGETS+=target-generatelocales
 endif
 endif
 
-include system/system.mk
+ifeq ($(BR2_ECLIPSE_REGISTER),y)
+TARGETS+=toolchain-eclipse-register
+endif
+
 include fs/common.mk
+
+TARGETS+=target-post-image
 
 TARGETS_CLEAN:=$(patsubst %,%-clean,$(TARGETS))
 TARGETS_SOURCE:=$(patsubst %,%-source,$(TARGETS) $(BASE_TARGETS))
@@ -367,38 +378,46 @@ TARGETS_LEGAL_INFO:=$(patsubst %,%-legal-info,\
 # all targets depend on the crosscompiler and it's prerequisites
 $(TARGETS_ALL): __real_tgt_%: $(BASE_TARGETS) %
 
-dirs: $(TOOLCHAIN_DIR) $(BUILD_DIR) $(STAGING_DIR) $(TARGET_DIR) \
+dirs: $(BUILD_DIR) $(STAGING_DIR) $(TARGET_DIR) \
 	$(HOST_DIR) $(BINARIES_DIR) $(STAMP_DIR)
 
-$(BASE_TARGETS): dirs $(HOST_DIR)/usr/share/buildroot/toolchainfile.cmake
-
-$(BUILD_DIR)/buildroot-config/auto.conf: $(CONFIG_DIR)/.config
+$(BUILD_DIR)/buildroot-config/auto.conf: $(BUILDROOT_CONFIG)
 	$(MAKE) $(EXTRAMAKEARGS) HOSTCC="$(HOSTCC_NOCCACHE)" HOSTCXX="$(HOSTCXX_NOCCACHE)" silentoldconfig
 
 prepare: $(BUILD_DIR)/buildroot-config/auto.conf
 
-world: prepare dirs dependencies $(BASE_TARGETS) $(TARGETS_ALL)
+world: $(BASE_TARGETS) $(TARGETS_ALL)
 
-.PHONY: all world dirs clean distclean source outputmakefile \
-	legal-info legal-info-prepare legal-info-clean \
+.PHONY: all world toolchain dirs clean distclean source outputmakefile \
+	legal-info legal-info-prepare legal-info-clean printvars \
 	$(BASE_TARGETS) $(TARGETS) $(TARGETS_ALL) \
 	$(TARGETS_CLEAN) $(TARGETS_DIRCLEAN) $(TARGETS_SOURCE) $(TARGETS_LEGAL_INFO) \
-	$(TOOLCHAIN_DIR) $(BUILD_DIR) $(STAGING_DIR) $(TARGET_DIR) \
+	$(BUILD_DIR) $(STAGING_DIR) $(TARGET_DIR) \
 	$(HOST_DIR) $(BINARIES_DIR) $(STAMP_DIR)
 
-#############################################################
+################################################################################
 #
 # staging and target directories do NOT list these as
 # dependencies anywhere else
 #
-#############################################################
-$(TOOLCHAIN_DIR) $(BUILD_DIR) $(HOST_DIR) $(BINARIES_DIR) $(STAMP_DIR) $(LEGAL_INFO_DIR) $(REDIST_SOURCES_DIR):
+################################################################################
+$(BUILD_DIR) $(HOST_DIR) $(BINARIES_DIR) $(STAMP_DIR) $(LEGAL_INFO_DIR) $(REDIST_SOURCES_DIR):
 	@mkdir -p $@
+
+# We make a symlink lib32->lib or lib64->lib as appropriate
+# MIPS64/n32 requires lib32 even though it's a 64-bit arch.
+ifeq ($(BR2_ARCH_IS_64)$(BR2_MIPS_NABI32),y)
+LIB_SYMLINK = lib64
+else
+LIB_SYMLINK = lib32
+endif
 
 $(STAGING_DIR):
 	@mkdir -p $(STAGING_DIR)/bin
 	@mkdir -p $(STAGING_DIR)/lib
+	@ln -snf lib $(STAGING_DIR)/$(LIB_SYMLINK)
 	@mkdir -p $(STAGING_DIR)/usr/lib
+	@ln -snf lib $(STAGING_DIR)/usr/$(LIB_SYMLINK)
 	@mkdir -p $(STAGING_DIR)/usr/include
 	@mkdir -p $(STAGING_DIR)/usr/bin
 	@ln -snf $(STAGING_DIR) $(BASE_DIR)/staging
@@ -407,16 +426,19 @@ ifeq ($(BR2_ROOTFS_SKELETON_CUSTOM),y)
 TARGET_SKELETON=$(BR2_ROOTFS_SKELETON_CUSTOM_PATH)
 endif
 
+RSYNC_VCS_EXCLUSIONS = \
+	--exclude .svn --exclude .git --exclude .hg --exclude .bzr \
+	--exclude CVS
+
 $(BUILD_DIR)/.root:
 	mkdir -p $(TARGET_DIR)
-	if ! [ -d "$(TARGET_DIR)/bin" ]; then \
-		if [ -d "$(TARGET_SKELETON)" ]; then \
-			cp -fa $(TARGET_SKELETON)/* $(TARGET_DIR)/; \
-		fi; \
-	fi
+	rsync -a $(RSYNC_VCS_EXCLUSIONS) \
+		--exclude .empty --exclude '*~' \
+		$(TARGET_SKELETON)/ $(TARGET_DIR)/
 	cp support/misc/target-dir-warning.txt $(TARGET_DIR_WARNING_FILE)
-	-find $(TARGET_DIR) -type d -name CVS -print0 -o -name .svn -print0 | xargs -0 rm -rf
-	-find $(TARGET_DIR) -type f \( -name .empty -o -name '*~' \) -print0 | xargs -0 rm -rf
+	@ln -snf lib $(TARGET_DIR)/$(LIB_SYMLINK)
+	@mkdir -p $(TARGET_DIR)/usr
+	@ln -snf lib $(TARGET_DIR)/usr/$(LIB_SYMLINK)
 	touch $@
 
 $(TARGET_DIR): $(BUILD_DIR)/.root
@@ -425,18 +447,16 @@ STRIP_FIND_CMD = find $(TARGET_DIR)
 ifneq (,$(call qstrip,$(BR2_STRIP_EXCLUDE_DIRS)))
 STRIP_FIND_CMD += \( $(call finddirclauses,$(TARGET_DIR),$(call qstrip,$(BR2_STRIP_EXCLUDE_DIRS))) \) -prune -o
 endif
-STRIP_FIND_CMD += -type f -perm +111
+STRIP_FIND_CMD += -type f -perm /111
 STRIP_FIND_CMD += -not \( $(call findfileclauses,libpthread*.so* $(call qstrip,$(BR2_STRIP_EXCLUDE_FILES))) \) -print
 
 target-finalize:
-ifeq ($(BR2_HAVE_DEVFILES),y)
-	( support/scripts/copy.sh $(STAGING_DIR) $(TARGET_DIR) )
-else
 	rm -rf $(TARGET_DIR)/usr/include $(TARGET_DIR)/usr/share/aclocal \
-		$(TARGET_DIR)/usr/lib/pkgconfig $(TARGET_DIR)/usr/share/pkgconfig
+		$(TARGET_DIR)/usr/lib/pkgconfig $(TARGET_DIR)/usr/share/pkgconfig \
+		$(TARGET_DIR)/usr/lib/cmake $(TARGET_DIR)/usr/share/cmake
+	find $(TARGET_DIR)/usr/{lib,share}/ -name '*.cmake' -print0 | xargs -0 rm -f
 	find $(TARGET_DIR)/lib \( -name '*.a' -o -name '*.la' \) -print0 | xargs -0 rm -f
 	find $(TARGET_DIR)/usr/lib \( -name '*.a' -o -name '*.la' \) -print0 | xargs -0 rm -f
-endif
 ifneq ($(BR2_PACKAGE_GDB),y)
 	rm -rf $(TARGET_DIR)/usr/share/gdb
 endif
@@ -454,15 +474,16 @@ ifeq ($(BR2_PACKAGE_PYTHON_PYC_ONLY),y)
 	find $(TARGET_DIR)/usr/lib/ -name '*.py' -print0 | xargs -0 rm -f
 endif
 	$(STRIP_FIND_CMD) | xargs $(STRIPCMD) 2>/dev/null || true
-	find $(TARGET_DIR)/lib/modules -type f -name '*.ko' | \
-		xargs -r $(KSTRIPCMD) || true
+	if test -d $(TARGET_DIR)/lib/modules; then \
+		find $(TARGET_DIR)/lib/modules -type f -name '*.ko' | \
+		xargs -r $(KSTRIPCMD); fi
 
 # See http://sourceware.org/gdb/wiki/FAQ, "GDB does not see any threads
 # besides the one in which crash occurred; or SIGTRAP kills my program when
 # I set a breakpoint"
 ifeq ($(BR2_TOOLCHAIN_HAS_THREADS),y)
 	find $(TARGET_DIR)/lib -type f -name 'libpthread*.so*' | \
-		xargs $(STRIPCMD) $(STRIP_STRIP_DEBUG) || true
+		xargs -r $(STRIPCMD) $(STRIP_STRIP_DEBUG)
 endif
 
 	mkdir -p $(TARGET_DIR)/etc
@@ -484,11 +505,15 @@ endif
 		echo "PRETTY_NAME=\"Buildroot $(BR2_VERSION)\"" \
 	) >  $(TARGET_DIR)/etc/os-release
 
-ifneq ($(BR2_ROOTFS_POST_BUILD_SCRIPT),"")
-	@$(call MESSAGE,"Executing post-build script\(s\)")
+	@$(foreach d, $(call qstrip,$(BR2_ROOTFS_OVERLAY)), \
+		$(call MESSAGE,"Copying overlay $(d)"); \
+		rsync -a $(RSYNC_VCS_EXCLUSIONS) \
+			--exclude .empty --exclude '*~' \
+			$(d)/ $(TARGET_DIR)$(sep))
+
 	@$(foreach s, $(call qstrip,$(BR2_ROOTFS_POST_BUILD_SCRIPT)), \
-		$(s) $(TARGET_DIR)$(sep))
-endif
+		$(call MESSAGE,"Executing post-build script $(s)"); \
+		$(s) $(TARGET_DIR) $(call qstrip,$(BR2_ROOTFS_POST_SCRIPT_ARGS))$(sep))
 
 ifeq ($(BR2_ENABLE_LOCALE_PURGE),y)
 LOCALE_WHITELIST=$(BUILD_DIR)/locales.nopurge
@@ -517,7 +542,7 @@ target-generatelocales: host-localedef
 	$(Q)mkdir -p $(TARGET_DIR)/usr/lib/locale/
 	$(Q)for locale in $(GENERATE_LOCALE) ; do \
 		inputfile=`echo $${locale} | cut -f1 -d'.'` ; \
-		charmap=`echo $${locale} | cut -f2 -d'.'` ; \
+		charmap=`echo $${locale} | cut -f2 -d'.' -s` ; \
 		if test -z "$${charmap}" ; then \
 			charmap="UTF-8" ; \
 		fi ; \
@@ -525,11 +550,19 @@ target-generatelocales: host-localedef
 		I18NPATH=$(STAGING_DIR)/usr/share/i18n:/usr/share/i18n \
 		$(HOST_DIR)/usr/bin/localedef \
 			--prefix=$(TARGET_DIR) \
-			--`echo $(BR2_ENDIAN) | tr [A-Z] [a-z]`-endian \
+			--$(call LOWERCASE,$(BR2_ENDIAN))-endian \
 			-i $${inputfile} -f $${charmap} \
 			$${locale} ; \
 	done
 endif
+
+target-post-image:
+	@$(foreach s, $(call qstrip,$(BR2_ROOTFS_POST_IMAGE_SCRIPT)), \
+		$(call MESSAGE,"Executing post-image script $(s)"); \
+		$(s) $(BINARIES_DIR) $(call qstrip,$(BR2_ROOTFS_POST_SCRIPT_ARGS))$(sep))
+
+toolchain-eclipse-register:
+	./support/scripts/eclipse-register-toolchain `readlink -f $(O)` $(notdir $(TARGET_CROSS)) $(BR2_ARCH)
 
 source: dirs $(TARGETS_SOURCE) $(HOST_SOURCE)
 
@@ -546,7 +579,7 @@ legal-info-prepare: $(LEGAL_INFO_DIR)
 	@$(call legal-manifest,buildroot,$(BR2_VERSION_FULL),GPLv2+,COPYING,not saved)
 	@$(call legal-warning,the Buildroot source code has not been saved)
 	@$(call legal-warning,the toolchain has not been saved)
-	@cp $(CONFIG_DIR)/.config $(LEGAL_INFO_DIR)/buildroot.config
+	@cp $(BUILDROOT_CONFIG) $(LEGAL_INFO_DIR)/buildroot.config
 
 legal-info: dirs legal-info-clean legal-info-prepare $(REDIST_SOURCES_DIR) \
 		$(TARGETS_LEGAL_INFO)
@@ -565,6 +598,8 @@ else # ifeq ($(BR2_HAVE_DOT_CONFIG),y)
 
 all: menuconfig
 
+endif # ifeq ($(BR2_HAVE_DOT_CONFIG),y)
+
 # configuration
 # ---------------------------------------------------------------------------
 
@@ -575,11 +610,16 @@ $(BUILD_DIR)/buildroot-config/%onf:
 	mkdir -p $(@D)/lxdialog
 	$(MAKE) CC="$(HOSTCC_NOCCACHE)" HOSTCC="$(HOSTCC_NOCCACHE)" obj=$(@D) -C $(CONFIG) -f Makefile.br $(@F)
 
+DEFCONFIG = $(call qstrip,$(BR2_DEFCONFIG))
+
+# We don't want to fully expand BR2_DEFCONFIG here, so Kconfig will
+# recognize that if it's still at its default $(CONFIG_DIR)/defconfig
 COMMON_CONFIG_ENV = \
+	BR2_DEFCONFIG='$(call qstrip,$(value BR2_DEFCONFIG))' \
 	KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
 	KCONFIG_AUTOHEADER=$(BUILD_DIR)/buildroot-config/autoconf.h \
 	KCONFIG_TRISTATE=$(BUILD_DIR)/buildroot-config/tristate.config \
-	BUILDROOT_CONFIG=$(CONFIG_DIR)/.config
+	BUILDROOT_CONFIG=$(BUILDROOT_CONFIG)
 
 xconfig: $(BUILD_DIR)/buildroot-config/qconf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
@@ -619,7 +659,7 @@ allnoconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 
 randpackageconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@grep -v BR2_PACKAGE_ $(CONFIG_DIR)/.config > $(CONFIG_DIR)/.config.nopkg
+	@grep -v BR2_PACKAGE_ $(BUILDROOT_CONFIG) > $(CONFIG_DIR)/.config.nopkg
 	@grep '^config BR2_PACKAGE_' Config.in.legacy | \
 		while read config pkg; do \
 		echo "# $$pkg is not set" >> $(CONFIG_DIR)/.config.nopkg; done
@@ -630,7 +670,7 @@ randpackageconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 
 allyespackageconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@grep -v BR2_PACKAGE_ $(CONFIG_DIR)/.config > $(CONFIG_DIR)/.config.nopkg
+	@grep -v BR2_PACKAGE_ $(BUILDROOT_CONFIG) > $(CONFIG_DIR)/.config.nopkg
 	@grep '^config BR2_PACKAGE_' Config.in.legacy | \
 		while read config pkg; do \
 		echo "# $$pkg is not set" >> $(CONFIG_DIR)/.config.nopkg; done
@@ -641,7 +681,7 @@ allyespackageconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 
 allnopackageconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@grep -v BR2_PACKAGE_ $(CONFIG_DIR)/.config > $(CONFIG_DIR)/.config.nopkg
+	@grep -v BR2_PACKAGE_ $(BUILDROOT_CONFIG) > $(CONFIG_DIR)/.config.nopkg
 	@$(COMMON_CONFIG_ENV) \
 		KCONFIG_ALLCONFIG=$(CONFIG_DIR)/.config.nopkg \
 		$< --allnoconfig $(CONFIG_CONFIG_IN)
@@ -651,9 +691,13 @@ silentoldconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
 	$(COMMON_CONFIG_ENV) $< --silentoldconfig $(CONFIG_CONFIG_IN)
 
+olddefconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
+	@mkdir -p $(BUILD_DIR)/buildroot-config
+	$(COMMON_CONFIG_ENV) $< --olddefconfig $(CONFIG_CONFIG_IN)
+
 defconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@$(COMMON_CONFIG_ENV) $< --defconfig$(if $(BR2_DEFCONFIG),=$(BR2_DEFCONFIG)) $(CONFIG_CONFIG_IN)
+	@$(COMMON_CONFIG_ENV) $< --defconfig$(if $(DEFCONFIG),=$(DEFCONFIG)) $(CONFIG_CONFIG_IN)
 
 %_defconfig: $(BUILD_DIR)/buildroot-config/conf $(TOPDIR)/configs/%_defconfig outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
@@ -661,19 +705,21 @@ defconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 
 savedefconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@$(COMMON_CONFIG_ENV) $< --savedefconfig=$(CONFIG_DIR)/defconfig $(CONFIG_CONFIG_IN)
+	@$(COMMON_CONFIG_ENV) $< \
+		--savedefconfig=$(if $(DEFCONFIG),$(DEFCONFIG),$(CONFIG_DIR)/defconfig) \
+		$(CONFIG_CONFIG_IN)
 
 # check if download URLs are outdated
 source-check:
 	$(MAKE) DL_MODE=SOURCE_CHECK $(EXTRAMAKEARGS) source
 
-endif # ifeq ($(BR2_HAVE_DOT_CONFIG),y)
+.PHONY: defconfig savedefconfig
 
-#############################################################
+################################################################################
 #
 # Cleanup and misc junk
 #
-#############################################################
+################################################################################
 
 # outputmakefile generates a Makefile in the output directory, if using a
 # separate output directory. This allows convenient use of make in the
@@ -683,9 +729,17 @@ ifeq ($(NEED_WRAPPER),y)
 	$(Q)$(TOPDIR)/support/scripts/mkmakefile $(TOPDIR) $(O)
 endif
 
+# printvars prints all the variables currently defined in our Makefiles
+printvars:
+	@$(foreach V, \
+		$(sort $(.VARIABLES)), \
+		$(if $(filter-out environment% default automatic, \
+				$(origin $V)), \
+		$(info $V=$($V) ($(value $V)))))
+
 clean:
-	rm -rf $(STAGING_DIR) $(TARGET_DIR) $(BINARIES_DIR) $(HOST_DIR) \
-		$(STAMP_DIR) $(BUILD_DIR) $(TOOLCHAIN_DIR) $(BASE_DIR)/staging \
+	rm -rf $(TARGET_DIR) $(BINARIES_DIR) $(HOST_DIR) \
+		$(STAMP_DIR) $(BUILD_DIR) $(BASE_DIR)/staging \
 		$(LEGAL_INFO_DIR)
 
 distclean: clean
@@ -695,9 +749,7 @@ endif
 ifeq ($(O),output)
 	rm -rf $(O)
 endif
-	rm -rf $(CONFIG_DIR)/.config $(CONFIG_DIR)/.config.old $(CONFIG_DIR)/.auto.deps
-
-cross: $(BASE_TARGETS)
+	rm -rf $(BUILDROOT_CONFIG) $(CONFIG_DIR)/.config.old $(CONFIG_DIR)/.auto.deps
 
 help:
 	@echo 'Cleaning:'
@@ -706,6 +758,7 @@ help:
 	@echo
 	@echo 'Build:'
 	@echo '  all                    - make world'
+	@echo '  toolchain              - build toolchain'
 	@echo '  <package>-rebuild      - force recompile <package>'
 	@echo '  <package>-reconfigure  - force reconfigure <package>'
 	@echo
@@ -715,6 +768,8 @@ help:
 	@echo '  xconfig                - interactive Qt-based configurator'
 	@echo '  gconfig                - interactive GTK-based configurator'
 	@echo '  oldconfig              - resolve any unresolved symbols in .config'
+	@echo '  silentoldconfig        - Same as oldconfig, but quietly, additionally update deps'
+	@echo '  olddefconfig           - Same as silentoldconfig but sets new symbols to their default value'
 	@echo '  randconfig             - New config with random answer to all options'
 	@echo '  defconfig              - New config with default answer to all options'
 	@echo '                             BR2_DEFCONFIG, if set, is used as input'
@@ -734,20 +789,17 @@ endif
 ifeq ($(BR2_TOOLCHAIN_BUILDROOT),y)
 	@echo '  uclibc-menuconfig      - Run uClibc menuconfig'
 endif
-ifeq ($(BR2_TOOLCHAIN_CTNG),y)
-	@echo '  ctng-menuconfig        - Run crosstool-NG menuconfig'
-endif
 ifeq ($(BR2_TARGET_BAREBOX),y)
 	@echo '  barebox-menuconfig     - Run barebox menuconfig'
 	@echo '  barebox-savedefconfig  - Run barebox savedefconfig'
 endif
 	@echo
 	@echo 'Documentation:'
-	@echo '  manual                 - build manual in HTML, split HTML, PDF and txt'
+	@echo '  manual                 - build manual in all formats'
 	@echo '  manual-html            - build manual in HTML'
 	@echo '  manual-split-html      - build manual in split HTML'
 	@echo '  manual-pdf             - build manual in PDF'
-	@echo '  manual-txt             - build manual in txt'
+	@echo '  manual-text            - build manual in text'
 	@echo '  manual-epub            - build manual in ePub'
 	@echo
 	@echo 'Miscellaneous:'
@@ -770,8 +822,8 @@ release: OUT=buildroot-$(BR2_VERSION)
 # Create release tarballs. We need to fiddle a bit to add the generated
 # documentation to the git output
 release:
-	git archive --format=tar --prefix=$(OUT)/ master > $(OUT).tar
-	$(MAKE) O=$(OUT) manual-html manual-txt manual-pdf
+	git archive --format=tar --prefix=$(OUT)/ HEAD > $(OUT).tar
+	$(MAKE) O=$(OUT) manual-html manual-text manual-pdf
 	tar rf $(OUT).tar $(OUT)
 	gzip -9 -c < $(OUT).tar > $(OUT).tar.gz
 	bzip2 -9 -c < $(OUT).tar > $(OUT).tar.bz2

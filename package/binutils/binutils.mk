@@ -1,8 +1,8 @@
-#############################################################
+################################################################################
 #
 # binutils
 #
-#############################################################
+################################################################################
 
 # Version is set when using buildroot toolchain.
 # If not, we do like other packages
@@ -26,6 +26,9 @@ BINUTILS_SITE = $(BR2_GNU_MIRROR)/binutils
 ifeq ($(ARCH),avr32)
 BINUTILS_SITE = ftp://www.at91.com/pub/buildroot
 endif
+ifeq ($(BR2_arc),y)
+BINUTILS_SITE = $(BR2_ARC_SITE)
+endif
 BINUTILS_EXTRA_CONFIG_OPTIONS = $(call qstrip,$(BR2_BINUTILS_EXTRA_CONFIG_OPTIONS))
 BINUTILS_INSTALL_STAGING = YES
 BINUTILS_DEPENDENCIES = $(if $(BR2_NEEDS_GETTEXT_IF_LOCALE),gettext)
@@ -36,7 +39,6 @@ BINUTILS_LICENSE_FILES = COPYING3 COPYING.LIB
 BINUTILS_CONF_OPT = --disable-multilib --disable-werror \
 		--host=$(GNU_TARGET_NAME) \
 		--target=$(GNU_TARGET_NAME) \
-		--enable-shared \
 		$(BINUTILS_EXTRA_CONFIG_OPTIONS)
 
 # Install binutils after busybox to prefer full-blown utilities
@@ -74,6 +76,7 @@ define BINUTILS_XTENSA_PRE_PATCH
 	tar xf $(BR2_XTENSA_OVERLAY_DIR)/xtensa_$(XTENSA_CORE_NAME).tar \
 		-C $(@D) --strip-components=1 binutils
 endef
+BINUTILS_PRE_PATCH_HOOKS += BINUTILS_XTENSA_PRE_PATCH
 HOST_BINUTILS_PRE_PATCH_HOOKS += BINUTILS_XTENSA_PRE_PATCH
 endif
 

@@ -1,11 +1,10 @@
 config BR2_PACKAGE_GOB2
 	bool "gob2"
 	depends on BR2_USE_WCHAR # glib2
-	# m4 uses fork(), so does bison then
-	depends on BR2_USE_MMU
+	depends on BR2_TOOLCHAIN_HAS_THREADS # glib2
+	depends on BR2_USE_MMU # bison, glib2
 	select BR2_PACKAGE_LIBGLIB2
 	select BR2_PACKAGE_FLEX
-	select BR2_PACKAGE_FLEX_LIBFL
 	select BR2_PACKAGE_BISON
 	help
 	  GOB (GTK+ Object Builder) is a preprocessor which simplifies
@@ -13,5 +12,6 @@ config BR2_PACKAGE_GOB2
 
 	  http://www.jirka.org/gob.html
 
-comment "gob2 requires a toolchain with WCHAR support"
-	depends on !BR2_USE_WCHAR
+comment "gob2 needs a toolchain w/ wchar"
+	depends on BR2_USE_MMU
+	depends on !BR2_USE_WCHAR || !BR2_TOOLCHAIN_HAS_THREADS

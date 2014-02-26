@@ -1,4 +1,5 @@
-// -*- mode:doc -*- ;
+// -*- mode:doc; -*-
+// vim: set syntax=asciidoc:
 
 [[adding-packages]]
 Adding new packages to Buildroot
@@ -16,6 +17,8 @@ include::adding-packages-generic.txt[]
 include::adding-packages-autotools.txt[]
 
 include::adding-packages-cmake.txt[]
+
+include::adding-packages-hooks.txt[]
 
 include::adding-packages-gettext.txt[]
 

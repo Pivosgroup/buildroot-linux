@@ -1,17 +1,17 @@
-#############################################################
+################################################################################
 #
 # psmisc
 #
-#############################################################
+################################################################################
 
-PSMISC_VERSION = 22.16
+PSMISC_VERSION = 22.20
 PSMISC_SITE = http://downloads.sourceforge.net/project/psmisc/psmisc
 PSMISC_LICENSE = GPLv2
 PSMISC_LICENSE_FILES = COPYING
 PSMISC_DEPENDENCIES = ncurses $(if $(BR2_NEEDS_GETTEXT_IF_LOCALE),gettext)
 
-ifneq ($(BR2_TOOLCHAIN_BUILDROOT_USE_SSP),y)
-# Don't force -fstack-protector
+ifeq ($(BR2_TOOLCHAIN_HAS_SSP),)
+# Don't force -fstack-protector when SSP is not available in toolchain
 PSMISC_CONF_OPT = --disable-harden-flags
 endif
 

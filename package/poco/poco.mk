@@ -1,10 +1,11 @@
-#############################################################
+################################################################################
 #
 # poco
 #
-#############################################################
-POCO_VERSION_MAJOR = 1.4.4
-POCO_VERSION = $(POCO_VERSION_MAJOR)
+################################################################################
+
+POCO_VERSION_MAJOR = 1.4.6
+POCO_VERSION = $(POCO_VERSION_MAJOR)p1
 POCO_SOURCE = poco-$(POCO_VERSION)-all.tar.gz
 POCO_SITE = http://downloads.sourceforge.net/project/poco/sources/poco-$(POCO_VERSION_MAJOR)
 POCO_LICENSE = Boost-v1.0
@@ -31,6 +32,11 @@ POCO_OMIT = Data/ODBC PageCompiler					\
 
 ifeq ($(LIBC),uclibc)
 POCO_CONF_OPT += --no-fpenvironment --no-wstring
+endif
+
+# sh4a is missing FE_DOWNWARD and FE_UPWARD in its fenv.h
+ifeq ($(BR2_sh4a),y)
+POCO_CONF_OPT += --no-fpenvironment
 endif
 
 define POCO_CONFIGURE_CMDS

@@ -1,3 +1,34 @@
+manual-update-lists: manual-check-dependencies-lists
+	$(Q)$(call MESSAGE,"Updating the manual lists...")
+	$(Q)BR2_DEFCONFIG="" TOPDIR=$(TOPDIR) O=$(O)/docs/manual/.build \
+		$(TOPDIR)/support/scripts/gen-manual-lists.py
+
+# we can't use suitable-host-package here because that's not available in
+# the context of 'make release'
+manual-check-dependencies:
+	$(Q)if [ -z "$(shell support/dependencies/check-host-asciidoc.sh)" ]; then \
+		echo "You need a sufficiently recent asciidoc on your host" \
+			"to generate the manual"; \
+		exit 1; \
+	fi
+	$(Q)if [ -z "`which w3m 2>/dev/null`" ]; then \
+		echo "You need w3m on your host to generate the manual"; \
+		exit 1; \
+	fi
+
+manual-check-dependencies-pdf:
+	$(Q)if [ -z "`which dblatex 2>/dev/null`" ]; then \
+		echo "You need dblatex on your host to generate the pdf manual"; \
+		exit 1; \
+	fi
+
+manual-check-dependencies-lists:
+	$(Q)if ! python -c "import argparse" >/dev/null 2>&1 ; then \
+		echo "You need python with argparse on your host to generate" \
+			"the list of packages in the manual"; \
+		exit 1; \
+	fi
+
 ################################################################################
 # GENDOC -- generates the make targets needed to build a specific type of
 #           asciidoc documentation.
@@ -17,11 +48,19 @@ $(1): $(1)-$(3)
 .PHONY: $(1)-$(3)
 $(1)-$(3): $$(O)/docs/$(1)/$(1).$(4)
 
-$$(O)/docs/$(1)/$(1).$(4): docs/$(1)/$(1).txt $$($(call UPPERCASE,$(1))_SOURCES)
-	@echo "Generating $(5) $(1)..."
-	$(Q)mkdir -p $$(@D)
+manual-check-dependencies-$(3):
+
+$$(O)/docs/$(1)/$(1).$(4): docs/$(1)/$(1).txt \
+			   $$($(call UPPERCASE,$(1))_SOURCES) \
+			   manual-check-dependencies \
+			   manual-check-dependencies-$(3) \
+			   manual-update-lists
+	$(Q)$(call MESSAGE,"Generating $(5) $(1)...")
+	$(Q)mkdir -p $$(@D)/.build
+	$(Q)rsync -au docs/$(1)/*.txt $$(@D)/.build
 	$(Q)a2x $(6) -f $(2) -d book -L -r $(TOPDIR)/docs/images \
-	  -D $$(@D) $$<
+	        -D $$(@D) $$(@D)/.build/$(1).txt
+	-$(Q)rm -rf $$(@D)/.build
 endef
 
 ################################################################################
@@ -34,15 +73,15 @@ endef
 ################################################################################
 define GENDOC
 $(call GENDOC_INNER,$(1),xhtml,html,html,HTML,--xsltproc-opts "--stringparam toc.section.depth 4")
-$(call GENDOC_INNER,$(1),chunked,split-html,chunked,Split HTML,--xsltproc-opts "--stringparam toc.section.depth 4")
+$(call GENDOC_INNER,$(1),chunked,split-html,chunked,split HTML,--xsltproc-opts "--stringparam toc.section.depth 4")
 $(call GENDOC_INNER,$(1),pdf,pdf,pdf,PDF,--dblatex-opts "-P latex.output.revhistory=0")
-$(call GENDOC_INNER,$(1),text,txt,text,Text)
-$(call GENDOC_INNER,$(1),epub,epub,epub,EPUB)
+$(call GENDOC_INNER,$(1),text,text,text,text)
+$(call GENDOC_INNER,$(1),epub,epub,epub,ePUB)
 clean: $(1)-clean
 $(1)-clean:
 	$(Q)$(RM) -rf $(O)/docs/$(1)
-.PHONY: $(1) $(1)-clean
+.PHONY: $(1) $(1)-clean manual-update-lists
 endef
 
-MANUAL_SOURCES = $(wildcard docs/manual/*.txt) $(wildcard docs/images/*)
+MANUAL_SOURCES = $(sort $(wildcard docs/manual/*.txt) $(wildcard docs/images/*))
 $(eval $(call GENDOC,manual))

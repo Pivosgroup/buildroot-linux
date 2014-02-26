@@ -1,8 +1,9 @@
-#############################################################
+################################################################################
 #
 # schifra
 #
-#############################################################
+################################################################################
+
 SCHIFRA_VERSION = 0.0.1
 SCHIFRA_SITE = http://www.schifra.com/downloads
 SCHIFRA_SOURCE = schifra.tgz
@@ -22,11 +23,11 @@ endef
 define SCHIFRA_INSTALL_EXAMPLES
 	cd $(@D) && for i in `find -type f -name 'schifra_*' -executable` ; \
 	do \
-		$(INSTALL) -m 0755 -D $$i (TARGET_DIR)/usr/bin/$$i; \
+		$(INSTALL) -m 0755 -D $$i $(TARGET_DIR)/usr/bin/$$i; \
 	done
 endef
 
-SCHIFRA_POST_TARGET_INSTALL_HOOKS += SCHIFRA_INSTALL_EXAMPLES
+SCHIFRA_POST_INSTALL_TARGET_HOOKS += SCHIFRA_INSTALL_EXAMPLES
 endif
 
 define SCHIFRA_INSTALL_TARGET_CMDS

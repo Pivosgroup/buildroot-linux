@@ -1,12 +1,14 @@
 ################################################################################
 #
-# xserver_xorg-server -- No description available
+# xserver_xorg-server
 #
 ################################################################################
 
-XSERVER_XORG_SERVER_VERSION = 1.9.4
+XSERVER_XORG_SERVER_VERSION = 1.12.4
 XSERVER_XORG_SERVER_SOURCE = xorg-server-$(XSERVER_XORG_SERVER_VERSION).tar.bz2
 XSERVER_XORG_SERVER_SITE = http://xorg.freedesktop.org/releases/individual/xserver
+XSERVER_XORG_SERVER_LICENSE = MIT
+XSERVER_XORG_SERVER_LICENSE_FILES = COPYING
 XSERVER_XORG_SERVER_MAKE = $(MAKE1) # make install fails with parallel make
 XSERVER_XORG_SERVER_INSTALL_STAGING = YES
 XSERVER_XORG_SERVER_INSTALL_STAGING_OPT = DESTDIR=$(STAGING_DIR) install install-data
@@ -46,12 +48,10 @@ XSERVER_XORG_SERVER_DEPENDENCIES = 	\
 	xproto_xextproto 		\
 	xproto_xf86bigfontproto 	\
 	xproto_xf86dgaproto 		\
-	xproto_xf86rushproto 		\
 	xproto_xf86vidmodeproto 	\
 	xproto_xproto 			\
 	xkeyboard-config		\
 	pixman 				\
-	openssl 			\
 	mcookie 			\
 	host-pkgconf
 
@@ -62,21 +62,40 @@ XSERVER_XORG_SERVER_CONF_OPT = --disable-config-hal \
 		--with-fontdir=/usr/share/fonts/X11/ --localstatedir=/var \
 		--$(if $(BR2_PACKAGE_XSERVER_XORG_SERVER_XVFB),en,dis)able-xvfb
 
-ifeq ($(BR2_PACKAGE_XSERVER_xorg),y)
+ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER_MODULAR),y)
 XSERVER_XORG_SERVER_CONF_OPT += --enable-xorg
 XSERVER_XORG_SERVER_DEPENDENCIES += xlib_libpciaccess libdrm
 else
 XSERVER_XORG_SERVER_CONF_OPT += --disable-xorg
 endif
 
-ifeq ($(BR2_PACKAGE_XSERVER_tinyx),y)
+ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER_KDRIVE),y)
 XSERVER_XORG_SERVER_CONF_OPT += --enable-kdrive --enable-xfbdev \
 		--disable-glx --disable-dri --disable-xsdl
 define XSERVER_CREATE_X_SYMLINK
  ln -f -s Xfbdev $(TARGET_DIR)/usr/bin/X
 endef
 XSERVER_XORG_SERVER_POST_INSTALL_TARGET_HOOKS += XSERVER_CREATE_X_SYMLINK
+
+ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER_KDRIVE_EVDEV),y)
+XSERVER_XORG_SERVER_CONF_OPT += --enable-kdrive-evdev
 else
+XSERVER_XORG_SERVER_CONF_OPT += --disable-kdrive-evdev
+endif
+
+ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER_KDRIVE_KBD),y)
+XSERVER_XORG_SERVER_CONF_OPT += --enable-kdrive-kbd
+else
+XSERVER_XORG_SERVER_CONF_OPT += --disable-kdrive-kbd
+endif
+
+ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER_KDRIVE_MOUSE),y)
+XSERVER_XORG_SERVER_CONF_OPT += --enable-kdrive-mouse
+else
+XSERVER_XORG_SERVER_CONF_OPT += --disable-kdrive-mouse
+endif
+
+else # modular
 XSERVER_XORG_SERVER_CONF_OPT += --disable-kdrive --disable-xfbdev
 endif
 
@@ -133,7 +152,7 @@ ifneq ($(BR2_PACKAGE_XLIB_LIBXCOMPOSITE),y)
 XSERVER_XORG_SERVER_CONF_OPT += --disable-composite
 endif
 
-ifeq ($(BR2_PACKAGE_XSERVER_xorg),y)
+ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER_MODULAR),y)
 ifeq ($(BR2_PACKAGE_XPROTO_DRI2PROTO),y)
 XSERVER_XORG_SERVER_DEPENDENCIES += xproto_dri2proto
 XSERVER_XORG_SERVER_CONF_OPT += --enable-dri2
@@ -157,6 +176,17 @@ ifeq ($(BR2_PACKAGE_MESA3D),y)
 XSERVER_XORG_SERVER_CONF_OPT += --enable-glx
 else
 XSERVER_XORG_SERVER_CONF_OPT += --disable-glx
+endif
+
+ifeq ($(BR2_PACKAGE_OPENSSL),y)
+XSERVER_XORG_SERVER_CONF_OPT += --with-sha1=libcrypto
+XSERVER_XORG_SERVER_DEPENDENCIES += openssl
+else ifeq ($(BR2_PACKAGE_LIBGCRYPT),y)
+XSERVER_XORG_SERVER_CONF_OPT += --with-sha1=libgcrypt
+XSERVER_XORG_SERVER_DEPENDENCIES += libgcrypt
+else
+XSERVER_XORG_SERVER_CONF_OPT += --with-sha1=libsha1
+XSERVER_XORG_SERVER_DEPENDENCIES += libsha1
 endif
 
 $(eval $(autotools-package))

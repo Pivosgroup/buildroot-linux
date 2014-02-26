@@ -1,8 +1,71 @@
 # Config entries for internal toolchain backend
 
 if BR2_TOOLCHAIN_BUILDROOT
-source "toolchain/kernel-headers/Config.in"
-source "toolchain/uClibc/Config.in"
+source "package/linux-headers/Config.in.host"
+
+choice
+	prompt "C library"
+
+config BR2_TOOLCHAIN_BUILDROOT_UCLIBC
+	bool "uClibc"
+	select BR2_TOOLCHAIN_USES_UCLIBC
+	help
+	  This option selects uClibc as the C library for the
+	  cross-compilation toolchain.
+
+	  http://uclibc.org
+
+config BR2_TOOLCHAIN_BUILDROOT_EGLIBC
+	bool "eglibc"
+	depends on BR2_arm    || BR2_armeb    || BR2_aarch64 || \
+		   BR2_i386   || BR2_mips     || BR2_mipsel  || \
+		   BR2_mips64 || BR2_mips64el || BR2_powerpc || \
+		   BR2_sh     || BR2_sh64     || BR2_sparc   || \
+		   BR2_x86_64
+	depends on BR2_USE_MMU
+	depends on !BR2_PREFER_STATIC_LIB
+	select BR2_TOOLCHAIN_USES_GLIBC
+	# our eglibc.mk enables RPC support
+	select BR2_TOOLCHAIN_HAS_NATIVE_RPC
+	help
+	  This option selects eglibc as the C library for the
+	  cross-compilation toolchain.
+
+	  http://eglibc.org
+
+config BR2_TOOLCHAIN_BUILDROOT_GLIBC
+	bool "glibc"
+	depends on BR2_arm    || BR2_armeb    || BR2_aarch64 || \
+		   BR2_i386   || BR2_mips     || BR2_mipsel  || \
+		   BR2_mips64 || BR2_mips64el || BR2_powerpc || \
+		   BR2_sh     || BR2_sh64     || BR2_sparc   || \
+		   BR2_x86_64
+	select BR2_TOOLCHAIN_USES_GLIBC
+	depends on !BR2_PREFER_STATIC_LIB
+	# our glibc.mk enables RPC support
+	select BR2_TOOLCHAIN_HAS_NATIVE_RPC
+	help
+	  This option selects glibc as the C library for the
+	  cross-compilation toolchain.
+
+	  http://www.gnu.org/software/libc/
+
+comment "(e)glibc only available with shared lib support"
+	depends on BR2_PREFER_STATIC_LIB
+
+endchoice
+
+config BR2_TOOLCHAIN_BUILDROOT_LIBC
+	string
+	default "uclibc" if BR2_TOOLCHAIN_BUILDROOT_UCLIBC
+	# Both glibc and eglibc are handled by the package called
+	# 'glibc'
+	default "glibc"  if BR2_TOOLCHAIN_BUILDROOT_EGLIBC
+	default "glibc"  if BR2_TOOLCHAIN_BUILDROOT_GLIBC
+
+source "package/uclibc/Config.in"
+
 source "package/binutils/Config.in.host"
-source "toolchain/gcc/Config.in"
+source "package/gcc/Config.in.host"
+source "package/elf2flt/Config.in.host"
 endif

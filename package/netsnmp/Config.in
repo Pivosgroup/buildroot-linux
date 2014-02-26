@@ -1,5 +1,6 @@
 config BR2_PACKAGE_NETSNMP
 	bool "netsnmp"
+	depends on BR2_USE_MMU # fork()
 	help
 	  Suite of applications used to implement SNMP v1, SNMP v2c, and
 	  SNMP v3 using both IPv4 and IPv6.
@@ -14,6 +15,20 @@ config BR2_PACKAGE_NETSNMP_ENABLE_MIBS
 	  The net-snmp package contains a selection of MIB files.
 	  Say yes if you want those MIB files installed on the target
 	  and enable the code that parses the MIB files.
+
+config BR2_PACKAGE_NETSNMP_WITH_MIB_MODULES
+	string "Build with these MIB modules"
+	default "host ucd-snmp/dlmod agentx"
+	depends on BR2_PACKAGE_NETSNMP
+	help
+	  Specify which MIB modules to include.
+
+config BR2_PACKAGE_NETSNMP_WITHOUT_MIB_MODULES
+	string "Build without these MIB modules"
+	default "disman/event disman/schedule utilities"
+	depends on BR2_PACKAGE_NETSNMP
+	help
+	  Specify which MIB modules to exclude.
 
 config BR2_PACKAGE_NETSNMP_ENABLE_DEBUGGING
 	bool "Enable debugging code"

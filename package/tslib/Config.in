@@ -1,6 +1,10 @@
 config BR2_PACKAGE_TSLIB
-	bool "libts - The Touchscreen tslib Library"
+	bool "tslib"
+	depends on !BR2_PREFER_STATIC_LIB # dlopen
 	help
-	    http://tslib.berlios.de/
+	  Tslib is an abstraction layer for touchscreen panel events.
 
-	    Tslib is an abstraction layer for touchscreen panel events.
+	  http://tslib.berlios.de/
+
+comment "tslib needs a toolchain w/ dynamic library"
+	depends on BR2_PREFER_STATIC_LIB

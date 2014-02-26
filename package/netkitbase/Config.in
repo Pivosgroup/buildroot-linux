@@ -1,11 +1,13 @@
 config BR2_PACKAGE_NETKITBASE
 	bool "netkitbase"
 	depends on BR2_TOOLCHAIN_HAS_NATIVE_RPC
+	depends on BR2_USE_MMU # fork()
 	depends on BR2_DEPRECATED
 	help
 	  Old-style inetd.
 
 	  ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/
 
-comment "netkitbase requires a toolchain with RPC support"
-        depends on !BR2_TOOLCHAIN_HAS_NATIVE_RPC
+comment "netkitbase needs a toolchain w/ RPC"
+	depends on BR2_USE_MMU && BR2_DEPRECATED
+	depends on !BR2_TOOLCHAIN_HAS_NATIVE_RPC

@@ -1,4 +1,4 @@
-######################################################################
+################################################################################
 #
 # Qt Embedded for Linux
 #
@@ -9,13 +9,19 @@
 # the kernels FPU emulation so it's better to choose soft float in the
 # buildroot config (and uClibc.config of course, if you have your own.)
 #
-######################################################################
+################################################################################
 
-QT_VERSION = 4.8.3
+QT_VERSION = 4.8.5
 QT_SOURCE  = qt-everywhere-opensource-src-$(QT_VERSION).tar.gz
-QT_SITE    = http://releases.qt-project.org/qt4/source
+QT_SITE    = http://download.qt-project.org/official_releases/qt/4.8/$(QT_VERSION)
 QT_DEPENDENCIES = host-pkgconf
 QT_INSTALL_STAGING = YES
+
+QT_LICENSE = LGPLv2.1 with exceptions or GPLv3
+ifneq ($(BR2_PACKAGE_QT_LICENSE_APPROVED),y)
+QT_LICENSE += or Digia Qt Commercial license
+endif
+QT_LICENSE_FILES = LICENSE.LGPL LGPL_EXCEPTION.txt LICENSE.GPL3
 
 ifeq ($(BR2_PACKAGE_QT_LICENSE_APPROVED),y)
 QT_CONFIGURE_OPTS += -opensource -confirm-license
@@ -24,11 +30,12 @@ endif
 QT_CONFIG_FILE=$(call qstrip,$(BR2_PACKAGE_QT_CONFIG_FILE))
 
 ifneq ($(QT_CONFIG_FILE),)
-QT_CONFIGURE_OPTS += -config buildroot
+QT_CONFIGURE_OPTS += -qconfig buildroot
 endif
 
 QT_CFLAGS = $(TARGET_CFLAGS)
 QT_CXXFLAGS = $(TARGET_CXXFLAGS)
+QT_LDFLAGS = $(TARGET_LDFLAGS)
 
 ifeq ($(BR2_LARGEFILE),y)
 QT_CONFIGURE_OPTS += -largefile
@@ -66,7 +73,7 @@ endif
 
 
 ### Pixel depths
-QT_PIXEL_DEPTHS := # empty
+QT_PIXEL_DEPTHS = # empty
 ifeq ($(BR2_PACKAGE_QT_PIXEL_DEPTH_1),y)
 QT_PIXEL_DEPTHS += 1
 endif
@@ -130,7 +137,11 @@ QT_DEPENDENCIES += directfb
 else
 QT_CONFIGURE_OPTS += -no-gfx-directfb
 endif
-
+ifeq ($(BR2_PACKAGE_QT_GFX_POWERVR),y)
+QT_CONFIGURE_OPTS += \
+	-plugin-gfx-powervr -D QT_NO_QWS_CURSOR -D QT_QWS_CLIENTBLIT
+QT_DEPENDENCIES += powervr
+endif
 
 ### Mouse drivers
 ifeq ($(BR2_PACKAGE_QT_MOUSE_PC),y)
@@ -307,6 +318,16 @@ else
 QT_CONFIGURE_OPTS += -no-openssl
 endif
 
+ifeq ($(BR2_PACKAGE_QT_OPENGL_ES),y)
+QT_CONFIGURE_OPTS += -opengl es2 -egl
+QT_DEPENDENCIES   += libgles libegl
+QT_CFLAGS   += $(shell $(PKG_CONFIG_HOST_BINARY) --cflags egl)
+QT_CXXFLAGS += $(shell $(PKG_CONFIG_HOST_BINARY) --cflags egl)
+QT_LDFLAGS  += $(shell $(PKG_CONFIG_HOST_BINARY) --libs egl)
+else
+QT_CONFIGURE_OPTS += -no-opengl
+endif
+
 # Qt SQL Drivers
 ifeq ($(BR2_PACKAGE_QT_SQL_MODULE),y)
 ifeq ($(BR2_PACKAGE_QT_IBASE),y)
@@ -398,12 +419,6 @@ else
 QT_CONFIGURE_OPTS += -no-scripttools
 endif
 
-ifeq ($(BR2_PACKAGE_QT_JAVASCRIPTCORE),y)
-QT_CONFIGURE_OPTS += -javascript-jit
-else
-QT_CONFIGURE_OPTS += -no-javascript-jit
-endif
-
 ifeq ($(BR2_PACKAGE_QT_STL),y)
 QT_CONFIGURE_OPTS += -stl
 else
@@ -422,10 +437,10 @@ ifeq ($(BR2_PACKAGE_OPENGL),y)
 //QT_CONFIGURE_LIBS_EGL = -ldbus-1 -lEGL -lMali
 endif
 
-# ccache and precompiled headers don't play well together
-ifeq ($(BR2_CCACHE),y)
+# -no-pch is needed to workaround the issue described at
+# http://comments.gmane.org/gmane.comp.lib.qt.devel/5933.
+# In addition, ccache and precompiled headers don't play well together
 QT_CONFIGURE_OPTS += -no-pch
-endif
 
 # x86x86fix
 # Workaround Qt Embedded bug when crosscompiling for x86 under x86 with linux
@@ -438,7 +453,7 @@ endif
 # End of workaround.
 
 # Variable for other Qt applications to use
-QT_QMAKE:=$(HOST_DIR)/usr/bin/qmake -spec qws/linux-$(QT_EMB_PLATFORM)-g++
+QT_QMAKE = $(HOST_DIR)/usr/bin/qmake -spec qws/linux-$(QT_EMB_PLATFORM)-g++
 
 ################################################################################
 # QT_QMAKE_SET -- helper macro to set <variable> = <value> in
@@ -485,7 +500,7 @@ define QT_CONFIGURE_CMDS
 	$(call QT_QMAKE_SET,QMAKE_STRIP,$(TARGET_STRIP),$(@D))
 	$(call QT_QMAKE_SET,QMAKE_CFLAGS,$(QT_CFLAGS),$(@D))
 	$(call QT_QMAKE_SET,QMAKE_CXXFLAGS,$(QT_CXXFLAGS),$(@D))
-	$(call QT_QMAKE_SET,QMAKE_LFLAGS,$(TARGET_LDFLAGS),$(@D))
+	$(call QT_QMAKE_SET,QMAKE_LFLAGS,$(QT_LDFLAGS),$(@D))
 	$(call QT_QMAKE_SET,PKG_CONFIG,$(HOST_DIR)/usr/bin/pkg-config,$(@D))
 	$(call QT_QMAKE_SET,QMAKE_LIBS_EGL,$(QT_CONFIGURE_LIBS_EGL),$(@D))
 # Don't use TARGET_CONFIGURE_OPTS here, qmake would be compiled for the target
@@ -505,6 +520,8 @@ define QT_CONFIGURE_CMDS
 		-no-separate-debug-info \
 		-prefix /usr \
 		-plugindir /usr/lib/qt/plugins \
+		-importdir /usr/lib/qt/imports \
+		-translationdir /usr/share/qt/translations \
 		-hostprefix $(STAGING_DIR) \
 		-fast \
 		-no-rpath \
@@ -564,9 +581,11 @@ endif
 ifeq ($(BR2_PACKAGE_QT_QT3SUPPORT),y)
 QT_INSTALL_LIBS    += Qt3Support
 endif
-ifeq ($(BR2_PACKAGE_OPENGL),y)
-//QT_INSTALL_LIBS    += QtOpenVG
-//QT_INSTALL_LIBS    += QtOpenGL
+ifeq ($(BR2_PACKAGE_QT_OPENGL_ES),y)
+QT_INSTALL_LIBS    += QtOpenGL
+endif
+ifeq ($(BR2_PACKAGE_QT_GFX_POWERVR),y)
+QT_INSTALL_LIBS    += pvrQWSWSEGL
 endif
 
 QT_CONF_FILE=$(HOST_DIR)/usr/bin/qt.conf
@@ -621,6 +640,14 @@ define QT_INSTALL_TARGET_PLUGINS
 	fi
 endef
 
+# Import installation
+define QT_INSTALL_TARGET_IMPORTS
+	if [ -d $(STAGING_DIR)/usr/lib/qt/imports/ ] ; then \
+		mkdir -p $(TARGET_DIR)/usr/lib/qt/imports ; \
+		cp -dpfr $(STAGING_DIR)/usr/lib/qt/imports/* $(TARGET_DIR)/usr/lib/qt/imports ; \
+	fi
+endef
+
 # Fonts installation
 ifneq ($(QT_FONTS),)
 define QT_INSTALL_TARGET_FONTS
@@ -636,11 +663,30 @@ define QT_INSTALL_TARGET_FONTS_TTF
 endef
 endif
 
+ifeq ($(BR2_PACKAGE_QT_GFX_POWERVR),y)
+define QT_INSTALL_TARGET_POWERVR
+	# Note: this overwrites the default powervr.ini provided by the ti-gfx
+	# package.
+	$(INSTALL) -D -m 0644 package/qt/powervr.ini \
+		$(TARGET_DIR)/etc/powervr.ini
+endef
+endif
+
+define QT_INSTALL_TARGET_TRANSLATIONS
+	if [ -d $(STAGING_DIR)/usr/share/qt/translations/ ] ; then \
+		mkdir -p $(TARGET_DIR)/usr/share/qt/translations ; \
+		cp -dpfr $(STAGING_DIR)/usr/share/qt/translations/* $(TARGET_DIR)/usr/share/qt/translations ; \
+	fi
+endef
+
 define QT_INSTALL_TARGET_CMDS
 	$(QT_INSTALL_TARGET_LIBS)
 	$(QT_INSTALL_TARGET_PLUGINS)
+	$(QT_INSTALL_TARGET_IMPORTS)
 	$(QT_INSTALL_TARGET_FONTS)
 	$(QT_INSTALL_TARGET_FONTS_TTF)
+	$(QT_INSTALL_TARGET_POWERVR)
+	$(QT_INSTALL_TARGET_TRANSLATIONS)
 endef
 
 define QT_CLEAN_CMDS

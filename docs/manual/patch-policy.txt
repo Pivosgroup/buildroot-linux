@@ -1,4 +1,5 @@
 // -*- mode:doc; -*-
+// vim: set syntax=asciidoc:
 
 [[patch-policy]]
 
@@ -10,8 +11,9 @@ necessary to patch the source of the software to get it cross-built within
 Buildroot.
 
 Buildroot offers an infrastructure to automatically handle this during
-the builds. It supports two ways of applying patch sets: downloaded patches
-and patches supplied within buildroot.
+the builds. It supports three ways of applying patch sets: downloaded patches,
+patches supplied within buildroot and patches located in a user-defined
+global patch directory.
 
 Providing patches
 ~~~~~~~~~~~~~~~~~
@@ -19,7 +21,7 @@ Providing patches
 Downloaded
 ^^^^^^^^^^
 
-If it is necessary to apply a patch that is available for download, then it
+If it is necessary to apply a patch that is available for download, then add it
 to the +<packagename>_PATCH+ variable. It is downloaded from the same site
 as the package itself. It can be a single patch, or a tarball containing a
 patch series.
@@ -33,11 +35,24 @@ Most patches are provided within Buildroot, in the package
 directory; these typically aim to fix cross-compilation, libc support,
 or other such issues.
 
-These patch files should be named +<packagename>-*.patch+.
+These patch files should be named +<packagename>-<number>-<description>.patch+.
 
 A +series+ file, as used by +quilt+, may also be added in the
 package directory. In that case, the +series+ file defines the patch
 application order.
+
+.Notes
+- The patch files coming with Buildroot should not contain any package version
+reference in their filename.
+- The field +<number>+ in the patch file name refers to the 'apply order'.
+
+Global patch directory
+^^^^^^^^^^^^^^^^^^^^^^
+
+The +BR2_GLOBAL_PATCH_DIR+ configuration file option can be
+used to specify a directory containing global package patches. See
+xref:packages-custom[] for details.
+
 
 How patches are applied
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,14 +65,17 @@ How patches are applied
   tarballs are applied;
 
 . If there are some +*.patch+ files in the package directory or in the
-  a package subdirectory named +<packagename>-<packageversion>+, then:
+  a package subdirectory named +<packageversion>+, then:
 +
 * If a +series+ file exists in the package directory, then patches are
   applied according to the +series+ file;
 +
-* Otherwise, patch files matching `<packagename>-*.patch` or
-  `<packagename>-*.patch.<arch>` (where +<arch>+ is the architecture
-  name) are applied following the +ls+ command order.
+* Otherwise, patch files matching +<packagename>-*.patch+
+  are applied in alphabetical order.
+  So, to ensure they are applied in the right order, it is hightly
+  recommended to named the patch files like this:
+  +<packagename>-<number>-<description>.patch+, where +<number>+
+  refers to the 'apply order'.
 
 . Run the +<packagename>_POST_PATCH_HOOKS+ commands if defined.
 
@@ -87,7 +105,7 @@ At the end, the patch should look like:
 ---------------
 configure.ac: add C++ support test
 
-signed-off-by John Doe <john.doe@noname.org>
+Signed-off-by: John Doe <john.doe@noname.org>
 
 --- configure.ac.orig
 +++ configure.ac

@@ -1,12 +1,15 @@
-#############################################################
+################################################################################
 #
 # atk
 #
-#############################################################
-ATK_VERSION_MAJOR = 1.33
-ATK_VERSION = $(ATK_VERSION_MAJOR).6
-ATK_SOURCE = atk-$(ATK_VERSION).tar.bz2
+################################################################################
+
+ATK_VERSION_MAJOR = 2.10
+ATK_VERSION = $(ATK_VERSION_MAJOR).0
+ATK_SOURCE = atk-$(ATK_VERSION).tar.xz
 ATK_SITE = http://ftp.gnome.org/pub/gnome/sources/atk/$(ATK_VERSION_MAJOR)/
+ATK_LICENSE = LGPLv2+
+ATK_LICENSE_FILES = COPYING
 ATK_INSTALL_STAGING = YES
 ATK_INSTALL_STAGING_OPT = DESTDIR=$(STAGING_DIR) LDFLAGS=-L$(STAGING_DIR)/usr/lib install
 
@@ -41,18 +44,6 @@ ATK_CONF_ENV = ac_cv_func_posix_getpwuid_r=yes \
 ATK_CONF_OPT =  --disable-glibtest --enable-explicit-deps=no \
 		--disable-debug
 
-ifeq ($(BR2_PACKAGE_XORG7),y)
-ATK_CONF_OPT += --with-x \
-		--x-includes=$(STAGING_DIR)/usr/include/X11 \
-		--x-libraries=$(STAGING_DIR)/usr/lib --disable-glibtest
-else
-ATK_CONF_OPT += --without-x
-endif
-
 ATK_DEPENDENCIES = libglib2 host-pkgconf
 
-HOST_ATK_CONF_OPT = \
-		--disable-glibtest
-
 $(eval $(autotools-package))
-$(eval $(host-autotools-package))

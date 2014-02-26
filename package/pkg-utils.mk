@@ -1,9 +1,9 @@
-############################################################################
+################################################################################
 #
 # This file contains various utility functions used by the package
 # infrastructure, or by the packages themselves.
 #
-############################################################################
+################################################################################
 
 # UPPERCASE Macro -- transform its argument to uppercase and replace dots and
 # hyphens to underscores
@@ -22,6 +22,14 @@ UPPERCASE = $(strip $(eval __tmp := $1) \
 		$(subst $(word 1,$(subst :, ,$c)),$(word 2,$(subst :, ,$c)),\
 	$(__tmp)))) \
 	$(__tmp))
+
+# LOWERCASE macro -- transforms its arguments to lowercase
+# The above non-tr implementation is not needed, because LOWERCASE is not
+# called very often
+
+define LOWERCASE
+$(shell echo $1 | tr '[:upper:]' '[:lower:]')
+endef
 
 #
 # Manipulation of .config files based on the Kconfig
@@ -62,6 +70,8 @@ INFLATE.tbz2 = $(BZCAT)
 INFLATE.tgz  = $(ZCAT)
 INFLATE.xz   = $(XZCAT)
 INFLATE.tar  = cat
+# suitable-extractor(filename): returns extractor based on suffix
+suitable-extractor = $(INFLATE$(suffix $(1)))
 
 # MESSAGE Macro -- display a message in bold type
 MESSAGE     = echo "$(TERM_BOLD)>>> $($(PKG)_NAME) $($(PKG)_VERSION) $(1)$(TERM_RESET)"
@@ -106,6 +116,6 @@ define legal-license-file # pkg, filename, file-fullpath
 	$(call legal-license-header,$(1),$(2) file) && \
 	cat $(3) >>$(LEGAL_LICENSES_TXT) && \
 	echo >>$(LEGAL_LICENSES_TXT) && \
-	mkdir -p $(LICENSE_FILES_DIR)/$(1)/ && \
-	cp $(3) $(LICENSE_FILES_DIR)/$(1)/
+	mkdir -p $(LICENSE_FILES_DIR)/$(1)/$(dir $(2)) && \
+	cp $(3) $(LICENSE_FILES_DIR)/$(1)/$(2)
 endef

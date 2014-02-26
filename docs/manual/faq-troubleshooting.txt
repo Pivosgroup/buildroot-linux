@@ -1,4 +1,5 @@
 // -*- mode:doc; -*-
+// vim: set syntax=asciidoc:
 
 Frequently Asked Questions & Troubleshooting
 ============================================
@@ -25,21 +26,6 @@ configuration+, and modify +Port to run a getty (login prompt) on+ and
 +Baudrate to use+ as appropriate. This will automatically tune the
 +/etc/inittab+ file of the generated system so that a shell starts on
 the correct serial port.
-
-[[faq-module-init-tool-build-failure]]
-module-init-tools fails to build with 'cannot find -lc'
--------------------------------------------------------
-
-If the build of +module-init-tools+ for the host fails with:
-
-------------------------
-/usr/bin/ld: cannot find -lc
-------------------------
-
-then probably you are running a Fedora (or similar) distribution, and
-you should install the +glibc-static+ package. This is because the
-+module-init-tools+ build process wants to link statically against the
-C library.
 
 [[faq-no-compiler-on-target]]
 Why is there no compiler on the target?
@@ -88,17 +74,6 @@ does not make sense to waste space with the documentation data.
 If you need documentation data on your target anyway, then Buildroot
 is not suitable for your purpose, and you should look for a _real
 distribution_ (see: xref:faq-no-compiler-on-target[]).
-
-[[faq-depends-on-vs-select]]
-+Config.in+: _depends on_ vs _select_
--------------------------------------
-
-When adding a new package to Buildroot, you will most likely have to
-deal with expressing the dependencies of this package.
-
-In the +Config.in+ file, dependencies may be expressed following two
-semantics.
-See xref:depends-on-vs-select[choosing between _depends_ and _select_].
 
 [[faq-why-not-visible-package]]
 Why are some packages not visible in the Buildroot config menu?

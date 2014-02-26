@@ -1,12 +1,15 @@
-#############################################################
+################################################################################
 #
 # beecrypt
 #
-#############################################################
+################################################################################
+
 BEECRYPT_VERSION = 4.2.1
 BEECRYPT_SITE = http://downloads.sourceforge.net/project/beecrypt/beecrypt/$(BEECRYPT_VERSION)
 BEECRYPT_AUTORECONF = YES
 BEECRYPT_INSTALL_STAGING = YES
+BEECRYPT_LICENSE = LGPLv2.1+
+BEECRYPT_LICENSE_FILES = COPYING.LIB
 
 # beecrypt contains C++ code that g++ 4.7 doesn't really
 # like. Upstream does not seem to be really active, so workaround this
@@ -16,7 +19,8 @@ BEECRYPT_CONF_ENV = \
 
 BEECRYPT_CONF_OPT = \
 		--without-java \
-		--without-python
+		--without-python \
+		--disable-openmp
 
 ifeq ($(BR2_PACKAGE_ICU),y)
 # C++ support needs icu

@@ -1,16 +1,23 @@
-#############################################################
+################################################################################
 #
 # nano
 #
-#############################################################
+################################################################################
 
-NANO_VERSION = 2.3.1
+NANO_VERSION = 2.3.2
 NANO_SITE = http://www.nano-editor.org/dist/v2.3
 NANO_LICENSE = GPLv3+
 NANO_LICENSE_FILES = COPYING
 NANO_MAKE_ENV = CURSES_LIB="-lncurses"
 NANO_CONF_OPT = --without-slang
+NANO_CONF_ENV = ac_cv_prog_NCURSESW_CONFIG=false
 NANO_DEPENDENCIES = ncurses
+
+ifeq ($(BR2_PACKAGE_FILE),y)
+	NANO_DEPENDENCIES += file
+else
+	NANO_CONF_ENV += ac_cv_lib_magic_magic_open=no
+endif
 
 ifeq ($(BR2_PACKAGE_NANO_TINY),y)
 	NANO_CONF_OPT += --enable-tiny

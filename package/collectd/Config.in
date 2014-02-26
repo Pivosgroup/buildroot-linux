@@ -2,6 +2,7 @@ config BR2_PACKAGE_COLLECTD
 	bool "collectd"
 	# Uses fork()
 	depends on BR2_USE_MMU
+	depends on BR2_INET_IPV6
 	depends on BR2_TOOLCHAIN_HAS_THREADS
 	help
 	  collectd is a daemon which collects system performance
@@ -42,11 +43,26 @@ endmenu
 
 menu "misc plugins"
 
+config BR2_PACKAGE_COLLECTD_AGGREGATION
+	bool "aggregation"
+	help
+	  The Aggregate plugin allows to aggregate multiple values into
+	  a single value using one or several consolidation functions,
+	  e.g. summation and average.
+
 config BR2_PACKAGE_COLLECTD_LOGFILE
 	bool "logfile"
 	default y
 	help
 	  Writes log messages to a file or STDOUT/STDERR.
+
+config BR2_PACKAGE_COLLECTD_NOTIFY_EMAIL
+	bool "notify_email"
+	select BR2_PACKAGE_LIBESMTP
+	select BR2_PACKAGE_OPENSSL
+	help
+	  Send an E-mail with the notification message to the
+	  configured recipients.
 
 config BR2_PACKAGE_COLLECTD_SYSLOG
 	bool "syslog"
@@ -88,6 +104,11 @@ config BR2_PACKAGE_COLLECTD_BIND
 	select BR2_PACKAGE_LIBXML2
 	help
 	  Collects BIND DNS statistics.
+
+config BR2_PACKAGE_COLLECTD_CGROUPS
+	bool "cgroups"
+	help
+	  Collects CGroups CPU usage accounting.
 
 config BR2_PACKAGE_COLLECTD_CONNTRACK
 	bool "conntrack"
@@ -212,7 +233,9 @@ config BR2_PACKAGE_COLLECTD_MEMORY
 
 config BR2_PACKAGE_COLLECTD_MYSQL
 	bool "mysql"
-	depends on BR2_INSTALL_LIBSTDCPP
+	depends on BR2_INSTALL_LIBSTDCPP # mysql
+	depends on BR2_USE_MMU # mysql
+	depends on BR2_TOOLCHAIN_HAS_THREADS # mysql
 	select BR2_PACKAGE_MYSQL_CLIENT
 	help
 	  Connects to a MySQL database and issues a "show status" command.
@@ -254,10 +277,21 @@ config BR2_PACKAGE_COLLECTD_PROTOCOLS
 	help
 	  Collects information about the network protocols.
 
+config BR2_PACKAGE_COLLECTD_SENSORS
+	bool "sensors"
+	select BR2_PACKAGE_LM_SENSORS
+	help
+	  Collects data from lm-sensors.
+
 config BR2_PACKAGE_COLLECTD_SERIAL
 	bool "serial"
 	help
 	  Collects the traffic on serial interfaces.
+
+config BR2_PACKAGE_COLLECTD_STATSD
+	bool "StatsD"
+	help
+	  StatsD network protocol to allow clients to report "events".
 
 config BR2_PACKAGE_COLLECTD_SNMP
 	bool "snmp"
@@ -280,6 +314,12 @@ config BR2_PACKAGE_COLLECTD_TAIL
 	help
 	  Tails log files and each line is given to one or more matches
 	  which test if the line is relevant for any statistics.
+
+config BR2_PACKAGE_COLLECTD_TAIL_CSV
+	bool "tail csv"
+	help
+	  Follows (tails) files in CSV format, parses each line and submits
+	  extracted values.
 
 config BR2_PACKAGE_COLLECTD_TCPCONNS
 	bool "tcpconns"
@@ -369,8 +409,15 @@ config BR2_PACKAGE_COLLECTD_RRDTOOL
 	help
 	  Writes values to RRD-files.
 
-comment "rrdtool support requires a toolchain with WCHAR support"
+comment "rrdtool support needs a toolchain w/ wchar"
 	depends on !BR2_USE_WCHAR
+
+config BR2_PACKAGE_COLLECTD_RIEMANN
+	bool "riemann"
+	depends on BR2_INSTALL_LIBSTDCPP # protobuf
+	select BR2_PACKAGE_PROTOBUF_C
+	help
+	  Sends data to Riemann, a stream processing and monitoring system.
 
 config BR2_PACKAGE_COLLECTD_UNIXSOCK
 	bool "unixsock"
@@ -388,5 +435,6 @@ endmenu
 
 endif
 
-comment "collectd needs a toolchain with thread support"
-        depends on !BR2_TOOLCHAIN_HAS_THREADS
+comment "collectd needs a toolchain w/ IPv6, threads"
+	depends on !BR2_TOOLCHAIN_HAS_THREADS || !BR2_INET_IPV6
+	depends on BR2_USE_MMU

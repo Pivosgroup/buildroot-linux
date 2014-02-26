@@ -1,14 +1,22 @@
-#############################################################
+################################################################################
 #
 # netatalk
 #
-#############################################################
-NETATALK_VERSION = 3.0
+################################################################################
+
+NETATALK_VERSION = 3.0.5
 NETATALK_SITE = http://downloads.sourceforge.net/project/netatalk/netatalk/$(NETATALK_VERSION)
 NETATALK_SOURCE = netatalk-$(NETATALK_VERSION).tar.bz2
+NETATALK_AUTORECONF = YES
+NETATALK_CONFIG_SCRIPTS = netatalk-config
+NETATALK_DEPENDENCIES = host-pkgconf openssl berkeleydb libgcrypt libgpg-error \
+	libevent
+NETATALK_LICENSE = GPLv2+, LGPLv3+, MIT-like
+NETATALK_LICENSE_FILES = COPYING COPYRIGHT
 
-NETATALK_DEPENDENCIES = openssl berkeleydb libgcrypt libgpg-error
-NETATALK_CONF_ENV += CC="$(TARGET_CC) -std=gnu99"
+# Don't run ldconfig!
+NETATALK_CONF_ENV += CC="$(TARGET_CC) -std=gnu99" \
+	ac_cv_path_NETA_LDCONFIG=""
 NETATALK_CONF_OPT += --with-cnid-cdb-backend \
 	--with-bdb=$(STAGING_DIR)/usr \
 	--disable-zeroconf \
@@ -17,7 +25,9 @@ NETATALK_CONF_OPT += --with-cnid-cdb-backend \
 	--with-shadow \
 	--disable-shell-check \
 	--without-kerberos \
-	--without-pam
+	--without-pam \
+	--with-libevent=no \
+	--with-dtrace=no
 
 ifeq ($(BR2_PACKAGE_CUPS),y)
 	NETATALK_DEPENDENCIES += cups

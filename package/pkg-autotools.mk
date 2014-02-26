@@ -70,12 +70,20 @@ ifndef $(2)_MAKE
  endif
 endif
 
+ifndef $(2)_AUTORECONF
+ ifdef $(3)_AUTORECONF
+  $(2)_AUTORECONF = $($(3)_AUTORECONF)
+ else
+  $(2)_AUTORECONF ?= NO
+ endif
+endif
+
 $(2)_CONF_ENV			?=
 $(2)_CONF_OPT			?=
 $(2)_MAKE_ENV			?=
 $(2)_MAKE_OPT			?=
-$(2)_AUTORECONF			?= NO
-$(2)_AUTORECONF_OPT		?=
+$(2)_AUTORECONF_OPT		?= $($(3)_AUTORECONF_OPT)
+$(2)_INSTALL_OPT                ?= install
 $(2)_INSTALL_STAGING_OPT	?= DESTDIR=$$(STAGING_DIR) install
 $(2)_INSTALL_TARGET_OPT		?= DESTDIR=$$(TARGET_DIR)  install
 $(2)_CLEAN_OPT			?= clean
@@ -116,6 +124,9 @@ endef
 else
 
 # Configure package for host
+# disable all kind of documentation generation in the process,
+# because it often relies on host tools which may or may not be
+# installed.
 define $(2)_CONFIGURE_CMDS
 	(cd $$($$(PKG)_SRCDIR) && rm -rf config.cache; \
 	        $$(HOST_CONFIGURE_OPTS) \
@@ -126,7 +137,13 @@ define $(2)_CONFIGURE_CMDS
 		--prefix="$$(HOST_DIR)/usr" \
 		--sysconfdir="$$(HOST_DIR)/etc" \
 		--enable-shared --disable-static \
-		$$($$(PKG)_CONF_OPT) \
+		--disable-gtk-doc \
+		--disable-doc \
+		--disable-docs \
+		--disable-documentation \
+		--with-xmlto=no \
+		--with-fop=no \
+		$$(QUIET) $$($$(PKG)_CONF_OPT) \
 	)
 endef
 endif
@@ -136,7 +153,7 @@ endif
 # Hook to update config.sub and config.guess if needed
 #
 define UPDATE_CONFIG_HOOK
-       @$$(call MESSAGE, "Updating config.sub and config.guess")
+       @$$(call MESSAGE,"Updating config.sub and config.guess")
        $$(call CONFIG_UPDATE,$$(@D))
 endef
 
@@ -176,7 +193,8 @@ define AUTORECONF_HOOK
 	$(Q)cd $$($$(PKG)_SRCDIR) && $(AUTORECONF) $$($$(PKG)_AUTORECONF_OPT)
 	$(Q)if test "$$($$(PKG)_LIBTOOL_PATCH)" = "YES"; then \
 		for i in `find $$($$(PKG)_SRCDIR) -name ltmain.sh`; do \
-			ltmain_version=`sed -n '/^[ 	]*VERSION=/{s/^[ 	]*VERSION=//;p;q;}' $$$$i | sed 's/\([0-9].[0-9]*\).*/\1/'`; \
+			ltmain_version=`sed -n '/^[ 	]*VERSION=/{s/^[ 	]*VERSION=//;p;q;}' $$$$i | \
+			sed -e 's/\([0-9].[0-9]*\).*/\1/' -e 's/\"//'`; \
 			if test $$$${ltmain_version} = "1.5"; then \
 				support/scripts/apply-patches.sh $$$${i%/*} support/libtool buildroot-libtool-v1.5.patch; \
 			elif test $$$${ltmain_version} = "2.2"; then\
@@ -222,7 +240,7 @@ endif
 #
 ifndef $(2)_INSTALL_CMDS
 define $(2)_INSTALL_CMDS
-	$$(HOST_MAKE_ENV) $$($$(PKG)_MAKE_ENV) $$($$(PKG)_MAKE) -C $$($$(PKG)_SRCDIR) install
+	$$(HOST_MAKE_ENV) $$($$(PKG)_MAKE_ENV) $$($$(PKG)_MAKE) $$($$(PKG)_INSTALL_OPT) -C $$($$(PKG)_SRCDIR)
 endef
 endif
 

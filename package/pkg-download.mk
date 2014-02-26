@@ -1,21 +1,22 @@
-############################################################################
+################################################################################
 #
 # This file contains the download helpers for the various package
 # infrastructures. It is used to handle downloads from HTTP servers,
 # FTP servers, Git repositories, Subversion repositories, Mercurial
 # repositories, Bazaar repositories, and SCP servers.
 #
-############################################################################
+################################################################################
 
 # Download method commands
-WGET:=$(call qstrip,$(BR2_WGET)) $(QUIET)
-SVN:=$(call qstrip,$(BR2_SVN))
-BZR:=$(call qstrip,$(BR2_BZR))
-GIT:=$(call qstrip,$(BR2_GIT))
-HG:=$(call qstrip,$(BR2_HG)) $(QUIET)
-SCP:=$(call qstrip,$(BR2_SCP)) $(QUIET)
-SSH:=$(call qstrip,$(BR2_SSH)) $(QUIET)
-LOCALFILES:=$(call qstrip,$(BR2_LOCALFILES))
+WGET := $(call qstrip,$(BR2_WGET)) $(QUIET)
+SVN := $(call qstrip,$(BR2_SVN))
+CVS := $(call qstrip,$(BR2_CVS))
+BZR := $(call qstrip,$(BR2_BZR))
+GIT := $(call qstrip,$(BR2_GIT))
+HG := $(call qstrip,$(BR2_HG)) $(QUIET)
+SCP := $(call qstrip,$(BR2_SCP)) $(QUIET)
+SSH := $(call qstrip,$(BR2_SSH)) $(QUIET)
+LOCALFILES := $(call qstrip,$(BR2_LOCALFILES))
 CP:=$(call qstrip,$(BR2_CP)) $(QUIET)
 
 # Default spider mode is 'DOWNLOAD'. Other possible values are 'SOURCE_CHECK'
@@ -25,17 +26,17 @@ DL_MODE=DOWNLOAD
 
 # Override BR2_DL_DIR if shell variable defined
 ifneq ($(BUILDROOT_DL_DIR),)
-DL_DIR:=$(BUILDROOT_DL_DIR)
+DL_DIR := $(BUILDROOT_DL_DIR)
 else
-DL_DIR:=$(call qstrip,$(BR2_DL_DIR))
+DL_DIR := $(call qstrip,$(BR2_DL_DIR))
 endif
 
 ifeq ($(DL_DIR),)
-DL_DIR:=$(TOPDIR)/dl
+DL_DIR := $(TOPDIR)/dl
 endif
 
 # ensure it exists and a absolute path
-DL_DIR:=$(shell mkdir -p $(DL_DIR) && cd $(DL_DIR) >/dev/null && pwd)
+DL_DIR := $(shell mkdir -p $(DL_DIR) && cd $(DL_DIR) >/dev/null && pwd)
 
 #
 # URI scheme helper functions
@@ -56,22 +57,21 @@ notdomain=$(patsubst $(call domain,$(1),$(2))$(call domainseparator,$(2))%,%,$(c
 domainseparator=$(if $(1),$(1),/)
 
 ################################################################################
-# The DOWNLOAD_{GIT,SVN,BZR,HG,LOCALFILES} helpers are in charge of getting a
-# working copy of the source repository for their corresponding SCM,
+# The DOWNLOAD_* helpers are in charge of getting a working copy
+# of the source repository for their corresponding SCM,
 # checking out the requested version / commit / tag, and create an
 # archive out of it. DOWNLOAD_SCP uses scp to obtain a remote file with
 # ssh authentication. DOWNLOAD_WGET is the normal wget-based download
 # mechanism.
 #
-# The SOURCE_CHECK_{GIT,SVN,BZR,HG,WGET,LOCALFILES,SCP} helpers are in charge of
-# simply checking that the source is available for download. This can be used
-# to make sure one will be able to get all the sources needed for
-# one's build configuration.
+# The SOURCE_CHECK_* helpers are in charge of simply checking that the source
+# is available for download. This can be used to make sure one will be able
+# to get all the sources needed for one's build configuration.
 #
-# The SHOW_EXTERNAL_DEPS_{GIT,SVN,BZR,HG,WGET,LOCALFILES,SCP} helpers simply
-# output to the console the names of the files that will be downloaded, or path
-# and revision of the source repositories, producing a list of all the
-# "external dependencies" of a given build configuration.
+# The SHOW_EXTERNAL_DEPS_* helpers simply output to the console the names
+# of the files that will be downloaded, or path and revision of the
+# source repositories, producing a list of all the "external dependencies"
+# of a given build configuration.
 ################################################################################
 
 # Try a shallow clone - but that only works if the version is a ref (tag or
@@ -83,7 +83,7 @@ domainseparator=$(if $(1),$(1),/)
 define DOWNLOAD_GIT
 	test -e $(DL_DIR)/$($(PKG)_SOURCE) || \
 	(pushd $(DL_DIR) > /dev/null && \
-	 ((test `git ls-remote  $($(PKG)_SITE) | cut -f 2- | grep $($(PKG)_DL_VERSION)` && \
+	 ((test "`git ls-remote $($(PKG)_SITE) $($(PKG)_DL_VERSION)`" && \
 	   echo "Doing shallow clone" && \
 	   $(GIT) clone --depth 1 -b $($(PKG)_DL_VERSION) --bare $($(PKG)_SITE) $($(PKG)_BASE_NAME)) || \
 	  (echo "Doing full clone" && \
@@ -120,6 +120,24 @@ define SHOW_EXTERNAL_DEPS_BZR
 	echo $($(PKG)_SOURCE)
 endef
 
+define DOWNLOAD_CVS
+	test -e $(DL_DIR)/$($(PKG)_SOURCE) || \
+	(pushd $(DL_DIR) > /dev/null && \
+	$(CVS) -z3 -d:pserver:anonymous@$(call stripurischeme,$(call qstrip,$($(PKG)_SITE))) \
+		co -d $($(PKG)_BASE_NAME) -r :$($(PKG)_DL_VERSION) -P $($(PKG)_RAWNAME) && \
+	$(TAR) czf $($(PKG)_SOURCE) $($(PKG)_BASE_NAME)/ && \
+	rm -rf $($(PKG)_DL_DIR) && \
+	popd > /dev/null)
+endef
+
+# Not all CVS servers support ls/rls, use login to see if we can connect
+define SOURCE_CHECK_CVS
+	$(CVS) -d:pserver:anonymous:@$(call stripurischeme,$(call qstrip,$($(PKG)_SITE))) login
+endef
+
+define SHOW_EXTERNAL_DEPS_CVS
+	echo $($(PKG)_SOURCE)
+endef
 
 define DOWNLOAD_SVN
 	test -e $(DL_DIR)/$($(PKG)_SOURCE) || \
@@ -250,6 +268,7 @@ define DOWNLOAD_INNER
 		case "$$scheme" in \
 			git) $($(DL_MODE)_GIT) && exit ;; \
 			svn) $($(DL_MODE)_SVN) && exit ;; \
+			cvs) $($(DL_MODE)_CVS) && exit ;; \
 			bzr) $($(DL_MODE)_BZR) && exit ;; \
 			file) $($(DL_MODE)_LOCALFILES) && exit ;; \
 			cp) $($(DL_MODE)_CP) && exit ;; \

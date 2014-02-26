@@ -1,3 +1,658 @@
+2013.11, Released November 30th, 2013:
+
+	Minor fixes.
+
+	Updated/fixed packages: apr, binutils, dbus-python, dropwatch,
+	ecryptfs-utils, eglibc, gdb, gpsd, grantlee, hostapd,
+	iptables, qlibiscsi, libnspr, libnss, libpfm4, libtool,
+	lua-ev, lvm2, mplayer, qt, qt5, quagga, ruby, tinymembench,
+	tvheadend, util-linux, wpa_supplicant
+
+	Issues resolved (http://bugs.uclibc.org):
+
+	#1279: Buildroot compiled Busybox and Coreutils LFS issues
+	#2995: -fstack-protector-all causes ssh to SIGSEGV
+	#5570: Cannot compile software on the target machine
+	#6428: util-linux libmount segfaults with patch from buildroot
+	#6500: php fails to build for armel
+	#6554: gdb needs to dependents on host texinfo
+	#6692: GNU nano fails to compile for x86_64
+	#6704: wpa_supplicant: fix wrong path to executable file in D-Bus
+
+2013.11-rc3, Released November 26th, 2013
+
+	Fixes all over the tree.
+
+	Architecture: Mark MIPS I, II, III and IV as deprecated.
+
+	Updated/fixed packages: beecrypt, dbus, e2fsprogs, libcap-ng,
+	libglib2, libroxml, libsigsegv, libvncserver, lxc, mdadm,
+	mongoose, nut, ola, omniorb, openssl, pcre, php, poco,
+	protobuf-c, pv, qt5base, ruby, schifra, squid, sunxi-mail,
+	swig, ti-gfx, tinymembench, uclibc, udisks, vim
+
+2013.11-rc2, Released November 18th, 2013
+
+	Fixes all over the tree.
+
+	Defconfigs: qemu_arm_versatile, qemu_arm_nuri, sheevaplug:
+	Adjust kernel versions.
+
+	Toolchain: avr32: fix for modern kernel headers
+
+	Bootloader: Barebox updated to 2013.10.1
+
+	Updated/fixed packages: dhcp, e2fsprogs, gst1-plugins-bad,
+	libcurl, libvncserver, nano, pc, qt5base, squashfs, ttcp,
+	wayland, wvstreams
+
+	Issues resolved (http://bugs.uclibc.org):
+
+	#3601: DHCPD S80dhcp-server startup script issues
+	#6320: Fix kernel compile issue if BR2_LINUX_KERNEL_CUSTOM_GIT_VERS..
+	#6416: Xenomai package, patch alternative
+	#6590: directfb-examples build failed whit linaro toolchain
+
+2013.11-rc1, Released November 12th, 2013
+
+	Architectures: Nios-II support, MIPS arch handling fixes
+
+	Defconfigs: cubieboard2, freescale i.MX 6sololite evk,
+	sabre-sd, wandboard added, rpi renamed to raspberrypi_defconfig
+
+	Toolchain: glibc support, upstream uClibc fixes, uClibc 0.9.31
+	for avr32, crosstool-ng backend removed, external musl
+	toolchain support, gcc 4.8.2, updated Linaro external
+	toolchains. Fortran and objective-C support deprecated,
+	mudflap support
+
+	Bootloaders: U-Boot: u-boot.imx support, version bumps
+
+	Linux: use kmod instead of module-init-tools
+
+	System: default to devtmpfs for /dev
+
+	Infrastructure: Make 3.82 fixes, locales generation fixes, CVS
+	download support, post-rsync hooks
+
+	Fs: u-boot image support for cpio
+
+	Updated/fixed packages: aircrack-ng, alsamixergui, apr,
+	apr-util, atk, automake, bellagio, berkeleydb, bind, binutils,
+	bison, boost, busybox, can-utils, ccache, ccid, cgilua,
+	chrony, cifs-utils, cjson, collectd, connman, conntrack-tools,
+	copas, cppcms, cppzmq, czmq, dash, dbus, dhcpcd, diffutils,
+	directfb, dmidecode, dnsmaqs, docker, dosfstools, dropbear,
+	dropwatch, ebtables, eglibc, elf2flt, empty, enchant, erlang,
+	ethtool, fbgrab, fbv, fdk-aac, feh, ffmpeg, file, findutils,
+	fltk, fmtools, freetype, gdk-pixbuf, gettext, git,
+	glib-networking, gmp, gnupg, gnutls, gpu-viv-bin-mx6q, gsl,
+	gstreamer, gstreamer1, gst1-plugins-{bad,base,good,ugly},
+	gtest, gutenprint, hplip, i2c-tools, icu, ifplugd,
+	imagemagick, iozone, iproute2, ipset, iptables, iw, jamvm,
+	jansson, jpeg-turbo, kismet, kmod, lcms2, libassuan, libcap,
+	libcap-ng, libcdaudio, libcec, libcue, libcurl, libdrm,
+	libedit, libevas, libevent, libfreefare, libfuse,
+	libgpg-error, libiconv, liblog4c-localtime, libmicrohttpd,
+	libmnl, libmodbus,
+	libnetfilter_{acct,conntrack,cthelper,cttimeout,log,queue},
+	libnfnetlink, libnl, libpng, libqmi, libqrencode, libroxml,
+	libsecret, libsigsegv, libsoup, libtirpc, libunwind, libusb,
+	libvpx, lighttpd, linphone, linux-pam, lmbench,
+	lockfile-progs, log4cxx, logrotate, logsurfer, ltp-testsuite,
+	ltrace, luacrypto, luaposix, lvm2, m4, matchbox-lib,
+	media-ctl, mediastreamer, minicom, minidlna, mongoose, monit,
+	mpc, mpd, mpg123, mplayer, mrouted, mtdev, mutt, mysql_client,
+	nano, ncftp, ndisc6, neard, neardal, neon, net-snmp, netatalk,
+	netcat, netkitbase, netperf, netplug, nettle, nfacct,
+	nfs-utils, ngircd, ngrep, noip, nuttcp, olsr, openssh, opkg,
+	oprofile, opus-tools, orc, ortp, pciutils, pcre, pcsc-lite,
+	perf, perl, perl-cross, php, picocom, pkgconf, polarssl,
+	poppler, pppd, proftpd, protobuf, proxychains-ng, pulseaudio,
+	pv, qemu, qt, qt5base, qt5webkit, quagga, radvd, redis,
+	rpi-{firmware,userland}, rrdtool, rsync, rtorrent, ruby,
+	samba, scons, screen, sdl_sound, ser2net, setserial,
+	smartmontools, socat, socketcand, sqlcipher, sqlite, squid,
+	stress, strongswan, stunnel, sudo, syslinux, systemd,
+	sysvinit, tcl, ti-gfx, time, transmission, tremor, tslib,
+	tstools, tvheadend, tzdata, uboot-tools, uclibc, udpcast,
+	uemacs, ulogd, usb_modeswitch{,_data}, util-linux, vala,
+	valgrind, vde2, vorbus-tools, vpnc, vsftpd, vtun, wayland,
+	webkit, webp, webrtc-audio-processing, weston, wget,
+	wireshark, wsapi, xavante, xdriver_xf86-video-geode, xenomai,
+	xinetd, xlib_libpthread-stubs, xl2tp, xmlstarlet,
+	xserver_xorg-server, xz, zeromq, zic, zmqpp
+
+	New packages: aiccu, autossh, bc, civetweb, cppdb, cryptsetup,
+	duma, eigen, harfbuzz, igmpproxy, iputils, jq, knock, kobs-ng,
+	lesstif, libcgroup, libsepol, libsoc, libssh2, luasec, luasql,
+	lxc, nut, ola, omniorb, openpowerlink, orbit, p910nd, psplash,
+	python-crc16, python-ipy, python-pyzmq, qt5sensors,
+	qt5serialport, qt5x11extras, snmppp, subversion, tcping,
+	trace-cmd, xscreensaver, zsh
+
+	Removed packages: module-init-tools
+
+	Issues resolved (http://bugs.uclibc.org):
+
+	#1138: Buildroot fails to build packages if BR2_GCC_SHARED_LIBGCC=y
+	#5408: qt build failure with Sourcery CodeBench ARM 2010.09
+	#5630: makefile error with toolchain helpers.mk
+	#5672: htop: remove X11 stuff
+	#5678: linux.mk: linux-menuconfig fails
+	#5696: python3 installation is too large, patches from python2 needed
+	#5978: Erlang does not build for arm in 2013.02-rc3
+	#6392: Extended ARM uImage kernel options
+	#6404: Buildroot's coreutils 'uname -p' reports 'Unknown' on recent..
+	#6428: util-linux libmount segfaults with patch from buildroot
+	#6452: eglibc from Linaro 2013.07 not copied to target correctly
+	#6566: PHP segfault when crosscompiled to mips64 - patch included
+	#6572: [PowerPC] Buildroot uses wrong external toolchain libraries..
+	#6578: udisks package broken
+	#6602: ebtables 64 bit kernel + 32 bit userland alignment error..
+	#6608: ebtables missing ethertypes - fix included
+	#6620: Sysvinit package missing killall5 and symlinks - patch included
+	#6632: CMake use host pkg-config
+	#6638: pkgconf doesn't download
+	#6644: "all" target doesn't work in out-of-tree builds
+	#6650: Segmentation fault when trying to build latest buildroot
+	#6668: iptables limit module alignment problem on mips64
+
+2013.08, Released August 31th, 2013:
+
+	Minor fixes.
+
+	Documentation build fixed.
+
+	Updated/fixed packages: ltrace, strongswan
+
+2013.08-rc3, Released August 29th, 2013:
+
+	Fixes all over the tree.
+
+	External toolchain lib32/lib64 handling, ABI name for EABIhf,
+	misc fixes for generatelocales, apply-patches and module
+	stripping.
+
+	Top level menu names reordered and renamed for clarity.
+
+	Updated/fixed packages: acl, attr, bash, dbus, directfb,
+	dvb-apps, kexec, kmod, libbsd, linux-fusion, mesa3d, minidlna,
+	openssh, openssl, pulseaudio, python-setuptools, qt5,
+	qt5webkit, redis, strongswan, sunxi-mali
+
+	Issues resolved (http://bugs.uclibc.org):
+
+	#6464: dbus-daemon-launch-helper needs setuid
+
+2013.08-rc2, Released August 16th 2013:
+
+	Documentation improvements.
+
+	External toolchains fixes.
+
+	Updated/fixed packages: aircrack-ng, bash, boost, cairo,
+	cppcms, eglibc, ffmpeg, gcc, git, gnupg, imagemagick, libcec,
+	libffi, libgcrypt, linux, linux-headers, ltrace, netatalk,
+	opencv, opengl, readline, samba, strongswan, sunxi-cedarx,
+	uclibc, udev, wayland, webkit, zeromq.
+
+	Issues resolved (http://bugs.uclibc.org):
+
+	#6440: typo in ffmpeg makefile
+
+2013.08-rc1, Released August 5th, 2013:
+
+	Architectures:
+	 - improved support for floating point on ARM and Thumb/Thumb2
+	 - support for ARM OABI removed
+
+	Toolchains:
+         - support added for Sourcery CodeBench ARM and MIPS 2013.05
+         - Linaro ARM and Aarch64 toolchains updated
+	 - support added for the Arago ARMv5 and ARMv7 toolchains
+	 - gcc 4.8.x version bumped
+	 - support for installing both FDPIC and FLAT libraries on
+	   Blackfin
+	 - support for uClibc 0.9.31 removed,
+	 - convert the internal toolchain backend to use the package
+	   infrastructure
+	 - support added for eglibc in the internal toolchain backend
+	 - toolchain components for the ARC architecture updated and
+           gdb for ARC added.
+	 - support for Blackfin in the internal toolchain fixed
+
+	Defconfigs: beaglebone_defconfig updated, new defconfig for
+	CubieBoard, for Olimex mx233 Olinuxino, for Calao Systems
+	TNY-A9G20-LPW.
+
+	A number of packages have been fixed to use the
+	<pkg>_CONFIG_SCRIPTS mechanism to get their <pkg>-config shell
+	script installed and modified properly. Licensing informations
+	has been added to a number of packages.
+
+	Use XZ tarballs for a number of packages.
+
+	Noticeable package changes/additions:
+         - The glib2/libgtk2/webkit stack has been updated to recent
+           versions.
+	 - Support for Gstreamer 1.x has been added.
+	 - OpenGL support for TI OMAP platforms has been added.
+	 - OpenGL support for Allwinner platforms has been added.
+	 - OpenMAX support for RasberryPi has been added.
+
+	Updated/fixed packages: acl, attr, autoconf, avahi, barebox,
+	bind, binutils, busybox, bwm-ng, bzip2, cifs-utils, colletctd,
+	cpanminus, cups, curl, dash, dbus, dhcp, directfb,
+	directfb-examples, dnsmasq, dosfstools, dropbear, dtc,
+	e2fsprogs, ed, efl, enlightenment, erlang, ethtool, fbgrab,
+	fftw, firmware-imx, flot, fltk, freetype, gawk, gdk-pixbuf,
+	gettext, gmp, gnutls, gsl, gutenprint, gvfs, gzip, haserl,
+	hiawatha, httping, icu, imagemagick, imlib2, imx-lib,
+	intltool, iozone, ipset, iptables, jquery, jquery-keyboard,
+	jquery-sparkline, kmod, less, libart, libcdaudio, libcgicc,
+	libesmtp, libftdi, libfuse, libglib2, libgtk, libgtk2, libidn,
+	libiqrf, liblog4c-localtime, libnspr, libnss, libpcap,
+	libroxml, libserial, libsigsev, libsoup, libtool, libtpl,
+	libvncserver, libxml2, linphone, lm_sensors, logrotate,
+	ltrace, lttng, luafilesystem, luajit, minicom, monit, mpg123,
+	mtd, mutt, mxml, neard, netatask, netsnmp, nettle,
+	network-manager, nodejs, nss-mdns, openssh, openswan, openvpn,
+	opkg, opus, pcre, perl-cross, php, pixman, poco, polarssl,
+	pulseaudio, pv, python, python3, qt, qt5, qt5declarative,
+	qt5jsbackend, qt5quick1, readline, rpi-firmware, ruby, samba,
+	sane-backends, sconeserver, sdl_image, sdparm, ser2net,
+	socketcand, sqlite, squid, strace, tcl, tcpdump, tinyhttpd,
+	tvheadend, tzdata, uboot, udpcast, usb_modeswitch,
+	usb_modeswitch_data, usbutils, webkit, wireshark, wvstreams,
+	xapp_luit, xapp_xmodmap, xenomai, xfsprogs, xlib_libX11, zic,
+	zlib.
+
+	New packages: a10disp, aespipe, am33x-cm3, cppcms, dhcpcd,
+	dropwatch, dtc, ecryptfs-utils, eglibc, elf2flt, fdk-aac,
+	gcc-final, gcc-initial, gcc-intermediate, git,
+	gpu-viv-bin-mx6q, gst1-plugins-bad, gst1-plugins-base,
+	gst1-plugins-good, gst1-plugins-ugly, gst-omx,
+	gst-plugin-x170, gstreamer1, jimtcl, lbase64, libassuan,
+	libbsd, libcec, libdvbsi, libedit, libgpgme, libqmi,
+	libqrencode, libsvg, libsvg-cairo, libunwind, libvpx,
+	linux-headers, lockdev, luabitop, luacrypto, lua-ev,
+	luaexpatutils, msgpack, ocrad, on2-8170-libs,
+	on2-8170-modules, p11-kit, pax-utils, ptpd, ptpd2,
+	python-pyro, ramspeed/smp, snappy, strongswan, sunxi-boards,
+	sunxi-cedarx, sunxi-mali, sunxi-tools, ti-gfx, tinymembench,
+	tree, tstools, uclibc, w_scan.
+
+	Issues resolved (http://bugs.uclibc.org):
+
+	#4718: python (built for powerpc) distutils has paths to host
+               compiler toolchain
+	#5516: appended device tree blobs on uImage fails
+	#6302: Versions of packages retrieved from github.com are wrong
+	#6308: dosfstools download link is wrong
+	#6326: Dropbear: Add options to allow better config for
+               different target devices (e.g. routers)
+	#6338: Wrong download link for minicom package
+	#6344: Wrong handling of license text files with same name and
+               different directory
+	#6374: gnutls package broken if linux cryptodev module
+               selected
+	#6410: omap3_beagle has uimage error load address error
+
+2013.05, Released May 31th, 2013:
+
+	Minor fixes.
+
+	External toolchain wrapper fix for if host/usr/bin is placed
+	in the patch.
+
+	Updated/fixed packages: acpid, at91bootstrap, czmq, elf2flt,
+	flex, jamvm, kmod, libplayer, libtirpc, libv4,
+	lttng-babeltrace, opengl, qt5jsbackend, udpcast, wvstreams
+
+	Issues resolved (http://bugs.uclibc.org):
+
+	#4868: Buildroot compile failure for toolchain/gdb-7.4/intl/reloc...
+	#4988: flex and m4 problems
+	#5912: obsolete CVS files
+
+2013.05-rc3, Released May 25th, 2013:
+
+	Minor fixes.
+
+	Updated/fixed packages: aircrack-ng, bellagio, boost, crda,
+	dvb-apps, flot, libatomic_ops, libeXosip2, libosip2, libxml2,
+	mongrel2, poco, portaudio, pptp-linux, tvheadend, urg, weston,
+	wireshark
+
+2013.05-rc2, Released May 15th, 2013:
+
+	Fixes all over the tree.
+
+	Default number of parallel jobs is now number of CPUs + 1.
+
+	Defconfigs: Add Telit EVK-PRO3, AT91SAM9260-EK Nand flash.
+
+	Updated/fixed packages: aircrack-ng, busybox, cairo,
+	classpath, curlftpfs, czmq, dbus, f2fs-tools, fan-ctrl,
+	filemq, gst-plugin-bad, gutenprint, hplip, json-c,
+	libatomic_ops, libcurl, libdrm, libglib2, libnspr, libnss,
+	libsha1, libsigsegv, libxcb, linknx, linux-pam, lttng-modules,
+	lttng-tools, matchbox-lib, mcookie, mesa3d, neon, pixman,
+	pulseaudio, python-nfc, qt5imageformats, quota, openssl,
+	sconeserver, strace, sylpheed, wvstreams,
+	xapp_{appres,bdftopcf,beforelight,bitmap,edires,fonttosfnt},
+	xapp_{fslsfonts,fstobdf,iceauth,ico,listres,luit,mkfontdir},
+	xapp_{mkfontscale,oclock,rgb,rstart,scripts,sessreg,setxkbmap},
+	xapp_{showfont,smproxy,twm,viewres,x11perf,xauth,xbacklight},
+	xapp_x{biff,calc,clipboard,clock,cmsdb,cursorgen,dbedizzy,ditview},
+	xapp_x{dm,dpyinfo,driinfo,edit,ev,eyes,f86dga,fd,fontsel,fs,fsinfo},
+	xapp_x{gamma,gc,host,input-calibrator,input,kbcomp,kbevd,kbprint},
+	xapp_x{kbutils,kill,load,logo,lsatoms,lsclients,lsfonts,mag,man},
+	xapp_x{message,mh,modmap,more,pr,prop,randr,rdb,refresh,set,setmode},
+	xapp_x{setpointer,setroot,sm,stdcmap,vidtune,vinfo,wd,wininfo,wud},
+	xcb-util, xcursor-transparent-theme, xdata_xbitmaps,
+	xdata_xcursor-themes,
+	xdriver_xf86-input-{evdev,joystick,keyboard,mouse,synaptics},
+	xdriver_xf86-input-{tslib,vmmouse,void},
+	xdriver_xf86-video-{ark,ast,ati,cirrus,dummy,fbdev,geode,glide},
+	xdriver_xf86-video-{glint,i128,intel,mach64,mga,neomagic,newport},
+	xdriver_xf86-video-{nv,openchrome,r128,savage,siliconmotion,sis},
+	xdriver_xf86-video-{tdfx,tga,trident,v4l,vesa,vmware,voodoo,wsfb},
+	xfont_encodings, xfont_font-adobe-{100,75}dpi,
+	xfont_font-utopia-{100dpi,75dpi,type1},
+	xfont_font-{alias,arabic-misc,bh-100dpi,bh-75dpi},
+	xfont_font-bh-lucidatypewriter-{100,75}dpi, xfont_font-bh-{ttf,type1},
+	xfont_font-bitstream-{100dpi,75dpi,type1}, xfont_font-cronyx-cyrillic,
+	xfont_font-{cursor,daewoo,dec,isas,jis,micro}-misc,
+	xfont_font-ibm-type1, xfont_font-misc-{cyrillic,ethiopic,meltho,misc},
+	xfont_font-{mutt,schumacher}-misc,
+	xfont_font-{screen-cyrillic,sony-misc,sun-misc,util},
+	xfont_font-winitzki-cyrillic, xfont_font-xfree86-type1,
+	xlib_lib{FS,ICE,SM,X11,XScrnSaver,Xau,Xaw,Xcomposite,Xcursor},
+	xlib_libX{damage,dmcp,ext,fixes,font,ft,i,inerama,mu,pm,randr},
+	xlib_libX{render,res,t,tst,v,vMC,xf86dga,xf86vm},
+	xlib_lib{dmx,fontenc,pciaccess,pthread-stubs,xkbfile}, xlib_xtrans,
+	xproto_{applewm,bigreqs,composite,damage,dmx,dri2,fixes}proto,
+	xproto_{fontcache,font,gl,input,kb,randr,record,render}proto,
+	xproto_{resource,scrnsaver,video,windowswm,xcmisc,xext}proto,
+	xproto_{xf86bigfont,xf86dga,xf86dri,xf86vidmode,xinerama,x}proto,
+	xserver_xorg-server, xutil_{makedepend,util-macros}
+
+	Readded Packages: xapp_xinit
+
+	Issues resolved (http://bugs.uclibc.org):
+
+	#5054: amd64: cannot find init - due to missing /lib64 folder
+
+2013.05-rc1, Released May 8th, 2013:
+
+	Architectures: ARC support, Blackfin support, FLAT binary
+	format, ARM: Drop old CPU variants, add fa526/626, Marvell PJ4
+
+	Toolchains: Add new Microblaze external toolchains, Linaro
+	ARM/Aarch64 updates, GCC 4.6.4 / 4.7.3 / 4.8.0 added to
+	internal toolchain, default to GCC 4.7.x. Internal
+	Crosstool-ng backend deprecated.
+
+	Defconfigs: Add Atmel at91sam9g45m10ek, freescale mpc8315erdb
+	& p1010rdb, Armadeus apf27 / apf28, Openblocks A6, Raspberry
+	pi, gnublin board.
+
+	FS: LZO and XZ compression methods, extra ubifs options,
+	ext2 rev 0/1 and ext3/4 support.
+
+	Patch handling: apply-patches now has .patch.xz support,
+	Patch logic reworked as discussed during Febrary dev days:
+	http://elinux.org/Buildroot:DeveloperDaysFOSDEM2013
+
+	<pkg>-rsync now excludes version control files.
+
+	linux: uImage load address for ARM multiplatform kernels
+
+	Infrastructure for multiple OpenGL / ES / EGL / OpenVG
+	providers, similar to how libjpeg / libjpeg-turbo is handled.
+
+	Infrastructure for packages to add system users.
+
+	kconfig: updated to 3.9-rc2, support make olddefconfig
+
+	Updated/fixed packages: alsa-lib, alsa-utils, apr, apr-util,
+	argp-standalone, at, at91bootstrap, audiofile, aumix, avahi,
+	bash, blackbox, bind, binutils, bison, boost, bridge-utils,
+	busybox, ccache, cifs-utils, cmake, collectd, connman,
+	conntrack-tools, cpanminus, crosstool-ng, diffutils, directfb,
+	directfb-examples, divine, dmalloc, dnsmasq, dosfstools,
+	dropbear, e2fsprogs, ebtables, eeprog, erlang, ethtool,
+	fb-test-app, fbset, feh, ffmpeg, file, flex, flot, foomatic,
+	fxload, gd, gdb, gdisk, genimage, gettext, gmp, gnuchess,
+	gnutls, gob2, gperf, gpsd, gstreamer, haserl, hiawatha, htop,
+	httping, icu, inotify-tools, intltool, iproute2, ipset,
+	iptables, iw, jpeg, jquery, jquery-{sparkline,validation},
+	json-c, kbd, kexec, kismet, kmod, lcdproc, libarchive,
+	libatasmart, libcap, libconfig, libconfuse, libcurl, libdrm,
+	libeet, libev, libevas, libeXosip2, libffi, libfribi, libfuse,
+	libgcrypt, libglib2, libgtk2, libid3tag, libmicrohttpd,
+	libnetfilter_acct, libnetfilter_conntrack, libnl, libpcap,
+	libplayer, libsigc, libv4l, libxcb, linenoise, linux-pam,
+	lm_sensors, ltp-testsuite, luajit, lzop, madplay, make, mdadm,
+	mediastreamer, memtester, mesa3d,
+	mobile-broadband-provider-info, monit, mpd, mpfr, mpg123,
+	mrouted, msmtp, nbd, ncurses, ndisc6, neard, neardal, neon,
+	netperf, netsnmp, nettle, nfacct, ntfs-3g, ofono, olsr,
+	omap-u-boot-utils, openssh, openssl, openswan, openvpn,
+	oprofile, orc, patch, pciutils, pcre, perl, php, poco,
+	polarssl, proftpd, psmisc, pulseaudio, python,
+	python-{bottle,netifaces,serial,setuptools}, qt, quagga,
+	quota, radvd, rpi-firmware, rpi-userland, rt-tests, sam-ba,
+	samba, sawman, sdl, ser2net, smartmontools, socat, socketcand,
+	speex, squid, stress, stunnel, sudo, syslinux, sysstat,
+	sysvinit, tcl, tcprelay, tinyhttpd, tslib, tvheadend,
+	uboot-tools, udev, ulogd, util-linux, vala, vtun, webkit,
+	xapp_{iceauth,luit,makefontscale,sessreg,setxkbmap,smproxy},
+	xapp_{xauth,xcmsdb,xdpyinfo,xev,xgamma,xhost,xinput,xkbcomp},
+	xapp_{xkbevd,xlsatoms,xlsclients,xmodmap,xpr,xprop,xrandr,xrdb},
+	xapp_{xset,xwd,xwininfo}, xcb-{proto,util},
+	xdriver_xf86-input-{evdev,joystick,keyboard,mouse,synptics},
+	xdriver_xf86-input-{tslib,vmmouse,void},
+	xdriver_xf86-video-{ark,ast,ati,cirrus,dummy,geode,glide,glint},
+	xdriver_xf86-video-{i128,intel,mach64,mga,neomagic,newport},
+	xdriver_xf86-video-{openchrome,r128,savage,siliconmotion,sis},
+	xdriver_xf86-video-{tdfx,trident,vesa,vmware,wsfb}, xenomai,
+	xfont, xinetd, xkeyboard-config, xlib_lib{FS,ICE,SM,X11},
+	xlib_libX{scrnSaver,au,aw,cursor,dmcp,ext,fixes,font,ft,i},
+	xlib_libX{inerama,mu,pm,randr,res,tst,v,vMC,xf86dga,xf86vm},
+	xlib_lib{dmx,fontenc,pciaccess,xkbfile}, xlib_xtrans,
+	xproto_{applevm,bigreqs,dri2,fonts,gl,input,kbd,record}proto,
+	xproto_{resource,scrnsaver,xcmisc,xext,x}proto,
+	xserver_xorg-server, xutil_makedepend, xz, zeromq
+
+	New packages: aircrack-ng, bcusdk, chrony, crda,
+	cryptodev-linux, cppzmq, czmq, dtach, enscript, exfat,
+	exfat-utils, f2fs-tools, fan-ctrl, filemq, foomatic-filters,
+	genimage, genpart, glibmm, gnuplot, gtest, gutenprint, hplip,
+	iozone, jansson, jhead, jquery-keyboard, jquery-ui,
+	jquery-ui-themes, json-glib, json-javascript, lcms2, libpfm4,
+	libpthsem, libserial, libsigsegv, libtasn1, libwebsockets,
+	libxkbcommon, libxml++, linknx, log4cxx, mongoose, mongrel2,
+	mtools, ne10, nmap, nodejs, openobex, openpgm, poppler,
+	protobuf-c, python-m2crypto, python-thrift, qjson, qt5base,
+	qt5declarative, qt5graphicaleffects, qt5imageformats,
+	qt5jsbackend, qt5multimedia, qt5quick1, qt5script, qt5svg,
+	qt5webkit qt5xmlpatterns, rapidjson, redis, swig, texinfo,
+	tzdata, urg, ussp-push, wayland, webp, weston, wireless-regdb,
+	wireshark, wvdial, wvstreams, xcb-util-image, xcb-util-wm,
+	xcursor-transparent-theme, zic, zmqpp, zyre
+
+	Removed packages: microperl, ocf-linux, xapp_xinit,
+	xapp_xplsprinters, xapp_xprehashprinterlist,
+	xfont_font-bitstream-speedo,
+	xlib_lib{Xfontcache,XprintAppUtil,XprintUtil,Xp,oldX,xkbui},
+	xproto_{print,xf86rush}proto
+
+	Deprecated packages: vala
+
+	Issues resolved (http://bugs.uclibc.org):
+
+	#1291: Add support for Faraday 526 arm processor (fa526)
+	#2683: cups does not install correctly to target
+	#3313: mesa3d fails to build
+	#5186: initramfs/cpio should support lzo compression
+	#5636: agetty - cannot get controlling tty error - need updated...
+	#5906: collectd client headers not exported
+	#5966: bison unnecessarily required as build dependency
+	#6140: --enable-fileinfo not applied for php package
+	#6164: openvpn usage of ip tool from Busybox
+
+2013.02, Released February 28th, 2013:
+
+	Misc manual updates.
+
+	Updated/fixed packages: busybox, collectd, flashbench,
+	libgtk2, libupnp, mii-diag, quota
+
+2013.02-rc3, Released February 26th, 2013
+
+	Minor fixes.
+
+	Updated/fixed packages: conntrack-tools, dialog,
+	enlightenment, haserl, keyutils, libfif, libmad,
+	linux-firmware, linux-fusion, matchbox-desktop, matchbox-wm,
+	ruby, spawn-fcgi, vtun
+
+	Issues resolved (http://bugs.uclibc.org):
+
+	#5960: fusion.ko driver does not install to target rootfs
+
+2013.02-rc2, Released February 19th, 2013
+
+	Fixes all over the tree.
+
+	Various manual updates and fixes.
+
+	Updated/fixed packages: busybox, collectd, gesftpserver,
+	glib-networking, gnutls, inotify-tools, libcurl, libffi,
+	libglib2, libtorrent, libvorbis, neard, network-manager,
+	ntfs-3g, openssl, qt, rpi-userland, rtorrent, thttpd, vim.
+
+	Issues resolved (http://bugs.uclibc.org):
+
+	#5906: collectd client headers not exported
+
+2013.02-rc1, Released February 10th, 2013
+
+	Toolchain: Crosstool-ng 1.17.0, default to GCC 4.6.3, target
+	libraries install fixed. Add Linaro ARM
+	2012.11/2012.12/2013.01, AArch64 12.11/12.12/13.01. Sourcery
+	CodeBench MIPS 2012.03/09. Infrastructure to warn about
+	missing 32bit support for binary toolchains. Toolchain wrapper
+	is now relocatable. Add GDB 7.5.1 / Remove 6.8 / 7.0 /
+	7.1. Deprecate uClibc 0.9.31.
+
+	Architecture: Xtensa fixes, add missing powerpc variants, arm
+	1136jf-s rev1, add A5/A15, neon support toggle, OABI
+	deprecated. Sparc: drop old unused variants
+
+	Bootloaders: At91bootstap: fix upstream URL, Barebox: add
+	2012.12/2013.01/2013.02, remove 2012.08/09/10, lzop fixes,
+	environment image support, U-Boot: add 2013.01.01
+
+	Linux: fix appended dtb handling for v3.8+ kernels, support
+	multiple device trees
+
+	Defconfigs: calao USB-A9260, snowball, QEMU PPC440 on ML507
+	board, QEMU ARM Exynos4210, Kernel version in QEMU defconfigs
+	updated, at91rm9200df: misc fixes. Lock kernel headers to
+	match kernel.
+
+	Infrastructure: Git download fixes. Toolchain make target
+	renamed from 'cross' to 'toolchain'. Eclipse integration
+	support. Option to set root password, post image scripts,
+	config scripts handling.
+
+	Updated/fixed packages: alsa-lib, argp-standalone, argus,
+	arptables, atk, audiofile, axel, beecrypt, bind, bison,
+	bluez_utils, boost, cairo, can-utils, bmon, boa, busybox,
+	cairo, ccache, cdrkit, cifs-utils, cjson, cmake, collectd,
+	connman, coreutils, cpanminus, cups, dbus, dhcp, dialog,
+	diffutils, directfb, distcc, divine, dnsmasq, docker,
+	dosfstools, dstat, e2fsprogs, ebtables, ed, empty, ethtool,
+	expedite, fbset, fbv, ffmpeg, flex, fltk, fluxbox, freetype,
+	gadget-test, gawk, gdb, genext2fs, gettext, giblib,
+	glib-networking, gmp, gmpc, gnupg, gnutls, gpsd,
+	gst-plugins-{bad,base,good}, gstreamer, gzip, haserl, hdparm,
+	heirloom-mailx, hiawanta, hostapd, icu, imagemagick, imlib2,
+	inadyn, infozip, iproute2, ipset, iptables, iw, jpeg, jquery,
+	jquery-sparklines, jqeury-validation, kismet, kmod, lame,
+	libao, libcap, libcurl, libdvdnav, libdvdread, libecore,
+	libedbus, libedje, libeet, libefreet, libeina, libeio,
+	liberation, libelementary, libembryo, libethumb, libev,
+	libevas, libffi, libfribidi, libfuse, libgcrypt, libglib2,
+	libgpg-error, libgtk2, libhid, libidn, libmicrohttpd, libmpd,
+	libnl, libnspr, libnss, libogg, libpcap, libplayer, libpng,
+	libroxml, librsvg, libseccomp, libsigc, libsndfile, libungif,
+	libupnp, liburcu, libusb-compat, libvncserver, libvorbis,
+	libxml2, libxslt, lighttpd, links, linux-firmware,
+	linux-fusion, ltp-testsuite, ltrace,
+	lttng-{babel,libust,modules,tools}, lvm2, lua, luajit, lzop,
+	matchbox-{desktop,lib}, mdadm, metacity, midori, minicom, mpd,
+	mpfr, mplayer, mtd, mysql_client, ncurses, neon, netatalk,
+	networkmanager, nspr, ntfs-3g, nuttcp, ofone, olsr, openssl,
+	openvpn, opkg, oprofile, opus, opus-tools, orc, ortp, pango,
+	pciutils, pcmanfm, pcre, pcsc-lite, perl, php, pixman,
+	pkgconf, polarssl, pptp-linux, proxychains, pulseaudio,
+	python, python3, qemu, qextserialport, qt, quagga, radvd,
+	readline, rng-tools, rt-tests, rubix, ruby, sam-ba, samba,
+	sane-backends, sconeserver, scons, screen, sdl, sdl_gfx,
+	sdl_mixer, sdl_ttf, sdparm, sed, ser2net, smartmontools,
+	speex, sqlite, squid, sshfs, strace, sudo, sylpheed, tn5250,
+	taglib, tar, torsmo, transmission, tslib, uboot-tools, ulogd,
+	usb_modeswitch, util-linux, valgrind, vim, vsftpd, wavpack,
+	webkit, wipe, wireless_tools, wpa_supplicant, xapp_xinit,
+	xapp_xinput-calibrator, xapp_xman, xapp_xmh, xlib_libX11,
+	xlib_libXdmcp, xlib_libXft, xlib_libpthread-stubs,
+	xlib_xtrans, xproto_xcmiscproto, xproto_xextproto,
+	xserver_xorg-server, xstroke, xvkbd, xz
+
+	New packages: b43-firmware, b43-fwcutter, bustle,
+	cache-calibrator, cegui06, celt051, classpath, curlftpfs,
+	dvb-apps, dvbsnoop, elfutils, enlightenment, firmware-imx,
+	flashbench, gd, gesftpserver, gst-fsl-plugins, httping, iftop,
+	imx-lib, jamvm, jpeg-turbo, keyutils, libatasmart, libcofi,
+	libebml, libevas-generic-loaders, libfslcodec, libfslparser,
+	libfslvpuwrap, libgsasl, libiscsi, libmatroska, libmcrypt,
+	libmhash, libqwt, libseccomp, libsha1, linenoise, mcrypt,
+	media-ctl, ncdu, neard, neardal, nettle, perf, polkit,
+	proxychains, python-bottle, python-pyparsing, rpi-firmware,
+	rpi-userland, sg3_utils, slirp, snowball-hdmiservice, spice,
+	spice-protocol, tcllib, tvheadend, udisks, usbredir
+	ux500-firmware, vde2, xcb-utils-keysyms, yavta,
+	zd1211-firmware
+
+	Removed packages: customize, xdriver_xf86-input-{acecad,aiptek},
+	xdriver_xf86-video-{apm,chips,i740,rendition,s3,s3virge,sisusb},
+	xdriver_xf86-video-sun{cg14,cg3,cg6,ffb,leo,tcx},
+	xdriver_xf86-video-{tsend,xgi,xgixp}
+
+	Deprecated packages: xstroke
+
+	Issues resolved (http://bugs.uclibc.org):
+
+	#4237: building shared openssl w/-Os fails due to gcc bug
+	#5690: python3 does not obey to BR2_PACKAGE_PYTHON3_PYC_ONLY=y
+	#5602: python3 should install a "python" symbolic link
+	#5846: Extra slash added to last slash in URL
+
+2012.11.1, Released January 3rd, 2013:
+
+	Toolchain: Fixed non-largefile builds on recent Ubuntu
+	versions.
+
+	Arch: fix missing x86/generic handling, Build for Xtensa with
+	longcalls option.
+
+	Updated/fixed packages: dosfstools, qt
+
 2012.11, Released December 2nd, 2012:
 
 	Git shallow clone fix for older git version.

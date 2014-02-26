@@ -1,11 +1,14 @@
-#############################################################
+################################################################################
 #
 # systemd
 #
-#############################################################
+################################################################################
+
 SYSTEMD_VERSION = 44
 SYSTEMD_SITE = http://www.freedesktop.org/software/systemd/
 SYSTEMD_SOURCE = systemd-$(SYSTEMD_VERSION).tar.xz
+SYSTEMD_LICENSE = GPLv2+
+SYSTEMD_LICENSE_FILES = LICENSE
 SYSTEMD_INSTALL_STAGING = YES
 SYSTEMD_DEPENDENCIES = \
 	host-intltool \

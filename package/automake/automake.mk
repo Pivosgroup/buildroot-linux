@@ -1,10 +1,11 @@
-#############################################################
+################################################################################
 #
 # automake
 #
-#############################################################
+################################################################################
 
-AUTOMAKE_VERSION = 1.11.6
+AUTOMAKE_VERSION = 1.12.6
+AUTOMAKE_SOURCE = automake-$(AUTOMAKE_VERSION).tar.xz
 AUTOMAKE_SITE = $(BR2_GNU_MIRROR)/automake
 AUTOMAKE_LICENSE = GPLv2+
 AUTOMAKE_LICENSE_FILES = COPYING

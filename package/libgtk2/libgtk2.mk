@@ -1,16 +1,19 @@
-#############################################################
+################################################################################
 #
-# libgtk2.0
+# libgtk2
 #
-#############################################################
+################################################################################
+
 LIBGTK2_VERSION_MAJOR = 2.24
-LIBGTK2_VERSION_MINOR = 10
+LIBGTK2_VERSION_MINOR = 18
 LIBGTK2_VERSION = $(LIBGTK2_VERSION_MAJOR).$(LIBGTK2_VERSION_MINOR)
 
 LIBGTK2_SOURCE = gtk+-$(LIBGTK2_VERSION).tar.xz
 LIBGTK2_SITE = http://ftp.gnome.org/pub/gnome/sources/gtk+/$(LIBGTK2_VERSION_MAJOR)
 LIBGTK2_INSTALL_STAGING = YES
 LIBGTK2_INSTALL_TARGET = YES
+
+LIBGTK2_AUTORECONF = YES
 
 LIBGTK2_CONF_ENV = ac_cv_func_posix_getpwuid_r=yes glib_cv_stack_grows=no \
 		glib_cv_uscore=no \
@@ -71,20 +74,47 @@ LIBGTK2_CONF_OPT = --disable-glibtest \
 
 LIBGTK2_DEPENDENCIES = host-pkgconf host-libgtk2 libglib2 cairo pango atk gdk-pixbuf
 
-ifeq ($(BR2_PACKAGE_DIRECTFB),y)
-	LIBGTK2_CONF_OPT += --with-gdktarget=directfb
-	LIBGTK2_DEPENDENCIES += directfb
+# Xorg dependencies
+LIBGTK2_CONF_OPT += \
+	--with-x \
+	--x-includes=$(STAGING_DIR)/usr/include/X11 \
+	--x-libraries=$(STAGING_DIR)/usr/lib \
+	--with-gdktarget=x11
+LIBGTK2_DEPENDENCIES += xlib_libXcomposite fontconfig xlib_libX11 \
+	xlib_libXext xlib_libXrender
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBXINERAMA),y)
+	LIBGTK2_CONF_OPT += --enable-xinerama
+	LIBGTK2_DEPENDENCIES += xlib_libXinerama
+else
+	LIBGTK2_CONF_OPT += --disable-xinerama
 endif
 
-ifeq ($(BR2_PACKAGE_XORG7),y)
-	LIBGTK2_CONF_OPT += \
-		--with-x \
-		--x-includes=$(STAGING_DIR)/usr/include/X11 \
-		--x-libraries=$(STAGING_DIR)/usr/lib \
-		--with-gdktarget=x11
-	LIBGTK2_DEPENDENCIES += xlib_libXcomposite xserver_xorg-server
+ifeq ($(BR2_PACKAGE_XLIB_LIBXI),y)
+	LIBGTK2_CONF_OPT += --with-xinput=yes
+	LIBGTK2_DEPENDENCIES += xlib_libXi
 else
-	LIBGTK2_CONF_OPT += --without-x
+	LIBGTK2_CONF_OPT += --with-xinput=no
+endif
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBXRANDR),y)
+	LIBGTK2_DEPENDENCIES += xlib_libXrandr
+endif
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBXCURSOR),y)
+	LIBGTK2_DEPENDENCIES += xlib_libXcursor
+endif
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBXFIXES),y)
+	LIBGTK2_DEPENDENCIES += xlib_libXfixes
+endif
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBXCOMPOSITE),y)
+	LIBGTK2_DEPENDENCIES += xlib_libXcomposite
+endif
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBXDAMAGE),y)
+	LIBGTK2_DEPENDENCIES += xlib_libXdamage
 endif
 
 ifeq ($(BR2_PACKAGE_LIBPNG),y)
@@ -127,7 +157,6 @@ endif
 # for the target.
 
 HOST_LIBGTK2_DEPENDENCIES = host-libglib2 host-libpng host-gdk-pixbuf
-HOST_LIBGTK2_AUTORECONF = YES
 HOST_LIBGTK2_CONF_OPT = \
 		--disable-static \
 		--disable-glibtest \
@@ -136,12 +165,6 @@ HOST_LIBGTK2_CONF_OPT = \
 		--with-gdktarget=none \
 		--disable-cups \
 		--disable-debug
-
-define HOST_LIBGTK2_PATCH_REDUCE_DEPENDENCIES_HOOK
- support/scripts/apply-patches.sh $(@D) $($(PKG)_DIR_PREFIX)/$(RAWNAME) host-*.patch
-endef
-
-HOST_LIBGTK2_POST_PATCH_HOOKS += HOST_LIBGTK2_PATCH_REDUCE_DEPENDENCIES_HOOK
 
 define HOST_LIBGTK2_BUILD_CMDS
  $(HOST_MAKE_ENV) make -C $(@D)/gtk gtk-update-icon-cache

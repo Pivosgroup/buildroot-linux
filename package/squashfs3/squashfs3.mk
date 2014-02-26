@@ -1,6 +1,12 @@
-SQUASHFS3_VERSION=3.4
-SQUASHFS3_SOURCE=squashfs$(SQUASHFS3_VERSION).tar.gz
-SQUASHFS3_SITE=http://downloads.sourceforge.net/project/squashfs/squashfs/$(SQUASHFS3_VERSION)
+################################################################################
+#
+# squashfs3
+#
+################################################################################
+
+SQUASHFS3_VERSION = 3.4
+SQUASHFS3_SOURCE = squashfs$(SQUASHFS3_VERSION).tar.gz
+SQUASHFS3_SITE = http://downloads.sourceforge.net/project/squashfs/squashfs/$(SQUASHFS3_VERSION)
 
 SQUASHFS3_DEPENDENCIES = zlib
 
@@ -26,4 +32,3 @@ endef
 
 $(eval $(generic-package))
 $(eval $(host-generic-package))
-

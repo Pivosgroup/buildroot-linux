@@ -23,8 +23,8 @@
 # files than series file and archives are considered as a patch.
 #
 # Once a patch is found, the script will try to apply it. If its name doesn't
-# end with '.gz', '.bz', '.bz2', '.zip', '.Z', '.diff*' or '.patch*', it will
-# be skipped. If necessary, the patch will be uncompressed before being
+# end with '.gz', '.bz', '.bz2', '.xz', '.zip', '.Z', '.diff*' or '.patch*',
+# it will be skipped. If necessary, the patch will be uncompressed before being
 # applied. The list of the patches applied is stored in '.applied_patches_list'
 # file in the build directory.
 
@@ -33,6 +33,9 @@ builddir=${1-.}
 patchdir=${2-../kernel-patches}
 shift 2
 patchpattern=${@-*}
+
+# use a well defined sorting order
+export LC_COLLATE=C
 
 if [ ! -d "${builddir}" ] ; then
     echo "Aborting.  '${builddir}' is not a directory."
@@ -59,6 +62,8 @@ function apply_patch {
 	type="bzip"; uncomp="bunzip -dc"; ;; 
 	*.bz2)
 	type="bzip2"; uncomp="bunzip2 -dc"; ;; 
+	*.xz)
+	type="xz"; uncomp="unxz -dc"; ;;
 	*.zip)
 	type="zip"; uncomp="unzip -d"; ;; 
 	*.Z)
@@ -68,14 +73,18 @@ function apply_patch {
 	*.patch*)
 	type="patch"; uncomp="cat"; ;;
 	*)
-	echo "Unsupported format file for ${patch}, skip it";
-	return 0;
+	echo "Unsupported file type for ${path}/${patch}, skipping";
+	return 0
 	;;
     esac
     echo ""
     echo "Applying $patch using ${type}: "
-	echo $patch >> ${builddir}/.applied_patches_list
-    ${uncomp} "${path}/$patch" | patch -g0 -p1 -E -d "${builddir}"
+    if [ ! -e "${path}/$patch" ] ; then
+	echo "Error: missing patch file ${path}/$patch"
+	exit 1
+    fi
+    echo $patch >> ${builddir}/.applied_patches_list
+    ${uncomp} "${path}/$patch" | patch -g0 -p1 -E -d "${builddir}" -t -N
     if [ $? != 0 ] ; then
         echo "Patch failed!  Please fix ${patch}!"
 	exit 1
@@ -91,7 +100,7 @@ function scan_patchdir {
     # to apply patches. Skip line starting with a dash.
     if [ -e "${path}/series" ] ; then
         for i in `grep -Ev "^#" ${path}/series 2> /dev/null` ; do
-            apply_patch "$path" "$i" || exit 1
+            apply_patch "$path" "$i"
         done
     else
         for i in `cd $path; ls -d $patches 2> /dev/null` ; do
@@ -104,7 +113,7 @@ function scan_patchdir {
                 tar -C "$unpackedarchivedir" -xaf "${path}/$i"
                 scan_patchdir "$unpackedarchivedir"
             else
-                apply_patch "$path" "$i" || exit 1
+                apply_patch "$path" "$i"
             fi
         done
     fi

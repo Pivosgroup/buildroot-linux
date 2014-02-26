@@ -1,10 +1,10 @@
-#############################################################
+################################################################################
 #
 # fontconfig
 #
-#############################################################
+################################################################################
+
 FONTCONFIG_VERSION = 2.6.0
-FONTCONFIG_SOURCE = fontconfig-$(FONTCONFIG_VERSION).tar.gz
 FONTCONFIG_SITE = http://fontconfig.org/release
 FONTCONFIG_LICENSE = fontconfig license
 FONTCONFIG_LICENSE_FILES = COPYING
@@ -24,7 +24,6 @@ FONTCONFIG_CONF_OPT = --with-arch=$(GNU_TARGET_NAME) \
 FONTCONFIG_DEPENDENCIES = freetype expat
 
 HOST_FONTCONFIG_CONF_OPT = \
-		--disable-docs \
 		--disable-static
 
 $(eval $(autotools-package))

@@ -1,12 +1,15 @@
-#############################################################
+################################################################################
 #
-# quagga suite
+# quagga
 #
-#############################################################
+################################################################################
 
-QUAGGA_VERSION = 0.99.21
+QUAGGA_VERSION = 0.99.22.4
+QUAGGA_SOURCE = quagga-$(QUAGGA_VERSION).tar.xz
 QUAGGA_SITE = http://download.savannah.gnu.org/releases/quagga
 QUAGGA_DEPENDENCIES = host-gawk
+QUAGGA_LICENSE = GPLv2+
+QUAGGA_LICENSE_FILES = COPYING
 QUAGGA_CONF_OPT = --program-transform-name='' --enable-netlink
 
 QUAGGA_CONF_OPT += $(if $(BR2_PACKAGE_QUAGGA_ZEBRA),--enable-zebra,--disable-zebra)
@@ -23,14 +26,9 @@ QUAGGA_CONF_OPT += $(if $(BR2_PACKAGE_QUAGGA_TCP_ZERBRA),--enable-tcp-zebra,--di
 QUAGGA_CONF_OPT += $(if $(BR2_PACKAGE_QUAGGA_OPAQUE_LSA),--enable-opaque-lsa,--disable-opaque-lsa)
 
 ifeq ($(BR2_PACKAGE_QUAGGA_SNMP),y)
-QUAGGA_CONF_OPT += --enable-snmp
+QUAGGA_CONF_ENV += ac_cv_path_NETSNMP_CONFIG=$(STAGING_DIR)/usr/bin/net-snmp-config
+QUAGGA_CONF_OPT += --enable-snmp=agentx
 QUAGGA_DEPENDENCIES += netsnmp
-# SNMP support tries -lcrypto by default, disable it if we ain't got openssl
-ifneq ($(BR2_PACKAGE_OPENSSL),y)
-QUAGGA_CONF_OPT +=--without-crypto
-endif
-else
-QUAGGA_CONF_OPT +=--disable-snmp
 endif
 
 $(eval $(autotools-package))

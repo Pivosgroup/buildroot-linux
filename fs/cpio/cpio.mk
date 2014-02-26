@@ -1,8 +1,8 @@
-#############################################################
+################################################################################
 #
 # cpio to archive target filesystem
 #
-#############################################################
+################################################################################
 
 ifeq ($(BR2_ROOTFS_DEVICE_CREATION_STATIC),y)
 
@@ -28,7 +28,15 @@ endif # BR2_ROOTFS_DEVICE_CREATION_STATIC
 ROOTFS_CPIO_PRE_GEN_HOOKS += ROOTFS_CPIO_ADD_INIT
 
 define ROOTFS_CPIO_CMD
-	cd $(TARGET_DIR) && find . | cpio --quiet -o -H newc > $$@
+	cd $(TARGET_DIR) && find . | cpio --quiet -o -H newc > $@
 endef
+
+$(BINARIES_DIR)/rootfs.cpio.uboot: $(BINARIES_DIR)/rootfs.cpio host-uboot-tools
+	$(MKIMAGE) -A $(MKIMAGE_ARCH) -T ramdisk \
+		-C none -d $<$(ROOTFS_CPIO_COMPRESS_EXT) $@
+
+ifeq ($(BR2_TARGET_ROOTFS_CPIO_UIMAGE),y)
+ROOTFS_CPIO_POST_TARGETS += $(BINARIES_DIR)/rootfs.cpio.uboot
+endif
 
 $(eval $(call ROOTFS_TARGET,cpio))

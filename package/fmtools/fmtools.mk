@@ -1,11 +1,13 @@
-#############################################################
+################################################################################
 #
 # fmtools
 #
-#############################################################
+################################################################################
 
 FMTOOLS_VERSION = 1.0.2
 FMTOOLS_SITE = http://www.stanford.edu/~blp/fmtools/
+FMTOOLS_LICENSE = GPLv2+
+FMTOOLS_LICENSE_FILES = COPYING
 
 define FMTOOLS_BUILD_CMDS
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)

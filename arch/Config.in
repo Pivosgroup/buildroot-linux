@@ -1,11 +1,33 @@
+menu "Target options"
+
 config BR2_ARCH_IS_64
-       bool
+	bool
+
+config BR2_KERNEL_64_USERLAND_32
+	bool
+
+config BR2_SOFT_FLOAT
+	bool
 
 choice
 	prompt "Target Architecture"
 	default BR2_i386
 	help
 	  Select the target architecture family to build for.
+
+config BR2_arcle
+	bool "ARC (little endian)"
+	help
+	  Synopsys' DesignWare ARC Processor Cores are a family of 32-bit CPUs
+	  that can be used from deeply embedded to high performance host
+	  applications. Little endian.
+
+config BR2_arceb
+	bool "ARC (big endian)"
+	help
+	  Synopsys' DesignWare ARC Processor Cores are a family of 32-bit CPUs
+	  that can be used from deeply embedded to high performance host
+	  applications. Big endian.
 
 config BR2_arm
 	bool "ARM (little endian)"
@@ -25,6 +47,7 @@ config BR2_armeb
 
 config BR2_aarch64
 	bool "AArch64"
+	select BR2_ARCH_IS_64
 	help
 	  Aarch64 is a 64-bit architecture developed by ARM Holdings.
 	  http://www.arm.com/products/processors/instruction-set-architectures/armv8-architecture.php
@@ -106,6 +129,13 @@ config BR2_mips64el
 	  http://www.mips.com/
 	  http://en.wikipedia.org/wiki/MIPS_Technologies
 
+config BR2_nios2
+	bool "Nios II"
+	help
+	  Nios II is a soft core processor from Altera Corporation.
+	  http://www.altera.com/
+	  http://en.wikipedia.org/wiki/Nios_II
+
 config BR2_powerpc
 	bool "PowerPC"
 	help
@@ -174,6 +204,91 @@ config BR2_GCC_TARGET_ABI
 config BR2_GCC_TARGET_CPU
 	string
 
+config BR2_GCC_TARGET_CPU_REVISION
+	string
+
+# The value of this option will be passed as --with-fpu=<value> when
+# building gcc (internal backend) or -mfpu=<value> in the toolchain
+# wrapper (external toolchain)
+config BR2_GCC_TARGET_FPU
+	string
+
+# The value of this option will be passed as --with-float=<value> when
+# building gcc (internal backend) or -mfloat-abi=<value> in the toolchain
+# wrapper (external toolchain)
+config BR2_GCC_TARGET_FLOAT_ABI
+	string
+
+# The value of this option will be passed as --with-mode=<value> when
+# building gcc (internal backend) or -m<value> in the toolchain
+# wrapper (external toolchain)
+config BR2_GCC_TARGET_MODE
+	string
+
+# Set up target binary format
+choice
+	prompt "Target Binary Format"
+	depends on BR2_bfin || BR2_m68k
+	default BR2_BINFMT_FDPIC
+
+config BR2_BINFMT_ELF
+	bool "ELF"
+	depends on !BR2_bfin && !BR2_m68k
+	help
+	  ELF (Executable and Linkable Format) is a format for libraries and
+	  executables used across different architectures and operating
+	  systems.
+
+config BR2_BINFMT_FDPIC
+	bool "FDPIC"
+	depends on BR2_bfin || BR2_m68k
+	help
+	  ELF FDPIC binaries are based on ELF, but allow the individual load
+	  segments of a binary to be located in memory independently of each
+	  other. This makes this format ideal for use in environments where no
+	  MMU is available.
+
+config BR2_BINFMT_FLAT
+	bool "FLAT"
+	depends on BR2_bfin || BR2_m68k
+	select BR2_PREFER_STATIC_LIB
+	help
+	  FLAT binary is a relatively simple and lightweight executable format
+	  based on the original a.out format. It is widely used in environment
+	  where no MMU is available.
+
+endchoice
+
+# Set up flat binary type
+choice
+	prompt "FLAT Binary type"
+	depends on BR2_BINFMT_FLAT
+	default BR2_BINFMT_FLAT_ONE
+
+config BR2_BINFMT_FLAT_ONE
+	bool "One memory region"
+	help
+	  All segments are linked into one memory region.
+
+config BR2_BINFMT_FLAT_SEP_DATA
+	bool "Separate data and code region"
+	depends on BR2_bfin || BR2_m68k
+	help
+	  Allow for the data and text segments to be separated and placed in
+	  different regions of memory.
+
+config BR2_BINFMT_FLAT_SHARED
+	bool "Shared binary"
+	depends on BR2_bfin || BR2_m68k
+	help
+	  Allow to load and link indiviual FLAT binaries at run time.
+
+endchoice
+
+if BR2_arcle || BR2_arceb
+source "arch/Config.in.arc"
+endif
+
 if BR2_arm || BR2_armeb
 source "arch/Config.in.arm"
 endif
@@ -202,6 +317,10 @@ if BR2_mips || BR2_mips64 || BR2_mipsel || BR2_mips64el
 source "arch/Config.in.mips"
 endif
 
+if BR2_nios2
+source "arch/Config.in.nios2"
+endif
+
 if BR2_powerpc
 source "arch/Config.in.powerpc"
 endif
@@ -221,3 +340,5 @@ endif
 if BR2_xtensa
 source "arch/Config.in.xtensa"
 endif
+
+endmenu # Target options

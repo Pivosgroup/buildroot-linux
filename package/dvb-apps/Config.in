@@ -1,0 +1,23 @@
+config BR2_PACKAGE_DVB_APPS
+	bool "dvb-apps (transponders data)"
+	help
+	  Install the DVB-C, DVB-S, DVB-T and ATSC transponders data.
+
+	  http://linuxtv.org/projects.php
+	  http://linuxtv.org/hg/dvb-apps
+
+if BR2_PACKAGE_DVB_APPS
+
+comment "dvb-apps utils needs a toolchain w/ largefile, threads"
+	depends on !BR2_LARGEFILE || !BR2_TOOLCHAIN_HAS_THREADS
+
+config BR2_PACKAGE_DVB_APPS_UTILS
+	bool "dvb-apps utilities"
+	depends on BR2_LARGEFILE
+	depends on BR2_TOOLCHAIN_HAS_THREADS
+	select BR2_PACKAGE_LIBICONV if !BR2_ENABLE_LOCALE
+	help
+	  A small number of DVB test and utility programs,
+	  including szap and dvbscan.
+
+endif

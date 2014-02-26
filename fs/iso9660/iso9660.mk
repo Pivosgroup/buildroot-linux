@@ -1,18 +1,14 @@
-#############################################################
+################################################################################
 #
 # Build the iso96600 root filesystem image
 #
 # Cannot be converted to the ROOTFS_TARGET infrastructure, because of
 # the temporary construction in ISO9660_TARGET_DIR.
 #
-#############################################################
+################################################################################
 
-ISO9660_TARGET_DIR=$(BUILD_DIR)/iso9660
-ISO9660_BOOT_MENU:=$(call qstrip,$(BR2_TARGET_ROOTFS_ISO9660_BOOT_MENU))
-
-ISO9660_CPIO_EXT-$(BR2_TARGET_ROOTFS_CPIO_GZIP)  = .gz
-ISO9660_CPIO_EXT-$(BR2_TARGET_ROOTFS_CPIO_BZIP2) = .bz2
-ISO9660_CPIO_EXT-$(BR2_TARGET_ROOTFS_CPIO_LZMA)  = .lzma
+ISO9660_TARGET_DIR = $(BUILD_DIR)/iso9660
+ISO9660_BOOT_MENU := $(call qstrip,$(BR2_TARGET_ROOTFS_ISO9660_BOOT_MENU))
 
 $(BINARIES_DIR)/rootfs.iso9660: host-cdrkit host-fakeroot linux rootfs-cpio grub
 	@$(call MESSAGE,"Generating root filesystem image rootfs.iso9660")
@@ -21,7 +17,7 @@ $(BINARIES_DIR)/rootfs.iso9660: host-cdrkit host-fakeroot linux rootfs-cpio grub
 	cp $(GRUB_DIR)/stage2/stage2_eltorito $(ISO9660_TARGET_DIR)/boot/grub/
 	cp $(ISO9660_BOOT_MENU) $(ISO9660_TARGET_DIR)/boot/grub/menu.lst
 	cp $(LINUX_IMAGE_PATH) $(ISO9660_TARGET_DIR)/kernel
-	cp $(BINARIES_DIR)/rootfs.cpio$(ISO9660_CPIO_EXT-y) $(ISO9660_TARGET_DIR)/initrd
+	cp $(BINARIES_DIR)/rootfs.cpio$(ROOTFS_CPIO_COMPRESS_EXT) $(ISO9660_TARGET_DIR)/initrd
 	# Use fakeroot to pretend all target binaries are owned by root
 	rm -f $(FAKEROOT_SCRIPT)
 	echo "chown -R 0:0 $(ISO9660_TARGET_DIR)" >> $(FAKEROOT_SCRIPT)
@@ -36,11 +32,11 @@ $(BINARIES_DIR)/rootfs.iso9660: host-cdrkit host-fakeroot linux rootfs-cpio grub
 
 rootfs-iso9660: $(BINARIES_DIR)/rootfs.iso9660
 
-#############################################################
+################################################################################
 #
 # Toplevel Makefile options
 #
-#############################################################
+################################################################################
 ifeq ($(BR2_TARGET_ROOTFS_ISO9660),y)
 TARGETS+=rootfs-iso9660
 endif

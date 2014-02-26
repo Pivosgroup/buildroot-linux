@@ -1,4 +1,5 @@
 // -*- mode:doc; -*-
+// vim: set syntax=asciidoc:
 
 Developer Guidelines
 ====================
@@ -10,5 +11,3 @@ include::adding-packages.txt[]
 include::patch-policy.txt[]
 
 include::download-infra.txt[]
-
-include::board-support.txt[]

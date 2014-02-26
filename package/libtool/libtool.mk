@@ -1,10 +1,11 @@
-#############################################################
+################################################################################
 #
 # libtool
 #
-#############################################################
-LIBTOOL_VERSION = 2.2.10
-LIBTOOL_SOURCE = libtool-$(LIBTOOL_VERSION).tar.gz
+################################################################################
+
+LIBTOOL_VERSION = 2.4.2
+LIBTOOL_SOURCE = libtool-$(LIBTOOL_VERSION).tar.xz
 LIBTOOL_SITE = $(BR2_GNU_MIRROR)/libtool
 LIBTOOL_INSTALL_STAGING = YES
 LIBTOOL_LICENSE = GPLv2+
@@ -16,5 +17,5 @@ $(eval $(autotools-package))
 $(eval $(host-autotools-package))
 
 # variables used by other packages
-LIBTOOL:=$(HOST_DIR)/usr/bin/libtool
-LIBTOOLIZE:=$(HOST_DIR)/usr/bin/libtoolize
+LIBTOOL = $(HOST_DIR)/usr/bin/libtool
+LIBTOOLIZE = $(HOST_DIR)/usr/bin/libtoolize

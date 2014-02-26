@@ -1,10 +1,10 @@
-#############################################################
+################################################################################
 #
 # gnupg
 #
-#############################################################
+################################################################################
 
-GNUPG_VERSION = 1.4.12
+GNUPG_VERSION = 1.4.15
 GNUPG_SOURCE = gnupg-$(GNUPG_VERSION).tar.bz2
 GNUPG_SITE = ftp://ftp.gnupg.org/gcrypt/gnupg
 GNUPG_LICENSE = GPLv3+
@@ -29,6 +29,12 @@ ifeq ($(BR2_PACKAGE_READLINE),y)
 GNUPG_DEPENDENCIES += readline
 else
 GNUPG_CONF_OPT += --without-readline
+endif
+
+ifeq ($(BR2_PACKAGE_GNUPG_RSA),y)
+GNUPG_CONF_OPT += --enable-rsa
+else
+GNUPG_CONF_OPT += --disable-rsa
 endif
 
 ifneq ($(BR2_PACKAGE_GNUPG_GPGV),y)

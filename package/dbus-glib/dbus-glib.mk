@@ -1,10 +1,10 @@
-#############################################################
+################################################################################
 #
 # dbus-glib
 #
-#############################################################
+################################################################################
+
 DBUS_GLIB_VERSION = 0.98
-DBUS_GLIB_SOURCE = dbus-glib-$(DBUS_GLIB_VERSION).tar.gz
 DBUS_GLIB_SITE = http://dbus.freedesktop.org/releases/dbus-glib/
 DBUS_GLIB_INSTALL_STAGING = YES
 
@@ -36,4 +36,4 @@ $(eval $(autotools-package))
 $(eval $(host-autotools-package))
 
 # dbus-glib for the host
-DBUS_GLIB_HOST_BINARY:=$(HOST_DIR)/usr/bin/dbus-binding-tool
+DBUS_GLIB_HOST_BINARY = $(HOST_DIR)/usr/bin/dbus-binding-tool

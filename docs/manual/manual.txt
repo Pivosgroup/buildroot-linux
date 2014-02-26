@@ -1,4 +1,5 @@
 // -*- mode:doc; -*-
+// vim: set syntax=asciidoc:
 
 The Buildroot user manual
 =========================
@@ -6,6 +7,9 @@ The Buildroot user manual
 
 Buildroot usage and documentation by Thomas Petazzoni. Contributions
 from Karsten Kruse, Ned Ludd, Martin Herren and others.
+
+Buildroot {sys:echo $\{BR2_VERSION%%-git*\}} manual generated on {docdate}
+{doctime} from git revision {sys:git rev-parse --short HEAD}
 
 image::logo.png[]
 
@@ -18,6 +22,8 @@ include::starting-up.txt[]
 include::working-with.txt[]
 
 include::faq-troubleshooting.txt[]
+
+include::known-issues.txt[]
 
 include::going-further.txt[]
 

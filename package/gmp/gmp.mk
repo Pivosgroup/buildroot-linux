@@ -1,18 +1,16 @@
-#############################################################
+################################################################################
 #
 # gmp
 #
-#############################################################
+################################################################################
 
-GMP_VERSION = 5.0.5
+GMP_VERSION = 5.1.3
 GMP_SITE = $(BR2_GNU_MIRROR)/gmp
-GMP_SOURCE = gmp-$(GMP_VERSION).tar.bz2
+GMP_SOURCE = gmp-$(GMP_VERSION).tar.xz
 GMP_INSTALL_STAGING = YES
-
-# Bad ARM assembly breaks on pure thumb
-ifeq ($(ARCH),arm)
-GMP_MAKE_OPT += CFLAGS="$(TARGET_CFLAGS) -marm"
-endif
+GMP_LICENSE = LGPLv3+
+GMP_LICENSE_FILES = COPYING.LIB
+GMP_DEPENDENCIES = host-m4
 
 $(eval $(autotools-package))
 $(eval $(host-autotools-package))

@@ -1,11 +1,14 @@
-comment "boost requires a toolchain with C++ support enabled"
-	depends on !BR2_INSTALL_LIBSTDCPP
+comment "boost needs a toolchain w/ C++, largefile, threads"
+	depends on !BR2_INSTALL_LIBSTDCPP || !BR2_LARGEFILE || !BR2_TOOLCHAIN_HAS_THREADS
 
 config BR2_PACKAGE_BOOST
 	bool "boost"
 	depends on BR2_INSTALL_LIBSTDCPP
-	select BR2_PACKAGE_BZIP2
-	select BR2_PACKAGE_ZLIB
+	depends on BR2_LARGEFILE
+	# Boost could theorically be built with threading=single, but
+	# that unfortunately doesn't work. Until someone fixes that,
+	# let's depend on threads.
+	depends on BR2_TOOLCHAIN_HAS_THREADS
 	help
 	  A general purpose C++ library
 
@@ -13,14 +16,13 @@ config BR2_PACKAGE_BOOST
 
 if BR2_PACKAGE_BOOST
 
-config BR2_PACKAGE_BOOST_MULTITHREADED
-	depends on BR2_TOOLCHAIN_HAS_THREADS
-	bool "boost-multithreaded"
-	help
-	  Build the boost libraries as multithreaded
-
 config BR2_PACKAGE_BOOST_CHRONO
 	bool "boost-chrono"
+
+config BR2_PACKAGE_BOOST_CONTEXT
+	bool "boost-context"
+	depends on (BR2_arm || BR2_armeb || BR2_i386 || BR2_mips || BR2_mipsel \
+			|| BR2_powerpc || BR2_sparc || BR2_x86_64)
 
 config BR2_PACKAGE_BOOST_DATE_TIME
 	bool "boost-date_time"
@@ -39,12 +41,14 @@ config BR2_PACKAGE_BOOST_GRAPH_PARALLEL
 
 config BR2_PACKAGE_BOOST_IOSTREAMS
 	bool "boost-iostreams"
+	select BR2_PACKAGE_BZIP2
+	select BR2_PACKAGE_ZLIB
 
 config BR2_PACKAGE_BOOST_LOCALE
 	depends on BR2_USE_WCHAR
 	bool "boost-locale"
 
-comment "boost-locale requires a toolchain with wchar support"
+comment "boost-locale needs a toolchain w/ wchar"
 	depends on !BR2_USE_WCHAR
 
 config BR2_PACKAGE_BOOST_MATH
@@ -75,7 +79,6 @@ config BR2_PACKAGE_BOOST_TEST
 	bool "boost-test"
 
 config BR2_PACKAGE_BOOST_THREAD
-	depends on BR2_TOOLCHAIN_HAS_THREADS
 	bool "boost-thread"
 
 config BR2_PACKAGE_BOOST_TIMER

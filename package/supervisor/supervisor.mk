@@ -1,11 +1,10 @@
-#############################################################
+################################################################################
 #
-# python-supervisor
+# supervisor
 #
-#############################################################
+################################################################################
 
 SUPERVISOR_VERSION = 3.0a12
-SUPERVISOR_SOURCE = supervisor-$(SUPERVISOR_VERSION).tar.gz
 SUPERVISOR_SITE = http://pypi.python.org/packages/source/s/supervisor/
 SUPERVISOR_LICENSE_FILES = LICENSES.txt
 

@@ -1,11 +1,12 @@
-#############################################################
+################################################################################
 #
 # python
 #
-#############################################################
+################################################################################
+
 PYTHON_VERSION_MAJOR = 2.7
 PYTHON_VERSION       = $(PYTHON_VERSION_MAJOR).3
-PYTHON_SOURCE        = Python-$(PYTHON_VERSION).tar.bz2
+PYTHON_SOURCE        = Python-$(PYTHON_VERSION).tar.xz
 PYTHON_SITE          = http://python.org/ftp/python/$(PYTHON_VERSION)
 PYTHON_LICENSE       = Python software foundation license v2, others
 PYTHON_LICENSE_FILES = LICENSE
@@ -37,7 +38,14 @@ HOST_PYTHON_MAKE_ENV = \
 	PYTHON_MODULES_INCLUDE=$(HOST_DIR)/usr/include \
 	PYTHON_MODULES_LIB="$(HOST_DIR)/lib $(HOST_DIR)/usr/lib"
 
-HOST_PYTHON_AUTORECONF = YES
+
+# Building host python in parallel sometimes triggers a "Bus error"
+# during the execution of "./python setup.py build" in the
+# installation step. It is probably due to the installation of a
+# shared library taking place in parallel to the execution of
+# ./python, causing spurious Bus error. Building host-python with
+# MAKE1 has shown to workaround the problem.
+HOST_PYTHON_MAKE = $(MAKE1)
 
 PYTHON_DEPENDENCIES  = host-python libffi
 
@@ -100,6 +108,10 @@ else
 PYTHON_CONF_OPT += --disable-zlib
 endif
 
+ifeq ($(BR2_PACKAGE_PYTHON_HASHLIB),y)
+PYTHON_DEPENDENCIES += openssl
+endif
+
 PYTHON_CONF_ENV += \
 	PYTHON_FOR_BUILD=$(HOST_PYTHON_DIR)/python \
 	PGEN_FOR_BUILD=$(HOST_PYTHON_DIR)/Parser/pgen \
@@ -132,22 +144,17 @@ endef
 PYTHON_POST_INSTALL_STAGING_HOOKS += PYTHON_FIXUP_LIBDIR
 
 #
-# Development files removal
-#
-define PYTHON_REMOVE_DEVFILES
-	rm -f $(TARGET_DIR)/usr/bin/python$(PYTHON_VERSION_MAJOR)-config
-	rm -f $(TARGET_DIR)/usr/bin/python-config
-endef
-
-ifneq ($(BR2_HAVE_DEVFILES),y)
-PYTHON_POST_INSTALL_TARGET_HOOKS += PYTHON_REMOVE_DEVFILES
-endif
-
-#
 # Remove useless files. In the config/ directory, only the Makefile
 # and the pyconfig.h files are needed at runtime.
 #
+# idle & smtpd.py have bad shebangs and are mostly samples
+#
 define PYTHON_REMOVE_USELESS_FILES
+	rm -f $(TARGET_DIR)/usr/bin/idle
+	rm -f $(TARGET_DIR)/usr/bin/python$(PYTHON_VERSION_MAJOR)-config
+	rm -f $(TARGET_DIR)/usr/bin/python2-config
+	rm -f $(TARGET_DIR)/usr/bin/python-config
+	rm -f $(TARGET_DIR)/usr/bin/smtpd.py
 	for i in `find $(TARGET_DIR)/usr/lib/python$(PYTHON_VERSION_MAJOR)/config/ \
 		-type f -not -name pyconfig.h -a -not -name Makefile` ; do \
 		rm -f $$i ; \

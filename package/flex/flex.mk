@@ -1,20 +1,19 @@
-#############################################################
+################################################################################
 #
 # flex
 #
-#############################################################
+################################################################################
 
-FLEX_VERSION = 2.5.35
-FLEX_PATCH_VERSION = 10
-FLEX_SOURCE = flex_$(FLEX_VERSION).orig.tar.gz
-FLEX_PATCH = flex_$(FLEX_VERSION)-$(FLEX_PATCH_VERSION).diff.gz
-FLEX_SITE = $(BR2_DEBIAN_MIRROR)/debian/pool/main/f/flex
-FLEX_DIR = $(BUILD_DIR)/flex-$(FLEX_VERSION)
+FLEX_VERSION = 2.5.37
+FLEX_SITE = http://download.sourceforge.net/project/flex
 FLEX_INSTALL_STAGING = YES
+FLEX_LICENSE = FLEX
+FLEX_LICENSE_FILES = COPYING
 FLEX_DEPENDENCIES = \
-	$(if $(BR2_PACKAGE_GETTEXT),gettext)
+	$(if $(BR2_PACKAGE_GETTEXT_IF_LOCALE),gettext) host-m4
+FLEX_CONF_ENV = ac_cv_path_M4=/usr/bin/m4
 # we don't have a host-gettext/libintl
-HOST_FLEX_DEPENDENCIES =
+HOST_FLEX_DEPENDENCIES = host-m4
 
 ifeq ($(BR2_PACKAGE_FLEX_BINARY),y)
 # lex -> flex
