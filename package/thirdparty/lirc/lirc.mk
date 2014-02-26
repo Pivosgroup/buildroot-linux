@@ -26,7 +26,7 @@ endif
 
 #work-around for hard-coded depmod
 define LIRC_DEPMOD
-$(HOST_DIR)/usr/sbin/depmod -b $(TARGET_DIR) -a $(LINUX_VERSION_PROBED)
+$(HOST_DIR)/sbin/depmod -b $(TARGET_DIR) -a $(LINUX_VERSION_PROBED)
 endef
 
 define LIRC_REMOVE_BROKEN_DRIVERS

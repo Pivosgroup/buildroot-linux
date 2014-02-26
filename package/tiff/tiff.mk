@@ -15,6 +15,7 @@ TIFF_CONF_OPT = \
 	--without-x \
 
 TIFF_DEPENDENCIES = host-pkgconf
+HOST_TIFF_DEPENDENCIES = host-zlib host-jpeg-turbo
 
 TIFF_TOOLS_LIST =
 ifeq ($(BR2_PACKAGE_TIFF_TIFF2PDF),y)
@@ -75,7 +76,6 @@ endif
 ifneq ($(BR2_PACKAGE_TIFF_JBIG),y)
 	TIFF_CONF_OPT += --disable-jbig
 endif
-HOST_TIFF_DEPENDENCIES = host-zlib host-jpeg
 
 define TIFF_INSTALL_TARGET_CMDS
 	-cp -a $(@D)/libtiff/.libs/libtiff.so* $(TARGET_DIR)/usr/lib/
