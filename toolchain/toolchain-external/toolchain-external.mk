@@ -515,6 +515,15 @@ define TOOLCHAIN_EXTERNAL_INSTALL_CORE
 			$(call copy_toolchain_lib_root,$${ARCH_SYSROOT_DIR},$${SUPPORT_LIB_DIR},$${ARCH_LIB_DIR},$$libs,/usr/lib); \
 		done ; \
 	fi ; \
+	for d in $(call qstrip,$(BR2_EXT_TOOL_DIRS_EXTRA)); do \
+		if [ -d "$${ARCH_SYSROOT_DIR}$${d}" ]; then \
+			mkdir -p "$(TARGET_DIR)$${d}"; \
+			echo "Copying extra directory '$${d}' to target from toolchain"; \
+			cp -a "$${ARCH_SYSROOT_DIR}$${d}/" "$(TARGET_DIR)$${d}/../"; \
+		else \
+			echo "No such directory '$${d}' while trying to copy from toolchain"; \
+		fi; \
+	done; \
 	$(call MESSAGE,"Copying external toolchain sysroot to staging...") ; \
 	$(call copy_toolchain_sysroot,$${SYSROOT_DIR},$${ARCH_SYSROOT_DIR},$${ARCH_SUBDIR},$${ARCH_LIB_DIR},$${SUPPORT_LIB_DIR}) ; \
 	if test "$(BR2_TOOLCHAIN_EXTERNAL_GDB_SERVER_COPY)" = "y"; then \
