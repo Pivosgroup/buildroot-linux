@@ -12,6 +12,8 @@ config BR2_PACKAGE_OPENSSL
 config BR2_PACKAGE_OPENSSL_BIN
 	bool "openssl binary"
 	depends on BR2_PACKAGE_OPENSSL
+	# uses fork()
+	depends on BR2_USE_MMU
 	help
 	  Install the openssl binary to the target file system. This is a
 	  command line tool for doing various crypthographic stuff.
@@ -21,13 +23,3 @@ config BR2_PACKAGE_OPENSSL_ENGINES
 	depends on BR2_PACKAGE_OPENSSL
 	help
 	  Install additional encryption engine libraries.
-
-config BR2_PACKAGE_OPENSSL_OCF
-	bool "openssl ocf support"
-	depends on BR2_PACKAGE_OPENSSL
-	help
-	  Enable openssl cryptodev (OCF) hardware acceleration support.
-	  This requires kernel patches from the ocf-linux project otherwise
-	  you'll just have a bigger openssl library that works as usual.
-
-	  http://ocf-linux.sourceforge.net/

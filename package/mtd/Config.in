@@ -20,14 +20,6 @@ config BR2_PACKAGE_MTD_FLASH_ERASE
 	bool "flash_erase"
 	default y
 
-config BR2_PACKAGE_MTD_FLASH_ERASEALL
-	bool "flash_eraseall"
-	default y
-
-config BR2_PACKAGE_MTD_FLASH_INFO
-	bool "flash_info"
-	default y
-
 config BR2_PACKAGE_MTD_FLASH_LOCK
 	bool "flash_lock"
 	default y
@@ -37,6 +29,12 @@ config BR2_PACKAGE_MTD_FLASH_OTP_DUMP
 
 config BR2_PACKAGE_MTD_FLASH_OTP_INFO
 	bool "flash_otp_info"
+
+config BR2_PACKAGE_MTD_FLASH_OTP_LOCK
+	bool "flash_otp_lock"
+
+config BR2_PACKAGE_MTD_FLASH_OTP_WRITE
+	bool "flash_otp_write"
 
 config BR2_PACKAGE_MTD_FLASH_UNLOCK
 	bool "flash_unlock"
@@ -55,6 +53,18 @@ config BR2_PACKAGE_MTD_MKFSJFFS2
 	bool "mkfs.jffs2"
 	select BR2_PACKAGE_ZLIB
 	select BR2_PACKAGE_LZO
+
+config BR2_PACKAGE_MTD_MKFSUBIFS
+	bool "mkfs.ubifs"
+	select BR2_PACKAGE_ZLIB
+	select BR2_PACKAGE_LZO
+	select BR2_PACKAGE_UTIL_LINUX
+	select BR2_PACKAGE_UTIL_LINUX_LIBUUID
+	depends on BR2_LARGEFILE # util-linux
+	depends on BR2_USE_WCHAR # util-linux
+
+comment "mkfs.ubifs needs a toolchain w/ largefile, wchar"
+	depends on !BR2_LARGEFILE || !BR2_USE_WCHAR
 
 config BR2_PACKAGE_MTD_MTD_DEBUG
 	bool "mtd_debug"
@@ -82,7 +92,7 @@ config BR2_PACKAGE_MTD_RECV_IMAGE
 	depends on BR2_INET_IPV6
 	bool "recv_image"
 
-comment "recv_image requires a toolchain with IPv6 support"
+comment "recv_image needs a toolchain w/ IPv6"
 	depends on !BR2_INET_IPV6
 
 config BR2_PACKAGE_MTD_RFDDUMP

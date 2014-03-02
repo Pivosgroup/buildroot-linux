@@ -20,14 +20,6 @@ index d51c68a..4521aa5 100755
  
  if [ -r /etc/usbmount/usbmount.conf ]; then
      . /etc/usbmount/usbmount.conf
-@@ -91,6 +92,7 @@ if [ "$1" = add ]; then
-     FSTYPE=$(echo "$DEVINFO" | sed -ne 's/.*[[:blank:]]TYPE="\([^"]*\)".*/\1/pg; s/[[:blank:]]*//g;')
-     UUID=$(echo "$DEVINFO"   | sed -ne 's/.*[[:blank:]]UUID="\([^"]*\)".*/\1/pg; s/[[:blank:]]*//g;')
-     USAGE=$(echo "$DEVINFO"  | sed -ne 's/.*[[:blank:]]USAGE="\([^"]*\)".*/\1/pg; s/[[:blank:]]*//g;')
-+    LABEL=$(echo "$DEVINFO"  | sed -ne 's/.*[[:blank:]]LABEL="\([^"]*\)".*/\1/pg; s/[[:blank:]]*//g;')
- 
-     if ! echo $USAGE | egrep -q "(filesystem|disklabel)"; then
- 	log info "$DEVNAME does not contain a filesystem or disklabel"
 @@ -113,14 +115,20 @@ if [ "$1" = add ]; then
  	# Test if the filesystem type is in the list of filesystem
  	# types to mount.
@@ -40,8 +32,8 @@ index d51c68a..4521aa5 100755
 -		    break
 -		fi
 -	    done
-+            if [ -n "${LABEL}" ]; then
-+              mountpoint="${MOUNT_BASE}/${LABEL}"
++            if [ -n "${ID_FS_LABEL}" ]; then
++              mountpoint="${MOUNT_BASE}/${ID_FS_LABEL}"
 +            elif [ -n "$DEVNAME" ]; then
 +              mountpoint="${MOUNT_BASE}/`basename ${DEVNAME}`"
 +            else

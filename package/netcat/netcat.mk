@@ -1,15 +1,12 @@
-#############################################################
+################################################################################
 #
 # netcat
 #
-#############################################################
+################################################################################
 
-NETCAT_VERSION:=0.7.1
-NETCAT_SOURCE:=netcat-$(NETCAT_VERSION).tar.gz
-NETCAT_SITE=http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/netcat
-NETCAT_AUTORECONF:=NO
-NETCAT_INSTALL_STAGING:=NO
-NETCAT_INSTALL_TARGET:=YES
-NETCAT_CONF_OPT = --program-prefix=''
+NETCAT_VERSION = 0.7.1
+NETCAT_SITE = http://downloads.sourceforge.net/project/netcat/netcat/$(NETCAT_VERSION)
+NETCAT_LICENSE = GPLv2+
+NETCAT_LICENSE_FILES = COPYING
 
-$(eval $(call AUTOTARGETS,package,netcat))
+$(eval $(autotools-package))

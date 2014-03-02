@@ -1,14 +1,15 @@
-#############################################################
+################################################################################
 #
 # cairo
 #
-#############################################################
-CAIRO_VERSION = 1.8.10
-CAIRO_SOURCE = cairo-$(CAIRO_VERSION).tar.gz
+################################################################################
+
+CAIRO_VERSION = 1.12.10
+CAIRO_SOURCE = cairo-$(CAIRO_VERSION).tar.xz
+CAIRO_LICENSE = LGPLv2.1+
+CAIRO_LICENSE_FILES = COPYING
 CAIRO_SITE = http://cairographics.org/releases
-CAIRO_AUTORECONF = NO
 CAIRO_INSTALL_STAGING = YES
-CAIRO_INSTALL_TARGET = YES
 
 CAIRO_CONF_ENV = ac_cv_func_posix_getpwuid_r=yes glib_cv_stack_grows=no \
 		glib_cv_uscore=no ac_cv_func_strtod=yes \
@@ -36,7 +37,15 @@ CAIRO_CONF_ENV = ac_cv_func_posix_getpwuid_r=yes glib_cv_stack_grows=no \
 		ac_cv_func_working_mktime=yes jm_cv_func_working_re_compile_pattern=yes \
 		ac_use_included_regex=no gl_cv_c_restrict=no
 
-CAIRO_DEPENDENCIES = host-pkg-config fontconfig pixman
+ifeq ($(BR2_TOOLCHAIN_HAS_THREADS),)
+	CAIRO_CONF_ENV += CPPFLAGS="$(TARGET_CPPFLAGS) -DCAIRO_NO_MUTEX=1"
+endif
+
+CAIRO_CONF_OPT = \
+	--enable-trace=no \
+	--enable-interpreter=no
+
+CAIRO_DEPENDENCIES = host-pkgconf fontconfig pixman
 
 ifeq ($(BR2_PACKAGE_DIRECTFB),y)
 	CAIRO_CONF_OPT += --enable-directfb
@@ -46,10 +55,17 @@ else
 endif
 
 ifeq ($(BR2_PACKAGE_XORG7),y)
-	CAIRO_CONF_OPT += --enable-xlib --with-x
-	CAIRO_DEPENDENCIES += xserver_xorg-server
+	CAIRO_CONF_OPT += --enable-xlib --enable-xcb --with-x
+	CAIRO_DEPENDENCIES += xlib_libX11 xlib_libXext
 else
-	CAIRO_CONF_OPT += --disable-xlib --without-x
+	CAIRO_CONF_OPT += --disable-xlib --disable-xcb --without-x
+endif
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBXRENDER),y)
+	CAIRO_CONF_OPT += --enable-xlib-xrender
+	CAIRO_DEPENDENCIES += xlib_libXrender
+else
+	CAIRO_CONF_OPT += --disable-xlib-xrender
 endif
 
 ifeq ($(BR2_PACKAGE_CAIRO_PS),y)
@@ -73,18 +89,28 @@ else
 	CAIRO_CONF_OPT += --disable-png
 endif
 
+ifeq ($(BR2_PACKAGE_CAIRO_SCRIPT),y)
+	CAIRO_CONF_OPT += --enable-script
+else
+	CAIRO_CONF_OPT += --disable-script
+endif
+
 ifeq ($(BR2_PACKAGE_CAIRO_SVG),y)
 	CAIRO_CONF_OPT += --enable-svg
 else
 	CAIRO_CONF_OPT += --disable-svg
 endif
 
-HOST_CAIRO_CONF_OPT = \
-		--enable-ps \
-		--enable-pdf \
-		--enable-xlib \
-		--with-x \
-		--disable-png \
-		--disable-svg
+ifeq ($(BR2_PACKAGE_CAIRO_TEE),y)
+	CAIRO_CONF_OPT += --enable-tee
+else
+	CAIRO_CONF_OPT += --disable-tee
+endif
 
-$(eval $(call AUTOTARGETS,package,cairo))
+ifeq ($(BR2_PACKAGE_CAIRO_XML),y)
+	CAIRO_CONF_OPT += --enable-xml
+else
+	CAIRO_CONF_OPT += --disable-xml
+endif
+
+$(eval $(autotools-package))

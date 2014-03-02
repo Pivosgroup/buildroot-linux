@@ -12,6 +12,7 @@
 *.orig
 *.rej
 *~
+*.pyc
 .DS_Store
 ._*
 *.swp

@@ -1,5 +1,6 @@
 config BR2_PACKAGE_HASERL
 	bool "haserl"
+	depends on BR2_USE_MMU # fork()
 	help
 	  Haserl is a small cgi wrapper that enables shell scripts to be
 	  embedded into html documents. It is intended for environments
@@ -8,12 +9,12 @@ config BR2_PACKAGE_HASERL
 	  http://haserl.sourceforge.net/
 
 config BR2_PACKAGE_HASERL_WITH_LUA
-	bool "lua support"
+	bool "Lua support"
 	depends on BR2_PACKAGE_HASERL
 	depends on BR2_PACKAGE_HASERL_VERSION_0_9_X
 	select BR2_PACKAGE_LUA
 	help
-	  Enable LUA support for haserl
+	  Enable Lua support for haserl
 
 choice
 	prompt "Haserl version"
@@ -38,4 +39,4 @@ endchoice
 config BR2_PACKAGE_HASERL_VERSION
 	string
 	default "0.8.0"		if BR2_PACKAGE_HASERL_VERSION_0_8_X
-	default "0.9.27"	if BR2_PACKAGE_HASERL_VERSION_0_9_X
+	default "0.9.30"	if BR2_PACKAGE_HASERL_VERSION_0_9_X

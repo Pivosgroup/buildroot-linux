@@ -1,0 +1,426 @@
+#
+# Config.in.legacy - support for backward compatibility
+#
+# When an existing Config.in symbol is removed, it should be added again in
+# this file, and take appropriate action to approximate backward compatibility.
+# This will make the transition for the user more convenient.
+#
+# When adding legacy symbols to this file, add them to the front. The oldest
+# symbols will be removed again after about two years.
+#
+# The symbol should be copied as-is from the place where it was previously
+# defined, but the help text should be removed or replaced with something that
+# explains how to fix it.
+#
+# For bool options, the old symbol should select BR2_LEGACY, so that the user
+# is informed at build-time about selected legacy options.
+# If there is an equivalent (set of) new symbols, these should be select'ed by
+# the old symbol for backwards compatibility.
+#
+# For string options, it is not possible to directly select another symbol. In
+# this case, a hidden wrap bool option has to be added, that defaults to y if
+# the old string is not set at its default value. The wrap symbol should select
+# BR2_LEGACY.
+# If the original symbol has been renamed, the new symbol should use the value
+# of the old symbol as default. This requires a change outside of
+# Config.in.legacy, and this should be clearly marked as such below, so that
+# removal of legacy options also include the removal of these external
+# references.
+#
+# [Example: renaming a string option from FOO to BAR]
+# original symbol:
+#     config BR2_FOO_STRING
+#             string "Some foo string"
+#
+# becomes:
+#     config BR2_BAR_STRING
+#             string "Some bar string"
+#             default BR2_FOO_STRING if BR2_FOO_STRING != ""  # legacy
+#
+# and in Config.in.legacy:
+#     config BR2_FOO_STRING
+#             string "The foo string has been renamed"
+#             help
+#               <suitable help text>
+#
+#     config BR2_FOO_STRING_WRAP
+#             bool
+#             default y if BR2_FOO_STRING != ""
+#             select BR2_LEGACY
+#
+#     # Note: BR2_FOO_STRING is still referenced from package/foo/Config.in
+#
+# [End of example]
+
+config BR2_LEGACY
+	bool
+	help
+	  This option is selected automatically when your old .config uses an
+	  option that no longer exists in current buildroot. In that case, the
+	  build will fail. Look for config options which are selected in the
+	  menu below: they no longer exist and should be replaced by something
+	  else.
+
+# This comment fits exactly in a 80-column display
+comment "Legacy detected: check the content of the menu below"
+	depends on BR2_LEGACY
+
+menu "Legacy config options"
+
+if BR2_LEGACY
+comment "----------------------------------------------------"
+comment "Your old configuration uses legacy options that no  "
+comment "longer exist in buildroot, as indicated in the menu "
+comment "below. As long as these options stay selected, or in"
+comment "case of string options are non-empty, the build     "
+comment "will fail.                                          "
+comment "*                                                   "
+comment "Where possible, an automatic conversion from old to "
+comment "new symbols has been performed. Before making any   "
+comment "change in this legacy menu, make sure to exit the   "
+comment "configuration editor a first time and save the      "
+comment "configuration. Otherwise, the automatic conversion  "
+comment "of symbols will be lost.                            "
+comment "*                                                   "
+comment "After this initial save, reopen the configuration   "
+comment "editor, inspect the options selected below, read    "
+comment "their help texts, and verify/update the new         "
+comment "configuration in the corresponding configuration    "
+comment "menus. When everything is ok, you can disable the   "
+comment "legacy options in the menu below. Once you have     "
+comment "disabled all legacy options, this text will         "
+comment "disappear and you will be able to start the build.  "
+comment "*                                                   "
+comment "Note: at some point in the future, the oldest legacy"
+comment "options will be removed, and configuration files    "
+comment "that still have those options set, will fail to     "
+comment "build, or run, in unpredictable ways.               "
+comment "----------------------------------------------------"
+endif
+
+###############################################################################
+comment "Legacy options removed in 2013.11"
+
+config BR2_PACKAGE_LVM2_DMSETUP_ONLY
+	bool "lvm2's 'dmsetup only' option removed"
+	select BR2_LEGACY
+	help
+	  The BR2_PACKAGE_LVM2_DMSETUP_ONLY was a negative option, which
+	  led to problems with other packages that need the full lvm2
+	  suite. Therefore, the option has been replaced with the positive
+	  BR2_PACKAGE_LVM2_STANDARD_INSTALL option.
+
+# Note: BR2_PACKAGE_LVM2_DMSETUP_ONLY is still referenced in package/lvm2/Config.in
+# in order to automatically propagate old configs
+
+config BR2_PACKAGE_QT_JAVASCRIPTCORE
+	bool "qt javascriptcore option removed"
+	select BR2_LEGACY
+	help
+	  The BR2_PACKAGE_QT_JAVASCRIPTCORE option was available to
+	  force the activation or disabling of the JIT compiler in the
+	  Qt Javascript interpreter. However, the JIT compiler is not
+	  available for all architectures, so forcing its activation
+	  does not always work. Moreover, Qt knows by itself for which
+	  architectures JIT support is possible, and will
+	  automatically enable it if possible.
+
+	  Therefore, this option was in fact useless, and causing
+	  build problems when enabled on architectures for which the
+	  JIT support was not available. It has been removed, and
+	  there is no replacement: Qt will enable JIT at compile time
+	  when possible.
+
+config BR2_PACKAGE_MODULE_INIT_TOOLS
+	bool "module-init-tools replaced by kmod"
+	select BR2_PACKAGE_KMOD
+	select BR2_PACKAGE_KMOD_TOOLS
+	select BR2_LEGACY
+	help
+	  The 'module-init-tools' package has been removed, since it
+	  has been depracated upstream and replaced by 'kmod'.
+
+config BR2_TARGET_UBOOT_CUSTOM_GIT_REPO_URL
+	string "u-boot: the git repository URL option has been renamed"
+	help
+	  The option BR2_TARGET_UBOOT_CUSTOM_GIT_REPO_URL has
+	  been renamed to BR2_TARGET_UBOOT_CUSTOM_REPO_URL.
+
+config BR2_TARGET_UBOOT_CUSTOM_GIT_REPO_URL_WRAP
+	bool
+	default y if BR2_TARGET_UBOOT_CUSTOM_GIT_REPO_URL != ""
+	select BR2_LEGACY
+
+# Note: BR2_TARGET_UBOOT_CUSTOM_GIT_REPO_URL is still referenced from
+# boot/uboot/Config.in
+
+config BR2_TARGET_UBOOT_CUSTOM_GIT_VERSION
+	string "u-boot: the git repository version option has been renamed"
+	help
+	  The option BR2_TARGET_UBOOT_CUSTOM_GIT_VERSION has
+	  been renamed to BR2_TARGET_UBOOT_CUSTOM_REPO_VERSION.
+
+config BR2_TARGET_UBOOT_CUSTOM_GIT_VERSION_WRAP
+	bool
+	default y if BR2_TARGET_UBOOT_CUSTOM_GIT_VERSION != ""
+	select BR2_LEGACY
+
+# Note: BR2_TARGET_UBOOT_CUSTOM_GIT_VERSION is still referenced from
+# boot/uboot/Config.in
+
+config BR2_LINUX_KERNEL_CUSTOM_GIT_REPO_URL
+	string "linux: the git repository URL option has been renamed"
+	help
+	  The option BR2_LINUX_KERNEL_CUSTOM_GIT_REPO_URL has
+	  been renamed to
+	  BR2_LINUX_KERNEL_CUSTOM_REPO_URL.
+
+config BR2_LINUX_KERNEL_CUSTOM_GIT_REPO_URL_WRAP
+	bool
+	default y if BR2_LINUX_KERNEL_CUSTOM_GIT_REPO_URL != ""
+	select BR2_LEGACY
+
+# Note: BR2_LINUX_KERNEL_CUSTOM_GIT_REPO_URL is still referenced from
+# linux/Config.in
+
+config BR2_LINUX_KERNEL_CUSTOM_GIT_VERSION
+	string "linux: the git repository version option has been renamed"
+	help
+	  The option BR2_LINUX_KERNEL_CUSTOM_GIT_VERSION has
+	  been renamed to
+	  BR2_LINUX_KERNEL_CUSTOM_REPO_VERSION.
+
+config BR2_LINUX_KERNEL_CUSTOM_GIT_VERSION_WRAP
+	bool
+	default y if BR2_LINUX_KERNEL_CUSTOM_GIT_VERSION != ""
+	select BR2_LEGACY
+
+# Note: BR2_LINUX_KERNEL_CUSTOM_GIT_VERSION is still referenced from
+# linux/Config.in
+
+###############################################################################
+comment "Legacy options removed in 2013.08"
+
+config BR2_ARM_OABI
+	bool "ARM OABI support has been removed"
+	select BR2_LEGACY
+	help
+	  The support for the ARM OABI was deprecated since a while,
+	  and has been removed completely from Buildroot. It is also
+	  deprecated in upstream gcc, since gcc 4.7. People should
+	  switch to EABI instead, which should not be a problem as
+	  long as you don't have pre-built OABI binaries in your
+	  system that you can't recompile.
+
+config BR2_PACKAGE_DOSFSTOOLS_DOSFSCK
+	bool "dosfstools dosfsck renamed to fsck.fat"
+	select BR2_LEGACY
+	select BR2_PACKAGE_DOSFSTOOLS_FSCK_FAT
+	help
+	  dosfsck was renamed upstream to fsck.fat for consistency.
+
+config BR2_PACKAGE_DOSFSTOOLS_DOSFSLABEL
+	bool "dosfstools dosfslabel renamed to fatlabel"
+	select BR2_LEGACY
+	select BR2_PACKAGE_DOSFSTOOLS_FATLABEL
+	help
+	  doslabel was renamed upstream to fatlabel for consistency.
+
+config BR2_PACKAGE_DOSFSTOOLS_MKDOSFS
+	bool "dosfstools mkdosfs renamed to mkfs.fat"
+	select BR2_LEGACY
+	select BR2_PACKAGE_DOSFSTOOLS_MKFS_FAT
+	help
+	  mkdosfs was renamed upstream to mkfs.fat for consistency.
+
+config BR2_ELF2FLT
+	bool "the elf2flt option has been renamed"
+	select BR2_LEGACY
+	help
+	  The BR2_ELF2FLT option has been renamed to
+	  BR2_PACKAGE_HOST_ELF2FLT due to the conversion of elf2flt to
+	  the package infrastructure.
+
+config BR2_VFP_FLOAT
+	bool "the ARM VFP floating point option has been renamed"
+	select BR2_LEGACY
+	help
+	  Due to a major refactoring of the floating-point handling of
+	  the ARM architecture support, the BR2_VFP_FLOAT option has
+	  been replaced with a choice of options that allows to select
+	  between various VFP versions/capabilities.
+
+config BR2_PACKAGE_GCC_TARGET
+	bool "gcc on the target filesystem has been removed"
+	select BR2_LEGACY
+	help
+	  The support for gcc in the target filesystem was deprecated
+	  since a while, and has been removed completely from Buildroot.
+	  See Buildroot's documentation for more explanations.
+
+config BR2_HAVE_DEVFILES
+	bool "development files in target filesystem has been removed"
+	select BR2_LEGACY
+	help
+	  The installation of the development files in the target
+	  filesystem was deprecated since a while, and has been removed
+	  completely from Buildroot.
+	  See Buildroot's documentation for more explanations.
+
+###############################################################################
+comment "Legacy options removed in 2013.05"
+
+config BR2_PACKAGE_LINUX_FIRMWARE_RTL_8192
+	bool "Realtek 8192 replaced by Realtek 81xx"
+	select BR2_LEGACY
+	select BR2_PACKAGE_LINUX_FIRMWARE_RTL_81XX
+	help
+	  Now covers the whole Realtek 81xx familly: 8188/8192.
+
+config BR2_PACKAGE_LINUX_FIRMWARE_RTL_8712
+	bool "Realtek 8712 replaced by Realtek 87xx"
+	select BR2_LEGACY
+	select BR2_PACKAGE_LINUX_FIRMWARE_RTL_87XX
+	help
+	  Now covers the whole Realtek 87xx familly: 8712/8723.
+
+###############################################################################
+comment "Legacy options removed in 2013.02"
+
+config BR2_sa110
+	bool "sa110 ARM target switched to strongarm"
+	select BR2_LEGACY
+	select BR2_strongarm
+	help
+	  The SA110 is the same as a generic StrongARM, it just differs
+	  in speed, peripherals and cache.
+
+config BR2_sa1100
+	bool "sa1100 ARM target switched to strongarm"
+	select BR2_LEGACY
+	select BR2_strongarm
+	help
+	  The SA1100 is the same as a generic StrongARM, it just differs
+	  in speed, peripherals and cache.
+
+config BR2_PACKAGE_GDISK
+	bool "gdisk has been replaced by gptfdisk"
+	select BR2_LEGACY
+	select BR2_PACKAGE_GPTFDISK
+	help
+	  The option has been renamed BR2_PACKAGE_GPTFDISK.
+
+config BR2_PACKAGE_GDISK_GDISK
+	bool "gdisk tool from gdisk has been replaced by gdisk in gptfdisk"
+	select BR2_LEGACY
+	select BR2_PACKAGE_GPTFDISK
+	select BR2_PACKAGE_GPTFDISK_GDISK
+	help
+	  The option has been renamed BR2_PACKAGE_GPTFDISK_GDISK.
+
+config BR2_PACKAGE_GDISK_SGDISK
+	bool "sgdisk tool from gdisk has been replaced by sgdisk in gptfdisk"
+	select BR2_LEGACY
+	select BR2_PACKAGE_GPTFDISK
+	select BR2_PACKAGE_GPTFDISK_SGDISK
+	help
+	  The option has been renamed BR2_PACKAGE_GPTFDISK_SGDISK.
+
+config BR2_PACKAGE_GDB_HOST
+	bool "gdb for the host option has been renamed"
+	select BR2_PACKAGE_HOST_GDB
+	select BR2_LEGACY
+	help
+	  Due to the conversion of gdb to the package infrastructure,
+	  the BR2_PACKAGE_GDB_HOST option has been renamed
+	  BR2_PACKAGE_HOST_GDB.
+
+config BR2_PACKAGE_DIRECTB_DITHER_RGB16
+	bool "DirectFB RGB16 dithering option has been renamed"
+	select BR2_PACKAGE_DIRECTFB_DITHER_RGB16
+	select BR2_LEGACY
+	help
+	  The option has been renamed
+	  BR2_PACKAGE_DIRECTFB_DITHER_RGB16.
+
+config BR2_PACKAGE_DIRECTB_TESTS
+	bool "DirectFB Tests option has been renamed"
+	select BR2_PACKAGE_DIRECTFB_TESTS
+	select BR2_LEGACY
+	help
+	  The option has been renamed
+	  BR2_PACKAGE_DIRECTFB_TESTS.
+
+###############################################################################
+comment "Legacy options removed in 2012.11"
+
+config BR2_PACKAGE_CUSTOMIZE
+	bool "customize package has been removed"
+	select BR2_LEGACY
+	help
+	  The 'customize' special package has been removed. Instead,
+	  we recommend to create either your own packages, or use a
+	  post-build script to customize your root filesystem. See
+	  Buildroot's documentation for more details.
+
+config BR2_PACKAGE_XSERVER_xorg
+	bool "X.org modular server"
+	select BR2_LEGACY
+	select BR2_PACKAGE_XSERVER_XORG_SERVER_MODULAR
+	help
+	  The option has been renamed
+	  BR2_PACKAGE_XSERVER_XORG_SERVER_MODULAR.
+
+config BR2_PACKAGE_XSERVER_tinyx
+	bool "KDrive / TinyX server"
+	select BR2_LEGACY
+	select BR2_PACKAGE_XSERVER_XORG_SERVER_KDRIVE
+	help
+	  The option has been renamed
+	  BR2_PACKAGE_XSERVER_XORG_SERVER_KDRIVE.
+
+config BR2_PACKAGE_PTHREAD_STUBS
+	bool "pthread-stubs option has been renamed"
+	select BR2_LEGACY
+	select BR2_PACKAGE_XLIB_LIBPTHREAD_STUBS
+	depends on BR2_PACKAGE_XORG7
+	help
+	  For consistency reason, the pthread-stubs package has been
+	  renamed to xlib_libpthread-stubs.
+
+###############################################################################
+comment "Legacy options removed in 2012.08"
+
+config BR2_PACKAGE_GETTEXT_STATIC
+	bool "libgettext.a is now selected by BR2_PREFER_STATIC_LIB"
+	select BR2_LEGACY
+	help
+	  To build a static gettext library, select BR2_PREFER_STATIC_LIB.
+
+
+config BR2_PACKAGE_LIBINTL
+	bool "libintl"
+	select BR2_LEGACY
+	select BR2_PACKAGE_GETTEXT
+	help
+	  libintl is now installed by selecting BR2_PACKAGE_GETTEXT. This now
+	  only installs the library, not the executables.
+
+config BR2_PACKAGE_INPUT_TOOLS_EVTEST
+	bool "input-tools evtest is now a separate package evtest"
+	select BR2_LEGACY
+	select BR2_PACKAGE_EVTEST
+	help
+	  The evtest program from input-tools is now a separate package.
+
+config BR2_BFIN_FDPIC
+	bool "BR2_BFIN_FDPIC is now BR2_BINFMT_FDPIC"
+	select BR2_BINFMT_FDPIC
+	select BR2_LEGACY
+
+config BR2_BFIN_FLAT
+	bool "BR2_BFIN_FLAT is now BR2_BINFMT_FLAT"
+	select BR2_BINFMT_FLAT
+	select BR2_LEGACY
+
+endmenu

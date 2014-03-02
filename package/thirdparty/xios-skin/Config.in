@@ -1,3 +1,3 @@
-config BR2_PACKAGE_XIOS
+config BR2_PACKAGE_XIOS_SKIN
 depends on BR2_PACKAGE_XBMC
         bool "XIOS Skin"

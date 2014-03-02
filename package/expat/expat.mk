@@ -1,20 +1,17 @@
-#############################################################
+################################################################################
 #
 # expat
 #
-#############################################################
+################################################################################
 
-EXPAT_VERSION = 2.0.1
-EXPAT_SOURCE = expat-$(EXPAT_VERSION).tar.gz
-EXPAT_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/expat
+EXPAT_VERSION = 2.1.0
+EXPAT_SITE = http://downloads.sourceforge.net/project/expat/expat/$(EXPAT_VERSION)
 EXPAT_INSTALL_STAGING = YES
-EXPAT_INSTALL_TARGET = YES
 EXPAT_INSTALL_STAGING_OPT = DESTDIR=$(STAGING_DIR) installlib
 EXPAT_INSTALL_TARGET_OPT = DESTDIR=$(TARGET_DIR) installlib
+EXPAT_DEPENDENCIES = host-pkgconf
+EXPAT_LICENSE = MIT
+EXPAT_LICENSE_FILES = COPYING
 
-EXPAT_CONF_OPT = --enable-shared
-
-EXPAT_DEPENDENCIES = host-pkg-config
-
-$(eval $(call AUTOTARGETS,package,expat))
-$(eval $(call AUTOTARGETS,package,expat,host))
+$(eval $(autotools-package))
+$(eval $(host-autotools-package))

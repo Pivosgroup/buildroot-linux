@@ -9,4 +9,4 @@ LIBCDIO_SOURCE = libcdio-$(LIBCDIO_VERSION).tar.gz
 LIBCDIO_INSTALL_STAGING = YES
 LIBCDIO_INSTALL_TARGET = YES
 
-$(eval $(call AUTOTARGETS,package/thirdparty,libcdio))
+$(eval $(autotools-package))

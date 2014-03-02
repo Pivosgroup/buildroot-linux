@@ -1,10 +1,11 @@
-#############################################################
+################################################################################
 #
 # kexec
 #
-#############################################################
-KEXEC_VERSION = 2.0.2
-KEXEC_SOURCE = kexec-tools-$(KEXEC_VERSION).tar.bz2
+################################################################################
+
+KEXEC_VERSION = 2.0.4
+KEXEC_SOURCE = kexec-tools-$(KEXEC_VERSION).tar.xz
 KEXEC_SITE = $(BR2_KERNEL_MIRROR)/linux/utils/kernel/kexec
 
 ifeq ($(BR2_PACKAGE_KEXEC_ZLIB),y)
@@ -20,4 +21,4 @@ endef
 
 KEXEC_POST_INSTALL_TARGET_HOOKS += KEXEC_REMOVE_LIB_TOOLS
 
-$(eval $(call AUTOTARGETS,package,kexec))
+$(eval $(autotools-package))

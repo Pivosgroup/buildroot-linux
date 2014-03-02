@@ -1,12 +1,29 @@
-#############################################################
+################################################################################
 #
 # bash
 #
-#############################################################
+################################################################################
 
-BASH_VERSION = 4.1
+BASH_VERSION = 4.2
 BASH_SITE = $(BR2_GNU_MIRROR)/bash
-BASH_DEPENDENCIES = ncurses
+BASH_DEPENDENCIES = ncurses host-bison
+BASH_LICENSE = GPLv3+
+BASH_LICENSE_FILES = COPYING
+
+BASH_CONF_ENV +=                       \
+   bash_cv_job_control_missing=present \
+   bash_cv_sys_named_pipes=present     \
+   bash_cv_func_sigsetjmp=present      \
+   bash_cv_printf_a_format=yes
+
+# Parallel build sometimes fails because some of the generator tools
+# are built twice (i.e. while executing).
+BASH_MAKE = $(MAKE1)
+
+# The static build needs some trickery
+ifeq ($(BR2_PREFER_STATIC_LIB),y)
+BASH_CONF_OPT += --enable-static-link --without-bash-malloc
+endif
 
 # Make sure we build after busybox so that /bin/sh links to bash
 ifeq ($(BR2_PACKAGE_BUSYBOX),y)
@@ -34,4 +51,4 @@ define BASH_UNINSTALL_TARGET_CMDS
 	fi
 endef
 
-$(eval $(call AUTOTARGETS,package,bash))
+$(eval $(autotools-package))

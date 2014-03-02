@@ -1,8 +1,9 @@
-#############################################################
+################################################################################
 #
 # slang
 #
-#############################################################
+################################################################################
+
 SLANG_VERSION = 1.4.5
 SLANG_SOURCE = slang-$(SLANG_VERSION)-mini.tar.bz2
 SLANG_SITE = http://www.uclibc.org/
@@ -51,4 +52,4 @@ define SLANG_CLEAN_CMDS
 	$(MAKE) -C $(@D) clean
 endef
 
-$(eval $(call GENTARGETS,package,slang))
+$(eval $(generic-package))

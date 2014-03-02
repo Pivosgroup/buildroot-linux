@@ -1,17 +1,19 @@
-#############################################################
+################################################################################
 #
-# libgtk2.0
+# libgtk2
 #
-#############################################################
-LIBGTK2_VERSION_MAJOR:=2.22
-LIBGTK2_VERSION_MINOR:=0
+################################################################################
+
+LIBGTK2_VERSION_MAJOR = 2.24
+LIBGTK2_VERSION_MINOR = 18
 LIBGTK2_VERSION = $(LIBGTK2_VERSION_MAJOR).$(LIBGTK2_VERSION_MINOR)
 
-LIBGTK2_SOURCE = gtk+-$(LIBGTK2_VERSION).tar.bz2
-LIBGTK2_SITE = ftp://ftp.gtk.org/pub/gtk/$(LIBGTK2_VERSION_MAJOR)
-LIBGTK2_AUTORECONF = NO
+LIBGTK2_SOURCE = gtk+-$(LIBGTK2_VERSION).tar.xz
+LIBGTK2_SITE = http://ftp.gnome.org/pub/gnome/sources/gtk+/$(LIBGTK2_VERSION_MAJOR)
 LIBGTK2_INSTALL_STAGING = YES
 LIBGTK2_INSTALL_TARGET = YES
+
+LIBGTK2_AUTORECONF = YES
 
 LIBGTK2_CONF_ENV = ac_cv_func_posix_getpwuid_r=yes glib_cv_stack_grows=no \
 		glib_cv_uscore=no \
@@ -66,28 +68,53 @@ LIBGTK2_CONF_ENV = ac_cv_func_posix_getpwuid_r=yes glib_cv_stack_grows=no \
 		ac_cv_prog_F77=no \
 		ac_cv_path_CUPS_CONFIG=no
 
-LIBGTK2_CONF_OPT = --enable-shared \
-		--enable-static \
-		--disable-glibtest \
+LIBGTK2_CONF_OPT = --disable-glibtest \
 		--enable-explicit-deps=no \
 		--disable-debug
 
-LIBGTK2_DEPENDENCIES = host-pkg-config host-libgtk2 libglib2 cairo pango atk gdk-pixbuf
+LIBGTK2_DEPENDENCIES = host-pkgconf host-libgtk2 libglib2 cairo pango atk gdk-pixbuf
 
-ifeq ($(BR2_PACKAGE_DIRECTFB),y)
-	LIBGTK2_CONF_OPT += --with-gdktarget=directfb
-	LIBGTK2_DEPENDENCIES += directfb
+# Xorg dependencies
+LIBGTK2_CONF_OPT += \
+	--with-x \
+	--x-includes=$(STAGING_DIR)/usr/include/X11 \
+	--x-libraries=$(STAGING_DIR)/usr/lib \
+	--with-gdktarget=x11
+LIBGTK2_DEPENDENCIES += xlib_libXcomposite fontconfig xlib_libX11 \
+	xlib_libXext xlib_libXrender
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBXINERAMA),y)
+	LIBGTK2_CONF_OPT += --enable-xinerama
+	LIBGTK2_DEPENDENCIES += xlib_libXinerama
+else
+	LIBGTK2_CONF_OPT += --disable-xinerama
 endif
 
-ifeq ($(BR2_PACKAGE_XORG7),y)
-	LIBGTK2_CONF_OPT += \
-		--with-x \
-		--x-includes=$(STAGING_DIR)/usr/include/X11 \
-		--x-libraries=$(STAGING_DIR)/usr/lib \
-		--with-gdktarget=x11
-	LIBGTK2_DEPENDENCIES += xlib_libXcomposite xserver_xorg-server
+ifeq ($(BR2_PACKAGE_XLIB_LIBXI),y)
+	LIBGTK2_CONF_OPT += --with-xinput=yes
+	LIBGTK2_DEPENDENCIES += xlib_libXi
 else
-	LIBGTK2_CONF_OPT += --without-x
+	LIBGTK2_CONF_OPT += --with-xinput=no
+endif
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBXRANDR),y)
+	LIBGTK2_DEPENDENCIES += xlib_libXrandr
+endif
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBXCURSOR),y)
+	LIBGTK2_DEPENDENCIES += xlib_libXcursor
+endif
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBXFIXES),y)
+	LIBGTK2_DEPENDENCIES += xlib_libXfixes
+endif
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBXCOMPOSITE),y)
+	LIBGTK2_DEPENDENCIES += xlib_libXcomposite
+endif
+
+ifeq ($(BR2_PACKAGE_XLIB_LIBXDAMAGE),y)
+	LIBGTK2_DEPENDENCIES += xlib_libXdamage
 endif
 
 ifeq ($(BR2_PACKAGE_LIBPNG),y)
@@ -114,11 +141,13 @@ else
 LIBGTK2_CONF_OPT += --disable-cups
 endif
 
+ifeq ($(BR2_PACKAGE_LIBGTK2_DEMO),)
 define LIBGTK2_POST_INSTALL_TWEAKS
 	rm -rf $(TARGET_DIR)/usr/share/gtk-2.0/demo $(TARGET_DIR)/usr/bin/gtk-demo
 endef
 
 LIBGTK2_POST_INSTALL_TARGET_HOOKS += LIBGTK2_POST_INSTALL_TWEAKS
+endif
 
 # We do not build a full version of libgtk2 for the host, because that
 # requires compiling Cairo, Pango, ATK and X.org for the
@@ -128,7 +157,6 @@ LIBGTK2_POST_INSTALL_TARGET_HOOKS += LIBGTK2_POST_INSTALL_TWEAKS
 # for the target.
 
 HOST_LIBGTK2_DEPENDENCIES = host-libglib2 host-libpng host-gdk-pixbuf
-HOST_LIBGTK2_AUTORECONF = YES
 HOST_LIBGTK2_CONF_OPT = \
 		--disable-static \
 		--disable-glibtest \
@@ -138,12 +166,6 @@ HOST_LIBGTK2_CONF_OPT = \
 		--disable-cups \
 		--disable-debug
 
-define HOST_LIBGTK2_PATCH_REDUCE_DEPENDENCIES_HOOK
- toolchain/patch-kernel.sh $(@D) $($(PKG)_DIR_PREFIX)/$($(NOHOSTPKG)_NAME) host-*.patch
-endef
-
-HOST_LIBGTK2_POST_PATCH_HOOKS += HOST_LIBGTK2_PATCH_REDUCE_DEPENDENCIES_HOOK
-
 define HOST_LIBGTK2_BUILD_CMDS
  $(HOST_MAKE_ENV) make -C $(@D)/gtk gtk-update-icon-cache
 endef
@@ -152,5 +174,5 @@ define HOST_LIBGTK2_INSTALL_CMDS
  cp $(@D)/gtk/gtk-update-icon-cache $(HOST_DIR)/usr/bin
 endef
 
-$(eval $(call AUTOTARGETS,package,libgtk2))
-$(eval $(call AUTOTARGETS,package,libgtk2,host))
+$(eval $(autotools-package))
+$(eval $(host-autotools-package))

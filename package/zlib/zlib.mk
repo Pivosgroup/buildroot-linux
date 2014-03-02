@@ -1,19 +1,22 @@
-#############################################################
+################################################################################
 #
 # zlib
 #
-#############################################################
-ZLIB_VERSION:=1.2.5
-ZLIB_SOURCE:=zlib-$(ZLIB_VERSION).tar.bz2
-ZLIB_SITE:=http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/libpng
-ZLIB_INSTALL_STAGING=YES
+################################################################################
+
+ZLIB_VERSION = 1.2.8
+ZLIB_SOURCE = zlib-$(ZLIB_VERSION).tar.xz
+ZLIB_SITE = http://downloads.sourceforge.net/project/libpng/zlib/$(ZLIB_VERSION)
+ZLIB_LICENSE = zlib license
+ZLIB_LICENSE_FILES = README
+ZLIB_INSTALL_STAGING = YES
 
 ifeq ($(BR2_PREFER_STATIC_LIB),y)
-ZLIB_PIC :=
-ZLIB_SHARED := --static
+ZLIB_PIC =
+ZLIB_SHARED = --static
 else
-ZLIB_PIC := -fPIC
-ZLIB_SHARED := --shared
+ZLIB_PIC = -fPIC
+ZLIB_SHARED = --shared
 endif
 
 define ZLIB_CONFIGURE_CMDS
@@ -31,9 +34,7 @@ define HOST_ZLIB_CONFIGURE_CMDS
 	(cd $(@D); rm -rf config.cache; \
 		$(HOST_CONFIGURE_ARGS) \
 		$(HOST_CONFIGURE_OPTS) \
-		CFLAGS="$(ZLIB_PIC)" \
 		./configure \
-		$(ZLIB_SHARED) \
 		--prefix="$(HOST_DIR)/usr" \
 		--sysconfdir="$(HOST_DIR)/etc" \
 	)
@@ -75,5 +76,5 @@ define HOST_ZLIB_UNINSTALL_TARGET_CMDS
 	$(MAKE1) -C $(@D) uninstall
 endef
 
-$(eval $(call GENTARGETS,package,zlib))
-$(eval $(call GENTARGETS,package,zlib,host))
+$(eval $(generic-package))
+$(eval $(host-generic-package))

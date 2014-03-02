@@ -1,12 +1,14 @@
-#############################################################
+################################################################################
 #
 # luasocket
 #
-#############################################################
+################################################################################
 
 LUASOCKET_VERSION = 2.0.2
 LUASOCKET_SITE = http://luaforge.net/frs/download.php/2664
 LUASOCKET_DEPENDENCIES = lua
+LUASOCKET_LICENSE = MIT
+LUASOCKET_LICENSE_FILES = LICENSE
 
 define LUASOCKET_BUILD_CMDS
 	$(MAKE) -C $(@D) -f makefile \
@@ -33,4 +35,4 @@ define LUASOCKET_CLEAN_CMDS
 	$(MAKE) -C $(@D) -f makefile clean
 endef
 
-$(eval $(call GENTARGETS,package,luasocket))
+$(eval $(generic-package))

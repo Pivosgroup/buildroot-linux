@@ -1,15 +1,23 @@
-#############################################################
+################################################################################
 #
 # midori
 #
-#############################################################
+################################################################################
 
-MIDORI_VERSION = 0.2.9
+MIDORI_VERSION = 0.4.6
 MIDORI_SOURCE = midori-$(MIDORI_VERSION).tar.bz2
-MIDORI_SITE = http://archive.xfce.org/src/apps/midori/0.2/
-MIDORI_INSTALL_TARGET = YES
-
-MIDORI_DEPENDENCIES = host-pkg-config host-intltool webkit libsexy libgtk2
+MIDORI_SITE = http://archive.xfce.org/src/apps/midori/0.4/
+MIDORI_LICENSE = LGPLv2.1+
+MIDORI_LICENSE_FILES = COPYING
+MIDORI_DEPENDENCIES = \
+	host-intltool \
+	host-pkgconf \
+	host-vala \
+	libgtk2 \
+	libsexy \
+	webkit \
+	$(if $(BR2_NEEDS_GETTEXT_IF_LOCALE),gettext) \
+	$(if $(BR2_PACKAGE_LIBICONV),libiconv)
 
 ifneq ($(BR2_PACKAGE_XORG7),y)
 define MIDORI_WITHOUT_X11
@@ -23,16 +31,16 @@ define MIDORI_CONFIGURE_CMDS
 		$(TARGET_CONFIGURE_OPTS)	\
 		./waf configure			\
 		--prefix=/usr			\
-		--disable-vala			\
+		--disable-libnotify		\
        )
 endef
 
 define MIDORI_BUILD_CMDS
-       (cd $(@D); ./waf build -j $(BR2_JLEVEL))
+       (cd $(@D); ./waf build -j $(PARALLEL_JOBS))
 endef
 
 define MIDORI_INSTALL_TARGET_CMDS
        (cd $(@D); ./waf --destdir=$(TARGET_DIR) install)
 endef
 
-$(eval $(call GENTARGETS,package,midori))
+$(eval $(generic-package))

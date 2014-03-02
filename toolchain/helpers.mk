@@ -1,46 +1,83 @@
-# This Makefile fragment declares helper functions, usefull to handle
-# non- buildroot-built toolchains, eg. purely external toolchains or
-# toolchains (internally) built using crosstool-NG.
+# This Makefile fragment declares toolchain related helper functions.
 
+# The copy_toolchain_lib_root function copies a toolchain library and
+# its symbolic links from the sysroot directory to the target
+# directory. Note that this function is used both by the external
+# toolchain logic, and the glibc package, so care must be taken when
+# changing this function.
 #
-# Copy a toolchain library and its symbolic links from the sysroot
-# directory to the target directory. Also optionaly strips the
-# library.
+# Most toolchains (CodeSourcery ones) have their libraries either in
+# /lib or /usr/lib relative to their ARCH_SYSROOT_DIR, so we search
+# libraries in:
 #
-# Most toolchains have their libraries either in /lib or /usr/lib
-# relative to their ARCH_SYSROOT_DIR. Buildroot toolchains, however,
-# have basic libraries in /lib, and libstdc++/libgcc_s in
-# /usr/<target-name>/lib(64).
+#  $${ARCH_LIB_DIR}
+#  usr/$${ARCH_LIB_DIR}
+#
+# Buildroot toolchains, however, have basic libraries in /lib, and
+# libstdc++/libgcc_s in /usr/<target-name>/lib(64), so we also need to
+# search libraries in:
+#
+#  usr/$(TOOLCHAIN_EXTERNAL_PREFIX)/$${ARCH_LIB_DIR}
+#
+# Linaro toolchains have most libraries in lib/<target-name>/, so we
+# need to search libraries in:
+#
+#  $${ARCH_LIB_DIR}/$(TOOLCHAIN_EXTERNAL_PREFIX)
+#
+# And recent Linaro toolchains have the GCC support libraries
+# (libstdc++, libgcc_s, etc.) into a separate directory, outside of
+# the sysroot, that we called the "SUPPORT_LIB_DIR", into which we
+# need to search as well.
+#
+# Thanks to ARCH_LIB_DIR we also take into account toolchains that
+# have the libraries in lib64 and usr/lib64.
+#
+# Please be very careful to check the major toolchain sources:
+# Buildroot, Crosstool-NG, CodeSourcery and Linaro before doing any
+# modification on the below logic.
 #
 # $1: arch specific sysroot directory
-# $2: library name
-# $3: destination directory of the libary, relative to $(TARGET_DIR)
+# $2: support libraries directory (can be empty)
+# $3: library directory ('lib' or 'lib64') from which libraries must be copied
+# $4: library name
+# $5: destination directory of the libary, relative to $(TARGET_DIR)
 #
 copy_toolchain_lib_root = \
 	ARCH_SYSROOT_DIR="$(strip $1)"; \
-	LIB="$(strip $2)"; \
-	DESTDIR="$(strip $3)" ; \
+	SUPPORT_LIB_DIR="$(strip $2)" ; \
+	ARCH_LIB_DIR="$(strip $3)" ; \
+	LIB="$(strip $4)"; \
+	DESTDIR="$(strip $5)" ; \
  \
-	LIBS=`(cd $${ARCH_SYSROOT_DIR}; \
-		find -L . -path "./lib/$${LIB}.*"     -o \
-			  -path "./usr/lib/$${LIB}.*" -o \
-			  -path "./usr/$(TOOLCHAIN_EXTERNAL_PREFIX)/lib*/$${LIB}.*" \
-		)` ; \
-	for FILE in $${LIBS} ; do \
-		LIB=`basename $${FILE}`; \
-		LIBDIR=`dirname $${FILE}` ; \
-		while test \! -z "$${LIB}"; do \
-			FULLPATH="$${ARCH_SYSROOT_DIR}/$${LIBDIR}/$${LIB}" ; \
-			rm -fr $(TARGET_DIR)/$${DESTDIR}/$${LIB}; \
-			mkdir -p $(TARGET_DIR)/$${DESTDIR}; \
-			if test -h $${FULLPATH} ; then \
-				cp -d $${FULLPATH} $(TARGET_DIR)/$${DESTDIR}/; \
-			elif test -f $${FULLPATH}; then \
-				$(INSTALL) -D -m0755 $${FULLPATH} $(TARGET_DIR)/$${DESTDIR}/$${LIB}; \
+	for dir in \
+		$${ARCH_SYSROOT_DIR}/$${ARCH_LIB_DIR}/$(TOOLCHAIN_EXTERNAL_PREFIX) \
+		$${ARCH_SYSROOT_DIR}/usr/$(TOOLCHAIN_EXTERNAL_PREFIX)/$${ARCH_LIB_DIR} \
+		$${ARCH_SYSROOT_DIR}/$${ARCH_LIB_DIR} \
+		$${ARCH_SYSROOT_DIR}/usr/$${ARCH_LIB_DIR} \
+		$${SUPPORT_LIB_DIR} ; do \
+		LIBSPATH=`find $${dir} -maxdepth 1 -name "$${LIB}" 2>/dev/null` ; \
+		if test -n "$${LIBSPATH}" ; then \
+			break ; \
+		fi \
+	done ; \
+	mkdir -p $(TARGET_DIR)/$${DESTDIR}; \
+	for LIBPATH in $${LIBSPATH} ; do \
+		while true ; do \
+			LIBNAME=`basename $${LIBPATH}`; \
+			LIBDIR=`dirname $${LIBPATH}` ; \
+			LINKTARGET=`readlink $${LIBPATH}` ; \
+			rm -fr $(TARGET_DIR)/$${DESTDIR}/$${LIBNAME}; \
+			if test -h $${LIBPATH} ; then \
+				ln -sf `basename $${LINKTARGET}` $(TARGET_DIR)/$${DESTDIR}/$${LIBNAME} ; \
+			elif test -f $${LIBPATH}; then \
+				$(INSTALL) -D -m0755 $${LIBPATH} $(TARGET_DIR)/$${DESTDIR}/$${LIBNAME}; \
 			else \
 				exit -1; \
 			fi; \
-			LIB="`readlink $${FULLPATH}`"; \
+			if test -z "$${LINKTARGET}" ; then \
+				break ; \
+			fi ; \
+			LIBPATH="`readlink -f $${LIBPATH}`"; \
 		done; \
 	done; \
  \
@@ -79,51 +116,80 @@ copy_toolchain_lib_root = \
 #    non-default architecture variant is used. Without this, the
 #    compiler fails to find libraries and headers.
 #
+# Some toolchains (i.e Linaro binary toolchains) store support
+# libraries (libstdc++, libgcc_s) outside of the sysroot, so we simply
+# copy all the libraries from the "support lib directory" into our
+# sysroot.
+#
+# Note that the 'locale' directories are not copied. They are huge
+# (400+MB) in CodeSourcery toolchains, and they are not really useful.
+#
 # $1: main sysroot directory of the toolchain
 # $2: arch specific sysroot directory of the toolchain
 # $3: arch specific subdirectory in the sysroot
-#
+# $4: directory of libraries ('lib', 'lib32' or 'lib64')
+# $5: support lib directories (for toolchains storing libgcc_s,
+#     libstdc++ and other gcc support libraries outside of the
+#     sysroot)
 copy_toolchain_sysroot = \
 	SYSROOT_DIR="$(strip $1)"; \
 	ARCH_SYSROOT_DIR="$(strip $2)"; \
 	ARCH_SUBDIR="$(strip $3)"; \
-	for i in etc lib sbin usr ; do \
+	ARCH_LIB_DIR="$(strip $4)" ; \
+	SUPPORT_LIB_DIR="$(strip $5)" ; \
+	for i in etc $${ARCH_LIB_DIR} sbin usr usr/$${ARCH_LIB_DIR}; do \
 		if [ -d $${ARCH_SYSROOT_DIR}/$$i ] ; then \
-			cp -a $${ARCH_SYSROOT_DIR}/$$i $(STAGING_DIR)/ ; \
+			rsync -au --chmod=Du+w --exclude 'usr/lib/locale' \
+				--exclude lib --exclude lib32 --exclude lib64 \
+				$${ARCH_SYSROOT_DIR}/$$i/ $(STAGING_DIR)/$$i/ ; \
 		fi ; \
 	done ; \
 	if [ `readlink -f $${SYSROOT_DIR}` != `readlink -f $${ARCH_SYSROOT_DIR}` ] ; then \
 		if [ ! -d $${ARCH_SYSROOT_DIR}/usr/include ] ; then \
 			cp -a $${SYSROOT_DIR}/usr/include $(STAGING_DIR)/usr ; \
 		fi ; \
-		ln -s . $(STAGING_DIR)/$${ARCH_SUBDIR} ; \
+		mkdir -p `dirname $(STAGING_DIR)/$${ARCH_SUBDIR}` ; \
+		relpath="./" ; \
+		nbslashs=`echo -n $${ARCH_SUBDIR} | sed 's%[^/]%%g' | wc -c` ; \
+		for slash in `seq 1 $${nbslashs}` ; do \
+			relpath=$${relpath}"../" ; \
+		done ; \
+		ln -s $${relpath} $(STAGING_DIR)/$${ARCH_SUBDIR} ; \
+		echo "Symlinking $(STAGING_DIR)/$${ARCH_SUBDIR} -> $${relpath}" ; \
+	fi ; \
+	if test -n "$${SUPPORT_LIB_DIR}" ; then \
+		cp -a $${SUPPORT_LIB_DIR}/* $(STAGING_DIR)/lib/ ; \
 	fi ; \
 	find $(STAGING_DIR) -type d | xargs chmod 755
 
 #
-# Create lib64 -> lib and usr/lib64 -> usr/lib symbolic links in the
-# target and staging directories. This is needed for some 64 bits
-# toolchains such as the Crosstool-NG toolchains, for which the path
-# to the dynamic loader and other libraries is /lib64, but the
-# libraries are stored in /lib.
-#
-create_lib64_symlinks = \
-	(cd $(TARGET_DIR) ;      ln -s lib lib64) ; \
-	(cd $(TARGET_DIR)/usr ;  ln -s lib lib64) ; \
-	(cd $(STAGING_DIR) ;     ln -s lib lib64) ; \
-	(cd $(STAGING_DIR)/usr ; ln -s lib lib64)
-
-#
-# Check the availability of a particular glibc feature. We assume that
-# all Buildroot toolchain options are supported by glibc, so we just
-# check that they are enabled.
+# Check the availability of a particular glibc feature. This function
+# is used to check toolchain options that are always supported by
+# glibc, so we simply check that the corresponding option is properly
+# enabled.
 #
 # $1: Buildroot option name
 # $2: feature description
 #
 check_glibc_feature = \
-	if [ x$($(1)) != x"y" ] ; then \
+	if [ "$($(1))" != "y" ] ; then \
 		echo "$(2) available in C library, please enable $(1)" ; \
+		exit 1 ; \
+	fi
+
+#
+# Check the availability of RPC support in a glibc toolchain
+#
+# $1: sysroot directory
+#
+check_glibc_rpc_feature = \
+	IS_IN_LIBC=`test -f $(1)/usr/include/rpc/rpc.h && echo y` ; \
+	if [ "$(BR2_TOOLCHAIN_HAS_NATIVE_RPC)" != "y" -a "$${IS_IN_LIBC}" = "y" ] ; then \
+		echo "RPC support available in C library, please enable BR2_TOOLCHAIN_HAS_NATIVE_RPC" ; \
+		exit 1 ; \
+	fi ; \
+	if [ "$(BR2_TOOLCHAIN_HAS_NATIVE_RPC)" = "y" -a "$${IS_IN_LIBC}" != "y" ] ; then \
+		echo "RPC support not available in C library, please disable BR2_TOOLCHAIN_HAS_NATIVE_RPC" ; \
 		exit 1 ; \
 	fi
 
@@ -138,17 +204,23 @@ check_glibc_feature = \
 #
 check_glibc = \
 	SYSROOT_DIR="$(strip $1)"; \
-	if ! test -f $${SYSROOT_DIR}/lib/ld-linux*.so.* -o -f $${SYSROOT_DIR}/lib/ld.so.* ; then \
+	if test `find $${SYSROOT_DIR}/ -maxdepth 2 -name 'ld-linux*.so.*' -o -name 'ld.so.*' | wc -l` -eq 0 ; then \
 		echo "Incorrect selection of the C library"; \
 		exit -1; \
 	fi; \
-	$(call check_glibc_feature,BR2_LARGEFILE,Large file support) ;\
-	$(call check_glibc_feature,BR2_INET_IPV6,IPv6 support) ;\
-	$(call check_glibc_feature,BR2_INET_RPC,RPC support) ;\
-	$(call check_glibc_feature,BR2_ENABLE_LOCALE,Locale support) ;\
 	$(call check_glibc_feature,BR2_USE_MMU,MMU support) ;\
-	$(call check_glibc_feature,BR2_USE_WCHAR,Wide char support) ;\
-	$(call check_glibc_feature,BR2_PROGRAM_INVOCATION,Program invocation support)
+	$(call check_glibc_rpc_feature,$${SYSROOT_DIR})
+
+#
+# Check that the selected C library really is musl
+#
+# $1: sysroot directory
+check_musl = \
+	SYSROOT_DIR="$(strip $1)"; \
+	if test ! -f $${SYSROOT_DIR}/lib/libc.so -o -e $${SYSROOT_DIR}/lib/libm.so ; then \
+		echo "Incorrect selection of the C library" ; \
+		exit -1; \
+	fi
 
 #
 # Check the conformity of Buildroot configuration with regard to the
@@ -162,11 +234,11 @@ check_glibc = \
 #
 check_uclibc_feature = \
 	IS_IN_LIBC=`grep -q "\#define $(1) 1" $(3) && echo y` ; \
-	if [ x$($(2)) != x"y" -a x$${IS_IN_LIBC} = x"y" ] ; then \
+	if [ "$($(2))" != "y" -a "$${IS_IN_LIBC}" = "y" ] ; then \
 		echo "$(4) available in C library, please enable $(2)" ; \
 		exit 1 ; \
 	fi ; \
-	if [ x$($(2)) = x"y" -a x$${IS_IN_LIBC} != x"y" ] ; then \
+	if [ "$($(2))" = "y" -a "$${IS_IN_LIBC}" != "y" ] ; then \
 		echo "$(4) not available in C library, please disable $(2)" ; \
 		exit 1 ; \
 	fi
@@ -183,7 +255,7 @@ check_uclibc_feature = \
 #
 check_uclibc = \
 	SYSROOT_DIR="$(strip $1)"; \
-	if ! test -f $${SYSROOT_DIR}/lib/ld*-uClibc.so.* ; then \
+	if ! test -f $${SYSROOT_DIR}/usr/include/bits/uClibc_config.h ; then \
 		echo "Incorrect selection of the C library"; \
 		exit -1; \
 	fi; \
@@ -191,37 +263,50 @@ check_uclibc = \
 	$(call check_uclibc_feature,__ARCH_USE_MMU__,BR2_USE_MMU,$${UCLIBC_CONFIG_FILE},MMU support) ;\
 	$(call check_uclibc_feature,__UCLIBC_HAS_LFS__,BR2_LARGEFILE,$${UCLIBC_CONFIG_FILE},Large file support) ;\
 	$(call check_uclibc_feature,__UCLIBC_HAS_IPV6__,BR2_INET_IPV6,$${UCLIBC_CONFIG_FILE},IPv6 support) ;\
-	$(call check_uclibc_feature,__UCLIBC_HAS_RPC__,BR2_INET_RPC,$${UCLIBC_CONFIG_FILE},RPC support) ;\
+	$(call check_uclibc_feature,__UCLIBC_HAS_RPC__,BR2_TOOLCHAIN_HAS_NATIVE_RPC,$${UCLIBC_CONFIG_FILE},RPC support) ;\
 	$(call check_uclibc_feature,__UCLIBC_HAS_LOCALE__,BR2_ENABLE_LOCALE,$${UCLIBC_CONFIG_FILE},Locale support) ;\
 	$(call check_uclibc_feature,__UCLIBC_HAS_WCHAR__,BR2_USE_WCHAR,$${UCLIBC_CONFIG_FILE},Wide char support) ;\
-	$(call check_uclibc_feature,__UCLIBC_HAS_PROGRAM_INVOCATION_NAME__,BR2_PROGRAM_INVOCATION,$${UCLIBC_CONFIG_FILE},Program invocation support) ;\
-	$(call check_uclibc_feature,__UCLIBC_HAS_THREADS__,BR2_TOOLCHAIN_HAS_THREADS,$${UCLIBC_CONFIG_FILE},Thread support)
+	$(call check_uclibc_feature,__UCLIBC_HAS_THREADS__,BR2_TOOLCHAIN_HAS_THREADS,$${UCLIBC_CONFIG_FILE},Thread support) ;\
+	$(call check_uclibc_feature,__PTHREADS_DEBUG_SUPPORT__,BR2_TOOLCHAIN_HAS_THREADS_DEBUG,$${UCLIBC_CONFIG_FILE},Thread debugging support) ;\
+	$(call check_uclibc_feature,__UCLIBC_HAS_SSP__,BR2_TOOLCHAIN_HAS_SSP,$${UCLIBC_CONFIG_FILE},Stack Smashing Protection support)
 
 #
 # Check that the Buildroot configuration of the ABI matches the
 # configuration of the external toolchain.
 #
+# $1: cross-gcc path
+#
 check_arm_abi = \
-	EXT_TOOLCHAIN_TARGET=$(shell LANG=C $(TARGET_CC) -v 2>&1 | grep ^Target | cut -f2 -d ' ') ; \
-	if echo $${EXT_TOOLCHAIN_TARGET} | grep -q 'eabi$$' ; then \
-		EXT_TOOLCHAIN_ABI="eabi" ; \
-	else \
-		EXT_TOOLCHAIN_ABI="oabi" ; \
-	fi ; \
-	if [ x$(BR2_ARM_OABI) = x"y" -a $${EXT_TOOLCHAIN_ABI} = "eabi" ] ; then \
-		echo "Incorrect ABI setting" ; \
+	__CROSS_CC=$(strip $1) ; \
+	__CROSS_READELF=$(strip $2) ; \
+	EXT_TOOLCHAIN_TARGET=`LANG=C $${__CROSS_CC} -v 2>&1 | grep ^Target | cut -f2 -d ' '` ; \
+	if ! echo $${EXT_TOOLCHAIN_TARGET} | grep -qE 'eabi(hf)?$$' ; then \
+		echo "External toolchain uses the unsuported OABI" ; \
 		exit 1 ; \
 	fi ; \
-	if [ x$(BR2_ARM_EABI) = x"y" -a $${EXT_TOOLCHAIN_ABI} = "oabi" ] ; then \
-		echo "Incorrect ABI setting" ; \
+	EXT_TOOLCHAIN_CRT1=`LANG=C $${__CROSS_CC} -print-file-name=crt1.o` ; \
+	if $${__CROSS_READELF} -A $${EXT_TOOLCHAIN_CRT1} | grep -q "Tag_ABI_VFP_args:" ; then \
+		EXT_TOOLCHAIN_ABI="eabihf" ; \
+	else \
+		EXT_TOOLCHAIN_ABI="eabi" ; \
+	fi ; \
+	if [ "$(BR2_ARM_EABI)" = "y" -a "$${EXT_TOOLCHAIN_ABI}" = "eabihf" ] ; then \
+		echo "Incorrect ABI setting: EABI selected, but toolchain uses EABIhf" ; \
+		exit 1 ; \
+	fi ; \
+	if [ "$(BR2_ARM_EABIHF)" = "y" -a "$${EXT_TOOLCHAIN_ABI}" = "eabi" ] ; then \
+		echo "Incorrect ABI setting: EABIhf selected, but toolchain uses EABI" ; \
 		exit 1 ; \
 	fi
 
 #
 # Check that the external toolchain supports C++
 #
+# $1: cross-g++ path
+#
 check_cplusplus = \
-	$(TARGET_CXX) -v > /dev/null 2>&1 ; \
+	__CROSS_CXX=$(strip $1) ; \
+	$${__CROSS_CXX} -v > /dev/null 2>&1 ; \
 	if test $$? -ne 0 ; then \
 		echo "C++ support is selected but is not available in external toolchain" ; \
 		exit 1 ; \
@@ -230,9 +315,30 @@ check_cplusplus = \
 #
 # Check that the cross-compiler given in the configuration exists
 #
+# $1: cross-gcc path
+#
 check_cross_compiler_exists = \
-	$(TARGET_CC) -v > /dev/null 2>&1 ; \
+	__CROSS_CC=$(strip $1) ; \
+	$${__CROSS_CC} -v > /dev/null 2>&1 ; \
 	if test $$? -ne 0 ; then \
-		echo "Cannot execute cross-compiler '$(TARGET_CC)'" ; \
+		echo "Cannot execute cross-compiler '$${__CROSS_CC}'" ; \
+		exit 1 ; \
+	fi
+
+#
+# Check for toolchains known not to work with Buildroot. For now, we
+# only check for Angstrom toolchains, by looking at the vendor part of
+# the host tuple.
+#
+# $1: cross-gcc path
+#
+check_unusable_toolchain = \
+	__CROSS_CC=$(strip $1) ; \
+	vendor=`$${__CROSS_CC} -dumpmachine | cut -f2 -d'-'` ; \
+	if test "$${vendor}" = "angstrom" ; then \
+		echo "Angstrom toolchains are not pure toolchains: they contain" ; \
+		echo "many other libraries than just the C library, which makes" ; \
+		echo "them unsuitable as external toolchains for build systems" ; \
+		echo "such as Buildroot." ; \
 		exit 1 ; \
 	fi

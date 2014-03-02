@@ -1,8 +1,9 @@
-#############################################################
+################################################################################
 #
 # sysklogd
 #
-#############################################################
+################################################################################
+
 SYSKLOGD_VERSION = 1.5
 SYSKLOGD_SOURCE  = sysklogd_$(SYSKLOGD_VERSION).orig.tar.gz
 SYSKLOGD_PATCH   = sysklogd_$(SYSKLOGD_VERSION)-6.diff.gz
@@ -15,7 +16,7 @@ endif
 
 define SYSKLOGD_DEBIAN_PATCHES
 	if [ -d $(@D)/debian/patches ]; then \
-		toolchain/patch-kernel.sh $(@D) $(@D)/debian/patches \*.patch; \
+		support/scripts/apply-patches.sh $(@D) $(@D)/debian/patches \*.patch; \
 	fi
 endef
 
@@ -52,4 +53,4 @@ define SYSKLOGD_CLEAN_CMDS
 	$(MAKE) -C $(@D) clean
 endef
 
-$(eval $(call GENTARGETS,package,sysklogd))
+$(eval $(generic-package))

@@ -1,16 +1,17 @@
-#############################################################
+################################################################################
 #
 # synergy
 #
-#############################################################
+################################################################################
 
 SYNERGY_VERSION = 1.3.1
-SYNERGY_SOURCE = synergy-$(SYNERGY_VERSION).tar.gz
-SYNERGY_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/synergy2/
-SYNERGY_AUTORECONF = NO
-SYNERGY_INSTALL_STAGING = NO
-SYNERGY_INSTALL_TARGET = YES
+SYNERGY_SITE = http://downloads.sourceforge.net/project/synergy2/Sources/$(SYNERGY_VERSION)
 
-SYNERGY_DEPENDENCIES = xserver_xorg-server xlib_libXtst
+SYNERGY_AUTORECONF = YES
+SYNERGY_CONF_OPT = --x-includes=$(STAGING_DIR)/usr/include/X11 \
+                   --x-libraries=$(STAGING_DIR)/usr/lib
 
-$(eval $(call AUTOTARGETS,package,synergy))
+SYNERGY_DEPENDENCIES = xlib_libXtst \
+		$(if $(BR2_PACKAGE_XLIB_LIBXINERAMA),xlib_libXinerama)
+
+$(eval $(autotools-package))

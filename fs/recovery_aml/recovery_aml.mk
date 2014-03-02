@@ -4,7 +4,7 @@
 #
 #############################################################
 
-ROOTFS_RECOVERY_AML_DEPENDENCIES = linux26 rootfs-tar_aml host-python
+ROOTFS_RECOVERY_AML_DEPENDENCIES = linux rootfs-tar_aml host-python
 
 RECOVERY_AML_ARGS = -b $(BR2_TARGET_ROOTFS_RECOVERY_AML_BOARDNAME)
 ifeq ($(BR2_TARGET_ROOTFS_RECOVERY_AML_WIPE_USERDATA),y)

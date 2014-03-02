@@ -1,21 +1,38 @@
-#############################################################
+################################################################################
 #
 # fltk
 #
-#############################################################
+################################################################################
 
-FLTK_VERSION = 1.1.7
-FLTK_SOURCE = fltk-$(FLTK_VERSION)-source.tar.bz2
-FLTK_SITE = http://ftp.easysw.com/pub/fltk/1.1.7/
-FLTK_AUTORECONF = NO
+FLTK_VERSION = 1.3.2
+FLTK_SOURCE = fltk-$(FLTK_VERSION)-source.tar.gz
+FLTK_SITE = http://fltk.org/pub/fltk/$(FLTK_VERSION)
 FLTK_INSTALL_STAGING = YES
-FLTK_INSTALL_TARGET = YES
-
 FLTK_INSTALL_STAGING_OPT = DESTDIR=$(STAGING_DIR) STRIP=$(TARGET_STRIP) install
 FLTK_INSTALL_TARGET_OPT = DESTDIR=$(TARGET_DIR) STRIP=$(TARGET_STRIP) install
+FLTK_CONF_OPT = --enable-threads --with-x --disable-gl \
+	--disable-localjpeg --disable-localpng --disable-localzlib
+FLTK_DEPENDENCIES = jpeg libpng xlib_libX11 xlib_libXext xlib_libXt
+FLTK_CONFIG_SCRIPTS = fltk-config
+FLTK_LICENSE = LGPLv2 with exceptions
+FLTK_LICENSE_FILES = COPYING
 
-FLTK_CONF_OPT = --enable-shared --enable-threads --with-x
+ifeq ($(BR2_PACKAGE_CAIRO),y)
+FLTK_CONF_OPT += --enable-cairo
+FLTK_DEPENDENCIES += cairo
+endif
 
-FLTK_DEPENDENCIES = xserver_xorg-server xlib_libXt
+ifeq ($(BR2_PACKAGE_XLIB_LIBXFT),y)
+FLTK_CONF_ENV += ac_cv_path_FTCONFIG=$(STAGING_DIR)/usr/bin/freetype-config
+FLTK_DEPENDENCIES += xlib_libXft
+else
+FLTK_CONF_OPT += --disable-xft
+endif
 
-$(eval $(call AUTOTARGETS,package,fltk))
+ifeq ($(BR2_PACKAGE_XLIB_LIBXINERAMA),y)
+FLTK_DEPENDENCIES += xlib_libXinerama
+else
+FLTK_CONF_OPT += --disable-xinerama
+endif
+
+$(eval $(autotools-package))

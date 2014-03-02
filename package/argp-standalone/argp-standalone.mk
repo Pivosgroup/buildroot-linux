@@ -1,12 +1,16 @@
-#############################################################
+################################################################################
 #
 # argp-standalone
 #
-#############################################################
+################################################################################
 
 ARGP_STANDALONE_VERSION = 1.3
 ARGP_STANDALONE_SITE = http://www.lysator.liu.se/~nisse/archive
 ARGP_STANDALONE_INSTALL_STAGING = YES
+ARGP_STANDALONE_LICENSE = LGPLv2+
+
+ARGP_STANDALONE_CONF_ENV = \
+	CFLAGS="$(TARGET_CFLAGS) -fPIC"
 
 define ARGP_STANDALONE_INSTALL_STAGING_CMDS
 	$(INSTALL) -D $(@D)/libargp.a $(STAGING_DIR)/usr/lib/libargp.a
@@ -18,4 +22,4 @@ define ARGP_STANDALONE_INSTALL_TARGET_CMDS
 	$(INSTALL) -D $(@D)/argp.h $(TARGET_DIR)/usr/include/argp.h
 endef
 
-$(eval $(call AUTOTARGETS,package,argp-standalone))
+$(eval $(autotools-package))

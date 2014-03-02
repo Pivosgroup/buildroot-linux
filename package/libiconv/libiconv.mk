@@ -1,14 +1,12 @@
-#############################################################
+################################################################################
 #
 # libiconv
 #
-#############################################################
-LIBICONV_VERSION = 1.12
-LIBICONV_SOURCE = libiconv-$(LIBICONV_VERSION).tar.gz
+################################################################################
+
+LIBICONV_VERSION = 1.14
 LIBICONV_SITE = $(BR2_GNU_MIRROR)/libiconv
-LIBICONV_AUTORECONF = NO
 LIBICONV_INSTALL_STAGING = YES
-LIBICONV_INSTALL_TARGET = YES
 
 # Remove not used preloadable libiconv.so
 define LIBICONV_TARGET_REMOVE_PRELOADABLE_LIBS
@@ -22,7 +20,15 @@ endef
 LIBICONV_POST_INSTALL_TARGET_HOOKS += LIBICONV_TARGET_REMOVE_PRELOADABLE_LIBS
 LIBICONV_POST_INSTALL_STAGING_HOOKS += LIBICONV_STAGING_REMOVE_PRELOADABLE_LIBS
 
-$(eval $(call AUTOTARGETS,package,libiconv))
+# Library lacks +x so strip skips it
+define LIBICONV_FIX_LIBRARY_MODE
+	-chmod +x $(TARGET_DIR)/usr/lib/libcharset.so*
+	-chmod +x $(TARGET_DIR)/usr/lib/libiconv.so*
+endef
+
+LIBICONV_POST_INSTALL_TARGET_HOOKS += LIBICONV_FIX_LIBRARY_MODE
+
+$(eval $(autotools-package))
 
 # Configurations where the toolchain supports locales and the libiconv
 # package is enabled are incorrect, because the toolchain already

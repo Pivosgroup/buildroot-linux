@@ -1,11 +1,14 @@
-#############################################################
+################################################################################
 #
 # dhcp
 #
-#############################################################
-DHCP_VERSION  = 4.1.1-P1
-DHCP_SOURCE   = dhcp-$(DHCP_VERSION).tar.gz
-DHCP_SITE     = http://ftp.isc.org/isc/dhcp/
+################################################################################
+
+DHCP_VERSION = 4.1-ESV-R8
+DHCP_SITE = http://ftp.isc.org/isc/dhcp/$(DHCP_VERSION)
+DHCP_INSTALL_STAGING = YES
+DHCP_LICENSE = ISC
+DHCP_LICENSE_FILES = LICENSE
 DHCP_CONF_ENV = ac_cv_file__dev_random=yes
 DHCP_CONF_OPT = \
 	--localstatedir=/var/lib/dhcp \
@@ -13,8 +16,15 @@ DHCP_CONF_OPT = \
 	--with-cli-lease-file=/var/lib/dhcp/dhclient.leases \
 	--with-srv-pid-file=/var/run/dhcpd.pid \
 	--with-cli-pid-file=/var/run/dhclient.pid \
-	--with-relay-pid-file=/var/run/dhcrelay.pid \
-	--disable-dhcpv6
+	--with-relay-pid-file=/var/run/dhcrelay.pid
+
+ifeq ($(BR2_PACKAGE_DHCP_SERVER_DELAYED_ACK),y)
+        DHCP_CONF_OPT += --enable-delayed-ack
+endif
+
+ifneq ($(BR2_INET_IPV6),y)
+        DHCP_CONF_OPT += --disable-dhcpv6
+endif
 
 ifeq ($(BR2_PACKAGE_DHCP_SERVER),y)
 define DHCP_INSTALL_SERVER
@@ -58,4 +68,4 @@ define DHCP_INSTALL_TARGET_CMDS
 	$(DHCP_INSTALL_CLIENT)
 endef
 
-$(eval $(call AUTOTARGETS,package,dhcp))
+$(eval $(autotools-package))

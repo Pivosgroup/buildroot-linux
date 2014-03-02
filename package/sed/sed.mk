@@ -1,11 +1,13 @@
-#############################################################
+################################################################################
 #
 # sed
 #
-#############################################################
-SED_VERSION = 4.2.1
-SED_SOURCE = sed-$(SED_VERSION).tar.gz
+################################################################################
+
+SED_VERSION = 4.2.2
 SED_SITE = $(BR2_GNU_MIRROR)/sed
+SED_LICENSE = GPLv3
+SED_LICENSE_FILES = COPYING
 
 SED_CONF_OPT = --bindir=/usr/bin \
 		--libdir=/lib \
@@ -23,4 +25,4 @@ endef
 
 SED_POST_INSTALL_TARGET_HOOKS = SED_MOVE_BINARY
 
-$(eval $(call AUTOTARGETS,package,sed))
+$(eval $(autotools-package))

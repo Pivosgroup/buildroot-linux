@@ -1,15 +1,13 @@
-#############################################################
+################################################################################
 #
 # cramfs
 #
-#############################################################
+################################################################################
 
-CRAMFS_VERSION=1.1
-CRAMFS_SOURCE=cramfs-$(CRAMFS_VERSION).tar.gz
-CRAMFS_SITE=http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/cramfs
+CRAMFS_VERSION = 1.1
+CRAMFS_SITE = http://downloads.sourceforge.net/project/cramfs/cramfs/$(CRAMFS_VERSION)
 
 CRAMFS_DEPENDENCIES = zlib
-HOST_CRAMFS_DEPENDENCIES = host-zlib
 
 define CRAMFS_BUILD_CMDS
  $(TARGET_MAKE_ENV) $(MAKE) CC="$(TARGET_CC)" CFLAGS="$(TARGET_CFLAGS)" LDFLAGS="$(TARGET_LDFLAGS)" -C $(@D)
@@ -29,5 +27,5 @@ define HOST_CRAMFS_INSTALL_CMDS
  install -D -m 755 $(@D)/cramfsck $(HOST_DIR)/usr/bin/cramfsck
 endef
 
-$(eval $(call GENTARGETS,package,cramfs))
-$(eval $(call GENTARGETS,package,cramfs,host))
+$(eval $(generic-package))
+$(eval $(host-generic-package))

@@ -1,12 +1,13 @@
-#############################################################
+################################################################################
 #
 # fbset
 #
-#############################################################
+################################################################################
 
 FBSET_VERSION = 2.1
-FBSET_SOURCE = fbset-$(FBSET_VERSION).tar.gz
 FBSET_SITE = http://users.telenet.be/geertu/Linux/fbdev
+FBSET_DEPENDENCIES = host-bison host-flex
+FBSET_LICENSE = GPLv2
 
 # Make sure full fbset wins over busybox fbset
 ifeq ($(BR2_PACKAGE_BUSYBOX),y)
@@ -29,4 +30,4 @@ define FBSET_CLEAN_CMDS
 	-$(MAKE) -C $(@D) clean
 endef
 
-$(eval $(call GENTARGETS,package,fbset))
+$(eval $(generic-package))

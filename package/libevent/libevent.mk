@@ -1,15 +1,13 @@
-#############################################################
+################################################################################
 #
 # libevent
 #
-#############################################################
-LIBEVENT_VERSION = 1.4.12
-LIBEVENT_SOURCE = libevent-$(LIBEVENT_VERSION)-stable.tar.gz
-LIBEVENT_SITE = http://monkey.org/~provos/
+################################################################################
 
-LIBEVENT_AUTORECONF = NO
+LIBEVENT_VERSION = 2.0.21
+LIBEVENT_SOURCE = libevent-$(LIBEVENT_VERSION)-stable.tar.gz
+LIBEVENT_SITE = https://github.com/downloads/libevent/libevent
 LIBEVENT_INSTALL_STAGING = YES
-LIBEVENT_INSTALL_TARGET = YES
 
 define LIBEVENT_REMOVE_PYSCRIPT
 	rm $(TARGET_DIR)/usr/bin/event_rpcgen.py
@@ -21,4 +19,4 @@ ifneq ($(BR2_PACKAGE_PYTHON),y)
 LIBEVENT_POST_INSTALL_TARGET_HOOKS += LIBEVENT_REMOVE_PYSCRIPT
 endif
 
-$(eval $(call AUTOTARGETS,package,libevent))
+$(eval $(autotools-package))

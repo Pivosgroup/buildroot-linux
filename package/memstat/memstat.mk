@@ -1,8 +1,8 @@
-#############################################################
+################################################################################
 #
 # memstat
 #
-#############################################################
+################################################################################
 
 MEMSTAT_VERSION = 0.8
 MEMSTAT_SITE = $(BR2_DEBIAN_MIRROR)/debian/pool/main/m/memstat
@@ -24,4 +24,4 @@ define MEMSTAT_UNINSTALL_TARGET_CMDS
 	rm -f $(TARGET_DIR)/usr/bin/memstat
 endef
 
-$(eval $(call GENTARGETS,package,memstat))
+$(eval $(generic-package))

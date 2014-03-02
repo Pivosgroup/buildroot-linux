@@ -9,4 +9,5 @@ TINYXML_SITE = http://mirrors.xbmc.org/build-deps/sources
 TINYXML_AUTORECONF = YES
 TINYXML_INSTALL_STAGING = YES
 TINYXML_INSTALL_TARGET = YES
-$(eval $(call AUTOTARGETS,package/thirdparty,tinyxml))
+
+$(eval $(autotools-package))

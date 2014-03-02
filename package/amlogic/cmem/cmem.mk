@@ -17,4 +17,4 @@ define CMEM_INSTALL_STAGING_CMDS
         install -m 755 $(@D)/libcmem.a $(TARGET_DIR)/usr/lib
 endef
 
-$(eval $(call GENTARGETS,package/amlogic,cmem))
+$(eval $(generic-package))

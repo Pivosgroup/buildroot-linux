@@ -1,6 +1,7 @@
 config BR2_PACKAGE_XAPP_XDM
 	bool "xdm"
-	select BR2_PACKAGE_XAPP_XINIT
+	# Runtime dependency: can't start an X server unless there is one
+	depends on BR2_PACKAGE_XSERVER_XORG_SERVER
 	select BR2_PACKAGE_XAPP_SESSREG
 	select BR2_PACKAGE_XAPP_XRDB
 	select BR2_PACKAGE_XLIB_LIBX11

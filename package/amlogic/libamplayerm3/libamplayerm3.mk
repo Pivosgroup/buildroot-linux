@@ -37,7 +37,7 @@ define LIBAMPLAYERM3_INSTALL_STAGING_CMDS
 	install -m 644 $(@D)/usr/include/amlplayer/ppmgr/*.h $(STAGING_DIR)/usr/include/amlplayer/ppmgr
 	mkdir -p $(STAGING_DIR)/usr/lib
 	install -m 755 $(@D)/usr/lib/*.so* $(STAGING_DIR)/usr/lib
-	ln -s $(STAGING_DIR)/usr/lib/libamcodec.so.0.0 $(STAGING_DIR)/usr/lib/libamcodec.so
+	ln -s -r $(STAGING_DIR)/usr/lib/libamcodec.so.0.0 $(STAGING_DIR)/usr/lib/libamcodec.so
 	#find $(@D)/usr -type f -exec install -m 644 {} $(STAGING_DIR)/usr \;
 
 	#temporary, until we sync with mainline xbmc
@@ -52,9 +52,9 @@ define LIBAMPLAYERM3_INSTALL_TARGET_CMDS
 	install -m 644 $(@D)/lib/firmware/*.bin $(TARGET_DIR)/lib/firmware
 	mkdir -p $(TARGET_DIR)/usr/lib
 	install -m 755 $(@D)/usr/lib/*.so* $(TARGET_DIR)/usr/lib
-	ln -s $(TARGET_DIR)/usr/lib/libamcodec.so.0.0 $(TARGET_DIR)/usr/lib/libamcodec.so
+	ln -s -r $(TARGET_DIR)/usr/lib/libamcodec.so.0.0 $(TARGET_DIR)/usr/lib/libamcodec.so
 #	find $(@D)/lib -type f -exec install -m 644 {} $(TARGET_DIR)/lib \;
 #	find $(@D)/usr/lib -type f -exec install -m 644 {} $(TARGET_DIR)/usr/lib \;
 endef
 
-$(eval $(call GENTARGETS,package/amlogic,libamplayerm3))
+$(eval $(generic-package))

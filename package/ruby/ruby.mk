@@ -1,18 +1,28 @@
-#############################################################
+################################################################################
 #
 # ruby
 #
-#############################################################
+################################################################################
 
-RUBY_VERSION = 1.9.2-p0
+RUBY_VERSION = 1.9.3-p484
 RUBY_SITE = ftp://ftp.ruby-lang.org/pub/ruby/1.9
-RUBY_AUTORECONF = YES
-HOST_RUBY_AUTORECONF = YES
-RUBY_DEPENDENCIES = host-ruby
+RUBY_DEPENDENCIES = host-pkgconf host-ruby
+HOST_RUBY_DEPENDENCIES = host-pkgconf
 RUBY_MAKE_ENV = $(TARGET_MAKE_ENV)
-RUBY_CONF_OPT = --disable-install-doc
+RUBY_MAKE = $(MAKE1)
+RUBY_CONF_OPT = --disable-install-doc --disable-rpath
+HOST_RUBY_CONF_OPT = --disable-install-doc --with-out-ext=curses,readline
+RUBY_LICENSE = Ruby or BSD-2c, BSD-3c, others
+RUBY_LICENSE_FILES = LEGAL COPYING BSDL
 
-HOST_RUBY_CONF_OPT = --disable-install-doc
+RUBY_CFLAGS = $(TARGET_CFLAGS)
+# With some SuperH toolchains (like Sourcery CodeBench 2012.09), ruby fails to
+# build with 'pcrel too far'. This seems to be caused by the -Os option we pass
+# by default. To fix the problem, use standard -O2 optimization instead.
+ifeq ($(BR2_sh)$(BR2_sh64),y)
+RUBY_CFLAGS += -O2
+endif
+RUBY_CONF_ENV = CFLAGS="$(RUBY_CFLAGS)"
 
 # Force optionals to build before we do
 ifeq ($(BR2_PACKAGE_BERKELEYDB),y)
@@ -31,5 +41,5 @@ ifeq ($(BR2_PACKAGE_ZLIB),y)
 	RUBY_DEPENDENCIES += zlib
 endif
 
-$(eval $(call AUTOTARGETS,package,ruby))
-$(eval $(call AUTOTARGETS,package,ruby,host))
+$(eval $(autotools-package))
+$(eval $(host-autotools-package))

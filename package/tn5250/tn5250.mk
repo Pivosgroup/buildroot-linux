@@ -1,13 +1,15 @@
-#############################################################
+################################################################################
 #
 # tn5250
 #
-#############################################################
+################################################################################
 
 TN5250_VERSION = 0.17.4
-TN5250_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/tn5250
+TN5250_SITE = http://downloads.sourceforge.net/project/tn5250/tn5250/$(TN5250_VERSION)
 TN5250_MAKE_OPT = CPPFLAGS=""
 TN5250_DEPENDENCIES = ncurses
+TN5250_LICENSE = LGPLv2.1+
+TN5250_LICENSE_FILES = COPYING
 
 ifeq ($(BR2_PACKAGE_OPENSSL),y)
 	TN5250_CONF_OPT += --with-ssl
@@ -29,4 +31,4 @@ define TN5250_UNINSTALL_TARGET_CMDS
 	rm -rf $(TARGET_DIR)/usr/share/tn5250
 endef
 
-$(eval $(call AUTOTARGETS,package,tn5250))
+$(eval $(autotools-package))

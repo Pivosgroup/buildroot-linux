@@ -1,10 +1,12 @@
-#############################################################
+################################################################################
 #
 # smartmontools
 #
-#############################################################
+################################################################################
 
-SMARTMONTOOLS_VERSION = 5.40
-SMARTMONTOOLS_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/smartmontools
+SMARTMONTOOLS_VERSION = 6.2
+SMARTMONTOOLS_SITE = http://downloads.sourceforge.net/project/smartmontools/smartmontools/$(SMARTMONTOOLS_VERSION)
+SMARTMONTOOLS_LICENSE = GPLv2+
+SMARTMONTOOLS_LICENSE_FILES = COPYING
 
-$(eval $(call AUTOTARGETS,package,smartmontools))
+$(eval $(autotools-package))

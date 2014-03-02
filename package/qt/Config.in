@@ -1,13 +1,17 @@
-comment "qt requires a toolchain with C++ support enabled"
-	depends on !BR2_INSTALL_LIBSTDCPP
+comment "qt needs a toolchain w/ C++, threads"
+	depends on !BR2_avr32
+	depends on !BR2_INSTALL_LIBSTDCPP || !BR2_TOOLCHAIN_HAS_THREADS
 
 menuconfig BR2_PACKAGE_QT
 	bool "Qt"
+	depends on !BR2_avr32 # lacks TLS
 	depends on BR2_INSTALL_LIBSTDCPP
+	depends on BR2_TOOLCHAIN_HAS_THREADS
 	help
-	  Qt for Embedded Linux.
+	  Qt is a cross-platform application and UI framework for
+	  developers using C++.
 
-	  http://www.qtsoftware.com/products/platform/qt-for-embedded-linux
+	  http://qt-project.org
 
 if BR2_PACKAGE_QT
 
@@ -18,6 +22,7 @@ config BR2_PACKAGE_QT_DEBUG
 
 config BR2_PACKAGE_QT_DEMOS
 	bool "Compile and install demos and examples (with code)"
+	select BR2_PACKAGE_QT_GUI_MODULE
 	help
 	  If unsure, say N.
 
@@ -278,13 +283,27 @@ config BR2_PACKAGE_QT_PHONON_BACKEND
 	help
 	  Build the platform Phonon plugin.
 	  If unsure, say n.
+
+config BR2_PACKAGE_QT_OPENGL_ES
+	bool "OpenGL ES v2.x support"
+	depends on BR2_PACKAGE_HAS_OPENGL_ES
+	depends on BR2_PACKAGE_HAS_OPENGL_EGL
+	help
+	  Enable the OpenGL ES v2.x support.
+
 endif
 
 config BR2_PACKAGE_QT_DBUS
 	bool "DBus Module"
 	select BR2_PACKAGE_DBUS
+	depends on BR2_TOOLCHAIN_HAS_THREADS # dbus
+	depends on BR2_USE_MMU # dbus
 	help
 	  Build the Qt DBus module.
+
+comment "DBus Module needs a toolchain w/ threads"
+	depends on BR2_USE_MMU
+	depends on !BR2_TOOLCHAIN_HAS_THREADS
 
 config BR2_PACKAGE_QT_XML
 	bool "XML Module"
@@ -309,6 +328,7 @@ config BR2_PACKAGE_QT_AUDIO_BACKEND
 	bool "QtMultimedia Audio backend"
 	depends on BR2_PACKAGE_QT_MULTIMEDIA
 	select BR2_PACKAGE_ALSA_LIB
+	depends on BR2_TOOLCHAIN_HAS_THREADS # alsa-lib
 	help
 	  Build the ALSA audio backend into QtMultimedia
 
@@ -326,23 +346,26 @@ config BR2_PACKAGE_QT_NETWORK
 	  Install the Network module.
 	  if unsure, say y
 
+config BR2_PACKAGE_QT_ARCH_SUPPORTS_WEBKIT
+	bool
+	# see src/3rdparty/webkit/Source/JavaScriptCore/wtf/Platform.h
+	default y if BR2_arm || BR2_armeb || BR2_i386 || BR2_mips || \
+		BR2_mipsel || BR2_powerpc || BR2_sh4 || BR2_sh4eb || \
+		BR2_sh4a || BR2_sh4aeb || BR2_sparc || BR2_x86_64
+
 config BR2_PACKAGE_QT_WEBKIT
 	bool "WebKit Module"
 	depends on BR2_PACKAGE_QT_SHARED
 	depends on BR2_PACKAGE_QT_GUI_MODULE
 	depends on BR2_PACKAGE_QT_NETWORK
+	depends on BR2_PACKAGE_QT_ARCH_SUPPORTS_WEBKIT
 	help
 	  Build the WebKit module.
 	  If unsure, say n.
 
 comment "WebKit needs shared library/gui/network support"
 	depends on !(BR2_PACKAGE_QT_SHARED && BR2_PACKAGE_QT_GUI_MODULE && BR2_PACKAGE_QT_NETWORK)
-
-config BR2_PACKAGE_QT_JAVASCRIPTCORE
-	bool "JavaScriptCore JIT compiler"
-	help
-	  Build the JavaScriptCore JIT compiler
-	  If unsure, say y
+	depends on BR2_PACKAGE_QT_ARCH_SUPPORTS_WEBKIT
 
 config BR2_PACKAGE_QT_STL
 	bool "STL support"
@@ -362,6 +385,7 @@ config BR2_PACKAGE_QT_OPENSSL
 
 config BR2_PACKAGE_QT_SCRIPT
 	bool "Script Module"
+	depends on BR2_PACKAGE_QT_ARCH_SUPPORTS_WEBKIT
 	default y
 	help
 	  Build the Qt Script module.

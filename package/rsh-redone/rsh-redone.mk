@@ -1,8 +1,8 @@
-#############################################################
+################################################################################
 #
 # rsh-redone
 #
-#############################################################
+################################################################################
 
 RSH_REDONE_VERSION = 85
 RSH_REDONE_SOURCE = rsh-redone_$(RSH_REDONE_VERSION).orig.tar.gz
@@ -33,4 +33,4 @@ define RSH_REDONE_UNINSTALL_TARGET_CMDS
 		$(addprefix $(TARGET_DIR)/usr/sbin/,$(rsh-redone-sbin-y))
 endef
 
-$(eval $(call GENTARGETS,package,rsh-redone))
+$(eval $(generic-package))

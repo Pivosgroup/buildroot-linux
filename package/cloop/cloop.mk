@@ -1,6 +1,12 @@
-CLOOP_VERSION=2.634-1
-CLOOP_SOURCE=cloop_$(CLOOP_VERSION).tar.gz
-CLOOP_SITE=http://debian-knoppix.alioth.debian.org/packages/sources/cloop
+################################################################################
+#
+# cloop
+#
+################################################################################
+
+CLOOP_VERSION = 2.634-1
+CLOOP_SOURCE = cloop_$(CLOOP_VERSION).tar.gz
+CLOOP_SITE = http://debian-knoppix.alioth.debian.org/packages/sources/cloop
 
 HOST_CLOOP_DEPENDENCIES = host-zlib
 
@@ -14,5 +20,5 @@ define HOST_CLOOP_INSTALL_CMDS
 	$(INSTALL) -m 755 $(@D)/extract_compressed_fs $(HOST_DIR)/usr/bin
 endef
 
-$(eval $(call GENTARGETS,package,cloop))
-$(eval $(call GENTARGETS,package,cloop,host))
+$(eval $(generic-package))
+$(eval $(host-generic-package))

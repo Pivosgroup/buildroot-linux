@@ -1,6 +1,0 @@
-config BR2_PACKAGE_LIBCEC
-        bool "libcec"
-        help
-          LIBCEC is a client library for hdmi cec device control.
-
-          https://github.com/Pulse-Eight/libcec.git

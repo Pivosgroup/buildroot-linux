@@ -328,7 +328,7 @@ void bb_show_usage(void)
 	fprintf(stderr, "%s: [-d device_table] rootdir\n\n", bb_applet_name);
 	fprintf(stderr, "Creates a batch of special files as specified in a device table.\n");
 	fprintf(stderr, "Device table entries take the form of:\n");
-	fprintf(stderr, "type mode user group major minor start increment count\n\n");
+	fprintf(stderr, "name type mode user group major minor start increment count\n\n");
 	fprintf(stderr, "Where name is the file name,  type can be one of:\n");
 	fprintf(stderr, "      f       A regular file\n");
 	fprintf(stderr, "      d       Directory\n");
@@ -410,7 +410,7 @@ int main(int argc, char **argv)
 		unsigned int count = 0;
 		unsigned int increment = 0;
 		unsigned int start = 0;
-		char name[41];
+		char name[4096];
 		char user[41];
 		char group[41];
 		char *full_name;
@@ -419,7 +419,7 @@ int main(int argc, char **argv)
 
 		linenum++;
 
-		if ((2 > sscanf(line, "%40s %c %o %40s %40s %u %u %u %u %u", name,
+		if ((2 > sscanf(line, "%4095s %c %o %40s %40s %u %u %u %u %u", name,
 						&type, &mode, user, group, &major,
 						&minor, &start, &increment, &count)) ||
 				((major | minor | start | count | increment) > 0xfffff))
@@ -536,8 +536,5 @@ loop:
 	}
 	fclose(table);
 
-	if (system("/bin/sync"))
-		bb_error_msg("sync failed, continuing anyway");
-
-	return 0;
+	return ret;
 }

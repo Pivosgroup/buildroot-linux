@@ -1,17 +1,16 @@
 ################################################################################
 #
-# xutil_makedepend -- No description available
+# xutil_makedepend
 #
 ################################################################################
 
-XUTIL_MAKEDEPEND_VERSION = 1.0.2
+XUTIL_MAKEDEPEND_VERSION = 1.0.4
 XUTIL_MAKEDEPEND_SOURCE = makedepend-$(XUTIL_MAKEDEPEND_VERSION).tar.bz2
 XUTIL_MAKEDEPEND_SITE = http://xorg.freedesktop.org/releases/individual/util
-XUTIL_MAKEDEPEND_AUTORECONF = NO
-XUTIL_MAKEDEPEND_INSTALL_STAGING = NO
-XUTIL_MAKEDEPEND_INSTALL_TARGET = YES
+XUTIL_MAKEDEPEND_LICENSE = MIT
+XUTIL_MAKEDEPEND_LICENSE_FILES = COPYING
 
-HOST_XUTIL_MAKEDEPEND_DEPENDENCIES = host-xproto_xproto
+XUTIL_MAKEDEPEND_DEPENDENCIES = xproto_xproto
 
-$(eval $(call AUTOTARGETS,package/x11r7,xutil_makedepend))
-$(eval $(call AUTOTARGETS,package/x11r7,xutil_makedepend,host))
+$(eval $(autotools-package))
+$(eval $(host-autotools-package))

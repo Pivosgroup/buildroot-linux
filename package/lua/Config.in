@@ -5,30 +5,30 @@ config BR2_PACKAGE_LUA
 
 	  http://www.lua.org/
 
-config BR2_PACKAGE_LUA_COMPILER
-	bool "lua compiler"
-	depends on BR2_PACKAGE_LUA
-	select BR2_PACKAGE_LUA_SHARED_LIBRARY
-	help
-	  Install luac binary
+if BR2_PACKAGE_LUA
 
-config BR2_PACKAGE_LUA_INTERPRETER
-	bool "lua interpreter"
-	depends on BR2_PACKAGE_LUA
-	select BR2_PACKAGE_LUA_SHARED_LIBRARY
+choice
+	prompt "Lua Interpreter command-line editing"
+	default BR2_PACKAGE_LUA_INTERPRETER_EDITING_NONE
+
+config BR2_PACKAGE_LUA_INTERPRETER_EDITING_NONE
+	bool "none"
 	help
-	  Install lua binary
+	  None.
 
 config BR2_PACKAGE_LUA_INTERPRETER_READLINE
 	bool "readline support"
-	depends on BR2_PACKAGE_LUA_INTERPRETER
 	select BR2_PACKAGE_READLINE
 	select BR2_PACKAGE_NCURSES
 	help
-	  Enables command-line editing in the lua interpreter.
+	  Enables command-line editing in the Lua interpreter.
 
-config BR2_PACKAGE_LUA_SHARED_LIBRARY
-	bool "shared library"
-	depends on BR2_PACKAGE_LUA
+config BR2_PACKAGE_LUA_INTERPRETER_LINENOISE
+	bool "linenoise support"
+	select BR2_PACKAGE_LINENOISE
 	help
-	  Install shared liblua.so
+	  Enables command-line editing in the Lua interpreter.
+
+endchoice
+
+endif

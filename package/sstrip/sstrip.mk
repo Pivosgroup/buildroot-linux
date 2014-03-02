@@ -1,17 +1,12 @@
-############################################################
+################################################################################
 #
 # sstrip
 #
-############################################################
+################################################################################
 
 SSTRIP_SITE = svn://dev.openwrt.org/openwrt/trunk/tools/sstrip
 SSTRIP_VERSION = 20154
-HOST_SSTRIP_BINARY = $(REAL_GNU_TARGET_NAME)-sstrip
-
-# This is a kludge to get host-ccache built before us or it fails
-ifeq ($(BR2_CCACHE),y)
-HOST_SSTRIP_DEPENDENCIES = host-ccache
-endif
+HOST_SSTRIP_BINARY = $(GNU_TARGET_NAME)-sstrip
 
 define SSTRIP_BUILD_CMDS
 	cd $(@D) ; \
@@ -41,5 +36,5 @@ define HOST_SSTRIP_UNINSTALL_CMDS
 	rm -f $(HOST_DIR)/usr/bin/$(HOST_SSTRIP_BINARY)
 endef
 
-$(eval $(call GENTARGETS,package,sstrip))
-$(eval $(call GENTARGETS,package,sstrip,host))
+$(eval $(generic-package))
+$(eval $(host-generic-package))

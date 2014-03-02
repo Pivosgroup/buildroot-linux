@@ -1,13 +1,16 @@
 config BR2_PACKAGE_PYTHON
 	bool "python"
 	depends on BR2_USE_WCHAR
+	# uses fork()
+	depends on BR2_USE_MMU
 	select BR2_PACKAGE_LIBFFI
 	help
 	  The python language interpreter.
 
 	  http://www.python.org/
 
-comment "python requires a toolchain with WCHAR support"
+comment "python needs a toolchain w/ wchar"
+	depends on BR2_USE_MMU
 	depends on !BR2_USE_WCHAR
 
 if BR2_PACKAGE_PYTHON
@@ -92,6 +95,12 @@ config BR2_PACKAGE_PYTHON_ZLIB
 	select BR2_PACKAGE_ZLIB
 	help
 	  zlib support in Python
+
+config BR2_PACKAGE_PYTHON_HASHLIB
+	bool "hashlib module"
+	select BR2_PACKAGE_OPENSSL
+	help
+	  hashlib support in Python
 
 endmenu
 

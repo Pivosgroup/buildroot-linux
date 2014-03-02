@@ -1,10 +1,13 @@
-#############################################################
+################################################################################
 #
 # ethtool
 #
-#############################################################
+################################################################################
 
-ETHTOOL_VERSION = 2.6.35
-ETHTOOL_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/gkernel/
+ETHTOOL_VERSION = 3.12.1
+ETHTOOL_SOURCE = ethtool-$(ETHTOOL_VERSION).tar.xz
+ETHTOOL_SITE = $(BR2_KERNEL_MIRROR)/software/network/ethtool
+ETHTOOL_LICENSE = GPLv2
+ETHTOOL_LICENSE_FILES = COPYING
 
-$(eval $(call AUTOTARGETS,package,ethtool))
+$(eval $(autotools-package))

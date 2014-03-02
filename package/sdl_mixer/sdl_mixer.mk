@@ -1,11 +1,14 @@
-#############################################################
+################################################################################
 #
-# SDL_mixer
+# sdl_mixer
 #
-#############################################################
-SDL_MIXER_VERSION:=1.2.11
-SDL_MIXER_SOURCE:=SDL_mixer-$(SDL_MIXER_VERSION).tar.gz
-SDL_MIXER_SITE:=http://www.libsdl.org/projects/SDL_mixer/release/
+################################################################################
+
+SDL_MIXER_VERSION = 1.2.12
+SDL_MIXER_SOURCE = SDL_mixer-$(SDL_MIXER_VERSION).tar.gz
+SDL_MIXER_SITE = http://www.libsdl.org/projects/SDL_mixer/release/
+SDL_MIXER_LICENSE = zlib
+SDL_MIXER_LICENSE_FILES = COPYING
 
 SDL_MIXER_INSTALL_STAGING = YES
 SDL_MIXER_DEPENDENCIES = sdl
@@ -41,4 +44,4 @@ define SDL_MIXER_CLEAN_CMDS
 	-$(MAKE) -C $(@D) clean
 endef
 
-$(eval $(call AUTOTARGETS,package,sdl_mixer))
+$(eval $(autotools-package))

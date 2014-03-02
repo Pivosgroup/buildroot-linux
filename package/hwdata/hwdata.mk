@@ -1,8 +1,9 @@
-#############################################################
+################################################################################
 #
 # hwdata
 #
-#############################################################
+################################################################################
+
 HWDATA_VERSION = 0.230
 HWDATA_SOURCE = hwdata_$(HWDATA_VERSION).orig.tar.gz
 HWDATA_PATCH = hwdata_$(HWDATA_VERSION)-1.diff.gz
@@ -18,4 +19,4 @@ define HWDATA_UNINSTALL_TARGET_CMDS
 	rmdir --ignore-fail-on-non-empty $(TARGET_DIR)/usr/share
 endef
 
-$(eval $(call GENTARGETS,package,hwdata))
+$(eval $(generic-package))

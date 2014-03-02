@@ -1,11 +1,13 @@
-#############################################################
+################################################################################
 #
 # memtester
 #
-#############################################################
-MEMTESTER_VERSION = 4.2.1
-MEMTESTER_SOURCE = memtester-$(MEMTESTER_VERSION).tar.gz
+################################################################################
+
+MEMTESTER_VERSION = 4.3.0
 MEMTESTER_SITE = http://pyropus.ca/software/memtester/old-versions/
+MEMTESTER_LICENSE = GPLv2
+MEMTESTER_LICENSE_FILES = COPYING
 
 MEMTESTER_TARGET_INSTALL_OPTS = INSTALLPATH=$(TARGET_DIR)/usr
 
@@ -26,4 +28,4 @@ define MEMTESTER_CLEAN_CMDS
 	-$(MAKE) -C $(@D) clean
 endef
 
-$(eval $(call GENTARGETS,package,memtester))
+$(eval $(generic-package))

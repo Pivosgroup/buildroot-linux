@@ -1,16 +1,18 @@
-#############################################################
+################################################################################
 #
 # axel
 #
-#############################################################
+################################################################################
+
 AXEL_VERSION = 2.4
-AXEL_SOURCE = axel-$(AXEL_VERSION).tar.gz
-AXEL_SITE = https://alioth.debian.org/frs/download.php/3015
+AXEL_SITE = https://alioth.debian.org/frs/download.php/file/3015
+AXEL_LICENSE = GPLv2+
+AXEL_LICENSE_FILES = COPYING
 
 AXEL_LDFLAGS = -lpthread
 
 ifeq ($(BR2_NEEDS_GETTEXT_IF_LOCALE),y)
-AXEL_DEPENDENCIES += gettext libintl
+AXEL_DEPENDENCIES += gettext
 AXEL_LDFLAGS += -lintl
 endif
 
@@ -44,4 +46,4 @@ define AXEL_CLEAN_CMDS
 	-$(MAKE) -C $(@D) clean
 endef
 
-$(eval $(call GENTARGETS,package,axel))
+$(eval $(generic-package))

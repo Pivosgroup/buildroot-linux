@@ -18,4 +18,4 @@ define AMREMOTE_CONFIG_INSTALL_TARGET_CMDS
         install -m 755 -t $(TARGET_DIR)/usr/bin $(@D)/amremote_config
 endef
 
-$(eval $(call GENTARGETS,package/amlogic,amremote_config))
+$(eval $(generic-package))

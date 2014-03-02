@@ -1,15 +1,17 @@
-#############################################################
+################################################################################
 #
 # e2fsprogs
 #
-#############################################################
+################################################################################
 
-E2FSPROGS_VERSION = 1.42.2
-E2FSPROGS_SITE = http://$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/e2fsprogs
+E2FSPROGS_VERSION = 1.42.8
+E2FSPROGS_SITE = http://downloads.sourceforge.net/project/e2fsprogs/e2fsprogs/v$(E2FSPROGS_VERSION)
+E2FSPROGS_LICENSE = GPLv2, libuuid BSD-3c, libss and libet MIT-like with advertising clause
+E2FSPROGS_LICENSE_FILES = COPYING lib/uuid/COPYING lib/ss/mit-sipb-copyright.h lib/et/internal.h
 
 E2FSPROGS_CONF_OPT = \
 	--disable-tls \
-	--enable-elf-shlibs \
+	$(if $(BR2_PREFER_STATIC_LIB),,--enable-elf-shlibs) \
 	$(if $(BR2_PACKAGE_E2FSPROGS_DEBUGFS),,--disable-debugfs) \
 	$(if $(BR2_PACKAGE_E2FSPROGS_E2IMAGE),,--disable-imager) \
 	$(if $(BR2_PACKAGE_E2FSPROGS_E4DEFRAG),,--disable-defrag) \
@@ -21,7 +23,7 @@ E2FSPROGS_CONF_OPT = \
 	--disable-e2initrd-helper \
 	--disable-testio-debug
 
-E2FSPROGS_DEPENDENCIES = host-pkg-config util-linux
+E2FSPROGS_DEPENDENCIES = host-pkgconf util-linux
 
 E2FSPROGS_MAKE_OPT = \
 	LDCONFIG=true
@@ -30,7 +32,7 @@ define HOST_E2FSPROGS_INSTALL_CMDS
  $(HOST_MAKE_ENV) $(MAKE) -C $(@D) install install-libs
 endef
 # we don't have a host-util-linux
-HOST_E2FSPROGS_DEPENDENCIES = host-pkg-config
+HOST_E2FSPROGS_DEPENDENCIES = host-pkgconf
 
 # binaries to keep or remove
 E2FSPROGS_BINTARGETS_$(BR2_PACKAGE_E2FSPROGS_BADBLOCKS) += usr/sbin/badblocks
@@ -103,5 +105,5 @@ ifeq ($(BR2_PACKAGE_E2FSPROGS_FINDFS),y)
 E2FSPROGS_POST_INSTALL_TARGET_HOOKS += E2FSPROGS_TARGET_FINDFS_SYMLINK
 endif
 
-$(eval $(call AUTOTARGETS,package,e2fsprogs))
-$(eval $(call AUTOTARGETS,package,e2fsprogs,host))
+$(eval $(autotools-package))
+$(eval $(host-autotools-package))

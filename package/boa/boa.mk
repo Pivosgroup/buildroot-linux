@@ -1,11 +1,13 @@
-#############################################################
+################################################################################
 #
 # boa
 #
-#############################################################
+################################################################################
+
 BOA_VERSION = 0.94.14rc21
-BOA_SOURCE = boa-$(BOA_VERSION).tar.gz
 BOA_SITE = http://www.boa.org/
+BOA_LICENSE = GPLv2+
+BOA_LICENSE_FILES = COPYING
 
 define BOA_INSTALL_TARGET_CMDS
 	install -D -m 755 $(@D)/src/boa $(TARGET_DIR)/usr/sbin/boa
@@ -25,4 +27,4 @@ define BOA_UNINSTALL_TARGET_CMDS
 		$(TARGET_DIR)/etc/mime.types $(TARGET_DIR)/etc/boa
 endef
 
-$(eval $(call AUTOTARGETS,package,boa))
+$(eval $(autotools-package))

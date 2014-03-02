@@ -1,20 +1,20 @@
-#############################################################
+################################################################################
 #
 # linux-fusion
 #
-#############################################################
-LINUX_FUSION_VERSION = 8.1.2
-LINUX_FUSION_SOURCE = linux-fusion-$(LINUX_FUSION_VERSION).tar.gz
+################################################################################
+
+LINUX_FUSION_VERSION = 9.0.2
 LINUX_FUSION_SITE = http://directfb.org/downloads/Core/linux-fusion
 LINUX_FUSION_INSTALL_STAGING = YES
-LINUX_FUSION_DEPENDENCIES = linux26
+LINUX_FUSION_DEPENDENCIES = linux
 
-LINUX_FOR_FUSION=$(LINUX26_VERSION_PROBED)
+LINUX_FOR_FUSION=$(LINUX_VERSION_PROBED)
 LINUX_FUSION_ETC_DIR=$(TARGET_DIR)/etc/udev/rules.d
 
 LINUX_FUSION_MAKE_OPTS =  KERNEL_VERSION=$(LINUX_FOR_FUSION)
-LINUX_FUSION_MAKE_OPTS += KERNEL_BUILD=$(LINUX26_DIR)
-LINUX_FUSION_MAKE_OPTS += KERNEL_SOURCE=$(LINUX26_DIR)
+LINUX_FUSION_MAKE_OPTS += KERNEL_BUILD=$(LINUX_DIR)
+LINUX_FUSION_MAKE_OPTS += KERNEL_SOURCE=$(LINUX_DIR)
 
 LINUX_FUSION_MAKE_OPTS += SYSROOT=$(TARGET_DIR)
 LINUX_FUSION_MAKE_OPTS += ARCH=$(KERNEL_ARCH)
@@ -22,15 +22,15 @@ LINUX_FUSION_MAKE_OPTS += CROSS_COMPILE=$(TARGET_CROSS)
 LINUX_FUSION_MAKE_OPTS += KERNEL_MODLIB=/lib/modules/$(LINUX_FOR_FUSION)/kernel
 
 define LINUX_FUSION_BUILD_CMDS
-	$(MAKE) $(TARGET_CONFIGURE_OPTS) $(LINUX_FUSION_MAKE_OPTS) -C $(@D)
+	$(TARGET_CONFIGURE_OPTS) $(MAKE) $(LINUX_FUSION_MAKE_OPTS) -C $(@D)
 endef
 
 define LINUX_FUSION_INSTALL_STAGING_CMDS
-	$(MAKE) $(TARGET_CONFIGURE_OPTS) $(LINUX_FUSION_MAKE_OPTS) INSTALL_MOD_PATH=$(STAGING_DIR) -C $(@D) headers_install
+	$(TARGET_CONFIGURE_OPTS) $(MAKE) $(LINUX_FUSION_MAKE_OPTS) INSTALL_MOD_PATH=$(STAGING_DIR) -C $(@D) headers_install
 endef
 
 define LINUX_FUSION_INSTALL_TARGET_CMDS
-	$(MAKE) $(TARGET_CONFIGURE_OPTS) \
+	$(TARGET_CONFIGURE_OPTS) $(MAKE) \
 		$(LINUX_FUSION_MAKE_OPTS) \
 		INSTALL_MOD_PATH=$(TARGET_DIR) \
 		-C $(@D) install
@@ -48,4 +48,4 @@ define LINUX_FUSION_UNINSTALL_TARGET_CMDS
 	rm -f $(LINUX_FUSION_ETC_DIR)/40-fusion.rules
 endef
 
-$(eval $(call GENTARGETS,package,linux-fusion))
+$(eval $(generic-package))

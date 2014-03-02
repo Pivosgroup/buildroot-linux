@@ -10,4 +10,4 @@ define UBOOTAMLTOOLCHAIN_BUILD_CMDS
 	cp -rf $(@D)/share $(TOOLCHAIN_EXTERNAL_DIR)
 endef
 
-$(eval $(call GENTARGETS,package/amlogic,ubootamltoolchain)) 
+$(eval $(generic-package))
