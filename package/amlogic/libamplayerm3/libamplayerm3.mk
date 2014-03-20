@@ -36,8 +36,16 @@ define LIBAMPLAYERM3_INSTALL_STAGING_CMDS
 	mkdir -p $(STAGING_DIR)/usr/include/amlplayer/ppmgr
 	install -m 644 $(@D)/usr/include/amlplayer/ppmgr/*.h $(STAGING_DIR)/usr/include/amlplayer/ppmgr
 	mkdir -p $(STAGING_DIR)/usr/lib
-	install -m 755 $(@D)/usr/lib/*.so* $(STAGING_DIR)/usr/lib
-	ln -s $(STAGING_DIR)/usr/lib/libamcodec.so.0.0 $(STAGING_DIR)/usr/lib/libamcodec.so
+	install -m 755 $(@D)/usr/lib/libamadec.so $(STAGING_DIR)/usr/lib
+	install -m 755 $(@D)/usr/lib/libamcodec.so.0.0 $(STAGING_DIR)/usr/lib
+	install -m 755 $(@D)/usr/lib/libamplayer.so $(STAGING_DIR)/usr/lib
+	if pushd $(STAGING_DIR)/usr/lib; then \
+	  ln -sf libamcodec.so.0.0 libamcodec.so; \
+	  popd; \
+	else \
+	  echo "ERROR: Failed to change directores ($(STAGING_DIR)/usr/lib)"; \
+	  exit 1; \
+	fi
 	#find $(@D)/usr -type f -exec install -m 644 {} $(STAGING_DIR)/usr \;
 
 	#temporary, until we sync with mainline xbmc
@@ -51,8 +59,16 @@ define LIBAMPLAYERM3_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/lib/firmware
 	install -m 644 $(@D)/lib/firmware/*.bin $(TARGET_DIR)/lib/firmware
 	mkdir -p $(TARGET_DIR)/usr/lib
-	install -m 755 $(@D)/usr/lib/*.so* $(TARGET_DIR)/usr/lib
-	ln -s $(TARGET_DIR)/usr/lib/libamcodec.so.0.0 $(TARGET_DIR)/usr/lib/libamcodec.so
+	install -m 755 $(@D)/usr/lib/libamadec.so $(TARGET_DIR)/usr/lib
+	install -m 755 $(@D)/usr/lib/libamcodec.so.0.0 $(TARGET_DIR)/usr/lib
+	install -m 755 $(@D)/usr/lib/libamplayer.so $(TARGET_DIR)/usr/lib
+	if pushd $(TARGET_DIR)/usr/lib; then \
+	  ln -sf libamcodec.so.0.0 libamcodec.so; \
+	  popd; \
+	else \
+	  echo "ERROR: Failed to change directores ($(TARGET_DIR)/usr/lib)"; \
+	  exit 1; \
+	fi
 #	find $(@D)/lib -type f -exec install -m 644 {} $(TARGET_DIR)/lib \;
 #	find $(@D)/usr/lib -type f -exec install -m 644 {} $(TARGET_DIR)/usr/lib \;
 endef
