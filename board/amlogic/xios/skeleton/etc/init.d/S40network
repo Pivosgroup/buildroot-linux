@@ -17,8 +17,15 @@ case "$1" in
     # xbmc will take care of actually configuring them
     # do it this way to keep from triggering
     # a lengthy dhcp probe at boot.
-    ifconfig eth0 up
-    ifconfig wlan0 up
+    while ! ifconfig eth0 up; do
+      echo waiting on eth0
+      sleep 1
+    done
+
+    while ! ifconfig wlan0 up; do
+      echo waiting on wlan0
+      sleep 1
+    done
   ;;
   stop)
     echo -n "Stopping network..."
