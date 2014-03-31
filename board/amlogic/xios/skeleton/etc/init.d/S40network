@@ -3,6 +3,15 @@
 # Start the network....
 #
 
+bring_up_net_interface()
+{
+  COUNT=0
+  while ! ifconfig $1 up && test $((++COUNT)) -lt 5; do
+    echo waiting on $1
+    sleep 1
+  done
+}
+
 case "$1" in
   start)
     echo "Starting network..."
@@ -17,15 +26,8 @@ case "$1" in
     # xbmc will take care of actually configuring them
     # do it this way to keep from triggering
     # a lengthy dhcp probe at boot.
-    while ! ifconfig eth0 up; do
-      echo waiting on eth0
-      sleep 1
-    done
-
-    while ! ifconfig wlan0 up; do
-      echo waiting on wlan0
-      sleep 1
-    done
+    bring_up_net_interface eth0
+    bring_up_net_interface wlan0
   ;;
   stop)
     echo -n "Stopping network..."
