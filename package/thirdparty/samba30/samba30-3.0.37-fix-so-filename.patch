@@ -1,0 +1,46 @@
+diff --git a/source/Makefile.in b/source/Makefile.in
+index 34b4490..de572fc 100644
+--- a/source/Makefile.in
++++ b/source/Makefile.in
+@@ -109,9 +109,13 @@ LOCKDIR = @lockdir@
+ # the directory where pid files go
+ PIDDIR = @piddir@
+ 
+-LIBSMBCLIENT=bin/libsmbclient.a @LIBSMBCLIENT_SHARED@
+ LIBSMBCLIENT_MAJOR=0
+ LIBSMBCLIENT_MINOR=1
++LIBSMBCLIENT_SHARED=@LIBSMBCLIENT_SHARED@
++ifneq "$(LIBSMBCLIENT_SHARED)" ""
++	LIBSMBCLIENT_SHARED := $(LIBSMBCLIENT_SHARED).$(LIBSMBCLIENT_MAJOR)
++endif
++LIBSMBCLIENT=bin/libsmbclient.a $(LIBSMBCLIENT_SHARED)
+ 
+ LIBMSRPC=bin/libmsrpc.a @LIBMSRPC_SHARED@
+ LIBMSRPC_MAJOR=0
+@@ -1159,7 +1163,7 @@ bin/libaddns.a: proto_exists $(LIBADDNS_OBJ)
+ 	@echo Linking libaddns non-shared library $@
+ 	@-$(AR) -rc $@ $(LIBADDNS_OBJ)
+ 
+-bin/libsmbclient.@SHLIBEXT@: proto_exists $(LIBSMBCLIENT_OBJ)
++bin/libsmbclient.@SHLIBEXT@.$(LIBSMBCLIENT_MAJOR): proto_exists $(LIBSMBCLIENT_OBJ)
+ 	@echo Linking libsmbclient shared library $@
+ 	@$(SHLD) $(LDSHFLAGS) -o $@ $(LIBSMBCLIENT_OBJ) $(LIBS) \
+ 		$(KRB5LIBS) $(LDAP_LIBS) $(NSCD_LIBS) \
+@@ -1633,7 +1637,7 @@ installswat: installdirs installmsg
+ 
+ installclientlib: installdirs libsmbclient
+ 	@$(SHELL) $(srcdir)/script/installdirs.sh $(INSTALLPERMS) $(DESTDIR) $(LIBDIR)
+-	-$(INSTALLLIBCMD_SH) bin/libsmbclient.@SHLIBEXT@ $(DESTDIR)$(LIBDIR)
++	-$(INSTALLLIBCMD_SH) bin/libsmbclient.@SHLIBEXT@.$(LIBSMBCLIENT_MAJOR) $(DESTDIR)$(LIBDIR)
+ 	-$(INSTALLLIBCMD_A) bin/libsmbclient.a $(DESTDIR)$(LIBDIR)
+ 	@$(SHELL) $(srcdir)/script/installdirs.sh $(INSTALLPERMS) $(DESTDIR) ${prefix}/include
+ 	-$(INSTALLCMD) $(srcdir)/include/libsmbclient.h $(DESTDIR)${prefix}/include
+@@ -1757,7 +1761,7 @@ uninstallswat: uninstallmsg
+ 	@$(SHELL) $(srcdir)/script/uninstallswat.sh $(DESTDIR) $(SWATDIR) $(srcdir)
+ 
+ uninstallclientlib:
+-	-$(UNINSTALLLIBCMD_SH) $(DESTDIR)$(LIBDIR)/libsmbclient.@SHLIBEXT@
++	-$(UNINSTALLLIBCMD_SH) $(DESTDIR)$(LIBDIR)/libsmbclient.@SHLIBEXT@.$(LIBSMBCLIENT_MAJOR)
+ 	-$(UNINSTALLLIBCMD_A) $(DESTDIR)$(LIBDIR)/libsmbclient.a
+ 	-rm -f $(DESTDIR)${prefix}/include/libsmbclient.h
+ 
