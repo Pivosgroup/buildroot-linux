@@ -1,5 +1,0 @@
-config BR2_PACKAGE_XBMCPVR
-	bool "xbmcpvr"
-	help
-	  XBMC PVR Addons
- depends on BR2_PACKAGE_XBMC
