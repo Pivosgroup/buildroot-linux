@@ -79,7 +79,7 @@ SAMBA30_CONF_OPT = \
 
 SAMBA30_INSTALL_TARGET_OPT = \
 	DESTDIR=$(TARGET_DIR) -C $(SAMBA30_DIR)/$(SAMBA30_SUBDIR) \
-	installclientlib
+	installclientlib installservers installbin
 
 SAMBA30_INSTALL_STAGING_OPT = \
         DESTDIR=$(STAGING_DIR) -C $(SAMBA30_DIR)/$(SAMBA30_SUBDIR) \
@@ -87,7 +87,7 @@ SAMBA30_INSTALL_STAGING_OPT = \
 
 SAMBA30_UNINSTALL_TARGET_OPT = \
 	DESTDIR=$(TARGET_DIR) -C $(SAMBA30_DIR)/$(SAMBA30_SUBDIR) \
-	uninstallclientlib
+	uninstallclientlibs uninstallservers uninstallbin
 
 SAMBA30_UNINSTALL_STAGING_OPT = \
         DESTDIR=$(STAGING_DIR) -C $(SAMBA30_DIR)/$(SAMBA30_SUBDIR) \
@@ -102,11 +102,61 @@ SAMBA30_TXTTARGETS_ = \
 	usr/include/tdb.h \
 	usr/include/wbclient.h
 
+# binaries to keep
+SAMBA30_BINTARGETS_y = \
+        usr/sbin/smbd \
+        usr/bin/smbpasswd \
+	usr/lib/libsmbclient.so*
+
+# binaries to remove
+SAMBA30_BINTARGETS_ = \
+        usr/lib/libsmbsharemodes* \
+	usr/bin/eventlogadm \
+	usr/bin/net \
+	usr/bin/nmblookup \
+	usr/bin/ntlm_auth \
+	usr/bin/pdbedit \
+	usr/bin/profiles \
+	usr/bin/rpcclient \
+	usr/bin/smbcacls \
+	usr/bin/smbclient \
+	usr/bin/smbcontrol \
+	usr/bin/smbcquotas \
+	usr/bin/smbget \
+	usr/bin/smbspool \
+	usr/bin/smbstatus \
+	usr/bin/smbtree \
+	usr/sbin/swat \
+	usr/bin/tdbbackup \
+	usr/bin/tdbdump \
+	usr/bin/tdbtool \
+	usr/bin/testparm
+
 define SAMBA30_REMOVE_UNNEEDED_HEADERS
        rm -f $(addprefix $(TARGET_DIR)/, $(SAMBA30_TXTTARGETS_))
 endef
 
+define SAMBA30_REMOVE_UNNEEDED_BINARIES
+        rm -f $(addprefix $(TARGET_DIR)/, $(SAMBA30_BINTARGETS_))
+endef
+
+define SAMBA30_INSTALL_INITSCRIPTS_CONFIG
+
+	# install start/stop script
+        @if [ ! -f $(TARGET_DIR)/etc/init.d/S91smb ]; then \
+                $(INSTALL) -m 0755 -D package/thirdparty/samba30/S91smb $(TARGET_DIR)/etc/init.d/S91smb; \
+        fi
+
+        # install config
+        @if [ ! -f $(TARGET_DIR)/etc/samba/smb.conf ]; then \
+                $(INSTALL) -m 0755 -D package/thirdparty/samba30/simple.conf $(TARGET_DIR)/etc/samba/smb.conf; \
+        fi
+endef
+
+
 SAMBA30_POST_INSTALL_TARGET_HOOKS += SAMBA30_REMOVE_UNNEEDED_HEADERS
+SAMBA30_POST_INSTALL_TARGET_HOOKS += SAMBA30_REMOVE_UNNEEDED_BINARIES
+SAMBA30_POST_INSTALL_TARGET_HOOKS += SAMBA30_INSTALL_INITSCRIPTS_CONFIG
 
 define SAMBA30_AUTOGEN
 	@$(call MESSAGE,"Reconfiguring")

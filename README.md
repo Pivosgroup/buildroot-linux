@@ -21,6 +21,7 @@ to python 2.7. Earlier pythons (or python3) will not work.
 # Set up a key to sign the image
 
 ```shell
+% mkdir ~/.android
 % keytool -genkey -keystore ~/.android/debug.keystore -v -alias \
       androiddebugkey -dname "CN=Android Debug,O=Android,C=US" -keypass \
       android -storepass android -keyalg RSA -keysize 2048 -validity 10000
