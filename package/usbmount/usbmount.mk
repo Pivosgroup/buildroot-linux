@@ -15,6 +15,7 @@ define USBMOUNT_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/etc/usbmount/usbmount.d/00_create_model_symlink
 	$(INSTALL) -m 0755 -D $(@D)/00_remove_model_symlink 	\
 		$(TARGET_DIR)/etc/usbmount/usbmount.d/00_remove_model_symlink
+	$(INSTALL) -m 0755 -D package/usbmount/diag.sh $(TARGET_DIR)/usr/bin
 
 	$(INSTALL) -m 0644 -D $(@D)/usbmount.rules $(TARGET_DIR)/lib/udev/rules.d/usbmount.rules
 	@if [ ! -f $(TARGET_DIR)/etc/usbmount/usbmount.conf ]; then \
