@@ -1,0 +1,9 @@
+config BR2_PACKAGE_GPHOTOFS
+	bool "gphotofs"
+        select BR2_PACKAGE_LIBUSB-COMPAT
+        select BR2_PACKAGE_LIBGPHOTO2
+	select BR2_PACKAGE_FUSE
+  	help
+	  gphotofs   
+
+	  http://www.gphoto.org

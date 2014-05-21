@@ -1,0 +1,2 @@
+ENV{INTERFACE}=="6/1/1", ACTION=="add", SUBSYSTEM=="usb", RUN+="/bin/sh /usr/bin/mountptp.sh"
+ENV{INTERFACE}=="6/1/1", ACTION=="remove", SUBSYSTEM=="usb", RUN+="/bin/sh /usr/bin/umountptp.sh"
