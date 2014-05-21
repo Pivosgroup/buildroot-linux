@@ -467,11 +467,22 @@ endif
 	# for recent versions of ldconfig
 	touch $(TARGET_DIR)/etc/ld.so.conf
 	mkdir -p $(TARGET_DIR)/var/cache/ldconfig
-	if [ -x "$(TARGET_CROSS)ldconfig" ]; \
+	if [ "$(BR2_ENABLE_EXTERNAL_LDCONFIG)" == "y" ]; \
 	then \
-		$(TARGET_CROSS)ldconfig -r $(TARGET_DIR); \
+		if [ -x $(BR2_EXTERNAL_LDCONFIG_PATH)/ldconfig ]; \
+		then \
+			$(BR2_EXTERNAL_LDCONFIG_PATH)/ldconfig -r $(TARGET_DIR); \
+		else \
+			echo "WARNING: External ldconfig should be used, but path is incorrect! Trying system default (/sbin/ldconfig)..."; \
+			/sbin/ldconfig -r $(TARGET_DIR); \
+		fi \
 	else \
-		/sbin/ldconfig -r $(TARGET_DIR); \
+		if [ -x "$(TARGET_CROSS)ldconfig" ]; \
+		then \
+			$(TARGET_CROSS)ldconfig -r $(TARGET_DIR); \
+		else \
+			/sbin/ldconfig -r $(TARGET_DIR); \
+		fi \
 	fi
 	echo $(BR2_VERSION_FULL) > $(TARGET_DIR)/etc/br-version
 
